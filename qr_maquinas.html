@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PANALCOR — QR Máquinas</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy:     #0d1b2a;
+  --navy-mid: #1a2d42;
+  --gold:     #c9a227;
+  --cream:    #f4efe6;
+  --text-dim: #7a9ab5;
+  --border:   rgba(255,255,255,0.08);
+}
+
+body {
+  background: var(--navy);
+  color: var(--cream);
+  font-family: 'Barlow', sans-serif;
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+.header {
+  background: var(--navy-mid);
+  border-bottom: 1px solid var(--border);
+  padding: 0 1.5rem;
+  height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+}
+.header-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1rem; font-weight: 600;
+  letter-spacing: 0.1em; color: var(--cream); text-transform: uppercase;
+}
+.header-title span { color: var(--gold); font-weight: 400; }
+.hbtn {
+  padding: 7px 14px; border-radius: 6px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--text-dim); font-family: 'Barlow',sans-serif;
+  font-size: 0.8rem; cursor: pointer; text-decoration: none;
+  transition: all 0.2s; display:inline-flex; align-items:center; gap:6px;
+}
+.hbtn:hover { color: var(--gold); border-color: rgba(201,162,39,0.4); }
+.hbtn-print {
+  background: linear-gradient(135deg,rgba(39,174,96,0.2),rgba(39,174,96,0.1));
+  border-color: rgba(39,174,96,0.5); color: #55efc4;
+}
+.hbtn-print:hover { border-color: #27ae60; }
+
+/* ── Controls ── */
+.controls {
+  background: var(--navy-mid);
+  border-bottom: 1px solid var(--border);
+  padding: 0.8rem 1.5rem;
+  display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap;
+}
+.ctrl-sel {
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px; color: white; font-family: 'Barlow',sans-serif;
+  font-size: 0.9rem; padding: 8px 30px 8px 12px; outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a9ab5' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center; cursor: pointer;
+}
+.ctrl-sel option { background: #1a2d42; }
+.ctrl-info {
+  font-size: 0.8rem; color: var(--text-dim); margin-left: auto;
+}
+.ctrl-info b { color: var(--gold); }
+
+/* ── QR Grid ── */
+.qr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 1rem;
+  padding: 1.2rem 1.5rem 4rem;
+}
+
+.qr-card {
+  background: white;
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.qr-area-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #999;
+  font-family: 'Barlow', sans-serif;
+  font-weight: 500;
+}
+
+.qr-id {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: #c9a227;
+}
+
+.qr-name {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #1a2d42;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.qr-tipo {
+  font-size: 0.72rem;
+  color: #666;
+  font-family: 'Barlow', sans-serif;
+  text-align: center;
+}
+
+.qr-box {
+  width: 140px; height: 140px;
+  display: flex; align-items: center; justify-content: center;
+}
+.qr-box canvas, .qr-box img { border-radius: 4px; }
+
+.qr-scan-hint {
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: #aaa;
+  text-align: center;
+  text-transform: uppercase;
+  font-family: 'Barlow', sans-serif;
+}
+
+.panalcor-brand {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: #c9a227;
+}
+
+/* ── No server warning ── */
+.no-server-warn {
+  background: rgba(230,126,34,0.1);
+  border: 1px solid rgba(230,126,34,0.35);
+  border-radius: 10px;
+  padding: 1.2rem 1.5rem;
+  margin: 1rem 1.5rem;
+  font-size: 0.88rem;
+  color: #ffb347;
+  display: none;
+}
+.no-server-warn b { color: #ffd97d; }
+
+/* ── Print styles ── */
+@media print {
+  body { background: white !important; color: black; }
+  .header, .controls, .no-server-warn { display: none !important; }
+  .qr-grid {
+    padding: 0;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+  }
+  .qr-card {
+    box-shadow: none;
+    border: 1px solid #ddd;
+    padding: 0.7rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .qr-grid { grid-template-columns: repeat(2, 1fr); gap: 0.6rem; padding: 0.8rem; }
+  .hbtn .btn-txt { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">QR Máquinas &mdash; <span>PANALCOR S.L.</span></div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <a href="panalcor_inicio.html" class="hbtn">← Inicio</a>
+    <button type="button" class="hbtn hbtn-print" onclick="window.print()">
+      🖨️ <span class="btn-txt">Imprimir</span>
+    </button>
+  </div>
+</div>
+
+<div class="no-server-warn" id="noServerWarn">
+  ⚠️ <b>Servidor no detectado.</b> Los QR deben apuntar a una URL de red para funcionar desde el móvil.
+  Arranca <b>arrancar.bat</b> en el PC y abre esta página desde el servidor: <code id="serverUrl">http://IP:8080/qr_maquinas.html</code>
+</div>
+
+<div class="controls">
+  <div>
+    <span style="font-size:0.68rem;letter-spacing:0.14em;color:var(--text-dim);text-transform:uppercase;display:block;margin-bottom:4px">Área</span>
+    <select class="ctrl-sel" id="filtroArea" onchange="renderQR()">
+      <option value="">Todas las áreas</option>
+    </select>
+  </div>
+  <div>
+    <span style="font-size:0.68rem;letter-spacing:0.14em;color:var(--text-dim);text-transform:uppercase;display:block;margin-bottom:4px">Tipo</span>
+    <select class="ctrl-sel" id="filtroTipo" onchange="renderQR()">
+      <option value="">Todos los tipos</option>
+    </select>
+  </div>
+  <div class="ctrl-info" id="countInfo">— máquinas</div>
+</div>
+
+<div class="qr-grid" id="qrGrid"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   MÁQUINAS — misma lista que averias.html
+   ══════════════════════════════════════════════════════ */
+const MAQUINAS = [
+  {id:"MAQ-001",n:"DIVISORA L1",t:"Divisora",f:"BONGARD",a:"L1",c:"A"},
+  {id:"MAQ-002",n:"CAMARA DE BOLAS L1",t:"Cámara de Bolas",f:"BONGARD",a:"L1",c:"A"},
+  {id:"MAQ-003",n:"TALLADORA L1",t:"Talladora",f:"BONGARD",a:"L1",c:"A"},
+  {id:"MAQ-004",n:"FORMADORA L1",t:"Formadora",f:"BONGARD",a:"L1",c:"A"},
+  {id:"MAQ-005",n:"HORNO 1",t:"Horno Rotativo",f:"BONGARD",a:"L1",c:"A"},
+  {id:"MAQ-006",n:"HORNO 2",t:"Horno Rotativo",f:"BONGARD",a:"L1",c:"A"},
+  {id:"MAQ-007",n:"HORNO 3",t:"Horno Rotativo",f:"BONGARD",a:"L1",c:"A"},
+  {id:"MAQ-008",n:"CARRUSEL L1",t:"Carrusel",f:"BONGARD",a:"L1",c:"A"},
+  {id:"MAQ-009",n:"FERMENTADORA L1",t:"Fermentadora",f:"BONGARD",a:"L1",c:"A"},
+  {id:"MAQ-010",n:"DIVISORA L2",t:"Divisora",f:"BONGARD",a:"L2",c:"A"},
+  {id:"MAQ-011",n:"CAMARA DE BOLAS L2",t:"Cámara de Bolas",f:"BONGARD",a:"L2",c:"A"},
+  {id:"MAQ-012",n:"TALLADORA L2",t:"Talladora",f:"BONGARD",a:"L2",c:"A"},
+  {id:"MAQ-013",n:"FORMADORA L2",t:"Formadora",f:"BONGARD",a:"L2",c:"A"},
+  {id:"MAQ-014",n:"HORNO 4",t:"Horno Rotativo",f:"BONGARD",a:"L2",c:"A"},
+  {id:"MAQ-015",n:"HORNO 5",t:"Horno Rotativo",f:"BONGARD",a:"L2",c:"A"},
+  {id:"MAQ-016",n:"HORNO 6",t:"Horno Rotativo",f:"BONGARD",a:"L2",c:"A"},
+  {id:"MAQ-017",n:"CARRUSEL L2",t:"Carrusel",f:"BONGARD",a:"L2",c:"A"},
+  {id:"MAQ-018",n:"FERMENTADORA L2",t:"Fermentadora",f:"BONGARD",a:"L2",c:"A"},
+  {id:"MAQ-019",n:"DIVISORA L3",t:"Divisora",f:"BONGARD",a:"L3",c:"A"},
+  {id:"MAQ-020",n:"CAMARA DE BOLAS L3",t:"Cámara de Bolas",f:"BONGARD",a:"L3",c:"A"},
+  {id:"MAQ-021",n:"TALLADORA L3",t:"Talladora",f:"BONGARD",a:"L3",c:"A"},
+  {id:"MAQ-022",n:"FORMADORA L3",t:"Formadora",f:"BONGARD",a:"L3",c:"A"},
+  {id:"MAQ-023",n:"HORNO 7",t:"Horno Rotativo",f:"BONGARD",a:"L3",c:"A"},
+  {id:"MAQ-024",n:"HORNO 8",t:"Horno Rotativo",f:"BONGARD",a:"L3",c:"A"},
+  {id:"MAQ-025",n:"HORNO 9",t:"Horno Rotativo",f:"BONGARD",a:"L3",c:"A"},
+  {id:"MAQ-026",n:"CARRUSEL L3",t:"Carrusel",f:"BONGARD",a:"L3",c:"A"},
+  {id:"MAQ-027",n:"FERMENTADORA L3",t:"Fermentadora",f:"BONGARD",a:"L3",c:"A"},
+  {id:"MAQ-028",n:"DIVISORA L4",t:"Divisora",f:"BONGARD",a:"L4",c:"A"},
+  {id:"MAQ-029",n:"CAMARA DE BOLAS L4",t:"Cámara de Bolas",f:"BONGARD",a:"L4",c:"A"},
+  {id:"MAQ-030",n:"TALLADORA L4",t:"Talladora",f:"BONGARD",a:"L4",c:"A"},
+  {id:"MAQ-031",n:"FORMADORA L4",t:"Formadora",f:"BONGARD",a:"L4",c:"A"},
+  {id:"MAQ-032",n:"HORNO 10",t:"Horno Rotativo",f:"BONGARD",a:"L4",c:"A"},
+  {id:"MAQ-033",n:"HORNO 11",t:"Horno Rotativo",f:"BONGARD",a:"L4",c:"A"},
+  {id:"MAQ-034",n:"HORNO 12",t:"Horno Rotativo",f:"BONGARD",a:"L4",c:"A"},
+  {id:"MAQ-035",n:"CARRUSEL L4",t:"Carrusel",f:"BONGARD",a:"L4",c:"A"},
+  {id:"MAQ-036",n:"FERMENTADORA L4",t:"Fermentadora",f:"BONGARD",a:"L4",c:"A"},
+  {id:"MAQ-037",n:"DIVISORA L5",t:"Divisora",f:"BONGARD",a:"L5",c:"A"},
+  {id:"MAQ-038",n:"CAMARA DE BOLAS L5",t:"Cámara de Bolas",f:"BONGARD",a:"L5",c:"A"},
+  {id:"MAQ-039",n:"TALLADORA L5",t:"Talladora",f:"BONGARD",a:"L5",c:"A"},
+  {id:"MAQ-040",n:"FORMADORA L5",t:"Formadora",f:"BONGARD",a:"L5",c:"A"},
+  {id:"MAQ-041",n:"HORNO 13",t:"Horno Rotativo",f:"BONGARD",a:"L5",c:"A"},
+  {id:"MAQ-042",n:"HORNO 14",t:"Horno Rotativo",f:"BONGARD",a:"L5",c:"A"},
+  {id:"MAQ-043",n:"HORNO 15",t:"Horno Rotativo",f:"BONGARD",a:"L5",c:"A"},
+  {id:"MAQ-044",n:"CARRUSEL L5",t:"Carrusel",f:"BONGARD",a:"L5",c:"A"},
+  {id:"MAQ-045",n:"FERMENTADORA L5",t:"Fermentadora",f:"BONGARD",a:"L5",c:"A"},
+  {id:"MAQ-046",n:"DIVISORA L6",t:"Divisora",f:"BONGARD",a:"L6",c:"A"},
+  {id:"MAQ-047",n:"CAMARA DE BOLAS L6",t:"Cámara de Bolas",f:"BONGARD",a:"L6",c:"A"},
+  {id:"MAQ-048",n:"TALLADORA L6",t:"Talladora",f:"BONGARD",a:"L6",c:"A"},
+  {id:"MAQ-049",n:"FORMADORA L6",t:"Formadora",f:"BONGARD",a:"L6",c:"A"},
+  {id:"MAQ-050",n:"HORNO 16",t:"Horno Rotativo",f:"BONGARD",a:"L6",c:"A"},
+  {id:"MAQ-051",n:"HORNO 17",t:"Horno Rotativo",f:"BONGARD",a:"L6",c:"A"},
+  {id:"MAQ-052",n:"HORNO 18",t:"Horno Rotativo",f:"BONGARD",a:"L6",c:"A"},
+  {id:"MAQ-053",n:"CARRUSEL L6",t:"Carrusel",f:"BONGARD",a:"L6",c:"A"},
+  {id:"MAQ-054",n:"FERMENTADORA L6",t:"Fermentadora",f:"BONGARD",a:"L6",c:"A"},
+  {id:"MAQ-055",n:"HORNO 19",t:"Horno Rotativo",f:"BONGARD",a:"HORNOS",c:"A"},
+  {id:"MAQ-056",n:"TUNEL PREFRIO L1",t:"Túnel Prefrio",f:"BONGARD",a:"L1",c:"A"},
+  {id:"MAQ-057",n:"TUNEL PREFRIO L2",t:"Túnel Prefrio",f:"BONGARD",a:"L2",c:"A"},
+  {id:"MAQ-058",n:"TUNEL PREFRIO L3",t:"Túnel Prefrio",f:"BONGARD",a:"L3",c:"A"},
+  {id:"MAQ-059",n:"TUNEL PREFRIO L4",t:"Túnel Prefrio",f:"BONGARD",a:"L4",c:"A"},
+  {id:"MAQ-060",n:"TUNEL PREFRIO L5",t:"Túnel Prefrio",f:"BONGARD",a:"L5",c:"A"},
+  {id:"MAQ-061",n:"TUNEL FRIO L1",t:"Túnel Frío",f:"BONGARD",a:"L1",c:"A"},
+  {id:"MAQ-062",n:"TUNEL FRIO L2",t:"Túnel Frío",f:"BONGARD",a:"L2",c:"A"},
+  {id:"MAQ-063",n:"TUNEL FRIO L3",t:"Túnel Frío",f:"BONGARD",a:"L3",c:"A"},
+  {id:"MAQ-064",n:"TUNEL FRIO L4",t:"Túnel Frío",f:"BONGARD",a:"L4",c:"A"},
+  {id:"MAQ-065",n:"TUNEL FRIO L5",t:"Túnel Frío",f:"BONGARD",a:"L5",c:"A"},
+  {id:"MAQ-066",n:"DESMOLDEO L1",t:"Desmoldeo",f:"BONGARD",a:"L1",c:"B"},
+  {id:"MAQ-067",n:"DESMOLDEO L2",t:"Desmoldeo",f:"BONGARD",a:"L2",c:"B"},
+  {id:"MAQ-068",n:"DESMOLDEO L3",t:"Desmoldeo",f:"BONGARD",a:"L3",c:"B"},
+  {id:"MAQ-069",n:"DESMOLDEO L4",t:"Desmoldeo",f:"BONGARD",a:"L4",c:"B"},
+  {id:"MAQ-070",n:"DESMOLDEO L5",t:"Desmoldeo",f:"BONGARD",a:"L5",c:"B"},
+  {id:"MAQ-071",n:"CONTADORA L1",t:"Contadora",f:"BONGARD",a:"L1",c:"B"},
+  {id:"MAQ-072",n:"CONTADORA L2",t:"Contadora",f:"BONGARD",a:"L2",c:"B"},
+  {id:"MAQ-073",n:"CONTADORA L3",t:"Contadora",f:"BONGARD",a:"L3",c:"B"},
+  {id:"MAQ-074",n:"CONTADORA L4",t:"Contadora",f:"BONGARD",a:"L4",c:"B"},
+  {id:"MAQ-075",n:"CONTADORA L5",t:"Contadora",f:"BONGARD",a:"L5",c:"B"},
+  {id:"MAQ-076",n:"REPARTIDOR L1",t:"Repartidor",f:"BONGARD",a:"L1",c:"B"},
+  {id:"MAQ-077",n:"REPARTIDOR L2",t:"Repartidor",f:"BONGARD",a:"L2",c:"B"},
+  {id:"MAQ-078",n:"REPARTIDOR L3",t:"Repartidor",f:"BONGARD",a:"L3",c:"B"},
+  {id:"MAQ-079",n:"REPARTIDOR L4",t:"Repartidor",f:"BONGARD",a:"L4",c:"B"},
+  {id:"MAQ-080",n:"REPARTIDOR L5",t:"Repartidor",f:"BONGARD",a:"L5",c:"B"},
+  {id:"MAQ-081",n:"FERMENTADORA RELAMPAGO",t:"Fermentadora Relámpago",f:"BONGARD",a:"CENTRAL",c:"A"},
+  {id:"MAQ-082",n:"TRUENO L1",t:"Trueno",f:"BONGARD",a:"L1",c:"A"},
+  {id:"MAQ-083",n:"TRUENO L2",t:"Trueno",f:"BONGARD",a:"L2",c:"A"},
+  {id:"MAQ-084",n:"TRUENO L3",t:"Trueno",f:"BONGARD",a:"L3",c:"A"},
+  {id:"MAQ-085",n:"TRUENO L4",t:"Trueno",f:"BONGARD",a:"L4",c:"A"},
+  {id:"MAQ-086",n:"TRUENO L5",t:"Trueno",f:"BONGARD",a:"L5",c:"A"},
+  {id:"MAQ-087",n:"COMPRESOR 1",t:"Compresor",f:"ATLAS COPCO",a:"SALA COMPRESORES",c:"A"},
+  {id:"MAQ-088",n:"COMPRESOR 2",t:"Compresor",f:"ATLAS COPCO",a:"SALA COMPRESORES",c:"A"},
+  {id:"MAQ-089",n:"COMPRESOR 3",t:"Compresor",f:"ATLAS COPCO",a:"SALA COMPRESORES",c:"A"},
+  {id:"MAQ-090",n:"SECADOR AIRE 1",t:"Secador",f:"ATLAS COPCO",a:"SALA COMPRESORES",c:"B"},
+  {id:"MAQ-091",n:"SECADOR AIRE 2",t:"Secador",f:"ATLAS COPCO",a:"SALA COMPRESORES",c:"B"},
+  {id:"MAQ-092",n:"SILO HARINA 1",t:"Silo",f:"—",a:"SILOS",c:"B"},
+  {id:"MAQ-093",n:"SILO HARINA 2",t:"Silo",f:"—",a:"SILOS",c:"B"},
+  {id:"MAQ-094",n:"SILO HARINA 3",t:"Silo",f:"—",a:"SILOS",c:"B"},
+  {id:"MAQ-095",n:"SILO HARINA 4",t:"Silo",f:"—",a:"SILOS",c:"B"},
+  {id:"MAQ-096",n:"TURBINA HARINA 1",t:"Turbina",f:"—",a:"SILOS",c:"B"},
+  {id:"MAQ-097",n:"TURBINA HARINA 2",t:"Turbina",f:"—",a:"SILOS",c:"B"},
+  {id:"MAQ-098",n:"BASCULA L1",t:"Báscula",f:"BIZERBA",a:"L1",c:"B"},
+  {id:"MAQ-099",n:"BASCULA L2",t:"Báscula",f:"BIZERBA",a:"L2",c:"B"},
+  {id:"MAQ-100",n:"BASCULA L3",t:"Báscula",f:"BIZERBA",a:"L3",c:"B"},
+  {id:"MAQ-101",n:"BASCULA L4",t:"Báscula",f:"BIZERBA",a:"L4",c:"B"},
+  {id:"MAQ-102",n:"BASCULA L5",t:"Báscula",f:"BIZERBA",a:"L5",c:"B"},
+  {id:"MAQ-103",n:"PRECINTADORA L1",t:"Precintadora",f:"—",a:"L1",c:"B"},
+  {id:"MAQ-104",n:"PRECINTADORA L2",t:"Precintadora",f:"—",a:"L2",c:"B"},
+  {id:"MAQ-105",n:"PRECINTADORA L3",t:"Precintadora",f:"—",a:"L3",c:"B"},
+  {id:"MAQ-106",n:"PRECINTADORA L4",t:"Precintadora",f:"—",a:"L4",c:"B"},
+  {id:"MAQ-107",n:"PRECINTADORA L5",t:"Precintadora",f:"—",a:"L5",c:"B"},
+  {id:"MAQ-108",n:"MAQUINA DE CAJAS L1",t:"Máq. Cajas",f:"FIORINI",a:"L1",c:"B"},
+  {id:"MAQ-109",n:"MAQUINA DE CAJAS L2",t:"Máq. Cajas",f:"FIORINI",a:"L2",c:"B"},
+  {id:"MAQ-110",n:"MAQUINA DE CAJAS L3",t:"Máq. Cajas",f:"FIORINI",a:"L3",c:"B"},
+  {id:"MAQ-111",n:"MAQUINA DE BOLSAS L1",t:"Máq. Bolsas",f:"—",a:"L1",c:"B"},
+  {id:"MAQ-112",n:"MAQUINA DE BOLSAS L2",t:"Máq. Bolsas",f:"—",a:"L2",c:"B"},
+  {id:"MAQ-113",n:"MAQUINA DE BOLSAS L3",t:"Máq. Bolsas",f:"—",a:"L3",c:"B"},
+  {id:"MAQ-114",n:"CENTRADOR L5",t:"Centrador",f:"—",a:"L5",c:"C"},
+  {id:"MAQ-115",n:"CENTRADOR L6",t:"Centrador",f:"—",a:"L6",c:"C"},
+  {id:"MAQ-116",n:"TOLVA AGUA L1",t:"Tolva Agua",f:"—",a:"L1",c:"B"},
+  {id:"MAQ-117",n:"TOLVA AGUA L2",t:"Tolva Agua",f:"—",a:"L2",c:"B"},
+  {id:"MAQ-118",n:"TOLVA AGUA L3",t:"Tolva Agua",f:"—",a:"L3",c:"B"},
+  {id:"MAQ-119",n:"TOLVA AGUA L4",t:"Tolva Agua",f:"—",a:"L4",c:"B"},
+  {id:"MAQ-120",n:"TOLVA AGUA L5",t:"Tolva Agua",f:"—",a:"L5",c:"B"},
+  {id:"MAQ-121",n:"TANQUE LEVADURA 1",t:"Tanque Levadura",f:"—",a:"LEVADURA",c:"A"},
+  {id:"MAQ-122",n:"TANQUE LEVADURA 2",t:"Tanque Levadura",f:"—",a:"LEVADURA",c:"A"},
+  {id:"MAQ-123",n:"TANQUE LEVADURA 3",t:"Tanque Levadura",f:"—",a:"LEVADURA",c:"A"},
+  {id:"MAQ-124",n:"EQUIPO FRIO LEVADURA",t:"Equipo Frío",f:"—",a:"LEVADURA",c:"A"},
+  {id:"MAQ-125",n:"TOLVA ADITIVOS L1",t:"Tolva Aditivos",f:"—",a:"L1",c:"C"},
+  {id:"MAQ-126",n:"TOLVA ADITIVOS L2",t:"Tolva Aditivos",f:"—",a:"L2",c:"C"},
+  {id:"MAQ-127",n:"TOLVA ADITIVOS L3",t:"Tolva Aditivos",f:"—",a:"L3",c:"C"},
+  {id:"MAQ-128",n:"CUADRO GENERAL",t:"Cuadro Eléctrico",f:"—",a:"CENTRAL",c:"A"},
+  {id:"MAQ-129",n:"INSTALACION AGUA",t:"Instalación Hidráulica",f:"—",a:"CENTRAL",c:"B"}
+];
+
+/* ══ Estado y base URL ══ */
+let serverBase = '';
+
+// Detectar si estamos en el servidor
+if(window.location.protocol === 'http:' && window.location.port === '8080') {
+  serverBase = window.location.origin; // http://192.168.x.x:8080
+} else if(window.location.protocol === 'http:') {
+  serverBase = window.location.origin;
+} else {
+  // file:// — mostrar aviso
+  document.getElementById('noServerWarn').style.display = 'block';
+  serverBase = 'http://TU_IP:8080';
+}
+
+// Poblar filtros
+const areas = [...new Set(MAQUINAS.map(m => m.a))].sort();
+const tipos = [...new Set(MAQUINAS.map(m => m.t))].sort();
+const selArea = document.getElementById('filtroArea');
+const selTipo = document.getElementById('filtroTipo');
+areas.forEach(a => { const o=document.createElement('option');o.textContent=o.value=a;selArea.appendChild(o); });
+tipos.forEach(t => { const o=document.createElement('option');o.textContent=o.value=t;selTipo.appendChild(o); });
+
+/* ══ Render QR cards ══ */
+let rendered = [];
+
+function renderQR() {
+  const area = document.getElementById('filtroArea').value;
+  const tipo = document.getElementById('filtroTipo').value;
+
+  const filtered = MAQUINAS.filter(m => {
+    if(area && m.a !== area) return false;
+    if(tipo && m.t !== tipo) return false;
+    return true;
+  });
+
+  document.getElementById('countInfo').innerHTML = `<b>${filtered.length}</b> máquinas`;
+
+  const grid = document.getElementById('qrGrid');
+  grid.innerHTML = '';
+  rendered = [];
+
+  filtered.forEach(maq => {
+    const url = `${serverBase}/averias.html?maq=${encodeURIComponent(maq.id)}`;
+
+    // Crear card
+    const card = document.createElement('div');
+    card.className = 'qr-card';
+    card.innerHTML = `
+      <div class="panalcor-brand">PANALCOR S.L.</div>
+      <div class="qr-area-label">${escHtml(maq.a)}</div>
+      <div class="qr-id">${maq.id}</div>
+      <div class="qr-name">${escHtml(maq.n)}</div>
+      <div class="qr-tipo">${escHtml(maq.t)} · ${maq.f}</div>
+      <div class="qr-box" id="qr-${maq.id}"></div>
+      <div class="qr-scan-hint">Escanear para registrar avería</div>
+    `;
+    grid.appendChild(card);
+
+    // Generar QR
+    try {
+      new QRCode(document.getElementById('qr-'+maq.id), {
+        text: url,
+        width:  140,
+        height: 140,
+        colorDark:  '#1a2d42',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    } catch(e) {
+      document.getElementById('qr-'+maq.id).innerHTML =
+        `<div style="font-size:0.65rem;color:#999;padding:10px;text-align:center;word-break:break-all">${url}</div>`;
+    }
+
+    rendered.push({maq, url});
+  });
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Arrancar
+renderQR();
+</script>
+</body>
+</html>

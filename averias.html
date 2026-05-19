@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Gestión de Averías</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- Firebase SDK (compat — no build tools necesario) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy-deep:#0d1b2a;--navy-mid:#1a2d42;--navy-light:#243d56;
+  --gold:#c9a227;--gold-light:#f0c040;--white:#f0f4f8;
+  --red:#e74c3c;--green:#2ecc71;--yellow:#f39c12;--blue:#3498db;
+  --radius:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-serif;font-size:1rem;min-height:100vh}
+a{color:inherit;text-decoration:none}
+
+/* ── TOP BAR ── */
+.topbar{background:linear-gradient(135deg,#0a1520,var(--navy-mid));border-bottom:2px solid var(--gold);padding:14px 20px;display:flex;align-items:center;gap:14px}
+.topbar h1{font-size:1.4rem;font-weight:900;letter-spacing:0.06em;color:var(--gold-light)}
+.topbar .sub{font-size:0.8rem;color:rgba(255,255,255,0.5);letter-spacing:0.1em}
+.back-btn{background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.4);color:var(--gold);padding:8px 14px;border-radius:7px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.85rem;letter-spacing:0.06em;transition:all .2s}
+.back-btn:hover{background:rgba(201,162,39,0.3)}
+
+/* ── TABS ── */
+.tabs{display:flex;background:var(--navy-mid);border-bottom:2px solid rgba(201,162,39,0.2);overflow-x:auto}
+.tab{padding:14px 22px;cursor:pointer;font-size:1rem;font-weight:600;letter-spacing:0.05em;color:rgba(255,255,255,0.5);border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap;display:flex;align-items:center;gap:8px}
+.tab:hover{color:var(--white);background:rgba(255,255,255,0.05)}
+.tab.active{color:var(--gold-light);border-bottom-color:var(--gold)}
+
+/* ── PANELS ── */
+.panel{display:none;padding:20px;max-width:900px}
+.panel.active{display:block}
+
+/* ── SECTION TITLES ── */
+.sec-title{font-size:0.72rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid rgba(201,162,39,0.2)}
+
+/* ── CARDS ── */
+.card{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius);padding:18px;margin-bottom:16px}
+.card-gold{border-color:rgba(201,162,39,0.3)}
+
+/* ── FORM ELEMENTS ── */
+.field{margin-bottom:16px}
+.field label{display:block;font-size:0.78rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.field input,.field select,.field textarea{
+  width:100%;background:var(--navy-deep);color:var(--white);
+  border:1px solid rgba(255,255,255,0.2);border-radius:7px;
+  padding:11px 14px;font-family:'Barlow',sans-serif;font-size:1rem;
+  transition:border-color .2s;
+}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--gold)}
+.field textarea{min-height:90px;resize:vertical}
+.field select option{background:var(--navy-deep)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+
+/* ── MECÁNICOS CHECKBOXES ── */
+.mec-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.mec-check{display:none}
+.mec-label{
+  background:var(--navy-deep);border:2px solid rgba(255,255,255,0.2);
+  border-radius:8px;padding:11px 18px;cursor:pointer;font-size:1rem;
+  font-weight:600;transition:all .2s;letter-spacing:0.04em;user-select:none;
+}
+.mec-check:checked + .mec-label{background:rgba(201,162,39,0.2);border-color:var(--gold);color:var(--gold-light)}
+
+/* ── TIPO AVERÍA BUTTONS ── */
+.tipo-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.tipo-radio{display:none}
+.tipo-label{
+  padding:10px 16px;border-radius:8px;cursor:pointer;font-size:0.9rem;
+  font-weight:600;border:2px solid rgba(255,255,255,0.2);
+  background:var(--navy-deep);transition:all .2s;letter-spacing:0.04em;
+}
+.tipo-radio:checked + .tipo-label{border-color:currentColor}
+.tipo-mec .tipo-radio:checked + .tipo-label{background:rgba(52,152,219,0.25);border-color:var(--blue);color:var(--blue)}
+.tipo-ele .tipo-radio:checked + .tipo-label{background:rgba(241,196,15,0.25);border-color:#f1c40f;color:#f1c40f}
+.tipo-hid .tipo-radio:checked + .tipo-label{background:rgba(52,152,219,0.15);border-color:#1abc9c;color:#1abc9c}
+.tipo-neu .tipo-radio:checked + .tipo-label{background:rgba(155,89,182,0.25);border-color:#9b59b6;color:#9b59b6}
+.tipo-ele2 .tipo-radio:checked + .tipo-label{background:rgba(230,126,34,0.25);border-color:#e67e22;color:#e67e22}
+.tipo-otr .tipo-radio:checked + .tipo-label{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.5);color:var(--white)}
+
+/* ── GRAVEDAD ── */
+.grav-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.grav-radio{display:none}
+.grav-label{padding:10px 18px;border-radius:8px;cursor:pointer;font-size:0.9rem;font-weight:700;border:2px solid rgba(255,255,255,0.2);background:var(--navy-deep);transition:all .2s}
+.grav-baja .grav-radio:checked + .grav-label{background:rgba(46,204,113,0.25);border-color:var(--green);color:var(--green)}
+.grav-media .grav-radio:checked + .grav-label{background:rgba(243,156,18,0.25);border-color:var(--yellow);color:var(--yellow)}
+.grav-alta .grav-radio:checked + .grav-label{background:rgba(231,76,60,0.2);border-color:var(--red);color:var(--red)}
+.grav-crit .grav-radio:checked + .grav-label{background:rgba(192,57,43,0.4);border-color:#c0392b;color:#ff6b6b;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.7}}
+
+/* ── MATERIALES ── */
+.mat-search-wrap{position:relative}
+.mat-search-wrap input{padding-right:44px}
+.mat-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--navy-mid);border:1px solid rgba(201,162,39,0.3);border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:100;display:none}
+.mat-option{padding:10px 14px;cursor:pointer;font-size:0.95rem;border-bottom:1px solid rgba(255,255,255,0.06)}
+.mat-option:hover{background:rgba(201,162,39,0.15)}
+.mat-option .ref{font-size:0.75rem;color:rgba(255,255,255,0.4)}
+.mat-list{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.mat-item{display:flex;align-items:center;gap:10px;background:var(--navy-deep);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:8px 12px;font-size:0.9rem}
+.mat-item .mat-desc{flex:1}
+.mat-item .mat-qty{width:60px;background:transparent;border:1px solid rgba(255,255,255,0.2);border-radius:5px;padding:4px 8px;color:var(--white);font-family:'Barlow',sans-serif;font-size:0.9rem;text-align:center}
+.mat-item .mat-del{background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.4);border-radius:5px;padding:4px 8px;cursor:pointer;font-size:0.8rem;color:var(--red)}
+
+/* ── ALERTA RECURRENCIA ── */
+.alert-rec{background:rgba(231,76,60,0.15);border:2px solid rgba(231,76,60,0.5);border-radius:10px;padding:14px 18px;margin-bottom:16px;display:none}
+.alert-rec .alert-title{font-size:1rem;font-weight:700;color:#ff6b6b;margin-bottom:4px}
+.alert-rec .alert-body{font-size:0.9rem;color:rgba(255,255,255,0.8)}
+
+/* ── BUTTONS ── */
+.btn{padding:13px 24px;border-radius:8px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:1rem;font-weight:700;letter-spacing:0.06em;transition:all .2s;border:none}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a}
+.btn-gold:hover{background:linear-gradient(135deg,var(--gold-light),var(--gold))}
+.btn-outline{background:transparent;border:2px solid rgba(255,255,255,0.25);color:var(--white)}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.btn-red{background:rgba(231,76,60,0.2);border:2px solid rgba(231,76,60,0.4);color:var(--red)}
+.btn-red:hover{background:rgba(231,76,60,0.35)}
+.btn-green{background:rgba(46,204,113,0.2);border:2px solid rgba(46,204,113,0.4);color:var(--green)}
+.actions-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+
+/* ── HISTORIAL ── */
+.hist-filters{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+.hist-filters select,.hist-filters input{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:9px 12px;color:var(--white);font-family:'Barlow',sans-serif;font-size:0.9rem;min-width:140px}
+.averia-card{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:10px;margin-bottom:12px;overflow:hidden;transition:border-color .2s}
+.averia-card:hover{border-color:rgba(201,162,39,0.3)}
+.averia-head{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer}
+.averia-id{font-size:0.75rem;color:rgba(255,255,255,0.4);font-weight:600;letter-spacing:0.1em;min-width:70px}
+.averia-maq{font-size:1rem;font-weight:700;flex:1}
+.averia-desc{font-size:0.85rem;color:rgba(255,255,255,0.6);flex:2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.averia-badge{padding:4px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;letter-spacing:0.06em;white-space:nowrap}
+.badge-resuel{background:rgba(46,204,113,0.2);color:var(--green);border:1px solid rgba(46,204,113,0.3)}
+.badge-curso{background:rgba(231,76,60,0.2);color:var(--red);border:1px solid rgba(231,76,60,0.3)}
+.badge-pend{background:rgba(243,156,18,0.2);color:var(--yellow);border:1px solid rgba(243,156,18,0.3)}
+.averia-body{display:none;padding:0 18px 16px;border-top:1px solid rgba(255,255,255,0.08)}
+.averia-body.open{display:block}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:12px}
+.detail-item .di-label{font-size:0.7rem;letter-spacing:0.12em;color:var(--gold);text-transform:uppercase}
+.detail-item .di-val{font-size:0.95rem;font-weight:600;margin-top:2px}
+.crit-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:700;letter-spacing:0.06em}
+.crit-A{background:rgba(231,76,60,0.25);color:#ff6b6b}
+.crit-B{background:rgba(243,156,18,0.25);color:var(--yellow)}
+.crit-C{background:rgba(46,204,113,0.2);color:var(--green)}
+
+/* ── ESTADÍSTICAS ── */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;text-align:center}
+.kpi-num{font-size:2rem;font-weight:900;color:var(--gold-light)}
+.kpi-label{font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-top:4px}
+.chart-wrap{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:18px;margin-bottom:16px}
+.chart-title{font-size:0.8rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+.rec-alert{background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.4);border-radius:8px;padding:12px 16px;margin-bottom:10px}
+.rec-alert .ra-maq{font-weight:700;font-size:1rem;color:#ff8a80}
+.rec-alert .ra-info{font-size:0.85rem;color:rgba(255,255,255,0.7);margin-top:3px}
+.mtbf-table{width:100%;border-collapse:collapse;font-size:0.9rem}
+.mtbf-table th{text-align:left;padding:8px 12px;font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid rgba(201,162,39,0.2)}
+.mtbf-table td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,0.05)}
+.mtbf-table tr:hover td{background:rgba(255,255,255,0.03)}
+.no-data{text-align:center;padding:40px;color:rgba(255,255,255,0.3);font-size:1rem}
+
+/* ── ESTADO INDICATOR ── */
+.estado-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+.dot-green{background:var(--green)}
+.dot-red{background:var(--red)}
+.dot-yellow{background:var(--yellow)}
+
+/* ── TIEMPO PARADA ── */
+.tiempo-display{font-size:1.4rem;font-weight:900;color:var(--gold-light);text-align:center;padding:10px;background:var(--navy-deep);border-radius:8px;border:1px solid rgba(201,162,39,0.3)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy-mid);border:1px solid rgba(201,162,39,0.5);border-radius:10px;padding:14px 22px;font-size:0.95rem;font-weight:600;z-index:9999;opacity:0;transform:translateY(20px);transition:all .3s;pointer-events:none;max-width:320px}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px){
+  .row2,.row3{grid-template-columns:1fr}
+  .averia-desc{display:none}
+  .kpi-row{grid-template-columns:1fr 1fr}
+  .topbar h1{font-size:1.1rem}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back-btn" onclick="history.back()">← Volver</button>
+  <div>
+    <div class="sub">PANADERÍA · MANTENIMIENTO</div>
+    <h1>🔧 GESTIÓN DE AVERÍAS</h1>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('nueva')" id="tab-nueva">🔴 Nueva Avería</div>
+  <div class="tab" onclick="switchTab('historial')" id="tab-historial">📋 Historial</div>
+  <div class="tab" onclick="switchTab('stats')" id="tab-stats">📊 Estadísticas</div>
+</div>
+
+<!-- ══════════ PANEL NUEVA AVERÍA ══════════ -->
+<div class="panel active" id="panel-nueva">
+
+  <div class="alert-rec" id="alertRec">
+    <div class="alert-title">⚠️ ¡ATENCIÓN! AVERÍA RECURRENTE</div>
+    <div class="alert-body" id="alertRecBody"></div>
+  </div>
+
+  <form id="formAveria" onsubmit="return false">
+
+    <!-- Máquina -->
+    <div class="card card-gold">
+      <div class="sec-title">1 · ¿Qué máquina ha fallado?</div>
+      <div class="field">
+        <label>Máquina</label>
+        <select id="fMaquina" onchange="onMaquinaChange()" required>
+          <option value="">— Selecciona la máquina —</option>
+        </select>
+      </div>
+      <div class="field" id="fParteWrap" style="display:none">
+        <label>Parte / Componente afectado</label>
+        <select id="fParte" onchange="checkRecurrencia()">
+          <option value="">— Selecciona la parte —</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Tipo y Gravedad -->
+    <div class="card">
+      <div class="sec-title">2 · Tipo y gravedad</div>
+      <div class="field">
+        <label>Tipo de avería</label>
+        <div class="tipo-grid">
+          <div class="tipo-mec"><input type="radio" name="tipo" id="t1" value="MECÁNICA" class="tipo-radio"><label for="t1" class="tipo-label">⚙️ Mecánica</label></div>
+          <div class="tipo-ele"><input type="radio" name="tipo" id="t2" value="ELÉCTRICA" class="tipo-radio"><label for="t2" class="tipo-label">⚡ Eléctrica</label></div>
+          <div class="tipo-hid"><input type="radio" name="tipo" id="t3" value="HIDRÁULICA" class="tipo-radio"><label for="t3" class="tipo-label">💧 Hidráulica</label></div>
+          <div class="tipo-neu"><input type="radio" name="tipo" id="t4" value="NEUMÁTICA" class="tipo-radio"><label for="t4" class="tipo-label">💨 Neumática</label></div>
+          <div class="tipo-ele2"><input type="radio" name="tipo" id="t5" value="ELECTRÓNICA" class="tipo-radio"><label for="t5" class="tipo-label">🖥️ Electrónica</label></div>
+          <div class="tipo-otr"><input type="radio" name="tipo" id="t6" value="OTRO" class="tipo-radio"><label for="t6" class="tipo-label">❓ Otro</label></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Gravedad</label>
+        <div class="grav-grid">
+          <div class="grav-baja"><input type="radio" name="grav" id="g1" value="BAJA" class="grav-radio"><label for="g1" class="grav-label">🟢 Baja</label></div>
+          <div class="grav-media"><input type="radio" name="grav" id="g2" value="MEDIA" class="grav-radio"><label for="g2" class="grav-label">🟡 Media</label></div>
+          <div class="grav-alta"><input type="radio" name="grav" id="g3" value="ALTA" class="grav-radio"><label for="g3" class="grav-label">🔴 Alta</label></div>
+          <div class="grav-crit"><input type="radio" name="grav" id="g4" value="CRÍTICA" class="grav-radio"><label for="g4" class="grav-label">🚨 Crítica — Parada total</label></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Causa raíz</label>
+        <select id="fCausa">
+          <option value="">— Selecciona la causa —</option>
+          <option>DESGASTE NORMAL</option>
+          <option>ROTURA</option>
+          <option>FALLO ELÉCTRICO</option>
+          <option>FALTA DE MANTENIMIENTO</option>
+          <option>ACCIDENTE / GOLPE</option>
+          <option>FALLO DE LUBRICACIÓN</option>
+          <option>SUCIEDAD / ATASCO</option>
+          <option>FALLO DE COMPONENTE</option>
+          <option>DESCONOCIDA</option>
+          <option>OTRA</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Fecha y Tiempo -->
+    <div class="card">
+      <div class="sec-title">3 · Fecha y tiempo de parada</div>
+      <div class="row3">
+        <div class="field">
+          <label>Fecha</label>
+          <input type="date" id="fFecha" required>
+        </div>
+        <div class="field">
+          <label>Hora inicio avería</label>
+          <input type="time" id="fHoraInicio" required>
+        </div>
+        <div class="field">
+          <label>Turno</label>
+          <select id="fTurno">
+            <option value="">— Turno —</option>
+            <option>MAÑANA (06-14h)</option>
+            <option>TARDE (14-22h)</option>
+            <option>NOCHE (22-06h)</option>
+          </select>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Hora fin / reparación</label>
+          <input type="time" id="fHoraFin" oninput="calcTiempo()">
+        </div>
+        <div class="field">
+          <label>Tiempo de parada</label>
+          <div class="tiempo-display" id="tiempoDisplay">— h — min</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mecánicos -->
+    <div class="card">
+      <div class="sec-title">4 · ¿Quién interviene?</div>
+      <div class="field">
+        <label>Mecánico(s) — puedes marcar varios</label>
+        <div class="mec-grid" id="mecGrid"></div>
+      </div>
+    </div>
+
+    <!-- Descripción -->
+    <div class="card">
+      <div class="sec-title">5 · Descripción de la avería</div>
+      <div class="field">
+        <label>¿Qué ha pasado?</label>
+        <textarea id="fDesc" placeholder="Describe con detalle qué ha fallado, síntomas, ruidos, olores..."></textarea>
+      </div>
+      <div class="field">
+        <label>Acción correctiva realizada</label>
+        <textarea id="fAccion" placeholder="¿Qué se ha hecho para solucionarlo?"></textarea>
+      </div>
+      <div class="field">
+        <label>Observaciones</label>
+        <textarea id="fObs" placeholder="Cualquier dato adicional que pueda ser útil..."></textarea>
+      </div>
+    </div>
+
+    <!-- Material -->
+    <div class="card">
+      <div class="sec-title">6 · Material utilizado (opcional)</div>
+
+      <!-- Estado carga repuestos -->
+      <div id="repEstado" style="margin-bottom:14px">
+        <span id="repTip" style="font-size:0.85rem;color:rgba(255,255,255,0.5)">⏳ Cargando repuestos...</span>
+      </div>
+
+      <!-- Búsqueda en base de datos -->
+      <div class="field">
+        <label>Buscar en base de datos de repuestos</label>
+        <div class="mat-search-wrap">
+          <input type="text" id="matSearch" placeholder="Escribe descripción o referencia..." oninput="buscarMaterial()" autocomplete="off">
+          <div class="mat-dropdown" id="matDropdown"></div>
+        </div>
+      </div>
+
+      <!-- Añadir material manualmente -->
+      <div style="margin-top:6px">
+        <button type="button" class="btn btn-outline" style="font-size:0.85rem;padding:8px 16px;width:100%" onclick="toggleManual()">
+          ✏️ Añadir material manualmente (sin base de datos)
+        </button>
+        <div id="manualWrap" style="display:none;margin-top:10px">
+          <div class="row2" style="margin-bottom:8px">
+            <div class="field" style="margin-bottom:0">
+              <label>Descripción</label>
+              <input type="text" id="manualDesc" placeholder="Nombre del material...">
+            </div>
+            <div class="field" style="margin-bottom:0">
+              <label>Referencia (opcional)</label>
+              <input type="text" id="manualRef" placeholder="REF-001 / sin referencia">
+            </div>
+          </div>
+          <button type="button" class="btn btn-green" style="font-size:0.9rem;padding:10px 20px" onclick="addManual()">+ Añadir</button>
+        </div>
+      </div>
+
+      <div class="mat-list" id="matList" style="margin-top:12px"></div>
+    </div>
+
+    <!-- Estado -->
+    <div class="card">
+      <div class="sec-title">7 · Estado final</div>
+      <div class="field">
+        <label>Estado de la avería</label>
+        <select id="fEstado" required>
+          <option value="">— Selecciona —</option>
+          <option value="RESUELTA">✅ Resuelta</option>
+          <option value="EN CURSO">🔴 En curso (aún sin resolver)</option>
+          <option value="PENDIENTE REPUESTO">🟡 Pendiente — Falta repuesto</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="actions-row">
+      <button type="button" class="btn btn-gold" onclick="guardarAveria()">💾 GUARDAR AVERÍA</button>
+      <button type="button" class="btn btn-outline" onclick="limpiarForm()">✕ Limpiar</button>
+    </div>
+
+  </form>
+</div>
+
+<!-- ══════════ PANEL HISTORIAL ══════════ -->
+<div class="panel" id="panel-historial" style="max-width:100%">
+  <div class="hist-filters">
+    <input type="text" id="hBuscar" placeholder="🔍 Buscar máquina, descripción..." oninput="renderHistorial()">
+    <select id="hEstado" onchange="renderHistorial()">
+      <option value="">Todos los estados</option>
+      <option>RESUELTA</option>
+      <option>EN CURSO</option>
+      <option>PENDIENTE REPUESTO</option>
+    </select>
+    <select id="hTipo" onchange="renderHistorial()">
+      <option value="">Todos los tipos</option>
+      <option>MECÁNICA</option><option>ELÉCTRICA</option><option>HIDRÁULICA</option>
+      <option>NEUMÁTICA</option><option>ELECTRÓNICA</option><option>OTRO</option>
+    </select>
+    <select id="hMec" onchange="renderHistorial()">
+      <option value="">Todos los mecánicos</option>
+    </select>
+    <input type="date" id="hDesde" onchange="renderHistorial()" title="Desde">
+    <input type="date" id="hHasta" onchange="renderHistorial()" title="Hasta">
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+    <button class="btn btn-green" onclick="exportarExcel()">📥 Exportar a Excel</button>
+    <button class="btn btn-outline" onclick="limpiarFiltros()">↺ Limpiar filtros</button>
+    <span id="histCount" style="align-self:center;font-size:0.85rem;color:rgba(255,255,255,0.5)"></span>
+  </div>
+  <div id="histList"></div>
+</div>
+
+<!-- ══════════ PANEL ESTADÍSTICAS ══════════ -->
+<div class="panel" id="panel-stats" style="max-width:100%">
+  <div class="kpi-row" id="kpiRow"></div>
+  <div class="row2" style="max-width:900px">
+    <div class="chart-wrap">
+      <div class="chart-title">Top 10 máquinas con más averías</div>
+      <canvas id="chartMaq" height="260"></canvas>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Averías por tipo</div>
+      <canvas id="chartTipo" height="260"></canvas>
+    </div>
+  </div>
+  <div class="chart-wrap" style="max-width:900px">
+    <div class="chart-title">Tendencia mensual</div>
+    <canvas id="chartTendencia" height="120"></canvas>
+  </div>
+  <div style="max-width:900px">
+    <div class="card" id="recurrencias">
+      <div class="sec-title">🚨 Averías recurrentes — Misma máquina y parte (últimos 90 días)</div>
+      <div id="recList"></div>
+    </div>
+    <div class="chart-wrap" style="margin-top:0">
+      <div class="chart-title">MTBF / MTTR por máquina (con al menos 2 averías)</div>
+      <div style="overflow-x:auto">
+        <table class="mtbf-table" id="mtbfTable">
+          <thead><tr>
+            <th>Máquina</th><th>Nº Averías</th><th>MTBF (días)</th>
+            <th>MTTR (horas)</th><th>Tiempo parado total</th><th>Criticidad</th>
+          </tr></thead>
+          <tbody id="mtbfBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════
+// DATOS
+// ══════════════════════════════════════════════
+const MECANICOS = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO'];
+
+const MAQUINAS = [
+  {id:'MAQ-001',n:'PABAT 1',t:'AMASADORA',f:'NEOTECH',a:'OBRADOR',c:'A'},
+  {id:'MAQ-002',n:'PABAT 2',t:'AMASADORA',f:'NEOTECH',a:'OBRADOR',c:'A'},
+  {id:'MAQ-003',n:'PABAT 3',t:'AMASADORA',f:'NEOTECH',a:'OBRADOR',c:'A'},
+  {id:'MAQ-004',n:'PABAT 4',t:'AMASADORA',f:'NEOTECH',a:'OBRADOR',c:'A'},
+  {id:'MAQ-005',n:'PABAT 5',t:'AMASADORA',f:'NEOTECH',a:'OBRADOR',c:'A'},
+  {id:'MAQ-006',n:'PABAT 6',t:'AMASADORA',f:'NEOTECH',a:'OBRADOR',c:'A'},
+  {id:'MAQ-007',n:'PABAT 7',t:'AMASADORA',f:'NEOTECH',a:'OBRADOR',c:'A'},
+  {id:'MAQ-008',n:'PABAT 8',t:'AMASADORA',f:'MAGER',a:'OBRADOR',c:'C'},
+  {id:'MAQ-009',n:'AMASADORA CANDEAL',t:'AMASADORA',f:'KEMPER',a:'OBRADOR',c:'A'},
+  {id:'MAQ-010',n:'LINEA 1',t:'FORMADORA-ENTABLADORA',f:'TECKMAPA',a:'OBRADOR',c:'B'},
+  {id:'MAQ-011',n:'LINEA 2',t:'FORMADORA-ENTABLADORA',f:'TECKMAPA',a:'OBRADOR',c:'B'},
+  {id:'MAQ-012',n:'LINEA 3',t:'FORMADORA-ENTABLADORA',f:'TECKMAPA',a:'OBRADOR',c:'B'},
+  {id:'MAQ-013',n:'LINEA 4',t:'FORMADORA-ENTABLADORA',f:'TECKMAPA',a:'OBRADOR',c:'B'},
+  {id:'MAQ-014',n:'LINEA 5',t:'FORMADORA-ENTABLADORA',f:'TECKMAPA',a:'OBRADOR',c:'B'},
+  {id:'MAQ-015',n:'LINEA 6',t:'FORMADORA-ENTABLADORA',f:'BEOR',a:'OBRADOR',c:'B'},
+  {id:'MAQ-016',n:'LINEA 7',t:'FORMADORA-ENTABLADORA',f:'TECKMAPA',a:'OBRADOR',c:'A'},
+  {id:'MAQ-017',n:'CARRUSEL 1',t:'CARRUSEL',f:'SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-018',n:'CARRUSEL 2',t:'CARRUSEL',f:'SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-019',n:'CARRUSEL 3',t:'CARRUSEL',f:'SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-020',n:'CARRUSEL 4',t:'CARRUSEL',f:'SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-021',n:'CARRUSEL 5',t:'CARRUSEL',f:'SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-022',n:'CARRUSEL 6',t:'CARRUSEL',f:'SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-023',n:'VOLCADOR 1',t:'VOLCADOR',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-024',n:'VOLCADOR 2',t:'VOLCADOR',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-025',n:'VOLCADOR 3',t:'VOLCADOR',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-026',n:'VOLCADOR 4',t:'VOLCADOR',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-027',n:'VOLCADOR 5',t:'VOLCADOR',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-028',n:'VOLCADOR 6',t:'VOLCADOR',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-029',n:'VOLCADOR 7',t:'VOLCADOR',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-030',n:'REPARTIDOR 1',t:'REPARTIDOR',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-031',n:'REPARTIDOR 2',t:'REPARTIDOR',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-032',n:'REPARTIDOR 3',t:'REPARTIDOR',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-033',n:'DIVISORA N1',t:'DIVISORAS',f:'SUBAL',a:'OBRADOR',c:''},
+  {id:'MAQ-034',n:'DIVISORA N2',t:'DIVISORAS',f:'SUBAL',a:'OBRADOR',c:''},
+  {id:'MAQ-035',n:'DIVISORA N3',t:'DIVISORAS',f:'SUBAL',a:'OBRADOR',c:''},
+  {id:'MAQ-036',n:'DIVISORA N4',t:'DIVISORAS',f:'SUBAL',a:'OBRADOR',c:''},
+  {id:'MAQ-037',n:'DIVISORA N5',t:'DIVISORAS',f:'SUBAL',a:'OBRADOR',c:''},
+  {id:'MAQ-038',n:'DIVISORA N6',t:'DIVISORAS',f:'SUBAL',a:'OBRADOR',c:''},
+  {id:'MAQ-039',n:'DIVISORA N7',t:'DIVISORAS',f:'SUBAL',a:'OBRADOR',c:''},
+  {id:'MAQ-040',n:'DIVISORA N8',t:'DIVISORAS',f:'SUBAL',a:'OBRADOR',c:''},
+  {id:'MAQ-041',n:'DIVISORA N9',t:'DIVISORAS',f:'SUBAL',a:'OBRADOR',c:''},
+  {id:'MAQ-042',n:'CAMARA DE BOLAS N1',t:'CAMARA REPOSO',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-043',n:'CAMARA DE BOLAS N2',t:'CAMARA REPOSO',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-044',n:'CAMARA DE BOLAS N3',t:'CAMARA REPOSO',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-045',n:'CAMARA DE BOLAS N4',t:'CAMARA REPOSO',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-046',n:'CAMARA DE BOLAS N5',t:'CAMARA REPOSO',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-047',n:'CAMARA DE BOLAS N6',t:'CAMARA REPOSO',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-048',n:'CAMARA DE BOLAS N7',t:'CAMARA REPOSO',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-049',n:'EMBOLADORA N1',t:'EMBOLADORA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-050',n:'EMBOLADORA N2',t:'EMBOLADORA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-051',n:'EMBOLADORA N3',t:'EMBOLADORA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-052',n:'EMBOLADORA N4',t:'EMBOLADORA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-053',n:'EMBOLADORA N5',t:'EMBOLADORA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-054',n:'EMBOLADORA N6',t:'EMBOLADORA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-055',n:'EMBOLADORA N7',t:'EMBOLADORA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-056',n:'EMBOLADORA N8',t:'EMBOLADORA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-057',n:'EMBOLADORA N9',t:'EMBOLADORA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-058',n:'FERMENTADORA RELAMPAGO',t:'FERMENTADORA',f:'INFRISA',a:'FERMENTADORA',c:''},
+  {id:'MAQ-059',n:'FERMENTADORA TRUENO',t:'FERMENTADORA',f:'INFRISA',a:'TRUENO-FERMENTADORA',c:''},
+  {id:'MAQ-060',n:'HORNO 1',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
+  {id:'MAQ-061',n:'HORNO 2',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
+  {id:'MAQ-062',n:'HORNO 3',t:'HORNO',f:'GPG',a:'HORNOS',c:''},
+  {id:'MAQ-063',n:'HORNO 4',t:'HORNO',f:'GPG',a:'HORNOS',c:''},
+  {id:'MAQ-064',n:'HORNO 5',t:'HORNO',f:'GPG',a:'HORNOS',c:''},
+  {id:'MAQ-065',n:'HORNO 6',t:'HORNO',f:'GPG',a:'HORNOS',c:''},
+  {id:'MAQ-066',n:'HORNO 7',t:'HORNO',f:'GPG',a:'HORNOS',c:''},
+  {id:'MAQ-067',n:'HORNO 8',t:'HORNO',f:'GPG',a:'HORNOS',c:''},
+  {id:'MAQ-068',n:'HORNO 9',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
+  {id:'MAQ-069',n:'HORNO 10',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
+  {id:'MAQ-070',n:'HORNO 11',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
+  {id:'MAQ-071',n:'HORNO 12',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
+  {id:'MAQ-072',n:'HORNO 13',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
+  {id:'MAQ-073',n:'HORNO 14',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
+  {id:'MAQ-074',n:'HORNO 15',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
+  {id:'MAQ-075',n:'HORNO 16 (1TRUENO)',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
+  {id:'MAQ-076',n:'HORNO 17 (2TRUENO)',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
+  {id:'MAQ-077',n:'HORNO 18 (3TRUENO)',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
+  {id:'MAQ-078',n:'HORNO 19 (4TRUENO)',t:'HORNO',f:'GPG',a:'HORNOS',c:''},
+  {id:'MAQ-079',n:'TALLADORA RELAMPAGO',t:'TALLADORA',f:'PORTICEL',a:'HORNOS',c:''},
+  {id:'MAQ-080',n:'TALLADORA TRUENO',t:'TALLADORA',f:'AYMI',a:'',c:''},
+  {id:'MAQ-081',n:'TUNEL PREFRIO',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
+  {id:'MAQ-082',n:'TUNEL 1',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
+  {id:'MAQ-083',n:'TUNEL 2',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
+  {id:'MAQ-084',n:'TUNEL 3',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
+  {id:'MAQ-085',n:'TUNEL 4',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
+  {id:'MAQ-086',n:'TUNEL 5',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
+  {id:'MAQ-087',n:'TUNEL 6',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
+  {id:'MAQ-088',n:'TUNEL 7',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
+  {id:'MAQ-089',n:'TUNEL 8',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
+  {id:'MAQ-090',n:'TUNEL 9 (1 TRUENO)',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
+  {id:'MAQ-091',n:'TUNEL 10 (2 TRUENO)',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
+  {id:'MAQ-092',n:'MAQUINA DE CAJAS',t:'FORMADORA CAJAS',f:'TAVIL',a:'ENVASADO',c:''},
+  {id:'MAQ-093',n:'FORMADORA-EMBOLSADORA',t:'FORMADORA CAJAS',f:'TAVIL',a:'ENVASADO',c:''},
+  {id:'MAQ-094',n:'MAQUINA DE BOLSAS',t:'EMBOLSADORA',f:'PATTYN',a:'ENVASADO',c:''},
+  {id:'MAQ-095',n:'DESCARGADOR 1',t:'CARGADOR/DESCARGADOR',f:'PORTICEL',a:'ENVASADO',c:''},
+  {id:'MAQ-096',n:'DESCARGADOR 2',t:'CARGADOR/DESCARGADOR',f:'PORTICEL',a:'ENVASADO',c:''},
+  {id:'MAQ-097',n:'CARGADOR 1',t:'CARGADOR/DESCARGADOR',f:'PORTICEL',a:'ENVASADO',c:''},
+  {id:'MAQ-098',n:'CARGADOR 2',t:'CARGADOR/DESCARGADOR',f:'PORTICEL',a:'ENVASADO',c:''},
+  {id:'MAQ-099',n:'DESMOLDEO 1',t:'DESMOLDEO',f:'PORTICEL',a:'ENVASADO',c:''},
+  {id:'MAQ-100',n:'DESMOLDEO 2',t:'DESMOLDEO',f:'PORTICEL',a:'ENVASADO',c:''},
+  {id:'MAQ-101',n:'CONTADORA 1',t:'CONTADORA',f:'LOYJAR',a:'ENVASADO',c:''},
+  {id:'MAQ-102',n:'CONTADORA 2',t:'CONTADORA',f:'PORTICEL',a:'ENVASADO',c:''},
+  {id:'MAQ-103',n:'CAMINO DE RODILLOS',t:'C. RODILLOS',f:'',a:'ENVASADO',c:''},
+  {id:'MAQ-104',n:'IMPRESORA RELAMPAGO',t:'IMPRESORA',f:'UBS',a:'ENVASADO',c:''},
+  {id:'MAQ-105',n:'IMPRESORA TRUENO',t:'IMPRESORA',f:'UBS',a:'ENVASADO',c:''},
+  {id:'MAQ-106',n:'PRECINTADORA',t:'PRECINTADORA',f:'SOCO-SYSTEM',a:'ENVASADO',c:''},
+  {id:'MAQ-107',n:'M. PEGATINAS',t:'M. PEGATINAS',f:'PANALCOR',a:'ENVASADO',c:''},
+  {id:'MAQ-108',n:'ROBOT',t:'ROBOT',f:'IPLA-FANUC',a:'ENVASADO',c:''},
+  {id:'MAQ-109',n:'ENFARDADORA RELAMPAGO',t:'ENFARDADORA',f:'IPLA-ROBOPAC',a:'ENVASADO',c:''},
+  {id:'MAQ-110',n:'ENFARDADORA TRUENO',t:'ENFARDADORA',f:'',a:'ENVASADO',c:''},
+  {id:'MAQ-111',n:'LAVADORA',t:'EMBOLADORA',f:'SOMENGIL',a:'OBRADOR',c:''},
+  {id:'MAQ-112',n:'SILOS',t:'SILOS HARINA',f:'AGRIFLEX',a:'SILOS',c:''},
+  {id:'MAQ-113',n:'TURBINAS',t:'SILOS HARINA',f:'',a:'SILOS',c:''},
+  {id:'MAQ-114',n:'CUADRO SILOS',t:'SILOS HARINA',f:'AGRIFLEX',a:'SILOS',c:''},
+  {id:'MAQ-115',n:'CUADRO HARINA',t:'SILOS HARINA',f:'',a:'SILOS',c:''},
+  {id:'MAQ-116',n:'ADITIVOS',t:'ADITIVOS',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-117',n:'CUADRO ADITIVOS',t:'ADITIVOS',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-118',n:'REVOLVER',t:'ADITIVOS',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-119',n:'TOLVA 1',t:'SILOS HARINA',f:'DAMM-SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-120',n:'TOLVA 2',t:'SILOS HARINA',f:'DAMM-SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-121',n:'TOLVA 3',t:'SILOS HARINA',f:'DAMM-SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-122',n:'TOLVA 4',t:'SILOS HARINA',f:'DAMM-SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-123',n:'TOLVA 5',t:'SILOS HARINA',f:'DAMM-SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-124',n:'TOLVA 6',t:'SILOS HARINA',f:'DAMM-SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-125',n:'TOLVA 7',t:'SILOS HARINA',f:'DAMM-SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-126',n:'LEVADURA TANQUE 1',t:'LEVADURA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-127',n:'LEVADURA TANQUE 2',t:'LEVADURA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-128',n:'LEVADURA CUADRO GENERAL Y BOMBAS',t:'LEVADURA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-129',n:'LEVADURA CUADRO GLICOL',t:'LEVADURA',f:'',a:'OBRADOR',c:''},
+];
+
+const PARTES = {
+  'AMASADORA':['MODULO','BRAZO','RABO COCHINO','CUADRO','MOTORES','AJUSTE','OTROS'],
+  'FORMADORA-ENTABLADORA':['PULMON SALIDA','LONAS','ENTABLADO','CANGILONES','FORMADORA','AJUSTE','OTROS'],
+  'CARRUSEL':['MOTOR GIRO','CUADRO','BRAZOS','CONECTOR ROTATIVO','INDUCTIVOS PASOS','NEUMATICA','AJUSTE','OTROS'],
+  'VOLCADOR':['MOTOR-REDUCTOR','CADENA','BRAZO','FINAL CARRERA','VUELCO','AJUSTE','OTROS'],
+  'REPARTIDOR':['LONA','MOTOR LONAS','EJES-CADENA TRACCION','CUCHILLA','RUEDAS CARRO','CORREAS CARRO','CADENAS','CUADRO','INDUCTIVOS','AJUSTE','OTROS'],
+  'SILOS HARINA':['CONOS','EV','TELA','ESTRUCTURA','CUADRO','AJUSTE','OTROS'],
+  'LEVADURA':['TANQUE','BOMBA','LLAVES','FRIO','MOTOR','REDUCTOR','AJUSTE','OTROS'],
+  'ADITIVOS':['AJUSTE','VALVULAS','MANGUITOS','TUBERIAS','REVOLVER','CUADRO','OTROS'],
+  'CAMARA REPOSO':['MOTOR-REDUCTOR-EJE','CUADRO','CADENA','HUEVERAS','VUELCO','DETECTORES','AJUSTE','OTROS'],
+  'FERMENTADORA':['EQUIPOS','COMPRESORES','CUADRO','ELECTRICO','AJUSTE','OTROS'],
+  'HORNO':['PLATAFORMA-UÑA','CUADRO','MOTORES','QUEMADOR','MECANICO','AJUSTE','OTROS'],
+  'TALLADORA':['SERVOS','CORREAS','DETECTORES','CADENAS','ANGULOS','MOTORES-REDUCTORES','SEGURIDAD','AJUSTE','OTROS'],
+  'CAMARA':['EQUIPOS','PUERTAS','CUADRO','COMPRESOR','AJUSTE','OTROS'],
+  'TUNEL':['EQUIPOS','PUERTAS','CUADRO','COMPRESOR','AJUSTE','OTROS'],
+  'CARGADOR/DESCARGADOR':['ANGULOS','CADENAS','MOTOR-REDUCTOR','SEGURIDAD','AJUSTE','OTROS'],
+  'DESMOLDEO':['CARRO','NEUMATICA','MOTOR-REDUCTOR','CUADRO','AJUSTE','OTROS'],
+  'CONTADORA':['CADENA','MOTOR-REDUCTOR','DETECTORES','NEUMATICA','MECANICO','ELECTRICO','CUADRO','AJUSTE','OTROS'],
+  'IMPRESORA':['TINTA','CABEZAL','CPU','AJUSTE','OTROS'],
+  'C. RODILLOS':['RODILLOS','CORREA','MOTOR-REDUCTOR','CUADRO','AJUSTE','OTROS'],
+  'FORMADORA CAJAS':['PEGAMENTO','NEUMATICA','VACIO-VENTOSAS','CORREA-SERVO','MECANICA','ELECTRICO','CUADRO','AJUSTE','OTROS'],
+  'EMBOLSADORA':['PINZAS','NEUMATICA','MECANICA','ELECTRICO','RODILLOS','SERVOS','CUADRO','AJUSTE','OTROS'],
+  'PRECINTADORA':['PRECINTO','RODILLOS','CORREAS','AJUSTE','OTROS'],
+  'M. PEGATINAS':['MECANICA','ELECTRICA','AJUSTE','OTROS'],
+  'ROBOT':['NEUMATICA','ELECTRICO','PINZA','SERVOS','AJUSTE','OTROS'],
+  'ENFARDADORA':['RESISTENCIAS','RODILLOS','NEUMATICA','CUADRO','AJUSTE','OTROS'],
+  'DIVISORAS':['MECANICA','ELECTRICO','TOLVA','AJUSTE','OTROS'],
+  'EMBOLADORA':['CONO','CARACOL','MOTOR-RED-CORREAS','CUADRO','AJUSTE','OTROS'],
+};
+
+// ══════════════════════════════════════════════
+// ESTADO
+// ══════════════════════════════════════════════
+/* ══ FIREBASE ══════════════════════════════════════════════════ */
+const FB_CFG = {
+  apiKey:            "AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU",
+  authDomain:        "panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:       "https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:         "panalcor-mantenimiento",
+  storageBucket:     "panalcor-mantenimiento.firebasestorage.app",
+  messagingSenderId: "67593058609",
+  appId:             "1:67593058609:web:c33fa1fa4fce2932485810"
+};
+if (!firebase.apps.length) firebase.initializeApp(FB_CFG);
+const DB = firebase.database();
+
+let _fbOnline = false; // se actualiza en el init
+DB.ref('.info/connected').on('value', snap => { _fbOnline = !!snap.val(); });
+
+/* ── Helper: guardar / eliminar en Firebase ─────────────────── */
+function fbSet(id, obj)    { return DB.ref('averias/' + id).set(obj).catch(()=>{}); }
+function fbRemove(id)      { return DB.ref('averias/' + id).remove().catch(()=>{}); }
+
+/* ── Cargar averías: Firebase primero, localStorage como fallback */
+function fbCargarAverias(callback) {
+  DB.ref('averias').once('value')
+    .then(snap => {
+      const val = snap.val();
+      if (val && Object.keys(val).length) {
+        const fb = Object.values(val).sort((a,b) => b.ts - a.ts);
+        // Fusionar: Firebase + registros locales que no estén en Firebase
+        const fbIds = new Set(fb.map(a => a.id));
+        const soloLocal = averias.filter(a => !fbIds.has(a.id));
+        averias = [...fb, ...soloLocal].sort((a,b) => b.ts - a.ts);
+        localStorage.setItem('averias_v1', JSON.stringify(averias));
+      }
+      if (callback) callback();
+    })
+    .catch(() => { if (callback) callback(); }); // usar localStorage si no hay red
+}
+/* ══════════════════════════════════════════════════════════════ */
+
+let averias = JSON.parse(localStorage.getItem('averias_v1') || '[]');
+let repuestosData = [];
+let materialesForm = [];
+let charts = {};
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+(function init(){
+  poblarMaquinas();
+  poblarMecanicos();
+  poblarFiltroMecanicos();
+  setFechaHoy();
+  setTurnoAuto();
+  cargarRepuestos();
+
+  // ── Cargar averías desde Firebase (sincroniza con la nube) ──
+  fbCargarAverias(() => {
+    // Re-renderizar historial/estadísticas con datos frescos si estamos en esas pestañas
+    if(document.getElementById('tab-historial') &&
+       document.getElementById('tab-historial').style.display !== 'none'){
+      renderHistorial();
+    }
+  });
+
+  // ── Pre-seleccionar máquina desde QR (?maq=MAQ-001) ──
+  const params = new URLSearchParams(window.location.search);
+  const maqQR  = params.get('maq');
+  if(maqQR){
+    const sel = document.getElementById('fMaquina');
+    if(sel) {
+      sel.value = maqQR;
+      onMaquinaChange();
+      sel.style.transition = 'box-shadow 0.4s';
+      sel.style.boxShadow  = '0 0 0 3px rgba(201,162,39,0.6)';
+      setTimeout(() => sel.style.boxShadow = '', 2500);
+      showToast('📱 Máquina pre-seleccionada desde QR');
+    }
+  }
+})();
+
+function poblarMaquinas(){
+  const sel = document.getElementById('fMaquina');
+  // Agrupar por área
+  const areas = {};
+  MAQUINAS.forEach(m=>{
+    const a = m.a||'SIN ÁREA';
+    if(!areas[a]) areas[a]=[];
+    areas[a].push(m);
+  });
+  Object.entries(areas).forEach(([area,macs])=>{
+    const g = document.createElement('optgroup');
+    g.label = '── '+area+' ──';
+    macs.forEach(m=>{
+      const o = document.createElement('option');
+      o.value = m.id;
+      o.textContent = m.n + ' ['+m.t+']' + (m.c?' ★'+m.c:'');
+      g.appendChild(o);
+    });
+    sel.appendChild(g);
+  });
+}
+
+function poblarMecanicos(){
+  const grid = document.getElementById('mecGrid');
+  MECANICOS.forEach(m=>{
+    const id = 'mec_'+m.replace(/\s/g,'_');
+    grid.innerHTML += `<div><input type="checkbox" class="mec-check" id="${id}" value="${m}"><label class="mec-label" for="${id}">${m}</label></div>`;
+  });
+}
+
+function poblarFiltroMecanicos(){
+  const sel = document.getElementById('hMec');
+  MECANICOS.forEach(m=>{ sel.innerHTML += `<option>${m}</option>`; });
+}
+
+function setFechaHoy(){
+  const d = new Date();
+  document.getElementById('fFecha').value = d.toISOString().split('T')[0];
+  const h = d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+  document.getElementById('fHoraInicio').value = h;
+}
+
+function setTurnoAuto(){
+  const h = new Date().getHours();
+  const t = h>=6&&h<14?'MAÑANA (06-14h)':h>=14&&h<22?'TARDE (14-22h)':'NOCHE (22-06h)';
+  const sel = document.getElementById('fTurno');
+  for(let i=0;i<sel.options.length;i++){
+    if(sel.options[i].value===t){sel.selectedIndex=i;break;}
+  }
+}
+
+function cargarRepuestos(){
+  const tip = document.getElementById('repTip');
+  const cached = localStorage.getItem('repuestosCache');
+  if(cached){
+    try{
+      repuestosData = JSON.parse(cached);
+      tip.textContent = '✅ '+repuestosData.length+' repuestos disponibles';
+      tip.style.color = 'var(--green)';
+    }catch(e){
+      tip.textContent = '⚠️ Abre primero Mecánicos para cargar los repuestos.';
+      tip.style.color = 'rgba(243,156,18,0.9)';
+    }
+  } else {
+    tip.textContent = '⚠️ Abre primero la página de Mecánicos para que los repuestos queden disponibles aquí.';
+    tip.style.color = 'rgba(243,156,18,0.9)';
+  }
+}
+
+// ══════════════════════════════════════════════
+// MÁQUINA → PARTES
+// ══════════════════════════════════════════════
+function onMaquinaChange(){
+  const id = document.getElementById('fMaquina').value;
+  const maq = MAQUINAS.find(m=>m.id===id);
+  const wrap = document.getElementById('fParteWrap');
+  const sel = document.getElementById('fParte');
+  sel.innerHTML = '<option value="">— Selecciona la parte —</option>';
+  if(!maq){wrap.style.display='none';return;}
+  wrap.style.display='block';
+  const partes = PARTES[maq.t]||['AJUSTE','MECANICA','ELECTRICA','OTROS'];
+  partes.forEach(p=>{
+    const o=document.createElement('option');
+    o.value=p;o.textContent=p;
+    sel.appendChild(o);
+  });
+  checkRecurrencia();
+}
+
+// ══════════════════════════════════════════════
+// RECURRENCIA
+// ══════════════════════════════════════════════
+function checkRecurrencia(){
+  const maqId = document.getElementById('fMaquina').value;
+  const parte = document.getElementById('fParte').value;
+  const alerta = document.getElementById('alertRec');
+  if(!maqId||!parte){alerta.style.display='none';return;}
+  const hace90 = Date.now()-90*24*3600*1000;
+  const recientes = averias.filter(a=>a.maqId===maqId&&a.parte===parte&&a.ts>hace90);
+  if(recientes.length>=2){
+    const maq = MAQUINAS.find(m=>m.id===maqId);
+    document.getElementById('alertRecBody').textContent =
+      `${maq?maq.n:maqId} — ${parte} ha fallado ${recientes.length} veces en los últimos 90 días. Considera un mantenimiento preventivo.`;
+    alerta.style.display='block';
+  } else {
+    alerta.style.display='none';
+  }
+}
+
+// ══════════════════════════════════════════════
+// TIEMPO PARADA
+// ══════════════════════════════════════════════
+function calcTiempo(){
+  const ini = document.getElementById('fHoraInicio').value;
+  const fin = document.getElementById('fHoraFin').value;
+  const disp = document.getElementById('tiempoDisplay');
+  if(!ini||!fin){disp.textContent='— h — min';return;}
+  const [ih,im]=ini.split(':').map(Number);
+  const [fh,fm]=fin.split(':').map(Number);
+  let mins = (fh*60+fm)-(ih*60+im);
+  if(mins<0) mins+=24*60;
+  const h=Math.floor(mins/60), m=mins%60;
+  disp.textContent = h+'h '+m.toString().padStart(2,'0')+'min';
+}
+
+// ══════════════════════════════════════════════
+// MATERIAL
+// ══════════════════════════════════════════════
+function toggleManual(){
+  const w = document.getElementById('manualWrap');
+  w.style.display = w.style.display==='none' ? 'block' : 'none';
+}
+
+function addManual(){
+  const desc = document.getElementById('manualDesc').value.trim();
+  const ref  = document.getElementById('manualRef').value.trim() || 'S/REF';
+  if(!desc){ showToast('⚠️ Escribe el nombre del material'); return; }
+  materialesForm.push({ref, desc, qty:1});
+  renderMatList();
+  document.getElementById('manualDesc').value = '';
+  document.getElementById('manualRef').value  = '';
+}
+
+let _matResultados = [];
+
+function buscarMaterial(){
+  const q = document.getElementById('matSearch').value.trim().toLowerCase();
+  const dd = document.getElementById('matDropdown');
+  if(q.length<2){dd.style.display='none';return;}
+  _matResultados = repuestosData.filter(r=>r.desc.toLowerCase().includes(q)||r.ref.toLowerCase().includes(q)).slice(0,12);
+  if(!_matResultados.length){
+    dd.innerHTML='<div class="mat-option" style="color:rgba(255,255,255,0.4);cursor:default">Sin resultados — usa "Añadir manualmente"</div>';
+    dd.style.display='block';
+    return;
+  }
+  dd.innerHTML = _matResultados.map((r,i)=>`
+    <div class="mat-option" style="display:flex;align-items:center;gap:10px;justify-content:space-between">
+      <div style="flex:1;min-width:0">
+        <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.desc}</div>
+        <div class="ref">${r.ref}${r.ubi?' · '+r.ubi:''}</div>
+      </div>
+      <button type="button" style="background:rgba(46,204,113,0.25);border:1px solid rgba(46,204,113,0.5);color:#2ecc71;border-radius:6px;padding:5px 12px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.85rem;font-weight:700;white-space:nowrap" data-idx="${i}">+ Añadir</button>
+    </div>`).join('');
+  dd.style.display='block';
+}
+
+function addMaterial(ref, desc){
+  document.getElementById('matSearch').value='';
+  document.getElementById('matDropdown').style.display='none';
+  if(materialesForm.find(m=>m.ref===ref&&m.desc===desc)) return;
+  materialesForm.push({ref,desc,qty:1});
+  renderMatList();
+}
+
+function renderMatList(){
+  const el = document.getElementById('matList');
+  el.innerHTML = materialesForm.map((m,i)=>`
+    <div class="mat-item">
+      <span class="mat-desc"><b>${m.ref}</b> — ${m.desc}</span>
+      <input class="mat-qty" type="number" min="1" value="${m.qty}" onchange="materialesForm[${i}].qty=+this.value" title="Cantidad">
+      <button class="mat-del" onclick="quitarMaterial(${i})">✕</button>
+    </div>`).join('');
+}
+
+function quitarMaterial(i){
+  materialesForm.splice(i,1);
+  renderMatList();
+}
+
+// ══════════════════════════════════════════════
+// GUARDAR
+// ══════════════════════════════════════════════
+function guardarAveria(){
+  const maqId = document.getElementById('fMaquina').value;
+  const fecha = document.getElementById('fFecha').value;
+  const horaIni = document.getElementById('fHoraInicio').value;
+  const estado = document.getElementById('fEstado').value;
+  const desc = document.getElementById('fDesc').value.trim();
+  const tipo = document.querySelector('input[name=tipo]:checked');
+  const grav = document.querySelector('input[name=grav]:checked');
+
+  if(!maqId){showToast('⚠️ Selecciona la máquina');return;}
+  if(!fecha||!horaIni){showToast('⚠️ Indica la fecha y hora');return;}
+  if(!tipo){showToast('⚠️ Selecciona el tipo de avería');return;}
+  if(!grav){showToast('⚠️ Selecciona la gravedad');return;}
+  if(!desc){showToast('⚠️ Escribe una descripción');return;}
+  if(!estado){showToast('⚠️ Indica el estado final');return;}
+
+  const maq = MAQUINAS.find(m=>m.id===maqId);
+  const horaFin = document.getElementById('fHoraFin').value;
+  const [ih,im]=horaIni.split(':').map(Number);
+  let tiempoMin = 0;
+  if(horaFin){
+    const [fh,fm]=horaFin.split(':').map(Number);
+    tiempoMin=(fh*60+fm)-(ih*60+im);
+    if(tiempoMin<0) tiempoMin+=24*60;
+  }
+
+  const mecsSelec = [...document.querySelectorAll('.mec-check:checked')].map(c=>c.value);
+
+  const av = {
+    id: 'AVR-'+Date.now(),
+    ts: Date.now(),
+    fecha, horaInicio:horaIni, horaFin,
+    tiempoMin,
+    maqId, maqNombre:maq?maq.n:maqId,
+    maqTipo:maq?maq.t:'',
+    maqFabricante:maq?maq.f:'',
+    maqArea:maq?maq.a:'',
+    criticidad:maq?maq.c:'',
+    parte: document.getElementById('fParte').value,
+    tipo: tipo.value,
+    gravedad: grav.value,
+    causa: document.getElementById('fCausa').value,
+    turno: document.getElementById('fTurno').value,
+    mecanicos: mecsSelec,
+    descripcion: desc,
+    accion: document.getElementById('fAccion').value.trim(),
+    observaciones: document.getElementById('fObs').value.trim(),
+    materiales: [...materialesForm],
+    estado,
+  };
+
+  averias.unshift(av);
+  localStorage.setItem('averias_v1', JSON.stringify(averias));
+
+  // ── Guardar en Firebase (funciona desde cualquier red) ──
+  fbSet(av.id, av).then(() => {
+    console.log('✅ Avería sincronizada con Firebase');
+  });
+
+  showToast(_fbOnline ? '✅ Avería guardada y sincronizada ☁️' : '✅ Avería guardada (se sincronizará cuando haya conexión)');
+  limpiarForm();
+  switchTab('historial');
+}
+
+function limpiarForm(){
+  document.getElementById('fMaquina').value='';
+  document.getElementById('fParteWrap').style.display='none';
+  document.getElementById('fDesc').value='';
+  document.getElementById('fAccion').value='';
+  document.getElementById('fObs').value='';
+  document.getElementById('fHoraFin').value='';
+  document.getElementById('fCausa').value='';
+  document.getElementById('fEstado').value='';
+  document.getElementById('tiempoDisplay').textContent='— h — min';
+  document.querySelectorAll('.mec-check').forEach(c=>c.checked=false);
+  document.querySelectorAll('input[name=tipo]').forEach(r=>r.checked=false);
+  document.querySelectorAll('input[name=grav]').forEach(r=>r.checked=false);
+  materialesForm=[];
+  renderMatList();
+  document.getElementById('alertRec').style.display='none';
+  setFechaHoy();
+  setTurnoAuto();
+}
+
+// ══════════════════════════════════════════════
+// HISTORIAL
+// ══════════════════════════════════════════════
+function renderHistorial(){
+  const q = document.getElementById('hBuscar').value.toLowerCase();
+  const est = document.getElementById('hEstado').value;
+  const tipo = document.getElementById('hTipo').value;
+  const mec = document.getElementById('hMec').value;
+  const desde = document.getElementById('hDesde').value;
+  const hasta = document.getElementById('hHasta').value;
+
+  let data = averias.filter(a=>{
+    if(est && a.estado!==est) return false;
+    if(tipo && a.tipo!==tipo) return false;
+    if(mec && !a.mecanicos.includes(mec)) return false;
+    if(desde && a.fecha<desde) return false;
+    if(hasta && a.fecha>hasta) return false;
+    if(q && !a.maqNombre.toLowerCase().includes(q) && !a.descripcion.toLowerCase().includes(q) && !a.parte.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  document.getElementById('histCount').textContent = data.length+' averías';
+  const el = document.getElementById('histList');
+  if(!data.length){el.innerHTML='<div class="no-data">No hay averías registradas con esos filtros</div>';return;}
+
+  el.innerHTML = data.map((a,i)=>{
+    const badgeCls = a.estado==='RESUELTA'?'badge-resuel':a.estado==='EN CURSO'?'badge-curso':'badge-pend';
+    const dotCls = a.estado==='RESUELTA'?'dot-green':a.estado==='EN CURSO'?'dot-red':'dot-yellow';
+    const tStr = a.tiempoMin? Math.floor(a.tiempoMin/60)+'h '+((a.tiempoMin%60)+'').padStart(2,'0')+'min':'—';
+    const crit = a.criticidad?`<span class="crit-badge crit-${a.criticidad}">★${a.criticidad}</span>`:'';
+    return `
+    <div class="averia-card">
+      <div class="averia-head" onclick="toggleAv('av${i}')">
+        <span class="averia-id">${a.id}</span>
+        <span class="averia-maq">${a.maqNombre} ${crit}</span>
+        <span class="averia-desc">${a.parte?a.parte+' · ':''}${a.descripcion}</span>
+        <span style="font-size:0.8rem;color:rgba(255,255,255,0.4);white-space:nowrap;margin-right:8px">${a.fecha} ${a.horaInicio}</span>
+        <span class="averia-badge ${badgeCls}"><span class="estado-dot ${dotCls}"></span>${a.estado}</span>
+      </div>
+      <div class="averia-body" id="av${i}">
+        <div class="detail-grid">
+          <div class="detail-item"><div class="di-label">Tipo</div><div class="di-val">${a.tipo||'—'}</div></div>
+          <div class="detail-item"><div class="di-label">Gravedad</div><div class="di-val">${a.gravedad||'—'}</div></div>
+          <div class="detail-item"><div class="di-label">Parte</div><div class="di-val">${a.parte||'—'}</div></div>
+          <div class="detail-item"><div class="di-label">Turno</div><div class="di-val">${a.turno||'—'}</div></div>
+          <div class="detail-item"><div class="di-label">Tiempo parada</div><div class="di-val">${tStr}</div></div>
+          <div class="detail-item"><div class="di-label">Mecánicos</div><div class="di-val">${a.mecanicos.join(', ')||'—'}</div></div>
+          <div class="detail-item"><div class="di-label">Causa</div><div class="di-val">${a.causa||'—'}</div></div>
+          <div class="detail-item"><div class="di-label">Fabricante</div><div class="di-val">${a.maqFabricante||'—'}</div></div>
+        </div>
+        ${a.descripcion?`<div style="margin-top:12px"><div class="di-label">Descripción</div><div style="margin-top:4px;font-size:0.95rem">${a.descripcion}</div></div>`:''}
+        ${a.accion?`<div style="margin-top:10px"><div class="di-label">Acción correctiva</div><div style="margin-top:4px;font-size:0.95rem">${a.accion}</div></div>`:''}
+        ${a.observaciones?`<div style="margin-top:10px"><div class="di-label">Observaciones</div><div style="margin-top:4px;font-size:0.95rem">${a.observaciones}</div></div>`:''}
+        ${a.materiales&&a.materiales.length?`<div style="margin-top:10px"><div class="di-label">Material utilizado</div><div style="margin-top:4px;font-size:0.9rem">${a.materiales.map(m=>`${m.desc} (${m.ref}) × ${m.qty}`).join(' | ')}</div></div>`:''}
+        <div style="margin-top:14px;display:flex;gap:8px">
+          <button class="btn btn-red" style="font-size:0.8rem;padding:7px 14px" onclick="borrarAveria('${a.id}')">🗑 Eliminar</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleAv(id){
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+
+function borrarAveria(id){
+  if(!confirm('¿Eliminar esta avería?')) return;
+  averias = averias.filter(a=>a.id!==id);
+  localStorage.setItem('averias_v1',JSON.stringify(averias));
+  fbRemove(id); // Borrar también de Firebase
+  renderHistorial();
+  showToast('🗑 Avería eliminada');
+}
+
+function limpiarFiltros(){
+  document.getElementById('hBuscar').value='';
+  document.getElementById('hEstado').value='';
+  document.getElementById('hTipo').value='';
+  document.getElementById('hMec').value='';
+  document.getElementById('hDesde').value='';
+  document.getElementById('hHasta').value='';
+  renderHistorial();
+}
+
+// ══════════════════════════════════════════════
+// EXPORTAR EXCEL
+// ══════════════════════════════════════════════
+function exportarExcel(){
+  if(!averias.length){showToast('No hay averías para exportar');return;}
+  const rows = averias.map(a=>({
+    'ID': a.id,
+    'Fecha': a.fecha,
+    'Hora Inicio': a.horaInicio,
+    'Hora Fin': a.horaFin||'',
+    'Tiempo Parada (min)': a.tiempoMin||0,
+    'Máquina': a.maqNombre,
+    'Tipo Máquina': a.maqTipo,
+    'Fabricante': a.maqFabricante,
+    'Área': a.maqArea,
+    'Criticidad': a.criticidad,
+    'Parte': a.parte,
+    'Tipo Avería': a.tipo,
+    'Gravedad': a.gravedad,
+    'Causa': a.causa,
+    'Turno': a.turno,
+    'Mecánicos': a.mecanicos.join(', '),
+    'Descripción': a.descripcion,
+    'Acción Correctiva': a.accion,
+    'Observaciones': a.observaciones,
+    'Material': a.materiales.map(m=>`${m.desc}(${m.ref})×${m.qty}`).join(' | '),
+    'Estado': a.estado,
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Averías');
+  const fecha = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `averias_${fecha}.xlsx`);
+  showToast('📥 Excel descargado');
+}
+
+// ══════════════════════════════════════════════
+// ESTADÍSTICAS
+// ══════════════════════════════════════════════
+function renderStats(){
+  // KPIs
+  const total = averias.length;
+  const totalMin = averias.reduce((s,a)=>s+(a.tiempoMin||0),0);
+  const enCurso = averias.filter(a=>a.estado==='EN CURSO').length;
+  const pendRep = averias.filter(a=>a.estado==='PENDIENTE REPUESTO').length;
+  const este_mes = averias.filter(a=>{
+    const d=new Date(a.fecha); const n=new Date();
+    return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear();
+  }).length;
+
+  document.getElementById('kpiRow').innerHTML = `
+    <div class="kpi"><div class="kpi-num">${total}</div><div class="kpi-label">Total averías</div></div>
+    <div class="kpi"><div class="kpi-num">${Math.floor(totalMin/60)}h</div><div class="kpi-label">Tiempo parado total</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:var(--red)">${enCurso}</div><div class="kpi-label">En curso</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:var(--yellow)">${pendRep}</div><div class="kpi-label">Pdte. repuesto</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:var(--blue)">${este_mes}</div><div class="kpi-label">Este mes</div></div>
+  `;
+
+  if(!averias.length){
+    document.getElementById('recList').innerHTML='<div class="no-data">Sin datos aún</div>';
+    document.getElementById('mtbfBody').innerHTML='<tr><td colspan="6" class="no-data">Sin datos aún</td></tr>';
+    return;
+  }
+
+  // Chart máquinas top10
+  const cntMaq={};
+  averias.forEach(a=>{ cntMaq[a.maqNombre]=(cntMaq[a.maqNombre]||0)+1; });
+  const topMaq = Object.entries(cntMaq).sort((a,b)=>b[1]-a[1]).slice(0,10);
+
+  destroyChart('chartMaq');
+  charts.chartMaq = new Chart(document.getElementById('chartMaq'),{
+    type:'bar',
+    data:{
+      labels: topMaq.map(e=>e[0]),
+      datasets:[{data:topMaq.map(e=>e[1]),backgroundColor:'rgba(201,162,39,0.7)',borderColor:'rgba(201,162,39,1)',borderWidth:1}]
+    },
+    options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#aaa',font:{size:10}}},y:{ticks:{color:'#aaa'},grid:{color:'rgba(255,255,255,0.07)'}}}}
+  });
+
+  // Chart tipos
+  const cntTipo={};
+  averias.forEach(a=>{ if(a.tipo) cntTipo[a.tipo]=(cntTipo[a.tipo]||0)+1; });
+  destroyChart('chartTipo');
+  charts.chartTipo = new Chart(document.getElementById('chartTipo'),{
+    type:'doughnut',
+    data:{
+      labels:Object.keys(cntTipo),
+      datasets:[{data:Object.values(cntTipo),backgroundColor:['#3498db','#f1c40f','#1abc9c','#9b59b6','#e67e22','#95a5a6']}]
+    },
+    options:{plugins:{legend:{labels:{color:'#ccc',font:{size:11}}}}}
+  });
+
+  // Chart tendencia mensual
+  const meses={};
+  averias.forEach(a=>{
+    const k=a.fecha?a.fecha.substring(0,7):'';
+    if(k) meses[k]=(meses[k]||0)+1;
+  });
+  const mesesOrd = Object.keys(meses).sort().slice(-12);
+  destroyChart('chartTendencia');
+  charts.chartTendencia = new Chart(document.getElementById('chartTendencia'),{
+    type:'line',
+    data:{
+      labels:mesesOrd,
+      datasets:[{data:mesesOrd.map(m=>meses[m]),borderColor:'rgba(201,162,39,0.9)',backgroundColor:'rgba(201,162,39,0.15)',fill:true,tension:0.3,pointRadius:4,pointBackgroundColor:'var(--gold)'}]
+    },
+    options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#aaa'}},y:{ticks:{color:'#aaa'},grid:{color:'rgba(255,255,255,0.07)'}}}}
+  });
+
+  // Recurrencias
+  const hace90=Date.now()-90*24*3600*1000;
+  const recMap={};
+  averias.filter(a=>a.ts>hace90).forEach(a=>{
+    const k=a.maqId+'|'+a.parte;
+    if(!recMap[k]) recMap[k]={maq:a.maqNombre,parte:a.parte,cnt:0};
+    recMap[k].cnt++;
+  });
+  const recurrentes = Object.values(recMap).filter(r=>r.cnt>=3).sort((a,b)=>b.cnt-a.cnt);
+  document.getElementById('recList').innerHTML = recurrentes.length
+    ? recurrentes.map(r=>`<div class="rec-alert">
+        <div class="ra-maq">⚠️ ${r.maq}</div>
+        <div class="ra-info">Parte: <b>${r.parte||'No especificada'}</b> · ${r.cnt} averías en 90 días · <b>Revisar mantenimiento preventivo</b></div>
+      </div>`).join('')
+    : '<div style="color:rgba(255,255,255,0.4);padding:12px">Sin averías recurrentes detectadas. ¡Buen trabajo!</div>';
+
+  // MTBF / MTTR
+  const maqStats={};
+  averias.forEach(a=>{
+    if(!maqStats[a.maqId]) maqStats[a.maqId]={nom:a.maqNombre,crit:a.criticidad,cnt:0,totalMin:0,fechas:[]};
+    maqStats[a.maqId].cnt++;
+    maqStats[a.maqId].totalMin+=(a.tiempoMin||0);
+    if(a.fecha) maqStats[a.maqId].fechas.push(a.fecha);
+  });
+
+  const rows = Object.values(maqStats).filter(s=>s.cnt>=2).sort((a,b)=>b.cnt-a.cnt);
+  document.getElementById('mtbfBody').innerHTML = rows.length ? rows.map(s=>{
+    const fechas = s.fechas.sort();
+    const dias = s.fechas.length>=2
+      ? Math.round((new Date(fechas[fechas.length-1])-new Date(fechas[0]))/(1000*3600*24))
+      : 0;
+    const mtbf = dias>0 ? (dias/(s.cnt-1)).toFixed(1) : '—';
+    const mttr = s.totalMin>0 ? (s.totalMin/60/s.cnt).toFixed(1) : '—';
+    const tTotal = Math.floor(s.totalMin/60)+'h '+(s.totalMin%60+'').padStart(2,'0')+'min';
+    const crit = s.crit?`<span class="crit-badge crit-${s.crit}">★${s.crit}</span>`:'—';
+    return `<tr><td><b>${s.nom}</b></td><td>${s.cnt}</td><td>${mtbf}</td><td>${mttr}</td><td>${tTotal}</td><td>${crit}</td></tr>`;
+  }).join('') : '<tr><td colspan="6" class="no-data">Necesitas al menos 2 averías por máquina</td></tr>';
+}
+
+function destroyChart(id){
+  if(charts[id]){charts[id].destroy();delete charts[id];}
+}
+
+// ══════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════
+function switchTab(name){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  if(name==='historial') renderHistorial();
+  if(name==='stats') renderStats();
+}
+
+// ══════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// Dropdown de materiales: añadir al clicar botón, cerrar al clicar fuera
+document.addEventListener('click',e=>{
+  const btn = e.target.closest('[data-idx]');
+  if(btn && btn.closest('#matDropdown')){
+    const i = parseInt(btn.dataset.idx);
+    const r = _matResultados[i];
+    if(r) addMaterial(r.ref, r.desc);
+    return;
+  }
+  if(!e.target.closest('.mat-search-wrap'))
+    document.getElementById('matDropdown').style.display='none';
+});
+</script>
+</body>
+</html>

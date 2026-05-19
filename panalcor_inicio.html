@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PANALCOR S.L. — Sistema de Mantenimiento</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #1e2b3a;
+    --navy-deep: #131d28;
+    --gold: #c9a227;
+    --gold-light: #e8c14e;
+    --cream: #f4efe6;
+    --white: #ffffff;
+    --blue-accent: #3a7abf;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: 'Barlow', sans-serif;
+  }
+
+  body {
+    background-color: var(--navy-deep);
+    color: var(--white);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ── Fondo con textura de engranaje ── */
+  .bg-pattern {
+    position: fixed;
+    inset: 0;
+    opacity: 0.04;
+    background-image:
+      radial-gradient(circle at 20% 20%, var(--gold) 0%, transparent 60%),
+      radial-gradient(circle at 80% 80%, var(--blue-accent) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .bg-gear {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .gear-bg {
+    position: absolute;
+    opacity: 0.03;
+  }
+
+  .gear-bg.top-left  { top: -120px; left: -120px; width: 420px; height: 420px; animation: spin 60s linear infinite; }
+  .gear-bg.bot-right { bottom: -100px; right: -100px; width: 360px; height: 360px; animation: spin 80s linear infinite reverse; }
+  .gear-bg.mid       { top: 40%; left: 55%; width: 280px; height: 280px; opacity: 0.02; animation: spin 100s linear infinite; }
+
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  /* ── Líneas decorativas ── */
+  .stripe-top {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--navy-deep), var(--gold), var(--gold-light), var(--gold), var(--navy-deep));
+  }
+
+  .stripe-bot {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--navy-deep), var(--gold), var(--gold-light), var(--gold), var(--navy-deep));
+  }
+
+  /* ── Contenedor principal ── */
+  .container {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1.5rem;
+    max-width: 520px;
+    width: 100%;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Logo SVG ── */
+  .logo-wrap {
+    width: 200px;
+    height: 200px;
+    margin-bottom: 1.5rem;
+    filter: drop-shadow(0 4px 24px rgba(201,162,39,0.3));
+    animation: fadeUp 0.8s 0.1s ease both;
+  }
+
+  /* ── Nombre empresa ── */
+  .brand {
+    font-family: 'Oswald', sans-serif;
+    font-size: 3rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--cream);
+    line-height: 1;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  .brand span {
+    font-size: 1.4rem;
+    font-weight: 400;
+    color: var(--gold);
+    letter-spacing: 0.06em;
+    vertical-align: super;
+  }
+
+  .tagline-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0.6rem 0 0.3rem;
+    animation: fadeUp 0.8s 0.3s ease both;
+  }
+
+  .tagline-dot {
+    font-size: 0.75rem;
+    color: var(--gold);
+    letter-spacing: 0.15em;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+
+  .tagline-line { flex: 1; height: 1px; background: rgba(201,162,39,0.4); }
+
+  .slogan {
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    color: var(--gold);
+    font-weight: 500;
+    text-transform: uppercase;
+    margin-bottom: 2.5rem;
+    animation: fadeUp 0.8s 0.35s ease both;
+  }
+
+  /* ── Divisor ── */
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: rgba(255,255,255,0.08);
+    margin-bottom: 2.5rem;
+    position: relative;
+    animation: fadeUp 0.8s 0.4s ease both;
+  }
+
+  .divider::before {
+    content: '⬡';
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%,-50%);
+    color: var(--gold);
+    font-size: 14px;
+    background: var(--navy-deep);
+    padding: 0 12px;
+  }
+
+  .access-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.8s 0.45s ease both;
+  }
+
+  /* ── Botones ── */
+  .btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    width: 100%;
+    animation: fadeUp 0.8s 0.5s ease both;
+  }
+
+  /* Preventivo */
+  .btn-prev {
+    border-color: rgba(39,174,96,0.3);
+  }
+  .btn-prev::before {
+    background: linear-gradient(135deg, rgba(39,174,96,0.12) 0%, transparent 100%);
+  }
+  .btn-prev:hover {
+    border-color: #27ae60;
+    box-shadow: 0 8px 32px rgba(39,174,96,0.2), inset 0 1px 0 rgba(39,174,96,0.3);
+  }
+  .btn-prev .btn-icon { color: #27ae60; }
+  .btn-prev .btn-label { color: #5dde95; }
+  .btn-prev .btn-sublabel { color: rgba(39,174,96,0.6); }
+
+  .btn-averia {
+    grid-column: 1 / -1;
+    border-color: rgba(192,57,43,0.35);
+    flex-direction: row;
+    padding: 1.2rem 1.5rem;
+    gap: 16px;
+    justify-content: center;
+  }
+  .btn-averia::before {
+    background: linear-gradient(135deg, rgba(192,57,43,0.12) 0%, transparent 100%);
+  }
+  .btn-averia:hover {
+    border-color: #e74c3c;
+    box-shadow: 0 8px 32px rgba(192,57,43,0.25), inset 0 1px 0 rgba(192,57,43,0.3);
+  }
+  .btn-averia .btn-icon { color: #e74c3c; width: 40px; height: 40px; }
+  .btn-averia .btn-label { color: #e74c3c; font-size: 1rem; }
+  .btn-averia .btn-sublabel { color: rgba(231,76,60,0.6); }
+
+  .btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 2rem 1rem;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.1);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    background: rgba(255,255,255,0.04);
+  }
+
+  .btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+
+  .btn:hover::before { opacity: 1; }
+  .btn:hover { transform: translateY(-3px); }
+  .btn:active { transform: translateY(0) scale(0.98); }
+
+  /* Mecánicos */
+  .btn-mec {
+    border-color: rgba(201,162,39,0.3);
+  }
+  .btn-mec::before {
+    background: linear-gradient(135deg, rgba(201,162,39,0.12) 0%, transparent 100%);
+  }
+  .btn-mec:hover {
+    border-color: var(--gold);
+    box-shadow: 0 8px 32px rgba(201,162,39,0.2), inset 0 1px 0 rgba(201,162,39,0.3);
+  }
+
+  .btn-mec .btn-icon { color: var(--gold); }
+  .btn-mec .btn-label { color: var(--gold); }
+  .btn-mec .btn-sublabel { color: rgba(201,162,39,0.6); }
+
+  /* Administrador */
+  .btn-admin {
+    border-color: rgba(58,122,191,0.3);
+  }
+  .btn-admin::before {
+    background: linear-gradient(135deg, rgba(58,122,191,0.12) 0%, transparent 100%);
+  }
+  .btn-admin:hover {
+    border-color: var(--blue-accent);
+    box-shadow: 0 8px 32px rgba(58,122,191,0.2), inset 0 1px 0 rgba(58,122,191,0.3);
+  }
+
+  .btn-admin .btn-icon { color: var(--blue-accent); }
+  .btn-admin .btn-label { color: #7bb8f0; }
+  .btn-admin .btn-sublabel { color: rgba(58,122,191,0.6); }
+
+  .btn-icon {
+    width: 52px; height: 52px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    transition: background 0.25s;
+  }
+
+  .btn:hover .btn-icon {
+    background: rgba(255,255,255,0.1);
+  }
+
+  .btn-icon svg { width: 28px; height: 28px; }
+
+  .btn-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .btn-sublabel {
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  /* ── Pie ── */
+  .footer {
+    margin-top: 2.5rem;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.2);
+    text-align: center;
+    text-transform: uppercase;
+    animation: fadeUp 0.8s 0.6s ease both;
+  }
+
+  /* ── Pulse badge estado ── */
+  .status-badge {
+    position: fixed;
+    top: 18px; right: 18px;
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.3);
+    text-transform: uppercase;
+    z-index: 20;
+  }
+
+  .pulse-dot {
+    width: 6px; height: 6px;
+    background: #3dba6b;
+    border-radius: 50%;
+    animation: pulse 2s ease infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(61,186,107,0.6); }
+    50%      { box-shadow: 0 0 0 4px rgba(61,186,107,0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-pattern"></div>
+
+<!-- Engranajes fondo -->
+<div class="bg-gear">
+  <svg class="gear-bg top-left" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <path fill="white" d="M43.5 0h13l2 8.5c3.2.9 6.2 2.2 8.9 4l7.8-4.2 9.2 9.2-4.2 7.8c1.8 2.7 3.1 5.7 4 8.9L93 36v13l-8.8 2c-.9 3.2-2.2 6.2-4 8.9l4.2 7.8-9.2 9.2-7.8-4.2c-2.7 1.8-5.7 3.1-8.9 4L57 85H43.5l-2-8.3c-3.2-.9-6.2-2.2-8.9-4l-7.8 4.2-9.2-9.2 4.2-7.8c-1.8-2.7-3.1-5.7-4-8.9L7 49V36l8.8-2c.9-3.2 2.2-6.2 4-8.9l-4.2-7.8 9.2-9.2 7.8 4.2c2.7-1.8 5.7-3.1 8.9-4L43.5 0zm6.5 28a22 22 0 100 44 22 22 0 000-44z"/>
+  </svg>
+  <svg class="gear-bg bot-right" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <path fill="white" d="M43.5 0h13l2 8.5c3.2.9 6.2 2.2 8.9 4l7.8-4.2 9.2 9.2-4.2 7.8c1.8 2.7 3.1 5.7 4 8.9L93 36v13l-8.8 2c-.9 3.2-2.2 6.2-4 8.9l4.2 7.8-9.2 9.2-7.8-4.2c-2.7 1.8-5.7 3.1-8.9 4L57 85H43.5l-2-8.3c-3.2-.9-6.2-2.2-8.9-4l-7.8 4.2-9.2-9.2 4.2-7.8c-1.8-2.7-3.1-5.7-4-8.9L7 49V36l8.8-2c.9-3.2 2.2-6.2 4-8.9l-4.2-7.8 9.2-9.2 7.8 4.2c2.7-1.8 5.7-3.1 8.9-4L43.5 0zm6.5 28a22 22 0 100 44 22 22 0 000-44z"/>
+  </svg>
+</div>
+
+<div class="stripe-top"></div>
+<div class="stripe-bot"></div>
+
+<!-- Estado del sistema -->
+<div class="status-badge">
+  <div class="pulse-dot"></div>
+  Sistema activo
+</div>
+
+<!-- Contenido principal -->
+<div class="container">
+
+  <!-- Logo SVG inline (reconstruido con los colores del original) -->
+  <svg class="logo-wrap" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+    <!-- Espigas izquierda -->
+    <g opacity="0.9">
+      <line x1="52" y1="105" x2="20" y2="60" stroke="#c9a227" stroke-width="2.5" stroke-linecap="round"/>
+      <ellipse cx="18" cy="56" rx="5" ry="10" fill="#c9a227" transform="rotate(-30 18 56)"/>
+      <ellipse cx="22" cy="48" rx="4" ry="8" fill="#c9a227" transform="rotate(-25 22 48)"/>
+      <ellipse cx="28" cy="42" rx="3.5" ry="7" fill="#c9a227" transform="rotate(-20 28 42)"/>
+      <ellipse cx="15" cy="65" rx="4" ry="8" fill="#c9a227" transform="rotate(-35 15 65)"/>
+    </g>
+    <!-- Espigas derecha -->
+    <g opacity="0.9">
+      <line x1="148" y1="105" x2="180" y2="60" stroke="#c9a227" stroke-width="2.5" stroke-linecap="round"/>
+      <ellipse cx="182" cy="56" rx="5" ry="10" fill="#c9a227" transform="rotate(30 182 56)"/>
+      <ellipse cx="178" cy="48" rx="4" ry="8" fill="#c9a227" transform="rotate(25 178 48)"/>
+      <ellipse cx="172" cy="42" rx="3.5" ry="7" fill="#c9a227" transform="rotate(20 172 42)"/>
+      <ellipse cx="185" cy="65" rx="4" ry="8" fill="#c9a227" transform="rotate(35 185 65)"/>
+    </g>
+    <!-- Espigas arriba -->
+    <g opacity="0.9">
+      <line x1="100" y1="50" x2="100" y2="10" stroke="#c9a227" stroke-width="2.5" stroke-linecap="round"/>
+      <ellipse cx="100" cy="8" rx="5" ry="10" fill="#c9a227"/>
+      <ellipse cx="93" cy="12" rx="4" ry="8" fill="#c9a227" transform="rotate(-10 93 12)"/>
+      <ellipse cx="107" cy="12" rx="4" ry="8" fill="#c9a227" transform="rotate(10 107 12)"/>
+    </g>
+    <!-- Engranaje exterior -->
+    <path d="M100,40
+      a60,60 0 0,1 0,120
+      a60,60 0 0,1 0,-120z" fill="none"/>
+    <!-- Engranaje (dientes) -->
+    <g fill="#2d3f54">
+      <path d="M85,42 L88,30 L100,28 L112,30 L115,42
+               A60,60 0 0,1 138,55 L150,52 L158,61 L155,73
+               A60,60 0 0,1 162,100 L175,100 L175,112 L162,112
+               A60,60 0 0,1 155,127 L158,139 L150,148 L138,145
+               A60,60 0 0,1 115,158 L112,170 L100,172 L88,170 L85,158
+               A60,60 0 0,1 62,145 L50,148 L42,139 L45,127
+               A60,60 0 0,1 38,112 L25,112 L25,100 L38,100
+               A60,60 0 0,1 45,73 L42,61 L50,52 L62,55
+               A60,60 0 0,1 85,42Z"/>
+    </g>
+    <!-- Círculo interior blanco -->
+    <circle cx="100" cy="100" r="52" fill="#f4efe6"/>
+    <!-- Cruz divisoria -->
+    <line x1="100" y1="50" x2="100" y2="150" stroke="#2d3f54" stroke-width="1.5" opacity="0.3"/>
+    <line x1="50" y1="100" x2="150" y2="100" stroke="#2d3f54" stroke-width="1.5" opacity="0.3"/>
+    <!-- Cuadrante 1: Llave inglesa -->
+    <g transform="translate(62,62) rotate(-45)">
+      <rect x="-4" y="-20" width="8" height="36" rx="2" fill="#2d3f54"/>
+      <ellipse cx="0" cy="-20" rx="9" ry="7" fill="none" stroke="#2d3f54" stroke-width="3"/>
+    </g>
+    <!-- Cuadrante 2: Pistola neumática (azul) -->
+    <g transform="translate(136,68)">
+      <rect x="-10" y="-6" width="18" height="8" rx="3" fill="#3a7abf"/>
+      <rect x="6" y="-12" width="6" height="10" rx="2" fill="#3a7abf"/>
+      <path d="M-10,2 Q-14,8 -8,12" fill="none" stroke="#3a7abf" stroke-width="2.5" stroke-linecap="round"/>
+    </g>
+    <!-- Cuadrante 3: Rayo -->
+    <g transform="translate(70,128)">
+      <polygon points="6,-18 0,0 7,0 1,18 14,-4 7,-4" fill="#c9a227"/>
+    </g>
+    <!-- Cuadrante 4: Enchufe -->
+    <g transform="translate(130,128)">
+      <path d="M0,-12 Q8,-12 8,0 Q8,10 0,14 Q-8,10 -8,0 Q-8,-12 0,-12Z" fill="none" stroke="#2d3f54" stroke-width="2.5"/>
+      <rect x="-2" y="-8" width="4" height="7" rx="1" fill="#2d3f54"/>
+      <rect x="6" y="-8" width="4" height="7" rx="1" fill="#2d3f54"/>
+      <path d="M0,14 L0,22" stroke="#2d3f54" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M-4,22 Q0,26 4,22" fill="none" stroke="#2d3f54" stroke-width="2" stroke-linecap="round"/>
+    </g>
+    <!-- Pan (parte inferior del engranaje) -->
+    <g transform="translate(100,155)">
+      <ellipse cx="0" cy="6" rx="26" ry="8" fill="#c9a227"/>
+      <path d="M-24,6 Q-20,-8 -10,-10 Q0,-14 10,-10 Q20,-8 24,6Z" fill="#c9a227"/>
+      <path d="M-14,-4 Q-10,-12 0,-12" fill="none" stroke="#d4a843" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+      <path d="M4,-8 Q8,-14 14,-6" fill="none" stroke="#d4a843" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+    </g>
+  </svg>
+
+  <div class="brand">PANALCOR <span>S.L.</span></div>
+
+  <div class="tagline-row">
+    <div class="tagline-line"></div>
+    <div class="tagline-dot">Mecánica &bull; Neumática &bull; Electricidad</div>
+    <div class="tagline-line"></div>
+  </div>
+
+  <div class="slogan">Trabajo duro, resultados que duran</div>
+
+  <div class="divider"></div>
+
+  <div class="access-label">Selecciona tu acceso</div>
+
+  <div class="btns">
+
+    <!-- Mecánicos Mantenimientos -->
+    <a class="btn btn-mec" href="mecanicos.html">
+      <div class="btn-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.77 3.77z"/>
+        </svg>
+      </div>
+      <div class="btn-label">Mecánicos</div>
+      <div class="btn-sublabel">Mantenimientos</div>
+    </a>
+
+    <!-- Administrador -->
+    <a class="btn btn-admin" href="admin.html">
+      <div class="btn-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M9 12l2 2 4-4"/>
+        </svg>
+      </div>
+      <div class="btn-label">Administrador</div>
+      <div class="btn-sublabel">Panel Control</div>
+    </a>
+
+    <!-- Preventivo -->
+    <a class="btn btn-prev" href="preventivo.html" style="grid-column:1/-1;flex-direction:row;padding:1.2rem 1.5rem;gap:16px;justify-content:center;">
+      <div class="btn-icon" style="width:40px;height:40px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+        </svg>
+      </div>
+      <div>
+        <div class="btn-label">Preventivo</div>
+        <div class="btn-sublabel">Catálogo de mantenimientos</div>
+      </div>
+    </a>
+
+    <!-- Averías -->
+    <a class="btn btn-averia" href="averias.html">
+      <div class="btn-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <div>
+        <div class="btn-label">Averías</div>
+        <div class="btn-sublabel">Registro de incidencias</div>
+      </div>
+    </a>
+
+  </div>
+
+  <!-- Estado base de datos -->
+  <div id="dbStatus" style="margin-top:1.8rem;width:100%;display:flex;flex-direction:column;gap:8px;animation:fadeUp 0.8s 0.55s ease both"></div>
+
+  <input type="file" id="repFileInput" accept=".xlsx,.xls" style="display:none" onchange="cargarArchivoRep(this.files[0])">
+
+  <div class="footer">
+    Sistema de Mantenimiento &nbsp;&bull;&nbsp; PANALCOR S.L. &nbsp;&bull;&nbsp; v1.0
+  </div>
+
+</div>
+
+<script>
+// ── CARGA AUTOMÁTICA DE BASE DE DATOS ──────────────────────────
+(function(){
+  const cached = localStorage.getItem('repuestosCache');
+  if(cached){
+    try{
+      const data = JSON.parse(cached);
+      mostrarEstado('✅ Base de datos de repuestos cargada — '+data.length+' artículos disponibles', '#2ecc71', false);
+      return;
+    }catch(e){}
+  }
+  // No hay caché → intentar fetch primero, si falla mostrar botón
+  fetch('./repuestos.xlsx',{cache:'no-store'})
+    .then(r=>r.ok?r.arrayBuffer():Promise.reject())
+    .then(buf=>{ procesarRepuestos(buf); })
+    .catch(()=>{
+      mostrarEstado('⚠️ Base de datos no cargada — pulsa el botón para cargarla', 'rgba(243,156,18,0.9)', true);
+    });
+})();
+
+function mostrarEstado(msg, color, boton){
+  const el = document.getElementById('dbStatus');
+  el.innerHTML = `<div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 16px;flex-wrap:wrap">
+    <span style="font-size:0.82rem;letter-spacing:0.08em;color:${color};flex:1">${msg}</span>
+    ${boton?`<button onclick="document.getElementById('repFileInput').click()" style="background:rgba(201,162,39,0.2);border:1px solid rgba(201,162,39,0.5);color:#c9a227;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:0.06em;white-space:nowrap">📂 Cargar repuestos.xlsx</button>`:''}
+  </div>`;
+}
+
+function cargarArchivoRep(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => procesarRepuestos(e.target.result);
+  reader.readAsArrayBuffer(file);
+}
+
+function procesarRepuestos(buf){
+  try{
+    const wb = XLSX.read(buf,{type:'array'});
+    const ws = wb.Sheets['Tabla1']||wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws,{header:1});
+    const data = [];
+    for(let i=1;i<rows.length;i++){
+      const r=rows[i];
+      if(r[2]) data.push({ubi:String(r[0]||'').trim(),ref:String(r[1]||'').trim(),desc:String(r[2]||'').trim()});
+    }
+    localStorage.setItem('repuestosCache', JSON.stringify(data));
+    mostrarEstado('✅ Base de datos cargada y guardada — '+data.length+' repuestos disponibles en todas las páginas', '#2ecc71', false);
+  }catch(e){
+    mostrarEstado('❌ Error al leer el archivo. Comprueba que es el repuestos.xlsx correcto.', '#e74c3c', true);
+  }
+}
+</script>
+</body>
+</html>

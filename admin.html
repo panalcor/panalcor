@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Administrador — PANALCOR</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy-deep:#0d1b2a;--navy-mid:#1a2d42;--navy-light:#243d56;
+  --gold:#c9a227;--gold-light:#f0c040;--white:#f0f4f8;
+  --red:#e74c3c;--green:#2ecc71;--yellow:#f39c12;--blue:#3498db;
+  --purple:#9b59b6;--radius:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-serif;font-size:1rem;min-height:100vh}
+
+/* ── LOGIN ── */
+.login-screen{position:fixed;inset:0;background:var(--navy-deep);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:20px}
+.login-box{background:var(--navy-mid);border:1px solid rgba(201,162,39,0.3);border-radius:16px;padding:40px;width:340px;text-align:center}
+.login-box h2{font-size:1.5rem;font-weight:900;color:var(--gold-light);letter-spacing:0.08em;margin-bottom:6px}
+.login-box .sub{font-size:0.78rem;color:rgba(255,255,255,0.4);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:28px}
+.login-box input{width:100%;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:13px 16px;font-family:'Barlow',sans-serif;font-size:1.1rem;text-align:center;letter-spacing:0.2em;margin-bottom:14px}
+.login-box input:focus{outline:none;border-color:var(--gold)}
+.login-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a;border:none;border-radius:8px;font-family:'Barlow',sans-serif;font-size:1rem;font-weight:900;letter-spacing:0.1em;cursor:pointer;transition:all .2s}
+.login-btn:hover{background:linear-gradient(135deg,var(--gold-light),var(--gold))}
+.login-err{color:var(--red);font-size:0.85rem;margin-top:8px;display:none}
+
+/* ── TOPBAR ── */
+.topbar{background:linear-gradient(135deg,#0a1520,var(--navy-mid));border-bottom:2px solid var(--gold);padding:14px 20px;display:flex;align-items:center;gap:14px}
+.topbar h1{font-size:1.4rem;font-weight:900;letter-spacing:0.06em;color:var(--gold-light)}
+.topbar .sub{font-size:0.78rem;color:rgba(255,255,255,0.5);letter-spacing:0.1em}
+.back-btn,.logout-btn{background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.4);color:var(--gold);padding:8px 14px;border-radius:7px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.85rem;letter-spacing:0.06em;transition:all .2s}
+.back-btn:hover,.logout-btn:hover{background:rgba(201,162,39,0.3)}
+.logout-btn{margin-left:auto;color:rgba(255,255,255,0.5);border-color:rgba(255,255,255,0.2)}
+
+/* ── TABS ── */
+.tabs{display:flex;background:var(--navy-mid);border-bottom:2px solid rgba(201,162,39,0.2);overflow-x:auto}
+.tab{padding:14px 20px;cursor:pointer;font-size:0.95rem;font-weight:600;letter-spacing:0.05em;color:rgba(255,255,255,0.5);border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap}
+.tab:hover{color:var(--white);background:rgba(255,255,255,0.04)}
+.tab.active{color:var(--gold-light);border-bottom-color:var(--gold)}
+
+/* ── PANELS ── */
+.panel{display:none;padding:20px}
+.panel.active{display:block}
+.sec-title{font-size:0.72rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid rgba(201,162,39,0.2)}
+.card{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius);padding:18px;margin-bottom:16px}
+
+/* ── KPIs ── */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:18px;text-align:center;transition:transform .2s}
+.kpi:hover{transform:translateY(-2px)}
+.kpi-num{font-size:2.2rem;font-weight:900;line-height:1}
+.kpi-label{font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-top:6px}
+.kpi-sub{font-size:0.75rem;color:rgba(255,255,255,0.3);margin-top:2px}
+
+/* ── CHARTS ── */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.chart-wrap{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:18px}
+.chart-title{font-size:0.78rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+
+/* ── TABLAS ── */
+.data-table{width:100%;border-collapse:collapse;font-size:0.9rem}
+.data-table th{text-align:left;padding:9px 14px;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid rgba(201,162,39,0.2);white-space:nowrap}
+.data-table td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.05)}
+.data-table tr:hover td{background:rgba(255,255,255,0.03)}
+.no-data{text-align:center;padding:40px 20px;color:rgba(255,255,255,0.3);font-size:1rem}
+
+/* ── ALERTAS ── */
+.alert-item{display:flex;gap:12px;align-items:flex-start;background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);border-radius:8px;padding:12px 16px;margin-bottom:8px}
+.alert-item .ai-icon{font-size:1.2rem;flex-shrink:0;margin-top:1px}
+.alert-item .ai-text{font-size:0.88rem;line-height:1.5}
+.alert-item .ai-title{font-weight:700;color:#ff8a80;margin-bottom:2px}
+.alert-warn{background:rgba(243,156,18,0.1);border-color:rgba(243,156,18,0.3)}
+.alert-warn .ai-title{color:var(--yellow)}
+.alert-ok{background:rgba(46,204,113,0.1);border-color:rgba(46,204,113,0.3)}
+.alert-ok .ai-title{color:var(--green)}
+
+/* ── MECÁNICOS ── */
+.mec-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.mec-card{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:18px}
+.mec-card-name{font-size:1.1rem;font-weight:900;letter-spacing:0.05em;margin-bottom:12px;color:var(--gold-light)}
+.mec-stat{display:flex;justify-content:space-between;font-size:0.85rem;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.06)}
+.mec-stat:last-child{border:none}
+.mec-stat .label{color:rgba(255,255,255,0.5)}
+.mec-stat .value{font-weight:700}
+.bar-wrap{margin-top:10px}
+.bar-bg{background:rgba(255,255,255,0.08);border-radius:4px;height:6px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--gold),var(--gold-light));transition:width .6s}
+
+/* ── IA ANÁLISIS ── */
+.ia-header{display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.ia-btn{padding:14px 28px;background:linear-gradient(135deg,#9b59b6,#6c3483);border:none;border-radius:10px;color:#fff;font-family:'Barlow',sans-serif;font-size:1rem;font-weight:700;letter-spacing:0.06em;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:10px}
+.ia-btn:hover{background:linear-gradient(135deg,#a569bd,#7d3c98);transform:translateY(-1px)}
+.ia-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.ia-output{background:var(--navy-deep);border:1px solid rgba(155,89,182,0.3);border-radius:10px;padding:20px;font-family:'Courier New',monospace;font-size:0.82rem;line-height:1.7;white-space:pre-wrap;min-height:300px;max-height:600px;overflow-y:auto;color:rgba(255,255,255,0.85)}
+.ia-loading{display:none;text-align:center;padding:40px;color:var(--purple);font-size:1rem;font-weight:600}
+.ia-copy-btn{padding:8px 18px;background:rgba(155,89,182,0.2);border:1px solid rgba(155,89,182,0.4);color:var(--purple);border-radius:7px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.85rem;font-weight:600}
+
+/* ── INFORMES ── */
+.report-filters{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px}
+.report-filters input,.report-filters select{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:9px 14px;color:var(--white);font-family:'Barlow',sans-serif;font-size:0.9rem}
+.btn-export{padding:12px 22px;border-radius:8px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.95rem;font-weight:700;letter-spacing:0.06em;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+.btn-green{background:rgba(46,204,113,0.2);border:1px solid rgba(46,204,113,0.4) !important;border-style:solid;color:var(--green)}
+.btn-green:hover{background:rgba(46,204,113,0.35)}
+.btn-blue{background:rgba(52,152,219,0.2);border:1px solid rgba(52,152,219,0.4) !important;color:var(--blue)}
+.btn-blue:hover{background:rgba(52,152,219,0.35)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a}
+.btn-gold:hover{background:linear-gradient(135deg,var(--gold-light),var(--gold))}
+.btn-red{background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.4) !important;color:var(--red)}
+.btn-red:hover{background:rgba(231,76,60,0.35)}
+
+/* ── CONFIG ── */
+.config-section{max-width:480px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:0.78rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.field input{width:100%;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:11px 14px;font-family:'Barlow',sans-serif;font-size:1rem}
+.field input:focus{outline:none;border-color:var(--gold)}
+
+/* ── BADGES ── */
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;letter-spacing:0.05em}
+.badge-red{background:rgba(231,76,60,0.2);color:var(--red);border:1px solid rgba(231,76,60,0.3)}
+.badge-green{background:rgba(46,204,113,0.2);color:var(--green);border:1px solid rgba(46,204,113,0.3)}
+.badge-yellow{background:rgba(243,156,18,0.2);color:var(--yellow);border:1px solid rgba(243,156,18,0.3)}
+.badge-blue{background:rgba(52,152,219,0.2);color:var(--blue);border:1px solid rgba(52,152,219,0.3)}
+.crit-A{background:rgba(231,76,60,0.2);color:#ff8a80}
+.crit-B{background:rgba(243,156,18,0.2);color:var(--yellow)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy-mid);border:1px solid rgba(201,162,39,0.5);border-radius:10px;padding:14px 22px;font-size:0.95rem;font-weight:600;z-index:9999;opacity:0;transform:translateY(20px);transition:all .3s;pointer-events:none;max-width:340px}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:700px){
+  .chart-grid{grid-template-columns:1fr}
+  .kpi-row{grid-template-columns:1fr 1fr}
+  .mec-cards{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div style="font-size:2.5rem;margin-bottom:12px">🛡️</div>
+    <h2>PANEL DE ADMINISTRADOR</h2>
+    <div class="sub">PANALCOR S.L. · Acceso restringido</div>
+    <input type="password" id="pwInput" placeholder="Contraseña" onkeydown="if(event.key==='Enter')login()">
+    <button class="login-btn" onclick="login()">ENTRAR</button>
+    <div class="login-err" id="loginErr">❌ Contraseña incorrecta</div>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="app" style="display:none">
+
+<div class="topbar">
+  <button class="back-btn" onclick="history.back()">← Volver</button>
+  <div>
+    <div class="sub">PANALCOR S.L. · ADMINISTRACIÓN</div>
+    <h1>🛡️ PANEL DE ADMINISTRADOR</h1>
+  </div>
+  <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('dash')" id="tab-dash">📊 Dashboard</div>
+  <div class="tab" onclick="switchTab('mec')"  id="tab-mec">👷 Mecánicos</div>
+  <div class="tab" onclick="switchTab('ia')"   id="tab-ia">🤖 Análisis IA</div>
+  <div class="tab" onclick="switchTab('inf')"  id="tab-inf">📋 Informes</div>
+  <div class="tab" onclick="switchTab('cfg')"  id="tab-cfg">⚙️ Configuración</div>
+</div>
+
+<!-- ═══ DASHBOARD ═══ -->
+<div class="panel active" id="panel-dash">
+  <div class="kpi-row" id="kpiRow"></div>
+  <div class="chart-grid">
+    <div class="chart-wrap">
+      <div class="chart-title">Averías por mes (último año)</div>
+      <canvas id="cTendencia" height="180"></canvas>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Averías por tipo</div>
+      <canvas id="cTipos" height="180"></canvas>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Top 10 máquinas</div>
+      <canvas id="cMaquinas" height="200"></canvas>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Averías por turno</div>
+      <canvas id="cTurnos" height="200"></canvas>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sec-title">🚨 Alertas activas</div>
+    <div id="alertasDash"></div>
+  </div>
+  <div class="card">
+    <div class="sec-title">📋 Últimas averías registradas</div>
+    <div style="overflow-x:auto">
+      <table class="data-table" id="tUltimas">
+        <thead><tr>
+          <th>Fecha</th><th>Máquina</th><th>Parte</th><th>Tipo</th>
+          <th>Mecánicos</th><th>Tiempo</th><th>Estado</th>
+        </tr></thead>
+        <tbody id="bUltimas"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MECÁNICOS ═══ -->
+<div class="panel" id="panel-mec">
+  <div class="card" style="margin-bottom:20px">
+    <div class="sec-title">Periodo de análisis</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+      <div><label style="font-size:0.75rem;color:var(--gold);display:block;margin-bottom:4px">DESDE</label>
+        <input type="date" id="mecDesde" style="background:var(--navy-deep);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:8px 12px;color:var(--white);font-family:Barlow,sans-serif" onchange="renderMecanicos()"></div>
+      <div><label style="font-size:0.75rem;color:var(--gold);display:block;margin-bottom:4px">HASTA</label>
+        <input type="date" id="mecHasta" style="background:var(--navy-deep);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:8px 12px;color:var(--white);font-family:Barlow,sans-serif" onchange="renderMecanicos()"></div>
+    </div>
+  </div>
+  <div class="mec-cards" id="mecCards"></div>
+  <div class="chart-wrap" style="margin-top:0">
+    <div class="chart-title">Intervenciones por mecánico</div>
+    <canvas id="cMecanicos" height="140"></canvas>
+  </div>
+</div>
+
+<!-- ═══ IA ANÁLISIS ═══ -->
+<div class="panel" id="panel-ia">
+  <div class="card">
+    <div class="sec-title">🤖 Análisis inteligente de patrones</div>
+    <p style="font-size:0.9rem;color:rgba(255,255,255,0.6);margin-bottom:18px;line-height:1.6">
+      El sistema analiza todos los datos registrados — averías, mecánicos, repuestos, turnos y tendencias — y genera un informe detallado con patrones detectados y recomendaciones de acción. Cuantos más datos haya registrados, más preciso será el análisis.
+    </p>
+    <div class="ia-header">
+      <button class="ia-btn" id="iaBtnGenerar" onclick="generarInforme()">
+        🤖 Generar Informe de Análisis
+      </button>
+      <button class="ia-copy-btn" onclick="copiarInforme()" id="iaCopyBtn" style="display:none">📋 Copiar informe</button>
+      <button class="ia-copy-btn" onclick="exportarInformeTxt()" style="display:none;border-color:rgba(46,204,113,0.4);color:var(--green)" id="iaExportBtn">💾 Guardar .txt</button>
+    </div>
+    <div class="ia-loading" id="iaLoading">⏳ Analizando datos...</div>
+    <div class="ia-output" id="iaOutput">El informe aparecerá aquí al pulsar el botón.</div>
+  </div>
+</div>
+
+<!-- ═══ INFORMES ═══ -->
+<div class="panel" id="panel-inf">
+  <div class="card">
+    <div class="sec-title">📥 Exportar averías a Excel</div>
+    <div class="report-filters">
+      <div>
+        <label style="font-size:0.75rem;color:var(--gold);display:block;margin-bottom:4px">DESDE</label>
+        <input type="date" id="infDesde">
+      </div>
+      <div>
+        <label style="font-size:0.75rem;color:var(--gold);display:block;margin-bottom:4px">HASTA</label>
+        <input type="date" id="infHasta">
+      </div>
+      <div>
+        <label style="font-size:0.75rem;color:var(--gold);display:block;margin-bottom:4px">ESTADO</label>
+        <select id="infEstado">
+          <option value="">Todos</option>
+          <option>RESUELTA</option><option>EN CURSO</option><option>PENDIENTE REPUESTO</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn-export btn-green" onclick="exportarAverias()">📥 Exportar Averías (.xlsx)</button>
+      <button class="btn-export btn-blue" onclick="exportarMantenimientos()">📥 Exportar Mantenimientos (.xlsx)</button>
+      <button class="btn-export btn-gold" onclick="exportarCompleto()">📦 Exportar Todo</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sec-title">📊 Resumen mensual</div>
+    <div style="overflow-x:auto">
+      <table class="data-table" id="tMensual">
+        <thead><tr>
+          <th>Mes</th><th>Nº Averías</th><th>Tiempo parado</th>
+          <th>Resueltas</th><th>Pendientes</th><th>Mecánico activo</th>
+        </tr></thead>
+        <tbody id="bMensual"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sec-title">🔩 Repuestos más utilizados</div>
+    <div style="overflow-x:auto">
+      <table class="data-table" id="tRepuestos">
+        <thead><tr>
+          <th>Descripción</th><th>Referencia</th><th>Veces usado</th><th>Unidades totales</th>
+        </tr></thead>
+        <tbody id="bRepuestos"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CONFIGURACIÓN ═══ -->
+<div class="panel" id="panel-cfg">
+  <div class="card config-section">
+    <div class="sec-title">🔑 Cambiar contraseña de administrador</div>
+    <div class="field">
+      <label>Contraseña actual</label>
+      <input type="password" id="cfgPwActual" placeholder="Contraseña actual">
+    </div>
+    <div class="field">
+      <label>Nueva contraseña</label>
+      <input type="password" id="cfgPwNueva" placeholder="Nueva contraseña (mín. 4 caracteres)">
+    </div>
+    <div class="field">
+      <label>Repetir nueva contraseña</label>
+      <input type="password" id="cfgPwRepetir" placeholder="Repite la nueva contraseña">
+    </div>
+    <button class="btn-export btn-gold" onclick="cambiarPassword()" style="margin-top:4px">💾 Guardar contraseña</button>
+  </div>
+
+  <div class="card config-section" style="margin-top:0">
+    <div class="sec-title">🗄️ Estado de datos en memoria</div>
+    <div id="cfgEstadoDatos" style="font-size:0.9rem;line-height:2"></div>
+  </div>
+
+  <div class="card config-section" style="margin-top:0;border-color:rgba(231,76,60,0.3)">
+    <div class="sec-title" style="color:var(--red)">⚠️ Zona peligrosa</div>
+    <p style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:14px">Estas acciones son irreversibles. Úsalas con precaución.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn-export btn-red" onclick="borrarAverias()">🗑 Borrar todas las averías</button>
+      <button class="btn-export btn-red" onclick="borrarMantenimientos()">🗑 Borrar mantenimientos</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════
+// AUTENTICACIÓN
+// ══════════════════════════════════════════════════
+const PW_KEY = 'adminPwd';
+function getPwd(){ return localStorage.getItem(PW_KEY) || 'admin'; }
+
+function login(){
+  const val = document.getElementById('pwInput').value;
+  if(val === getPwd()){
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initApp();
+  } else {
+    document.getElementById('loginErr').style.display = 'block';
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
+  }
+}
+
+function logout(){
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('pwInput').value = '';
+  document.getElementById('loginErr').style.display = 'none';
+}
+
+// ══════════════════════════════════════════════════
+// FIREBASE — misma config que averias.html
+// ══════════════════════════════════════════════════
+const FB_CFG = {
+  apiKey:            "AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU",
+  authDomain:        "panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:       "https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:         "panalcor-mantenimiento",
+  storageBucket:     "panalcor-mantenimiento.firebasestorage.app",
+  messagingSenderId: "67593058609",
+  appId:             "1:67593058609:web:c33fa1fa4fce2932485810"
+};
+if (!firebase.apps.length) firebase.initializeApp(FB_CFG);
+const DB = firebase.database();
+
+// Escucha en tiempo real: cuando llega una avería nueva desde el móvil,
+// el panel del admin se actualiza automáticamente sin recargar
+DB.ref('averias').on('value', snap => {
+  const val = snap.val();
+  if (val) {
+    const nuevas = Object.values(val).sort((a,b) => b.ts - a.ts);
+    localStorage.setItem('averias_v1', JSON.stringify(nuevas));
+    // Si el dashboard está visible, refrescarlo silenciosamente
+    if (document.getElementById('app') &&
+        document.getElementById('app').style.display !== 'none') {
+      renderDashboard();
+      renderEstadoDatos();
+    }
+  }
+});
+
+// También borra de Firebase cuando el admin elimina averías
+function fbBorrarAverias() {
+  DB.ref('averias').remove().catch(()=>{});
+}
+
+// ══════════════════════════════════════════════════
+// DATOS
+// ══════════════════════════════════════════════════
+function getAverias(){ return JSON.parse(localStorage.getItem('averias_v1')||'[]'); }
+
+function getTurnos(){
+  const keys = Object.keys(localStorage).filter(k=>k.startsWith('turno_'));
+  return keys.map(k=>{ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }).filter(Boolean);
+}
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+let charts = {};
+
+function initApp(){
+  renderDashboard();
+  // fechas por defecto para mecánicos e informes (último mes)
+  const hoy = new Date();
+  const hace30 = new Date(hoy); hace30.setDate(hoy.getDate()-30);
+  const fmt = d => d.toISOString().split('T')[0];
+  ['mecDesde','infDesde'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=fmt(hace30); });
+  ['mecHasta','infHasta'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=fmt(hoy); });
+  renderEstadoDatos();
+}
+
+// ══════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════
+function renderDashboard(){
+  const av = getAverias();
+  const turnos = getTurnos();
+  const hoy = new Date();
+  const mesActual = hoy.toISOString().substring(0,7);
+  const avMes = av.filter(a=>a.fecha&&a.fecha.startsWith(mesActual));
+  const totalMin = av.reduce((s,a)=>s+(a.tiempoMin||0),0);
+  const totalMinMes = avMes.reduce((s,a)=>s+(a.tiempoMin||0),0);
+  const pendientes = av.filter(a=>a.estado!=='RESUELTA').length;
+  const turnMes = turnos.filter(t=>t.fecha&&t.fecha.startsWith(mesActual));
+  const cumpl = turnMes.length ? Math.round(turnMes.reduce((s,t)=>s+(t.done/t.total),0)/turnMes.length*100) : null;
+
+  // Máquina más averiada
+  const maqCnt = {}; av.forEach(a=>{ maqCnt[a.maqNombre]=(maqCnt[a.maqNombre]||0)+1; });
+  const topMaq = Object.entries(maqCnt).sort((a,b)=>b[1]-a[1])[0];
+
+  document.getElementById('kpiRow').innerHTML = `
+    <div class="kpi"><div class="kpi-num" style="color:var(--gold-light)">${av.length}</div><div class="kpi-label">Total averías</div><div class="kpi-sub">histórico</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:var(--blue)">${avMes.length}</div><div class="kpi-label">Este mes</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:var(--red)">${pendientes}</div><div class="kpi-label">Pendientes</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:var(--yellow)">${Math.floor(totalMinMes/60)}h</div><div class="kpi-label">Parado este mes</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:var(--green)">${cumpl!==null?cumpl+'%':'—'}</div><div class="kpi-label">Cumpl. mant.</div><div class="kpi-sub">este mes</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:var(--purple);font-size:1.2rem;padding-top:6px">${topMaq?topMaq[0]:'—'}</div><div class="kpi-label">Más averiada</div><div class="kpi-sub">${topMaq?topMaq[1]+' averías':''}</div></div>
+  `;
+
+  // Charts
+  renderChartTendencia(av);
+  renderChartTipos(av);
+  renderChartMaquinas(av);
+  renderChartTurnos(av);
+
+  // Alertas
+  renderAlertasDash(av);
+
+  // Últimas averías
+  const tbody = document.getElementById('bUltimas');
+  if(!av.length){ tbody.innerHTML='<tr><td colspan="7" class="no-data">Sin averías registradas</td></tr>'; return; }
+  tbody.innerHTML = av.slice(0,10).map(a=>{
+    const t = a.tiempoMin ? Math.floor(a.tiempoMin/60)+'h'+(a.tiempoMin%60?''+a.tiempoMin%60+'m':'') : '—';
+    const est = a.estado==='RESUELTA'?'badge-green':a.estado==='EN CURSO'?'badge-red':'badge-yellow';
+    return `<tr>
+      <td>${a.fecha||'—'}</td>
+      <td><b>${a.maqNombre||'—'}</b></td>
+      <td>${a.parte||'—'}</td>
+      <td>${a.tipo||'—'}</td>
+      <td>${(a.mecanicos||[]).join(', ')||'—'}</td>
+      <td>${t}</td>
+      <td><span class="badge ${est}">${a.estado||'—'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderAlertasDash(av){
+  const el = document.getElementById('alertasDash');
+  const alertas = [];
+  const pendientes = av.filter(a=>a.estado!=='RESUELTA');
+  if(pendientes.length>0){
+    const criticas = pendientes.filter(a=>a.gravedad==='CRÍTICA');
+    if(criticas.length) alertas.push({tipo:'red',icon:'🚨',title:`${criticas.length} avería${criticas.length>1?'s':''} CRÍTICA${criticas.length>1?'S':''} sin resolver`,text:`Máquinas: ${criticas.map(a=>a.maqNombre).join(', ')}`});
+    if(pendientes.length>criticas.length) alertas.push({tipo:'warn',icon:'⚠️',title:`${pendientes.length-criticas.length} avería${pendientes.length-criticas.length>1?'s':''} pendiente${pendientes.length-criticas.length>1?'s':''}`,text:'Requieren atención'});
+  }
+  const hace90=Date.now()-90*24*3600*1000;
+  const recMap={};
+  av.filter(a=>a.ts>hace90).forEach(a=>{
+    const k=a.maqId+'|'+a.parte;
+    if(!recMap[k]) recMap[k]={maq:a.maqNombre,parte:a.parte,cnt:0};
+    recMap[k].cnt++;
+  });
+  const recs=Object.values(recMap).filter(r=>r.cnt>=3);
+  if(recs.length) alertas.push({tipo:'red',icon:'🔄',title:`${recs.length} avería${recs.length>1?'s':''} recurrente${recs.length>1?'s':''}`,text:recs.map(r=>`${r.maq} — ${r.parte||'S/P'} (${r.cnt}×)`).join(' | ')});
+  if(!alertas.length) alertas.push({tipo:'ok',icon:'✅',title:'Todo bajo control',text:'No hay alertas críticas en este momento'});
+  el.innerHTML=alertas.map(a=>`<div class="alert-item ${a.tipo==='warn'?'alert-warn':a.tipo==='ok'?'alert-ok':''}">
+    <div class="ai-icon">${a.icon}</div>
+    <div class="ai-text"><div class="ai-title">${a.title}</div>${a.text}</div>
+  </div>`).join('');
+}
+
+function renderChartTendencia(av){
+  const meses={};
+  av.forEach(a=>{ const k=a.fecha?a.fecha.substring(0,7):''; if(k) meses[k]=(meses[k]||0)+1; });
+  const keys=Object.keys(meses).sort().slice(-12);
+  destroyChart('cTendencia');
+  charts.cTendencia=new Chart(document.getElementById('cTendencia'),{
+    type:'line',
+    data:{labels:keys,datasets:[{data:keys.map(k=>meses[k]),borderColor:'rgba(201,162,39,0.9)',backgroundColor:'rgba(201,162,39,0.12)',fill:true,tension:0.3,pointRadius:4,pointBackgroundColor:'var(--gold)'}]},
+    options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#888',font:{size:10}}},y:{ticks:{color:'#888'},grid:{color:'rgba(255,255,255,0.06)'}}}}
+  });
+}
+
+function renderChartTipos(av){
+  const tipos={};
+  av.forEach(a=>{ if(a.tipo) tipos[a.tipo]=(tipos[a.tipo]||0)+1; });
+  destroyChart('cTipos');
+  if(!Object.keys(tipos).length) return;
+  charts.cTipos=new Chart(document.getElementById('cTipos'),{
+    type:'doughnut',
+    data:{labels:Object.keys(tipos),datasets:[{data:Object.values(tipos),backgroundColor:['#3498db','#f1c40f','#1abc9c','#9b59b6','#e67e22','#95a5a6']}]},
+    options:{plugins:{legend:{labels:{color:'#ccc',font:{size:10}}}}}
+  });
+}
+
+function renderChartMaquinas(av){
+  const maqCnt={};
+  av.forEach(a=>{ maqCnt[a.maqNombre]=(maqCnt[a.maqNombre]||0)+1; });
+  const top=Object.entries(maqCnt).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  destroyChart('cMaquinas');
+  if(!top.length) return;
+  charts.cMaquinas=new Chart(document.getElementById('cMaquinas'),{
+    type:'bar',
+    data:{labels:top.map(e=>e[0]),datasets:[{data:top.map(e=>e[1]),backgroundColor:'rgba(231,76,60,0.65)',borderColor:'rgba(231,76,60,1)',borderWidth:1}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#888'},grid:{color:'rgba(255,255,255,0.06)'}},y:{ticks:{color:'#ccc',font:{size:10}}}}}
+  });
+}
+
+function renderChartTurnos(av){
+  const t={MAÑANA:0,TARDE:0,NOCHE:0};
+  av.forEach(a=>{ if(a.turno){ const k=a.turno.split(' ')[0]; if(t[k]!==undefined) t[k]++; }});
+  destroyChart('cTurnos');
+  charts.cTurnos=new Chart(document.getElementById('cTurnos'),{
+    type:'pie',
+    data:{labels:['Mañana','Tarde','Noche'],datasets:[{data:[t.MAÑANA,t.TARDE,t.NOCHE],backgroundColor:['#f1c40f','#e67e22','#3498db']}]},
+    options:{plugins:{legend:{labels:{color:'#ccc'}}}}
+  });
+}
+
+function destroyChart(id){ if(charts[id]){charts[id].destroy();delete charts[id];} }
+
+// ══════════════════════════════════════════════════
+// MECÁNICOS
+// ══════════════════════════════════════════════════
+function renderMecanicos(){
+  const av = getAverias();
+  const turnos = getTurnos();
+  const desde = document.getElementById('mecDesde').value;
+  const hasta = document.getElementById('mecHasta').value;
+
+  const avFilt = av.filter(a=>(!desde||a.fecha>=desde)&&(!hasta||a.fecha<=hasta));
+  const tFilt  = turnos.filter(t=>(!desde||t.fecha>=desde)&&(!hasta||t.fecha<=hasta));
+
+  // Reunir todos los mecánicos mencionados
+  const mecSet = new Set();
+  avFilt.forEach(a=>(a.mecanicos||[]).forEach(m=>mecSet.add(m)));
+  tFilt.forEach(t=>{ if(t.mecanico) mecSet.add(t.mecanico); });
+
+  if(!mecSet.size){
+    document.getElementById('mecCards').innerHTML='<div class="no-data" style="grid-column:1/-1">Sin datos en el periodo seleccionado</div>';
+    destroyChart('cMecanicos'); return;
+  }
+
+  const stats = {};
+  mecSet.forEach(m=>{
+    const avMec = avFilt.filter(a=>(a.mecanicos||[]).includes(m));
+    const tMec  = tFilt.filter(t=>t.mecanico===m);
+    const totalMin = avMec.reduce((s,a)=>s+(a.tiempoMin||0),0);
+    const avgMin   = avMec.length ? Math.round(totalMin/avMec.length) : 0;
+    const turnosDone = tMec.reduce((s,t)=>s+t.done,0);
+    const turnosTotal= tMec.reduce((s,t)=>s+t.total,0);
+    const cumpl = turnosTotal ? Math.round(turnosDone/turnosTotal*100) : null;
+    const tipos = {}; avMec.forEach(a=>{ if(a.tipo) tipos[a.tipo]=(tipos[a.tipo]||0)+1; });
+    const topTipo = Object.entries(tipos).sort((a,b)=>b[1]-a[1])[0];
+    stats[m] = { intervenciones:avMec.length, totalMin, avgMin, turnosTotales:tMec.length, cumpl, topTipo };
+  });
+
+  const maxInt = Math.max(...Object.values(stats).map(s=>s.intervenciones),1);
+
+  document.getElementById('mecCards').innerHTML = Object.entries(stats).sort((a,b)=>b[1].intervenciones-a[1].intervenciones).map(([m,s])=>{
+    const th = Math.floor(s.totalMin/60), tm = s.totalMin%60;
+    const at = Math.floor(s.avgMin/60), am = s.avgMin%60;
+    const pct = Math.round(s.intervenciones/maxInt*100);
+    return `<div class="mec-card">
+      <div class="mec-card-name">👷 ${m}</div>
+      <div class="mec-stat"><span class="label">Intervenciones</span><span class="value">${s.intervenciones}</span></div>
+      <div class="mec-stat"><span class="label">Tiempo total reparando</span><span class="value">${th}h ${tm}min</span></div>
+      <div class="mec-stat"><span class="label">Tiempo medio/avería</span><span class="value">${at}h ${am}min</span></div>
+      <div class="mec-stat"><span class="label">Turnos completados</span><span class="value">${s.turnosTotales}</span></div>
+      ${s.cumpl!==null?`<div class="mec-stat"><span class="label">Cumplimiento tareas</span><span class="value" style="color:${s.cumpl>=80?'var(--green)':s.cumpl>=60?'var(--yellow)':'var(--red)'}">${s.cumpl}%</span></div>`:''}
+      ${s.topTipo?`<div class="mec-stat"><span class="label">Tipo más frecuente</span><span class="value">${s.topTipo[0]}</span></div>`:''}
+      <div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:${pct}%"></div></div></div>
+    </div>`;
+  }).join('');
+
+  // Chart mecánicos
+  const entries = Object.entries(stats).sort((a,b)=>b[1].intervenciones-a[1].intervenciones);
+  destroyChart('cMecanicos');
+  charts.cMecanicos = new Chart(document.getElementById('cMecanicos'),{
+    type:'bar',
+    data:{
+      labels:entries.map(e=>e[0]),
+      datasets:[
+        {label:'Intervenciones',data:entries.map(e=>e[1].intervenciones),backgroundColor:'rgba(201,162,39,0.7)'},
+        {label:'Turnos',data:entries.map(e=>e[1].turnosTotales),backgroundColor:'rgba(52,152,219,0.5)'}
+      ]
+    },
+    options:{plugins:{legend:{labels:{color:'#ccc'}}},scales:{x:{ticks:{color:'#ccc'}},y:{ticks:{color:'#888'},grid:{color:'rgba(255,255,255,0.06)'}}}}
+  });
+}
+
+// ══════════════════════════════════════════════════
+// IA ANÁLISIS
+// ══════════════════════════════════════════════════
+let informeGenerado = '';
+
+function generarInforme(){
+  const btn = document.getElementById('iaBtnGenerar');
+  const loading = document.getElementById('iaLoading');
+  const output = document.getElementById('iaOutput');
+  btn.disabled = true;
+  loading.style.display = 'block';
+  output.style.display = 'none';
+
+  setTimeout(()=>{
+    informeGenerado = analizarDatos();
+    loading.style.display = 'none';
+    output.style.display = 'block';
+    output.textContent = informeGenerado;
+    btn.disabled = false;
+    document.getElementById('iaCopyBtn').style.display = 'inline-flex';
+    document.getElementById('iaExportBtn').style.display = 'inline-flex';
+    showToast('🤖 Informe generado');
+  }, 800);
+}
+
+function analizarDatos(){
+  const av = getAverias();
+  const turnos = getTurnos();
+  const fecha = new Date().toLocaleDateString('es-ES',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const linea = '═'.repeat(52);
+  const sep   = '─'.repeat(52);
+  let r = '';
+
+  r += `${linea}\n`;
+  r += `  INFORME DE ANÁLISIS INTELIGENTE — PANALCOR S.L.\n`;
+  r += `  ${fecha.toUpperCase()}\n`;
+  r += `${linea}\n\n`;
+
+  if(!av.length && !turnos.length){
+    r += 'Sin datos registrados todavía. Registra averías y turnos para obtener análisis.\n';
+    return r;
+  }
+
+  // ── RESUMEN ──
+  const totalMin = av.reduce((s,a)=>s+(a.tiempoMin||0),0);
+  const pendientes = av.filter(a=>a.estado!=='RESUELTA');
+  const hoy = new Date(); const mesK = hoy.toISOString().substring(0,7);
+  const avMes = av.filter(a=>a.fecha&&a.fecha.startsWith(mesK));
+  r += `📊 RESUMEN EJECUTIVO\n${sep}\n`;
+  r += `Total averías registradas:    ${av.length}\n`;
+  r += `Tiempo total de parada:       ${Math.floor(totalMin/60)}h ${totalMin%60}min\n`;
+  r += `Averías este mes:             ${avMes.length}\n`;
+  r += `Sin resolver actualmente:     ${pendientes.length}\n`;
+  r += `Turnos de mantenimiento:      ${turnos.length}\n`;
+  if(turnos.length){
+    const done = turnos.reduce((s,t)=>s+t.done,0);
+    const total = turnos.reduce((s,t)=>s+t.total,0);
+    r += `Cumplimiento global tareas:   ${Math.round(done/total*100)}%\n`;
+  }
+  r += '\n';
+
+  // ── ALERTAS CRÍTICAS ──
+  const criticas = pendientes.filter(a=>a.gravedad==='CRÍTICA'||a.gravedad==='ALTA');
+  if(criticas.length){
+    r += `🚨 ALERTAS CRÍTICAS\n${sep}\n`;
+    criticas.forEach(a=>{ r += `• [${a.gravedad}] ${a.maqNombre} — ${a.parte||'sin parte'} (${a.fecha})\n  Descripción: ${a.descripcion?a.descripcion.substring(0,80):'—'}\n`; });
+    r += '\n';
+  }
+
+  // ── RECURRENCIAS ──
+  const hace90=Date.now()-90*24*3600*1000;
+  const recMap={};
+  av.filter(a=>a.ts>hace90).forEach(a=>{
+    const k=a.maqId+'|'+a.parte;
+    if(!recMap[k]) recMap[k]={maq:a.maqNombre,parte:a.parte,cnt:0,totalMin:0};
+    recMap[k].cnt++; recMap[k].totalMin+=(a.tiempoMin||0);
+  });
+  const recs=Object.values(recMap).filter(r=>r.cnt>=3).sort((a,b)=>b.cnt-a.cnt);
+  if(recs.length){
+    r += `🔄 AVERÍAS RECURRENTES (últimos 90 días)\n${sep}\n`;
+    recs.forEach(rec=>{
+      r += `• ${rec.maq} — ${rec.parte||'sin parte'}: ${rec.cnt} fallos · ${Math.floor(rec.totalMin/60)}h parado\n`;
+      r += `  → ${rec.cnt>=5?'CRÍTICO: Sustituir componente o revisar diseño':'Implementar mantenimiento preventivo de este elemento'}\n`;
+    });
+    r += '\n';
+  }
+
+  // ── MÁQUINAS ──
+  if(av.length){
+    const maqStats={};
+    av.forEach(a=>{
+      if(!maqStats[a.maqNombre]) maqStats[a.maqNombre]={cnt:0,min:0,fechas:[]};
+      maqStats[a.maqNombre].cnt++;
+      maqStats[a.maqNombre].min+=(a.tiempoMin||0);
+      if(a.fecha) maqStats[a.maqNombre].fechas.push(a.fecha);
+    });
+    const top=Object.entries(maqStats).sort((a,b)=>b[1].cnt-a[1].cnt).slice(0,5);
+    r += `🔧 TOP 5 MÁQUINAS MÁS AVERIADAS\n${sep}\n`;
+    top.forEach(([maq,s],i)=>{
+      const mttr = s.cnt>0 ? Math.round(s.min/s.cnt) : 0;
+      let mtbf = '—';
+      if(s.fechas.length>=2){
+        const fs=s.fechas.sort(); const dias=Math.round((new Date(fs[fs.length-1])-new Date(fs[0]))/(86400000));
+        mtbf = (dias/(s.cnt-1)).toFixed(1)+' días';
+      }
+      r += `${i+1}. ${maq}: ${s.cnt} averías · MTTR ${Math.floor(mttr/60)}h${mttr%60}min · MTBF ${mtbf}\n`;
+    });
+    if(top.length) r += `\n→ Priorizar revisión preventiva de: ${top[0][0]}\n`;
+    r += '\n';
+
+    // Detectar deterioro (MTBF decreciente)
+    const deterioro=[];
+    Object.entries(maqStats).forEach(([maq,s])=>{
+      if(s.fechas.length>=4){
+        const fs=s.fechas.sort();
+        const mitad=Math.floor(fs.length/2);
+        const diasPrimera=Math.round((new Date(fs[mitad-1])-new Date(fs[0]))/(86400000));
+        const diasSegunda=Math.round((new Date(fs[fs.length-1])-new Date(fs[mitad]))/(86400000));
+        const mtbf1=diasPrimera/(mitad); const mtbf2=diasSegunda/(fs.length-1-mitad)||1;
+        if(mtbf2<mtbf1*0.7) deterioro.push({maq,mejora:Math.round((1-mtbf2/mtbf1)*100)});
+      }
+    });
+    if(deterioro.length){
+      r += `📉 MÁQUINAS EN DETERIORO (MTBF empeorando)\n${sep}\n`;
+      deterioro.forEach(d=>{ r += `• ${d.maq}: frecuencia de fallos aumentó un ${d.mejora}%\n→ Inspección técnica urgente recomendada\n`; });
+      r += '\n';
+    }
+  }
+
+  // ── TURNOS ──
+  const turnMap={MAÑANA:0,TARDE:0,NOCHE:0};
+  av.forEach(a=>{ if(a.turno){const k=a.turno.split(' ')[0];if(turnMap[k]!==undefined)turnMap[k]++;}});
+  if(Object.values(turnMap).some(v=>v>0)){
+    r += `⏰ ANÁLISIS POR TURNO\n${sep}\n`;
+    const total=Object.values(turnMap).reduce((s,v)=>s+v,0);
+    Object.entries(turnMap).sort((a,b)=>b[1]-a[1]).forEach(([t,c])=>{
+      if(c>0){ const bars='█'.repeat(Math.min(Math.round(c/total*20),20)); r += `${t.padEnd(8)}: ${bars.padEnd(20)} ${c} (${Math.round(c/total*100)}%)\n`; }
+    });
+    const peor=Object.entries(turnMap).sort((a,b)=>b[1]-a[1])[0];
+    if(peor[1]>0) r += `\n→ El turno ${peor[0]} concentra más averías. Revisar carga de trabajo y condiciones.\n`;
+    r += '\n';
+  }
+
+  // ── MECÁNICOS ──
+  const mecStats={};
+  av.forEach(a=>{
+    (a.mecanicos||[]).forEach(m=>{
+      if(!mecStats[m]) mecStats[m]={cnt:0,min:0};
+      mecStats[m].cnt++; mecStats[m].min+=(a.tiempoMin||0);
+    });
+  });
+  if(Object.keys(mecStats).length){
+    r += `👷 ANÁLISIS POR MECÁNICO\n${sep}\n`;
+    const sorted=Object.entries(mecStats).sort((a,b)=>b[1].cnt-a[1].cnt);
+    sorted.forEach(([m,s])=>{
+      const avg=s.cnt?Math.round(s.min/s.cnt):0;
+      r += `• ${m}: ${s.cnt} intervenciones · tiempo medio ${Math.floor(avg/60)}h ${avg%60}min\n`;
+    });
+    if(sorted.length>=2){
+      const fastest=sorted.reduce((a,b)=>(a[1].min/a[1].cnt||999)<(b[1].min/b[1].cnt||999)?a:b);
+      r += `\n→ Menor tiempo medio de reparación: ${fastest[0]}\n`;
+    }
+    r += '\n';
+  }
+
+  // ── TIPOS ──
+  const tipoMap={};
+  av.forEach(a=>{ if(a.tipo) tipoMap[a.tipo]=(tipoMap[a.tipo]||0)+1; });
+  if(Object.keys(tipoMap).length){
+    r += `⚙️ TIPOS DE AVERÍA\n${sep}\n`;
+    const tot=av.length;
+    Object.entries(tipoMap).sort((a,b)=>b[1]-a[1]).forEach(([t,c])=>{
+      const bars='█'.repeat(Math.min(Math.round(c/tot*20),20));
+      r += `${t.padEnd(14)}: ${bars.padEnd(20)} ${c} (${Math.round(c/tot*100)}%)\n`;
+    });
+    r += '\n';
+  }
+
+  // ── REPUESTOS ──
+  const repMap={};
+  av.forEach(a=>{
+    (a.materiales||[]).forEach(m=>{
+      if(!repMap[m.desc]) repMap[m.desc]={desc:m.desc,ref:m.ref,cnt:0,qty:0};
+      repMap[m.desc].cnt++; repMap[m.desc].qty+=(m.qty||1);
+    });
+  });
+  const topRep=Object.values(repMap).sort((a,b)=>b.cnt-a.cnt).slice(0,8);
+  if(topRep.length){
+    r += `📦 REPUESTOS MÁS UTILIZADOS\n${sep}\n`;
+    topRep.forEach((rep,i)=>{ r += `${i+1}. ${rep.desc} (${rep.ref}): ${rep.cnt} veces · ${rep.qty} uds totales\n`; });
+    r += `\n→ Asegura stock mínimo de: ${topRep.slice(0,3).map(r=>r.desc).join(', ')}\n`;
+    r += '\n';
+  }
+
+  // ── CAUSAS ──
+  const causaMap={};
+  av.forEach(a=>{ if(a.causa) causaMap[a.causa]=(causaMap[a.causa]||0)+1; });
+  if(Object.keys(causaMap).length){
+    r += `🔍 CAUSAS RAÍZ MÁS FRECUENTES\n${sep}\n`;
+    Object.entries(causaMap).sort((a,b)=>b[1]-a[1]).forEach(([c,n])=>{ r += `• ${c}: ${n} caso${n>1?'s':''}\n`; });
+    const topCausa=Object.entries(causaMap).sort((a,b)=>b[1]-a[1])[0];
+    if(topCausa) r += `\n→ La causa "${topCausa[0]}" es la más frecuente. Revisar plan de mantenimiento preventivo.\n`;
+    r += '\n';
+  }
+
+  // ── MANTENIMIENTOS ──
+  if(turnos.length){
+    const bajoCumplimiento=turnos.filter(t=>t.done/t.total<0.7);
+    if(bajoCumplimiento.length){
+      r += `📋 TURNOS CON BAJO CUMPLIMIENTO (<70%)\n${sep}\n`;
+      bajoCumplimiento.slice(0,5).forEach(t=>{ r += `• ${t.fecha} ${t.turno} — ${t.mecanico}: ${t.done}/${t.total} tareas (${Math.round(t.done/t.total*100)}%)\n`; });
+      r += '\n';
+    }
+  }
+
+  // ── RECOMENDACIONES ──
+  const recomend=[];
+  if(recs.length) recomend.push(`Plan de mantenimiento preventivo para: ${recs.slice(0,3).map(r=>r.maq+' ('+r.parte+')').join(', ')}`);
+  if(pendientes.length>3) recomend.push(`Resolver urgentemente las ${pendientes.length} averías abiertas`);
+  if(topRep.length) recomend.push(`Asegurar stock de los repuestos más usados: ${topRep.slice(0,2).map(r=>r.desc).join(', ')}`);
+  if(avMes.length>5) recomend.push(`Alta actividad este mes (${avMes.length} averías). Revisar plan de mantenimiento general`);
+  if(!recomend.length && av.length>0) recomend.push('El sistema está bajo control. Continuar con el plan de mantenimiento actual');
+  if(!recomend.length) recomend.push('Registra más datos para obtener recomendaciones personalizadas');
+
+  r += `💡 RECOMENDACIONES\n${sep}\n`;
+  recomend.forEach((rec,i)=>{ r += `${i+1}. ${rec}\n`; });
+
+  r += `\n${linea}\n`;
+  r += `Sistema de Análisis Inteligente PANALCOR v1.0\n`;
+  r += `${linea}\n`;
+  return r;
+}
+
+function copiarInforme(){
+  navigator.clipboard.writeText(informeGenerado).then(()=>showToast('📋 Informe copiado al portapapeles'));
+}
+
+function exportarInformeTxt(){
+  const blob=new Blob([informeGenerado],{type:'text/plain;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='informe_panalcor_'+new Date().toISOString().split('T')[0]+'.txt';
+  a.click(); URL.revokeObjectURL(url);
+  showToast('💾 Informe guardado');
+}
+
+// ══════════════════════════════════════════════════
+// INFORMES
+// ══════════════════════════════════════════════════
+function renderInformes(){
+  renderResumenMensual();
+  renderRepuestosUsados();
+}
+
+function getAvFiltradas(){
+  const av=getAverias();
+  const desde=document.getElementById('infDesde').value;
+  const hasta=document.getElementById('infHasta').value;
+  const est=document.getElementById('infEstado').value;
+  return av.filter(a=>(!desde||a.fecha>=desde)&&(!hasta||a.fecha<=hasta)&&(!est||a.estado===est));
+}
+
+function renderResumenMensual(){
+  const av=getAverias();
+  const meses={};
+  av.forEach(a=>{
+    const k=a.fecha?a.fecha.substring(0,7):'';
+    if(!k) return;
+    if(!meses[k]) meses[k]={cnt:0,min:0,res:0,pend:0,mecs:{}};
+    meses[k].cnt++;
+    meses[k].min+=(a.tiempoMin||0);
+    if(a.estado==='RESUELTA') meses[k].res++; else meses[k].pend++;
+    (a.mecanicos||[]).forEach(m=>{ meses[k].mecs[m]=(meses[k].mecs[m]||0)+1; });
+  });
+  const tbody=document.getElementById('bMensual');
+  const keys=Object.keys(meses).sort().reverse();
+  if(!keys.length){tbody.innerHTML='<tr><td colspan="6" class="no-data">Sin datos</td></tr>';return;}
+  tbody.innerHTML=keys.map(k=>{
+    const d=meses[k];
+    const topMec=Object.entries(d.mecs).sort((a,b)=>b[1]-a[1])[0];
+    return `<tr>
+      <td><b>${k}</b></td><td>${d.cnt}</td>
+      <td>${Math.floor(d.min/60)}h ${d.min%60}min</td>
+      <td><span class="badge badge-green">${d.res}</span></td>
+      <td><span class="badge badge-yellow">${d.pend}</span></td>
+      <td>${topMec?topMec[0]+'('+topMec[1]+')':'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderRepuestosUsados(){
+  const av=getAverias();
+  const repMap={};
+  av.forEach(a=>{ (a.materiales||[]).forEach(m=>{ if(!repMap[m.desc]) repMap[m.desc]={desc:m.desc,ref:m.ref,cnt:0,qty:0}; repMap[m.desc].cnt++; repMap[m.desc].qty+=(m.qty||1); }); });
+  const sorted=Object.values(repMap).sort((a,b)=>b.cnt-a.cnt).slice(0,20);
+  const tbody=document.getElementById('bRepuestos');
+  if(!sorted.length){tbody.innerHTML='<tr><td colspan="4" class="no-data">No hay materiales registrados</td></tr>';return;}
+  tbody.innerHTML=sorted.map(r=>`<tr><td>${r.desc}</td><td><code>${r.ref}</code></td><td>${r.cnt}</td><td>${r.qty}</td></tr>`).join('');
+}
+
+function exportarAverias(){
+  const av=getAvFiltradas();
+  if(!av.length){showToast('Sin datos para exportar');return;}
+  const rows=av.map(a=>({'ID':a.id,'Fecha':a.fecha,'H.Inicio':a.horaInicio,'H.Fin':a.horaFin||'','Min Parado':a.tiempoMin||0,'Máquina':a.maqNombre,'Tipo Máq.':a.maqTipo,'Fabricante':a.maqFabricante,'Área':a.maqArea,'Criticidad':a.criticidad,'Parte':a.parte,'Tipo Avería':a.tipo,'Gravedad':a.gravedad,'Causa':a.causa,'Turno':a.turno,'Mecánicos':(a.mecanicos||[]).join(', '),'Descripción':a.descripcion,'Acción':a.accion,'Observaciones':a.observaciones,'Material':( a.materiales||[]).map(m=>`${m.desc}(${m.ref})×${m.qty}`).join('|'),'Estado':a.estado}));
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'Averías');
+  XLSX.writeFile(wb,`averias_${new Date().toISOString().split('T')[0]}.xlsx`);
+  showToast('📥 Averías exportadas');
+}
+
+function exportarMantenimientos(){
+  const t=getTurnos();
+  if(!t.length){showToast('Sin mantenimientos registrados');return;}
+  const rows=t.map(r=>({'Fecha':r.fecha,'Turno':r.turno,'Mecánico':r.mecanico,'Hora':r.hora,'Hechas':r.done,'Total':r.total,'%':r.total?Math.round(r.done/r.total*100)+'%':'—','Admin':r.editadoPorAdmin?'Sí':'No'}));
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'Mantenimientos');
+  XLSX.writeFile(wb,`mantenimientos_${new Date().toISOString().split('T')[0]}.xlsx`);
+  showToast('📥 Mantenimientos exportados');
+}
+
+function exportarCompleto(){
+  const av=getAverias(); const t=getTurnos();
+  const wb=XLSX.utils.book_new();
+  if(av.length) XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(av.map(a=>({ID:a.id,Fecha:a.fecha,Máquina:a.maqNombre,Parte:a.parte,Tipo:a.tipo,Gravedad:a.gravedad,Descripción:a.descripcion,Mecánicos:(a.mecanicos||[]).join(', '),Min:a.tiempoMin||0,Estado:a.estado}))),'Averías');
+  if(t.length) XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(t.map(r=>({Fecha:r.fecha,Turno:r.turno,Mecánico:r.mecanico,Hechas:r.done,Total:r.total}))),'Mantenimientos');
+  XLSX.writeFile(wb,`backup_panalcor_${new Date().toISOString().split('T')[0]}.xlsx`);
+  showToast('📦 Exportación completa descargada');
+}
+
+// ══════════════════════════════════════════════════
+// CONFIGURACIÓN
+// ══════════════════════════════════════════════════
+function cambiarPassword(){
+  const actual=document.getElementById('cfgPwActual').value;
+  const nueva=document.getElementById('cfgPwNueva').value;
+  const rep=document.getElementById('cfgPwRepetir').value;
+  if(actual!==getPwd()){showToast('❌ La contraseña actual no es correcta');return;}
+  if(nueva.length<4){showToast('⚠️ La nueva contraseña debe tener al menos 4 caracteres');return;}
+  if(nueva!==rep){showToast('⚠️ Las contraseñas nuevas no coinciden');return;}
+  localStorage.setItem(PW_KEY,nueva);
+  document.getElementById('cfgPwActual').value='';
+  document.getElementById('cfgPwNueva').value='';
+  document.getElementById('cfgPwRepetir').value='';
+  showToast('✅ Contraseña actualizada');
+}
+
+function renderEstadoDatos(){
+  const av=getAverias(); const t=getTurnos();
+  const rep=localStorage.getItem('repuestosCache');
+  let repN=0; try{repN=JSON.parse(rep||'[]').length;}catch(e){}
+  const keys=Object.keys(localStorage);
+  const sizeKB=Math.round(JSON.stringify(localStorage).length/1024);
+  document.getElementById('cfgEstadoDatos').innerHTML=`
+    <div>📋 Averías registradas: <b>${av.length}</b></div>
+    <div>🔧 Turnos de mantenimiento: <b>${t.length}</b></div>
+    <div>📦 Repuestos en caché: <b>${repN}</b></div>
+    <div>🗄️ Entradas en localStorage: <b>${keys.length}</b></div>
+    <div>💾 Espacio utilizado aprox.: <b>${sizeKB} KB</b></div>
+  `;
+}
+
+function borrarAverias(){
+  if(!confirm('⚠️ ¿Borrar TODAS las averías? Esta acción no se puede deshacer.\nSe borrarán también de la nube (Firebase).')) return;
+  localStorage.removeItem('averias_v1');
+  fbBorrarAverias();
+  showToast('🗑 Averías eliminadas (local + nube)');
+  renderEstadoDatos();
+  renderDashboard();
+}
+
+function borrarMantenimientos(){
+  if(!confirm('⚠️ ¿Borrar TODOS los registros de mantenimiento? Esta acción no se puede deshacer.')) return;
+  Object.keys(localStorage).filter(k=>k.startsWith('turno_')||k.startsWith('checks_')).forEach(k=>localStorage.removeItem(k));
+  showToast('🗑 Mantenimientos eliminados');
+  renderEstadoDatos();
+}
+
+// ══════════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════════
+function switchTab(name){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  if(name==='mec') renderMecanicos();
+  if(name==='inf') renderInformes();
+  if(name==='cfg') renderEstadoDatos();
+}
+
+// ══════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+// Enter en login
+document.getElementById('pwInput').addEventListener('keydown',e=>{ if(e.key==='Enter') login(); });
+</script>
+</body>
+</html>

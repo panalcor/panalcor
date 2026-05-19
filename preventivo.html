@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PANALCOR S.L. — Mantenimiento Preventivo</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy:       #0d1b2a;
+  --navy-mid:   #1a2d42;
+  --navy-card:  #1e3550;
+  --gold:       #c9a227;
+  --gold-light: #e8c14e;
+  --green:      #27ae60;
+  --cream:      #f4efe6;
+  --white:      #ffffff;
+  --text:       #d0dce8;
+  --text-dim:   #7a9ab5;
+  --border:     rgba(255,255,255,0.08);
+}
+
+html, body { height: 100%; font-family: 'Barlow', sans-serif; }
+
+body {
+  background: var(--navy);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── STRIPE TOP/BOT ── */
+.stripe {
+  position: fixed; left: 0; right: 0; height: 4px; z-index: 100;
+  background: linear-gradient(90deg, var(--navy), var(--gold), var(--gold-light), var(--gold), var(--navy));
+}
+.stripe-top { top: 0; }
+.stripe-bot { bottom: 0; }
+
+/* ══════════════ LOGIN SCREEN ══════════════ */
+#loginScreen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 2rem;
+}
+
+.login-box {
+  background: var(--navy-mid);
+  border: 1px solid rgba(201,162,39,0.25);
+  border-radius: 12px;
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 16px 60px rgba(0,0,0,0.5);
+  animation: fadeUp 0.6s ease both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.login-brand {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.login-brand .brand-name {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--cream);
+  letter-spacing: 0.06em;
+}
+.login-brand .brand-sl {
+  font-size: 1rem;
+  color: var(--gold);
+  letter-spacing: 0.1em;
+  margin-left: 4px;
+}
+.login-brand .brand-sub {
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-top: 6px;
+  display: block;
+}
+
+.login-icon {
+  width: 60px; height: 60px;
+  background: rgba(39,174,96,0.1);
+  border: 1px solid rgba(39,174,96,0.3);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1.2rem;
+  color: var(--green);
+}
+
+.login-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--cream);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.login-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.login-input {
+  width: 100%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  color: var(--white);
+  font-family: 'Barlow', sans-serif;
+  font-size: 1.1rem;
+  padding: 12px 16px;
+  outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 1rem;
+}
+.login-input:focus { border-color: var(--green); }
+
+.login-btn {
+  width: 100%;
+  padding: 13px;
+  background: linear-gradient(135deg, var(--green), #219a52);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+}
+.login-btn:hover  { opacity: 0.9; transform: translateY(-1px); }
+.login-btn:active { transform: translateY(0) scale(0.98); }
+
+#loginError {
+  display: none;
+  margin-top: 0.8rem;
+  padding: 10px 14px;
+  background: rgba(231,76,60,0.1);
+  border: 1px solid rgba(231,76,60,0.3);
+  border-radius: 6px;
+  color: #e74c3c;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.back-link {
+  margin-top: 1.5rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  text-decoration: none;
+  letter-spacing: 0.08em;
+  transition: color 0.2s;
+}
+.back-link:hover { color: var(--gold); }
+
+/* ══════════════ APP SCREEN ══════════════ */
+#appScreen {
+  display: none;
+  min-height: 100vh;
+  padding-top: 4px;
+}
+
+/* ── Header ── */
+.app-header {
+  background: var(--navy-mid);
+  border-bottom: 1px solid var(--border);
+  padding: 0 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.app-header .logo-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  width: 36px; height: 36px;
+  background: rgba(39,174,96,0.15);
+  border: 1px solid rgba(39,174,96,0.35);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--green);
+  flex-shrink: 0;
+}
+
+.app-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--cream);
+  text-transform: uppercase;
+}
+.app-title span {
+  font-weight: 400;
+  font-size: 0.75rem;
+  color: var(--gold);
+  letter-spacing: 0.08em;
+  display: block;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hdr-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+.hdr-btn:hover { color: var(--gold); border-color: rgba(201,162,39,0.4); }
+.hdr-btn.logout:hover { color: #e74c3c; border-color: rgba(231,76,60,0.4); }
+.hdr-btn svg { width: 14px; height: 14px; }
+
+/* ── Controls bar ── */
+.controls {
+  background: var(--navy-mid);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  align-items: flex-end;
+}
+
+.ctrl-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+  min-width: 180px;
+}
+
+.ctrl-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.ctrl-select, .ctrl-input {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  color: var(--white);
+  font-family: 'Barlow', sans-serif;
+  font-size: 1rem;
+  padding: 9px 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  cursor: pointer;
+}
+.ctrl-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a9ab5' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+.ctrl-select:focus, .ctrl-input:focus { border-color: var(--green); }
+.ctrl-select option { background: #1a2d42; }
+
+.ctrl-select:hover, .ctrl-input:hover { border-color: rgba(255,255,255,0.22); }
+
+.export-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 20px;
+  background: linear-gradient(135deg, rgba(39,174,96,0.2), rgba(39,174,96,0.1));
+  border: 1px solid rgba(39,174,96,0.4);
+  border-radius: 8px;
+  color: var(--green);
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  align-self: flex-end;
+}
+.export-btn:hover {
+  background: linear-gradient(135deg, rgba(39,174,96,0.3), rgba(39,174,96,0.15));
+  border-color: var(--green);
+  box-shadow: 0 4px 20px rgba(39,174,96,0.2);
+}
+.export-btn svg { width: 18px; height: 18px; }
+
+/* ── Stats strip ── */
+.stats-strip {
+  padding: 0.9rem 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.18s;
+  user-select: none;
+}
+.stat-chip:hover { filter: brightness(1.15); transform: translateY(-1px); }
+.stat-chip.active { box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
+.stat-chip .chip-count {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.count-display {
+  margin-left: auto;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+}
+.count-display b { color: var(--gold); font-size: 1rem; }
+
+/* ── Table ── */
+.table-wrap {
+  padding: 0 1.5rem 5rem;
+  margin-top: 1rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 4px;
+}
+
+thead th {
+  padding: 10px 16px;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  font-weight: 600;
+  text-align: left;
+  background: var(--navy-mid);
+  position: sticky;
+  top: 60px;
+  z-index: 10;
+}
+thead th:first-child { border-radius: 8px 0 0 8px; }
+thead th:last-child  { border-radius: 0 8px 8px 0; }
+
+tbody tr {
+  background: var(--navy-card);
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+tbody tr:hover { background: #243d58; }
+
+tbody td {
+  padding: 14px 16px;
+  font-size: 1rem;
+  color: var(--text);
+  vertical-align: middle;
+}
+tbody td:first-child { border-radius: 8px 0 0 8px; color: var(--text-dim); font-size: 0.85rem; font-family: 'Oswald', sans-serif; }
+tbody td:last-child  { border-radius: 0 8px 8px 0; }
+
+.td-machine {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.82rem !important;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-dim) !important;
+  white-space: nowrap;
+}
+
+.td-task {
+  font-size: 1.05rem !important;
+  color: var(--cream) !important;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.freq-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-family: 'Oswald', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+/* Frequency colors */
+.freq-DIARIO     { color: #ff6b6b; background: rgba(231,76,60,0.12);  border-color: rgba(231,76,60,0.3); }
+.freq-SEMANAL    { color: #74b9ff; background: rgba(52,152,219,0.12); border-color: rgba(52,152,219,0.3); }
+.freq-QUINCENAL  { color: #55efc4; background: rgba(46,204,113,0.12); border-color: rgba(46,204,113,0.3); }
+.freq-MENSUAL    { color: #ffd97d; background: rgba(201,162,39,0.12); border-color: rgba(201,162,39,0.3); }
+.freq-TRIMESTRAL { color: #d6a3ff; background: rgba(155,89,182,0.12); border-color: rgba(155,89,182,0.3); }
+.freq-SEMESTRAL  { color: #ffb347; background: rgba(230,126,34,0.12); border-color: rgba(230,126,34,0.3); }
+.freq-ANUAL      { color: #b2bec3; background: rgba(149,165,166,0.12);border-color: rgba(149,165,166,0.3); }
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: var(--text-dim);
+}
+.empty-state svg { width: 56px; height: 56px; opacity: 0.25; margin-bottom: 1rem; }
+.empty-state p   { font-size: 1.1rem; }
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .app-header { padding: 0 1rem; }
+  .controls   { padding: 0.8rem 1rem; }
+  .stats-strip{ padding: 0.8rem 1rem; }
+  .table-wrap { padding: 0 0.5rem 5rem; }
+  thead th, tbody td { padding: 10px 10px; }
+  .td-task { font-size: 0.95rem !important; }
+  .app-title span { display: none; }
+  .hdr-btn .btn-text { display: none; }
+  .ctrl-group { min-width: 140px; }
+}
+
+@media print {
+  .stripe, .app-header, .controls, .stats-strip, .tab-nav, .week-nav, .plan-controls { display: none !important; }
+  body { background: white; color: black; }
+  .table-wrap, .plan-wrap { padding: 0; }
+  table { font-size: 11pt; }
+  tbody tr { background: white !important; }
+  tbody td { border-bottom: 1px solid #ddd; }
+  .freq-badge { border: 1px solid #999; color: black !important; background: white !important; }
+  .plan-machine-header { background: #eee !important; color: black !important; }
+  .plan-task-row { background: white !important; border-bottom: 1px solid #eee; }
+}
+
+/* ══ TABS ══ */
+.tab-nav {
+  background: var(--navy-mid);
+  border-bottom: 2px solid var(--border);
+  display: flex;
+  padding: 0 1rem;
+  position: sticky; top: 60px; z-index: 40;
+}
+.tab-btn {
+  padding: 13px 18px;
+  background: none; border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--text-dim);
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.82rem; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer; transition: all 0.2s;
+  margin-bottom: -2px;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--green); border-bottom-color: var(--green); }
+
+/* ══ WEEK NAVIGATOR ══ */
+.week-nav {
+  background: var(--navy-mid);
+  border-bottom: 1px solid var(--border);
+  padding: 0.9rem 1.5rem;
+  display: flex; align-items: center;
+  justify-content: space-between; gap: 1rem;
+}
+.week-nav-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text-dim);
+  font-family: 'Barlow', sans-serif; font-size: 0.9rem;
+  cursor: pointer; transition: all 0.2s; white-space: nowrap;
+}
+.week-nav-btn:hover { color: var(--green); border-color: rgba(39,174,96,0.45); }
+.week-info { text-align: center; flex: 1; min-width: 0; }
+.week-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.15rem; font-weight: 700;
+  color: var(--cream); letter-spacing: 0.06em;
+}
+.week-sub { font-size: 0.75rem; color: var(--text-dim); letter-spacing: 0.08em; margin-top: 2px; }
+
+/* ══ PLAN CONTROLS ══ */
+.plan-controls {
+  padding: 0.7rem 1.5rem;
+  display: flex; align-items: flex-end;
+  gap: 1rem; border-bottom: 1px solid var(--border);
+  background: var(--navy-mid); flex-wrap: wrap;
+}
+.plan-stat-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; flex: 1; }
+
+/* ══ PLAN TASK LIST ══ */
+.plan-wrap { padding: 1rem 1.5rem 5rem; }
+
+.plan-machine-group { margin-bottom: 1rem; border-radius: 10px; overflow: hidden; }
+
+.plan-machine-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 14px;
+  background: #1f3a56;
+  border-left: 3px solid var(--green);
+}
+.plan-machine-name {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.95rem; font-weight: 600;
+  letter-spacing: 0.1em; color: var(--cream);
+  flex: 1;
+}
+.plan-mec-badge {
+  font-size: 0.7rem; font-family: 'Oswald', sans-serif; font-weight: 600;
+  letter-spacing: 0.08em; color: var(--gold);
+  background: rgba(201,162,39,0.1);
+  border: 1px solid rgba(201,162,39,0.3);
+  padding: 2px 8px; border-radius: 10px;
+}
+.plan-count-badge {
+  font-size: 0.72rem; color: var(--text-dim);
+  background: rgba(255,255,255,0.06);
+  padding: 2px 8px; border-radius: 10px;
+}
+.plan-task-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  background: var(--navy-card);
+  border-top: 1px solid rgba(255,255,255,0.04);
+  transition: background 0.13s;
+}
+.plan-task-row:hover { background: #243d58; }
+.plan-task-num {
+  font-size: 0.78rem; color: var(--text-dim);
+  font-family: 'Oswald', sans-serif;
+  min-width: 26px; text-align: right;
+}
+.plan-task-text { flex: 1; font-size: 1rem; color: var(--cream); line-height: 1.35; }
+
+.pre-ref-msg {
+  margin: 2.5rem auto; max-width: 460px;
+  background: rgba(230,126,34,0.08);
+  border: 1px solid rgba(230,126,34,0.3);
+  border-radius: 10px; padding: 1.8rem; text-align: center;
+}
+.pre-ref-msg h3 { font-family:'Oswald',sans-serif; color:#ffb347; font-size:1rem; letter-spacing:0.1em; margin-bottom:8px; }
+.pre-ref-msg p  { font-size:0.9rem; color:var(--text-dim); }
+.pre-ref-msg button { margin-top:1rem; padding:8px 18px; background:rgba(201,162,39,0.15); border:1px solid rgba(201,162,39,0.4); border-radius:6px; color:var(--gold); font-family:'Oswald',sans-serif; font-size:0.85rem; font-weight:600; letter-spacing:0.1em; cursor:pointer; }
+
+/* ══ AJUSTES ══ */
+.ajustes-wrap { padding: 1.5rem; max-width: 720px; }
+.ajuste-section {
+  background: var(--navy-mid); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.4rem; margin-bottom: 1rem;
+}
+.ajuste-title {
+  font-family: 'Oswald', sans-serif; font-size: 0.88rem;
+  font-weight: 600; letter-spacing: 0.14em;
+  color: var(--gold); text-transform: uppercase;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.07); padding-bottom: 0.6rem;
+}
+.ajuste-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.8rem; flex-wrap: wrap; }
+.ajuste-lbl { font-size: 0.85rem; color: var(--text-dim); min-width: 180px; }
+.ajuste-input, .ajuste-sel {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 6px; color: var(--white);
+  font-family: 'Barlow', sans-serif; font-size: 0.95rem;
+  padding: 8px 12px; outline: none; transition: border-color 0.2s;
+}
+.ajuste-input:focus, .ajuste-sel:focus { border-color: var(--green); }
+.ajuste-sel {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a9ab5' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px;
+}
+.ajuste-sel option { background: #1a2d42; }
+.save-btn {
+  padding: 9px 20px;
+  background: linear-gradient(135deg,rgba(39,174,96,0.2),rgba(39,174,96,0.1));
+  border: 1px solid rgba(39,174,96,0.5); border-radius: 8px;
+  color: var(--green);
+  font-family: 'Oswald', sans-serif; font-size: 0.85rem;
+  font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer; transition: all 0.2s;
+}
+.save-btn:hover { border-color: var(--green); box-shadow: 0 2px 12px rgba(39,174,96,0.2); }
+.asig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.asig-row { display:flex; align-items:center; gap:8px; padding:6px 10px; background:rgba(255,255,255,0.03); border-radius:6px; }
+.asig-maq { flex:1; font-size:0.8rem; color:var(--text); font-family:'Oswald',sans-serif; font-weight:500; }
+.asig-mec { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:5px; color:var(--gold); font-family:'Barlow',sans-serif; font-size:0.82rem; padding:4px 8px; outline:none; min-width:115px; }
+.asig-mec option { background:#1a2d42; }
+.ok-msg { display:none; font-size:0.82rem; color:var(--green); margin-left:10px; }
+
+@media (max-width:640px) {
+  .asig-grid { grid-template-columns:1fr; }
+  .tab-btn { padding:10px 10px; font-size:0.73rem; }
+  .week-nav { padding:0.8rem 1rem; }
+  .week-title { font-size:1rem; }
+  .plan-controls { padding:0.7rem 1rem; }
+  .plan-wrap { padding:0.8rem 0.5rem 5rem; }
+  .ajustes-wrap { padding:1rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="stripe stripe-top"></div>
+<div class="stripe stripe-bot"></div>
+
+<!-- ══════════ LOGIN ══════════ -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-brand">
+      <div class="brand-name">PANALCOR <span class="brand-sl">S.L.</span></div>
+      <span class="brand-sub">Sistema de Mantenimiento</span>
+    </div>
+
+    <div class="login-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="28" height="28">
+        <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+      </svg>
+    </div>
+
+    <div class="login-title">Mantenimiento Preventivo</div>
+
+    <form onsubmit="intentarLogin(event)">
+      <label class="login-label" for="loginPwd">Contraseña de acceso</label>
+      <input class="login-input" type="password" id="loginPwd" autocomplete="off" placeholder="••••••••" autofocus>
+      <button class="login-btn" type="submit">Entrar</button>
+    </form>
+
+    <div id="loginError">Contraseña incorrecta. Inténtalo de nuevo.</div>
+
+    <a href="panalcor_inicio.html" class="back-link" style="display:block;text-align:center">← Volver al inicio</a>
+  </div>
+</div>
+
+<!-- ══════════ APP ══════════ -->
+<div id="appScreen">
+
+  <!-- Header -->
+  <div class="app-header">
+    <div class="logo-area">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+          <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+        </svg>
+      </div>
+      <div class="app-title">
+        Mantenimiento Preventivo
+        <span>PANALCOR S.L. — Catálogo de tareas</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <a href="panalcor_inicio.html" class="hdr-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span class="btn-text">Inicio</span>
+      </a>
+      <button type="button" class="hdr-btn logout" onclick="cerrarSesion()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span class="btn-text">Salir</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ TAB NAV ══ -->
+  <div class="tab-nav">
+    <button type="button" class="tab-btn active" id="tbtn-plan"     onclick="switchTab('plan')">📅 Plan Semanal</button>
+    <button type="button" class="tab-btn"        id="tbtn-catalogo" onclick="switchTab('catalogo')">📋 Catálogo</button>
+    <button type="button" class="tab-btn"        id="tbtn-ajustes"  onclick="switchTab('ajustes')">⚙️ Ajustes</button>
+  </div>
+
+  <!-- ══ PLAN SEMANAL ══ -->
+  <div id="tab-plan">
+    <div class="week-nav">
+      <button type="button" class="week-nav-btn" onclick="navWeek(-1)">← Anterior</button>
+      <div class="week-info">
+        <div class="week-title" id="weekTitle">—</div>
+        <div class="week-sub"   id="weekSub">—</div>
+      </div>
+      <button type="button" class="week-nav-btn" onclick="navWeek(1)">Siguiente →</button>
+    </div>
+    <div class="plan-controls">
+      <div class="plan-stat-chips" id="planStats"></div>
+      <div style="display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap">
+        <div>
+          <span style="font-size:0.68rem;letter-spacing:0.14em;color:var(--text-dim);text-transform:uppercase;display:block;margin-bottom:4px">Mecánico</span>
+          <select class="ajuste-sel" id="planMecanico" onchange="renderPlan()" style="min-width:145px"></select>
+        </div>
+        <button type="button" class="export-btn" onclick="exportPlan()" style="padding:9px 16px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
+          Exportar Plan
+        </button>
+      </div>
+    </div>
+    <div class="plan-wrap" id="planWrap"></div>
+  </div>
+
+  <!-- ══ CATÁLOGO ══ -->
+  <div id="tab-catalogo" style="display:none">
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="ctrl-group">
+      <span class="ctrl-label">Máquina / Grupo</span>
+      <select class="ctrl-select" id="filtroMaquina" onchange="aplicarFiltros()">
+        <option value="">— Todas las máquinas —</option>
+        <option>LEVADURA</option>
+        <option>HARINA Y ADITIVOS</option>
+        <option>COMPRESORES Y SECADORES</option>
+        <option>LINEAS FORMADORAS</option>
+        <option>CARRUSELES</option>
+        <option>TOLVAS Y AGUA</option>
+        <option>DIVISORAS Y CAMARAS DE BOLAS</option>
+        <option>REPARTIDORES</option>
+        <option>TALLADORA</option>
+        <option>HORNOS</option>
+        <option>FERMENTADORA RELAMPAGO</option>
+        <option>TUNEL PREFRIO</option>
+        <option>TUNELES</option>
+        <option>DESMOLDEO</option>
+        <option>CONTADORA</option>
+        <option>MAQUINA DE CAJAS</option>
+        <option>MAQUINA DE BOLSAS</option>
+        <option>BASCULA Y PRECINTADORA</option>
+        <option>CENTRADORES ENTABLADO</option>
+        <option>TRUENO</option>
+      </select>
+    </div>
+
+    <div class="ctrl-group">
+      <span class="ctrl-label">Periodicidad</span>
+      <select class="ctrl-select" id="filtroFrecuencia" onchange="aplicarFiltros()">
+        <option value="">— Todas las frecuencias —</option>
+        <option>DIARIO</option>
+        <option>SEMANAL</option>
+        <option>QUINCENAL</option>
+        <option>MENSUAL</option>
+        <option>TRIMESTRAL</option>
+        <option>SEMESTRAL</option>
+        <option>ANUAL</option>
+      </select>
+    </div>
+
+    <div class="ctrl-group" style="max-width:280px">
+      <span class="ctrl-label">Buscar tarea</span>
+      <input class="ctrl-input" type="text" id="filtroTexto" placeholder="Escribe para filtrar..." oninput="aplicarFiltros()">
+    </div>
+
+    <button type="button" class="export-btn" onclick="exportarExcel()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="12" y1="18" x2="12" y2="12"/>
+        <polyline points="9 15 12 18 15 15"/>
+      </svg>
+      Exportar Excel
+    </button>
+  </div>
+
+  <!-- Stats chips -->
+  <div class="stats-strip" id="statsStrip">
+    <!-- filled by JS -->
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table id="tareasTable">
+      <thead>
+        <tr>
+          <th style="width:50px">#</th>
+          <th style="width:200px">Máquina</th>
+          <th>Tarea</th>
+          <th style="width:130px;text-align:center">Frecuencia</th>
+        </tr>
+      </thead>
+      <tbody id="tareasBody">
+      </tbody>
+    </table>
+    <div id="emptyState" class="empty-state" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <p>No hay tareas que coincidan con el filtro seleccionado.</p>
+    </div>
+  </div>
+
+  </div><!-- /tab-catalogo -->
+
+  <!-- ══ AJUSTES ══ -->
+  <div id="tab-ajustes" style="display:none">
+    <div class="ajustes-wrap">
+
+      <!-- Fecha referencia -->
+      <div class="ajuste-section">
+        <div class="ajuste-title">📅 Fecha de inicio del plan</div>
+        <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:1rem">
+          Desde esta fecha se calculan los ciclos: Quincenal = cada 2 semanas, Mensual = cada 4 semanas, Trimestral = cada 13, Semestral = cada 26, Anual = cada 52.
+        </p>
+        <div class="ajuste-row">
+          <label class="ajuste-lbl">Fecha de inicio (lunes)</label>
+          <input type="date" class="ajuste-input" id="ajRefDate" style="width:160px">
+          <button type="button" class="save-btn" onclick="guardarRefDate()">Guardar</button>
+          <span class="ok-msg" id="okRef">✅ Guardado</span>
+        </div>
+      </div>
+
+      <!-- Mecánicos -->
+      <div class="ajuste-section">
+        <div class="ajuste-title">👷 Mecánicos del equipo</div>
+        <div id="mecList" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem"></div>
+        <div class="ajuste-row">
+          <input type="text" class="ajuste-input" id="newMecName" placeholder="Nombre mecánico..." style="width:200px" oninput="this.value=this.value.toUpperCase()">
+          <button type="button" class="save-btn" onclick="addMecanico()">+ Añadir</button>
+        </div>
+      </div>
+
+      <!-- Asignación máquinas → mecánicos -->
+      <div class="ajuste-section">
+        <div class="ajuste-title">🔧 Asignación de máquinas a mecánicos</div>
+        <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:1rem">
+          Asigna cada grupo de máquinas a un mecánico. Esto permite filtrar el Plan Semanal por persona.
+        </p>
+        <div class="asig-grid" id="asigGrid"></div>
+        <button type="button" class="save-btn" style="margin-top:0.8rem" onclick="guardarAsig()">Guardar asignaciones</button>
+        <span class="ok-msg" id="okAsig">✅ Guardado</span>
+      </div>
+
+      <!-- Cambiar contraseña -->
+      <div class="ajuste-section">
+        <div class="ajuste-title">🔒 Contraseña de acceso</div>
+        <div class="ajuste-row">
+          <label class="ajuste-lbl">Contraseña actual</label>
+          <input type="password" class="ajuste-input" id="pwdOld" style="width:160px">
+        </div>
+        <div class="ajuste-row">
+          <label class="ajuste-lbl">Nueva contraseña</label>
+          <input type="password" class="ajuste-input" id="pwdNew" style="width:160px">
+        </div>
+        <div class="ajuste-row">
+          <label class="ajuste-lbl">Repetir nueva</label>
+          <input type="password" class="ajuste-input" id="pwdNew2" style="width:160px">
+          <button type="button" class="save-btn" onclick="cambiarPwd()">Cambiar</button>
+          <span class="ok-msg" id="okPwd">✅ Cambiada</span>
+        </div>
+        <div id="pwdErr" style="display:none;font-size:0.82rem;color:#e74c3c;margin-top:0.4rem"></div>
+      </div>
+
+    </div>
+  </div><!-- /tab-ajustes -->
+
+</div><!-- /appScreen -->
+
+<script>
+/* ════════════════════════════════════════════
+   DATOS — 412 tareas preventivas
+   ════════════════════════════════════════════ */
+const TAREAS = [
+{"id":1,"maquina":"LEVADURA","tarea":"GLICOL","frecuencia":"MENSUAL"},
+{"id":2,"maquina":"LEVADURA","tarea":"ENFRIAMIENTO TANQUES","frecuencia":"QUINCENAL"},
+{"id":3,"maquina":"LEVADURA","tarea":"AGITADORES","frecuencia":"QUINCENAL"},
+{"id":4,"maquina":"LEVADURA","tarea":"TEMPERATURA TANQUES","frecuencia":"QUINCENAL"},
+{"id":5,"maquina":"LEVADURA","tarea":"CUADRO LEVADURA T1 (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)","frecuencia":"QUINCENAL"},
+{"id":6,"maquina":"LEVADURA","tarea":"BOMBAS (FUNCIONAMIENTO CORRECTO Y SIN PERDIDAS)","frecuencia":"QUINCENAL"},
+{"id":7,"maquina":"LEVADURA","tarea":"CUADRO GENERAL LIMPIEZA","frecuencia":"TRIMESTRAL"},
+{"id":8,"maquina":"LEVADURA","tarea":"CUADRO TANQUE 1 LIMPIEZA","frecuencia":"TRIMESTRAL"},
+{"id":9,"maquina":"LEVADURA","tarea":"ESTADO DE LAS LLAVES","frecuencia":"MENSUAL"},
+{"id":10,"maquina":"LEVADURA","tarea":"ESTADO DE LAS MANGUERAS","frecuencia":"MENSUAL"},
+{"id":11,"maquina":"LEVADURA","tarea":"DOSIFICACION LINEA 1","frecuencia":"MENSUAL"},
+{"id":12,"maquina":"LEVADURA","tarea":"DOSIFICACION LINEA 2","frecuencia":"MENSUAL"},
+{"id":13,"maquina":"LEVADURA","tarea":"DOSIFICACION LINEA 3","frecuencia":"MENSUAL"},
+{"id":14,"maquina":"LEVADURA","tarea":"DOSIFICACION LINEA 4","frecuencia":"MENSUAL"},
+{"id":15,"maquina":"LEVADURA","tarea":"DOSIFICACION LINEA 5","frecuencia":"MENSUAL"},
+{"id":16,"maquina":"LEVADURA","tarea":"DOSIFICACION LINEA 6","frecuencia":"MENSUAL"},
+{"id":17,"maquina":"LEVADURA","tarea":"ESTADO CONTADOR L1","frecuencia":"MENSUAL"},
+{"id":18,"maquina":"LEVADURA","tarea":"ESTADO CONTADOR L2","frecuencia":"MENSUAL"},
+{"id":19,"maquina":"LEVADURA","tarea":"ESTADO CONTADOR L3","frecuencia":"MENSUAL"},
+{"id":20,"maquina":"LEVADURA","tarea":"ESTADO CONTADOR L4","frecuencia":"MENSUAL"},
+{"id":21,"maquina":"LEVADURA","tarea":"ESTADO CONTADOR L5","frecuencia":"MENSUAL"},
+{"id":22,"maquina":"LEVADURA","tarea":"ESTADO CONTADOR L6","frecuencia":"MENSUAL"},
+{"id":23,"maquina":"LEVADURA","tarea":"CONTADOR IMPULSOS L1","frecuencia":"MENSUAL"},
+{"id":24,"maquina":"LEVADURA","tarea":"CONTADOR IMPULSOS L2","frecuencia":"MENSUAL"},
+{"id":25,"maquina":"LEVADURA","tarea":"CONTADOR IMPULSOS L3","frecuencia":"MENSUAL"},
+{"id":26,"maquina":"LEVADURA","tarea":"CONTADOR IMPULSOS L4","frecuencia":"MENSUAL"},
+{"id":27,"maquina":"LEVADURA","tarea":"CONTADOR IMPULSOS L5","frecuencia":"MENSUAL"},
+{"id":28,"maquina":"LEVADURA","tarea":"CONTADOR IMPULSOS L6","frecuencia":"MENSUAL"},
+{"id":29,"maquina":"HARINA Y ADITIVOS","tarea":"CONOS SILOS, ESTADO","frecuencia":"MENSUAL"},
+{"id":30,"maquina":"HARINA Y ADITIVOS","tarea":"VALVULAS SALIDA HARINA","frecuencia":"MENSUAL"},
+{"id":31,"maquina":"HARINA Y ADITIVOS","tarea":"CODOS, MANGUITOS, UNIONES ETC TUBERIAS","frecuencia":"SEMANAL"},
+{"id":32,"maquina":"HARINA Y ADITIVOS","tarea":"TURBINAS (ESTADO EN TEJADO, TUBOS ETC)","frecuencia":"QUINCENAL"},
+{"id":33,"maquina":"HARINA Y ADITIVOS","tarea":"VALVULA SEGURIDAD ENTRADA HARINA","frecuencia":"SEMANAL"},
+{"id":34,"maquina":"HARINA Y ADITIVOS","tarea":"REVISION BOCAS SILOS","frecuencia":"MENSUAL"},
+{"id":35,"maquina":"HARINA Y ADITIVOS","tarea":"VIBRADORES SILOS","frecuencia":"MENSUAL"},
+{"id":36,"maquina":"HARINA Y ADITIVOS","tarea":"CUADRO PESOS HARINA","frecuencia":"MENSUAL"},
+{"id":37,"maquina":"HARINA Y ADITIVOS","tarea":"TURBINA","frecuencia":"QUINCENAL"},
+{"id":38,"maquina":"HARINA Y ADITIVOS","tarea":"ARRANCADOR","frecuencia":"QUINCENAL"},
+{"id":39,"maquina":"HARINA Y ADITIVOS","tarea":"REVOLVER GIRO","frecuencia":"QUINCENAL"},
+{"id":40,"maquina":"HARINA Y ADITIVOS","tarea":"CUADRO ADITIVOS Y CUADRO REVOLVER (MARCADO, LIMPIEZA ETC.)","frecuencia":"QUINCENAL"},
+{"id":41,"maquina":"HARINA Y ADITIVOS","tarea":"BASCULA ADITIVOS (PESA BASCULA ENVASADO Y ANOTAR)","frecuencia":"SEMANAL"},
+{"id":42,"maquina":"HARINA Y ADITIVOS","tarea":"PISTONES APERTURA TRAMPILLA","frecuencia":"SEMANAL"},
+{"id":43,"maquina":"HARINA Y ADITIVOS","tarea":"VIBRADOR CONO","frecuencia":"SEMANAL"},
+{"id":44,"maquina":"HARINA Y ADITIVOS","tarea":"ASPIRACION CONO","frecuencia":"SEMANAL"},
+{"id":45,"maquina":"HARINA Y ADITIVOS","tarea":"TOLVAS ADITIVOS, ESTADO ETC","frecuencia":"SEMANAL"},
+{"id":46,"maquina":"HARINA Y ADITIVOS","tarea":"MOTOR-REDUCTOR SINFIN ADITIVOS (TODOS)","frecuencia":"SEMANAL"},
+{"id":47,"maquina":"HARINA Y ADITIVOS","tarea":"LIMPIEZA","frecuencia":"MENSUAL"},
+{"id":48,"maquina":"HARINA Y ADITIVOS","tarea":"ESTADO PANTALLA","frecuencia":"MENSUAL"},
+{"id":49,"maquina":"HARINA Y ADITIVOS","tarea":"MARCADO BOTONERAS Y LUCES","frecuencia":"MENSUAL"},
+{"id":50,"maquina":"COMPRESORES Y SECADORES","tarea":"LIMPIEZA TOMAS DE AIRE","frecuencia":"SEMANAL"},
+{"id":51,"maquina":"COMPRESORES Y SECADORES","tarea":"REVISION NIVEL ACEITE","frecuencia":"SEMANAL"},
+{"id":52,"maquina":"COMPRESORES Y SECADORES","tarea":"ROTACION COMPRESORES","frecuencia":"SEMANAL"},
+{"id":53,"maquina":"COMPRESORES Y SECADORES","tarea":"LIMPIEZA RADIADORES","frecuencia":"SEMANAL"},
+{"id":54,"maquina":"COMPRESORES Y SECADORES","tarea":"REVISION PURGAS","frecuencia":"SEMANAL"},
+{"id":55,"maquina":"LINEAS FORMADORAS","tarea":"CADENAS AZULES-GRISES","frecuencia":"SEMANAL"},
+{"id":56,"maquina":"LINEAS FORMADORAS","tarea":"MOTOR-REDUCTOR-EJE-PINONES-POLEAS  ENTRADA","frecuencia":"QUINCENAL"},
+{"id":57,"maquina":"LINEAS FORMADORAS","tarea":"MOTOR-REDUCTOR-EJE-PINONES-CADENAS  SALIDA","frecuencia":"QUINCENAL"},
+{"id":58,"maquina":"LINEAS FORMADORAS","tarea":"MOTOR-REDUCTOR-EJE-PINONES-CADENAS-ANGULOS PULMON","frecuencia":"QUINCENAL"},
+{"id":59,"maquina":"LINEAS FORMADORAS","tarea":"MOTOR-REDUCTOR-CADENA-EJE-PINONES-TAPER-ENCODER TOPES","frecuencia":"QUINCENAL"},
+{"id":60,"maquina":"LINEAS FORMADORAS","tarea":"INDUCTIVOS INTERIORES (NO ROZADOS O DAÑADOS-TOPES-BANDEJAS)","frecuencia":"SEMANAL"},
+{"id":61,"maquina":"LINEAS FORMADORAS","tarea":"RETENEDORES BANDEJAS - PISTON ELEVADOR - ELECTROVALV.","frecuencia":"SEMANAL"},
+{"id":62,"maquina":"LINEAS FORMADORAS","tarea":"LONA AZUL - EJES - MOTOR - REDUCTOR- RODAMIENTOS","frecuencia":"QUINCENAL"},
+{"id":63,"maquina":"LINEAS FORMADORAS","tarea":"CADENA CANJILONES - TENSION - ESTADO - CADENA MOTRIZ (ENGRASAR)","frecuencia":"SEMANAL"},
+{"id":64,"maquina":"LINEAS FORMADORAS","tarea":"PATIN SUP.- MOTOR-REDUCTOR-EJES-RODAMIENTOS-LONA","frecuencia":"QUINCENAL"},
+{"id":65,"maquina":"LINEAS FORMADORAS","tarea":"PATIN INF.- MOTOR-REDUCTOR-EJES-RODAMIENTOS-LONA","frecuencia":"QUINCENAL"},
+{"id":66,"maquina":"LINEAS FORMADORAS","tarea":"LONA VUELCO - RODILLO GRANDE- RODAMIENTOS - TEFLONES - TENSOR","frecuencia":"QUINCENAL"},
+{"id":67,"maquina":"LINEAS FORMADORAS","tarea":"CENTRADOR 1 - PALAS - FOTOCEL - PINONES - PISTON - EV","frecuencia":"QUINCENAL"},
+{"id":68,"maquina":"LINEAS FORMADORAS","tarea":"CENTRADOR 2 - PALAS - FOTOCEL - PINONES - PISTON - EV","frecuencia":"QUINCENAL"},
+{"id":69,"maquina":"LINEAS FORMADORAS","tarea":"PINONES TODOS","frecuencia":"QUINCENAL"},
+{"id":70,"maquina":"LINEAS FORMADORAS","tarea":"MOTOR - POLEA - CORREAS (INCLUSO LAS VERDES)","frecuencia":"QUINCENAL"},
+{"id":71,"maquina":"LINEAS FORMADORAS","tarea":"CADENAS: ESTADO-TENSION-LIMPIAR-ENGRASAR","frecuencia":"QUINCENAL"},
+{"id":72,"maquina":"LINEAS FORMADORAS","tarea":"RODILLOS: ESTADO","frecuencia":"QUINCENAL"},
+{"id":73,"maquina":"LINEAS FORMADORAS","tarea":"RODAMIENTOS DE LOS PINONES, LONAS, ETC","frecuencia":"QUINCENAL"},
+{"id":74,"maquina":"LINEAS FORMADORAS","tarea":"LONAS ENTRADA, INTERMEDIA, SALIDA Y TENSORES","frecuencia":"QUINCENAL"},
+{"id":75,"maquina":"LINEAS FORMADORAS","tarea":"HARINERO: MOTOR-REDUCTOR-VARIADOR (LIMPIAR VARIADOR)","frecuencia":"QUINCENAL"},
+{"id":76,"maquina":"LINEAS FORMADORAS","tarea":"SETAS ENTABLADO, CUADRO Y FORMADORA, REJILLA, TAPAS LATERALES","frecuencia":"MENSUAL"},
+{"id":77,"maquina":"LINEAS FORMADORAS","tarea":"CONTADOR DE BANDEJAS","frecuencia":"MENSUAL"},
+{"id":78,"maquina":"LINEAS FORMADORAS","tarea":"LIMPIEZA CUADRO, SOLO ANOTAR SI ES NECESARIA","frecuencia":"MENSUAL"},
+{"id":79,"maquina":"LINEAS FORMADORAS","tarea":"PROTECCIONES TANTO DELANTERAS, LATERALES COMO TRASERAS","frecuencia":"MENSUAL"},
+{"id":80,"maquina":"LINEAS FORMADORAS","tarea":"TOMA DE TIERRA (COMPROBAR CON PARTE METALICA)","frecuencia":"MENSUAL"},
+{"id":81,"maquina":"CARRUSELES","tarea":"MOTOR Y PINONES GIRO","frecuencia":"MENSUAL"},
+{"id":82,"maquina":"CARRUSELES","tarea":"PISTONES MOVIMIENTO ENTRADA Y SALIDA CACEROLA (CON INDUCTIVOS)","frecuencia":"SEMANAL"},
+{"id":83,"maquina":"CARRUSELES","tarea":"ELECTROVALVULAS PISTONES","frecuencia":"SEMANAL"},
+{"id":84,"maquina":"CARRUSELES","tarea":"INDUCTIVOS DE PARADA Y ANILLO DESLIZANTE","frecuencia":"SEMANAL"},
+{"id":85,"maquina":"CARRUSELES","tarea":"INDUCTIVOS DE CACEROLA","frecuencia":"SEMANAL"},
+{"id":86,"maquina":"CARRUSELES","tarea":"CARRILES Y RUEDAS GUIA CACEROLA","frecuencia":"SEMANAL"},
+{"id":87,"maquina":"CARRUSELES","tarea":"PERDIDAS DE AIRE Y TUBOS OBSOLETOS, MAL ESTADO","frecuencia":"MENSUAL"},
+{"id":88,"maquina":"CARRUSELES","tarea":"RUEDAS GIRO CARRUSEL (LAS GRANDES Y LAS PEQUEÑAS)","frecuencia":"MENSUAL"},
+{"id":89,"maquina":"CARRUSELES","tarea":"TAPA CACEROLA (AJUSTA CORRECTAMENTE)","frecuencia":"MENSUAL"},
+{"id":90,"maquina":"CARRUSELES","tarea":"ENTRAN CORRECTAMENTE EN VOLCADOR Y AMASADORA","frecuencia":"SEMANAL"},
+{"id":91,"maquina":"CARRUSELES","tarea":"PANTALLA CUADRO + BOTONERA + SEGURIDADES","frecuencia":"QUINCENAL"},
+{"id":92,"maquina":"CARRUSELES","tarea":"TOMAS DE TIERRA (IMPORTANTE)","frecuencia":"MENSUAL"},
+{"id":93,"maquina":"CARRUSELES","tarea":"ESTADO Y TENSION CADENAS","frecuencia":"MENSUAL"},
+{"id":94,"maquina":"CARRUSELES","tarea":"PINONES Y CHAPAS GUIAS BRAZOS","frecuencia":"MENSUAL"},
+{"id":95,"maquina":"CARRUSELES","tarea":"ESTADO INDUCTIVOS, MICROS Y CONECTORES","frecuencia":"SEMANAL"},
+{"id":96,"maquina":"CARRUSELES","tarea":"MOTOR-REDUCTOR","frecuencia":"MENSUAL"},
+{"id":97,"maquina":"CARRUSELES","tarea":"NIVELACION","frecuencia":"MENSUAL"},
+{"id":98,"maquina":"CARRUSELES","tarea":"GUIAS SUBIDA (ENGRASE, HOLGURA Y AJUSTE)","frecuencia":"SEMANAL"},
+{"id":99,"maquina":"CARRUSELES","tarea":"INDUCTIVO CACEROLA","frecuencia":"SEMANAL"},
+{"id":100,"maquina":"CARRUSELES","tarea":"AJUSTE MICROS SUBIDA Y BAJADA","frecuencia":"QUINCENAL"},
+{"id":101,"maquina":"CARRUSELES","tarea":"HOLGURAS BRAZO, MODULO ETC","frecuencia":"QUINCENAL"},
+{"id":102,"maquina":"CARRUSELES","tarea":"CORREAS - TENSION","frecuencia":"MENSUAL"},
+{"id":103,"maquina":"CARRUSELES","tarea":"JUNTAS","frecuencia":"MENSUAL"},
+{"id":104,"maquina":"CARRUSELES","tarea":"CONTACTORES (REVISAR Y CAMBIAR)","frecuencia":"SEMESTRAL"},
+{"id":105,"maquina":"CARRUSELES","tarea":"CIRCUITO ACEITE (NO FUGAS NI GOTEOS)","frecuencia":"QUINCENAL"},
+{"id":106,"maquina":"CARRUSELES","tarea":"SETA CARRUSEL","frecuencia":"MENSUAL"},
+{"id":107,"maquina":"CARRUSELES","tarea":"PUERTA CARRUSEL","frecuencia":"MENSUAL"},
+{"id":108,"maquina":"CARRUSELES","tarea":"SETA VOLCADOR","frecuencia":"MENSUAL"},
+{"id":109,"maquina":"CARRUSELES","tarea":"LIMPIEZA CUADRO","frecuencia":"MENSUAL"},
+{"id":110,"maquina":"CARRUSELES","tarea":"CIRCUITO ENTRADA LEVADURA (LIMPIAR Y REVISAR EV Y LLAVES)","frecuencia":"SEMANAL"},
+{"id":111,"maquina":"TOLVAS Y AGUA","tarea":"FILTRO SUPERIOR CAMBIO Y LIMPIEZA (CADA 6 MESES - SEGUN TABLA)","frecuencia":"SEMESTRAL"},
+{"id":112,"maquina":"TOLVAS Y AGUA","tarea":"CALIBRACION (SE PONEN LAS PESAS Y SE ESCRIBE LA DIFERENCIA)","frecuencia":"SEMESTRAL"},
+{"id":113,"maquina":"TOLVAS Y AGUA","tarea":"ESTADO DE LA REJILLA DEL FILTRO","frecuencia":"SEMESTRAL"},
+{"id":114,"maquina":"TOLVAS Y AGUA","tarea":"ESTADO DE LA MARIPOSA","frecuencia":"SEMESTRAL"},
+{"id":115,"maquina":"TOLVAS Y AGUA","tarea":"EV MARIPOSA","frecuencia":"MENSUAL"},
+{"id":116,"maquina":"TOLVAS Y AGUA","tarea":"MANGAS (DESCOMPRESION Y CAIDA)","frecuencia":"SEMANAL"},
+{"id":117,"maquina":"TOLVAS Y AGUA","tarea":"MANGUITOS ENTRADA HARINA Y PRODUCTO","frecuencia":"QUINCENAL"},
+{"id":118,"maquina":"TOLVAS Y AGUA","tarea":"REVISION EV DE BOLA ASPIRACION Y HARINA","frecuencia":"MENSUAL"},
+{"id":119,"maquina":"TOLVAS Y AGUA","tarea":"VIBRADOR","frecuencia":"MENSUAL"},
+{"id":120,"maquina":"TOLVAS Y AGUA","tarea":"TOMA DE TIERRA (COMPROBAR CON PARTE METALICA)","frecuencia":"MENSUAL"},
+{"id":121,"maquina":"TOLVAS Y AGUA","tarea":"TAPA (PISTON - GUIA - JUNTA)","frecuencia":"MENSUAL"},
+{"id":122,"maquina":"TOLVAS Y AGUA","tarea":"EV AGUA, GOTEO","frecuencia":"SEMANAL"},
+{"id":123,"maquina":"TOLVAS Y AGUA","tarea":"MANGUERAS (CAMBIAR SI DETERIORADAS)","frecuencia":"MENSUAL"},
+{"id":124,"maquina":"TOLVAS Y AGUA","tarea":"CUENTA-LITROS (ESTADO VISUAL)","frecuencia":"SEMANAL"},
+{"id":125,"maquina":"TOLVAS Y AGUA","tarea":"PEDIR 2 LITROS Y MEDIR LA DOSIFICACION, APUNTARLO","frecuencia":"MENSUAL"},
+{"id":126,"maquina":"TOLVAS Y AGUA","tarea":"ESTADO DEL CUENTALITROS - SE HACE MEDICION","frecuencia":"SEMANAL"},
+{"id":127,"maquina":"DIVISORAS Y CAMARAS DE BOLAS","tarea":"LIMPIEZA","frecuencia":"QUINCENAL"},
+{"id":128,"maquina":"DIVISORAS Y CAMARAS DE BOLAS","tarea":"CORREAS","frecuencia":"QUINCENAL"},
+{"id":129,"maquina":"DIVISORAS Y CAMARAS DE BOLAS","tarea":"MOTOR-REDUCTOR","frecuencia":"QUINCENAL"},
+{"id":130,"maquina":"DIVISORAS Y CAMARAS DE BOLAS","tarea":"ESPIRAL","frecuencia":"QUINCENAL"},
+{"id":131,"maquina":"DIVISORAS Y CAMARAS DE BOLAS","tarea":"TOLVA","frecuencia":"QUINCENAL"},
+{"id":132,"maquina":"DIVISORAS Y CAMARAS DE BOLAS","tarea":"ESCENTRICAS","frecuencia":"QUINCENAL"},
+{"id":133,"maquina":"DIVISORAS Y CAMARAS DE BOLAS","tarea":"RECIRCULACION ACEITE (TODOS LOS TURNOS)","frecuencia":"DIARIO"},
+{"id":134,"maquina":"DIVISORAS Y CAMARAS DE BOLAS","tarea":"ESTADO VISUAL JUNTAS (NO RESTOS O MANCHADO)","frecuencia":"DIARIO"},
+{"id":135,"maquina":"DIVISORAS Y CAMARAS DE BOLAS","tarea":"BOTONERA","frecuencia":"DIARIO"},
+{"id":136,"maquina":"DIVISORAS Y CAMARAS DE BOLAS","tarea":"SETAS","frecuencia":"DIARIO"},
+{"id":137,"maquina":"DIVISORAS Y CAMARAS DE BOLAS","tarea":"PERDIDAS DE ACEITE","frecuencia":"DIARIO"},
+{"id":138,"maquina":"DIVISORAS Y CAMARAS DE BOLAS","tarea":"ESTADO VISUAL DE FUNCIONAMIENTO","frecuencia":"DIARIO"},
+{"id":139,"maquina":"DIVISORAS Y CAMARAS DE BOLAS","tarea":"Nº DE BOLAS/M","frecuencia":"DIARIO"},
+{"id":140,"maquina":"DIVISORAS Y CAMARAS DE BOLAS","tarea":"HUEVERAS, TELA Y ESTRUCTURA (REVISAR SEEGER)","frecuencia":"QUINCENAL"},
+{"id":141,"maquina":"DIVISORAS Y CAMARAS DE BOLAS","tarea":"CAIDA BOLA","frecuencia":"QUINCENAL"},
+{"id":142,"maquina":"DIVISORAS Y CAMARAS DE BOLAS","tarea":"HARINERO (CAIDA HARINA, MOTOR, REDUCTOR, PARTES MOVILES)","frecuencia":"QUINCENAL"},
+{"id":143,"maquina":"DIVISORAS Y CAMARAS DE BOLAS","tarea":"TRANSPORTIN (MOTOR, REDUCTOR, RODILLOS, LONA)","frecuencia":"QUINCENAL"},
+{"id":144,"maquina":"DIVISORAS Y CAMARAS DE BOLAS","tarea":"RELES","frecuencia":"SEMESTRAL"},
+{"id":145,"maquina":"DIVISORAS Y CAMARAS DE BOLAS","tarea":"CONTACTORES","frecuencia":"SEMESTRAL"},
+{"id":146,"maquina":"DIVISORAS Y CAMARAS DE BOLAS","tarea":"TENSION CADENAS","frecuencia":"QUINCENAL"},
+{"id":147,"maquina":"DIVISORAS Y CAMARAS DE BOLAS","tarea":"MOTOR, REDUCTOR TRACCION, EJE, PINONES Y RODAMIENTOS","frecuencia":"QUINCENAL"},
+{"id":148,"maquina":"DIVISORAS Y CAMARAS DE BOLAS","tarea":"RODETES VUELCO","frecuencia":"SEMANAL"},
+{"id":149,"maquina":"DIVISORAS Y CAMARAS DE BOLAS","tarea":"QUITA-DOBLES LONA, RODILLOS Y FOTOCELULA","frecuencia":"SEMANAL"},
+{"id":150,"maquina":"DIVISORAS Y CAMARAS DE BOLAS","tarea":"TOMA DE TIERRA DIVISORA","frecuencia":"MENSUAL"},
+{"id":151,"maquina":"DIVISORAS Y CAMARAS DE BOLAS","tarea":"TOMA DE TIERRA CAMARA DE BOLAS","frecuencia":"MENSUAL"},
+{"id":152,"maquina":"REPARTIDORES","tarea":"CORREAS (ESTADO Y TENSION)","frecuencia":"MENSUAL"},
+{"id":153,"maquina":"REPARTIDORES","tarea":"CADENAS-PINONES (LIMPIAR - DESENGRASAR Y ENGRASAR)","frecuencia":"MENSUAL"},
+{"id":154,"maquina":"REPARTIDORES","tarea":"MOTOR-REDUCTOR CARRO","frecuencia":"MENSUAL"},
+{"id":155,"maquina":"REPARTIDORES","tarea":"MOTOR-REDUCTOR LONAS","frecuencia":"MENSUAL"},
+{"id":156,"maquina":"REPARTIDORES","tarea":"CUCHILLA","frecuencia":"MENSUAL"},
+{"id":157,"maquina":"REPARTIDORES","tarea":"RUEDAS REPARTIDOR","frecuencia":"MENSUAL"},
+{"id":158,"maquina":"REPARTIDORES","tarea":"CABLEADO","frecuencia":"MENSUAL"},
+{"id":159,"maquina":"REPARTIDORES","tarea":"ESTADO SOPORTE E INDUCTIVOS CUCHILLA","frecuencia":"MENSUAL"},
+{"id":160,"maquina":"REPARTIDORES","tarea":"COMPROBACION DE SETAS","frecuencia":"SEMANAL"},
+{"id":161,"maquina":"REPARTIDORES","tarea":"TOMA DE TIERRA A PARTE ALEATORIA METALICA","frecuencia":"MENSUAL"},
+{"id":162,"maquina":"REPARTIDORES","tarea":"LONAS AZULES (ESTADO Y TENSION)","frecuencia":"QUINCENAL"},
+{"id":163,"maquina":"REPARTIDORES","tarea":"MOTOR-REDUCTOR CUCHILLA","frecuencia":"MENSUAL"},
+{"id":164,"maquina":"REPARTIDORES","tarea":"CUADRO REPARTIDOR ORIGINAL","frecuencia":"MENSUAL"},
+{"id":165,"maquina":"TALLADORA","tarea":"MOTOR-REDUCTOR-HUSILLO","frecuencia":"QUINCENAL"},
+{"id":166,"maquina":"TALLADORA","tarea":"GUIAS SILLA-ENGRASE","frecuencia":"QUINCENAL"},
+{"id":167,"maquina":"TALLADORA","tarea":"BRAZOS SILLA (ESTADO)","frecuencia":"QUINCENAL"},
+{"id":168,"maquina":"TALLADORA","tarea":"INDUCTIVOS CARRO","frecuencia":"SEMANAL"},
+{"id":169,"maquina":"TALLADORA","tarea":"UÑAS SILLA","frecuencia":"QUINCENAL"},
+{"id":170,"maquina":"TALLADORA","tarea":"CARRO EMPUJE LATAS","frecuencia":"QUINCENAL"},
+{"id":171,"maquina":"TALLADORA","tarea":"FOTOCELULA SEGURIDAD BANDEJAS","frecuencia":"SEMANAL"},
+{"id":172,"maquina":"TALLADORA","tarea":"PISTONES-GUIA CARRO (SUPERIORES)","frecuencia":"SEMANAL"},
+{"id":173,"maquina":"TALLADORA","tarea":"MOTOR Y REDUCTOR + CADENAS-ANGULOS + ROD. (CIERRE)","frecuencia":"SEMANAL"},
+{"id":174,"maquina":"TALLADORA","tarea":"MOTOR-REDUCTOR-HUSILLO (ENGRASE)","frecuencia":"QUINCENAL"},
+{"id":175,"maquina":"TALLADORA","tarea":"GUIAS SILLA-ENGRASE (LADO 2)","frecuencia":"QUINCENAL"},
+{"id":176,"maquina":"TALLADORA","tarea":"BRAZOS SILLA (ESTADO) (LADO 2)","frecuencia":"QUINCENAL"},
+{"id":177,"maquina":"TALLADORA","tarea":"INDUCTIVOS CARRO (LADO 2)","frecuencia":"SEMANAL"},
+{"id":178,"maquina":"TALLADORA","tarea":"UÑAS SILLA (LADO 2)","frecuencia":"QUINCENAL"},
+{"id":179,"maquina":"TALLADORA","tarea":"CARRO EMPUJE LATAS (CON SERVO)","frecuencia":"QUINCENAL"},
+{"id":180,"maquina":"TALLADORA","tarea":"FOTOCELULA SEGURIDAD BANDEJAS (LADO 2)","frecuencia":"SEMANAL"},
+{"id":181,"maquina":"TALLADORA","tarea":"PISTONES-GUIA CARRO (SUPERIORES) (LADO 2)","frecuencia":"SEMANAL"},
+{"id":182,"maquina":"TALLADORA","tarea":"MOTOR Y REDUCTOR + CADENAS-ANGULOS + ROD. (CIERRE) (LADO 2)","frecuencia":"SEMANAL"},
+{"id":183,"maquina":"TALLADORA","tarea":"SERVOS (TEMPERATURA DE TRABAJO)","frecuencia":"QUINCENAL"},
+{"id":184,"maquina":"TALLADORA","tarea":"RODAMIENTOS","frecuencia":"MENSUAL"},
+{"id":185,"maquina":"TALLADORA","tarea":"CORREAS","frecuencia":"MENSUAL"},
+{"id":186,"maquina":"TALLADORA","tarea":"MOLDE CUCHILLAS Y SOPORTES","frecuencia":"QUINCENAL"},
+{"id":187,"maquina":"TALLADORA","tarea":"M3 MOTOR-REDUCTOR-CADENAS-PINONES-PISTON SUJECCION","frecuencia":"SEMANAL"},
+{"id":188,"maquina":"TALLADORA","tarea":"M4 MOTOR-REDUCTOR-CADENAS-PINONES-ROD.","frecuencia":"SEMANAL"},
+{"id":189,"maquina":"TALLADORA","tarea":"M5 MOTOR-REDUCTOR-CADENAS-PINONES-ROD.","frecuencia":"SEMANAL"},
+{"id":190,"maquina":"TALLADORA","tarea":"INDUCTIVOS POSICION CADENAS- FOTOCELULAS","frecuencia":"SEMANAL"},
+{"id":191,"maquina":"TALLADORA","tarea":"CUADRO ESTADO-ORGANIZACION-CABLEADO","frecuencia":"MENSUAL"},
+{"id":192,"maquina":"TALLADORA","tarea":"SETAS Y SEGURIDADES (FUNCIONAMIENTO)","frecuencia":"QUINCENAL"},
+{"id":193,"maquina":"TALLADORA","tarea":"SOPLADO DRIVER SERVOS (SEGUIR PROCEDIMIENTO)","frecuencia":"SEMESTRAL"},
+{"id":194,"maquina":"TALLADORA","tarea":"TOMA DE TIERRA A PARTE ALEATORIA METALICA","frecuencia":"MENSUAL"},
+{"id":195,"maquina":"HORNOS","tarea":"PUERTAS-BISAGRAS-MANETAS","frecuencia":"SEMANAL"},
+{"id":196,"maquina":"HORNOS","tarea":"PARADA CARRO","frecuencia":"SEMANAL"},
+{"id":197,"maquina":"HORNOS","tarea":"ESTADO CORREAS-TENSION","frecuencia":"SEMANAL"},
+{"id":198,"maquina":"HORNOS","tarea":"MICRO PUERTAS (IMPORTANTE)","frecuencia":"SEMANAL"},
+{"id":199,"maquina":"HORNOS","tarea":"TURBINA","frecuencia":"SEMANAL"},
+{"id":200,"maquina":"HORNOS","tarea":"MOTOR-REDUCTOR CARRO","frecuencia":"SEMANAL"},
+{"id":201,"maquina":"HORNOS","tarea":"CUADRO FUNCIONAMIENTO CORRECTO - CERRADO","frecuencia":"SEMANAL"},
+{"id":202,"maquina":"HORNOS","tarea":"EV AGUA","frecuencia":"SEMANAL"},
+{"id":203,"maquina":"HORNOS","tarea":"TOMA DE TIERRA A PARTE ALEATORIA METALICA","frecuencia":"MENSUAL"},
+{"id":204,"maquina":"HORNOS","tarea":"ALTURA UÑA/PLATAFORMA/ESTADO SUELO-UÑA","frecuencia":"SEMANAL"},
+{"id":205,"maquina":"HORNOS","tarea":"PUERTAS-BISAGRAS-MANETAS (GRUPO 2)","frecuencia":"SEMANAL"},
+{"id":206,"maquina":"HORNOS","tarea":"PARADA CARRO (GRUPO 2)","frecuencia":"SEMANAL"},
+{"id":207,"maquina":"HORNOS","tarea":"ESTADO CORREAS-TENSION (GRUPO 2)","frecuencia":"SEMANAL"},
+{"id":208,"maquina":"HORNOS","tarea":"MICRO PUERTAS (IMPORTANTE) (GRUPO 2)","frecuencia":"SEMANAL"},
+{"id":209,"maquina":"HORNOS","tarea":"TURBINA (GRUPO 2)","frecuencia":"SEMANAL"},
+{"id":210,"maquina":"HORNOS","tarea":"MOTOR-REDUCTOR CARRO (GRUPO 2)","frecuencia":"SEMANAL"},
+{"id":211,"maquina":"HORNOS","tarea":"CUADRO FUNCIONAMIENTO CORRECTO - CERRADO (GRUPO 2)","frecuencia":"SEMANAL"},
+{"id":212,"maquina":"HORNOS","tarea":"EV AGUA (GRUPO 2)","frecuencia":"SEMANAL"},
+{"id":213,"maquina":"HORNOS","tarea":"TOMA DE TIERRA A PARTE ALEATORIA METALICA (GRUPO 2)","frecuencia":"MENSUAL"},
+{"id":214,"maquina":"HORNOS","tarea":"ALTURA UÑA/PLATAFORMA/ESTADO SUELO-UÑA (GRUPO 2)","frecuencia":"SEMANAL"},
+{"id":215,"maquina":"FERMENTADORA RELAMPAGO","tarea":"TOMA DE TIERRA A PARTE ALEATORIA METALICA","frecuencia":"MENSUAL"},
+{"id":216,"maquina":"FERMENTADORA RELAMPAGO","tarea":"CORTINAS","frecuencia":"SEMANAL"},
+{"id":217,"maquina":"FERMENTADORA RELAMPAGO","tarea":"CARRILES GUIAS","frecuencia":"MENSUAL"},
+{"id":218,"maquina":"FERMENTADORA RELAMPAGO","tarea":"SUELO","frecuencia":"MENSUAL"},
+{"id":219,"maquina":"FERMENTADORA RELAMPAGO","tarea":"TIRAS ANTIDESLIZANTES ENTRADA","frecuencia":"SEMANAL"},
+{"id":220,"maquina":"FERMENTADORA RELAMPAGO","tarea":"TIRAS ANTIDESLIZANTES PASILLO","frecuencia":"SEMANAL"},
+{"id":221,"maquina":"FERMENTADORA RELAMPAGO","tarea":"GOTERAS EQUIPOS","frecuencia":"SEMANAL"},
+{"id":222,"maquina":"FERMENTADORA RELAMPAGO","tarea":"DESAGUES","frecuencia":"MENSUAL"},
+{"id":223,"maquina":"FERMENTADORA RELAMPAGO","tarea":"VAPAC 1 LLENADO Y VAPOR","frecuencia":"QUINCENAL"},
+{"id":224,"maquina":"FERMENTADORA RELAMPAGO","tarea":"VAPAC 2 LLENADO Y VAPOR","frecuencia":"QUINCENAL"},
+{"id":225,"maquina":"FERMENTADORA RELAMPAGO","tarea":"VAPAC 3 LLENADO Y VAPOR","frecuencia":"QUINCENAL"},
+{"id":226,"maquina":"FERMENTADORA RELAMPAGO","tarea":"VAPAC 4 LLENADO Y VAPOR","frecuencia":"QUINCENAL"},
+{"id":227,"maquina":"FERMENTADORA RELAMPAGO","tarea":"PRESIONES EQUIPO 1 (VERANO E INVIERNO)","frecuencia":"QUINCENAL"},
+{"id":228,"maquina":"FERMENTADORA RELAMPAGO","tarea":"PRESIONES EQUIPO 2 (VERANO E INVIERNO)","frecuencia":"QUINCENAL"},
+{"id":229,"maquina":"FERMENTADORA RELAMPAGO","tarea":"PRESIONES EQUIPO 3 (VERANO E INVIERNO)","frecuencia":"QUINCENAL"},
+{"id":230,"maquina":"FERMENTADORA RELAMPAGO","tarea":"PRESIONES EQUIPO 4 (VERANO E INVIERNO)","frecuencia":"QUINCENAL"},
+{"id":231,"maquina":"FERMENTADORA RELAMPAGO","tarea":"VENTILADORES EVAPORADORES","frecuencia":"QUINCENAL"},
+{"id":232,"maquina":"FERMENTADORA RELAMPAGO","tarea":"VENTILADORES CONDENSADORES","frecuencia":"QUINCENAL"},
+{"id":233,"maquina":"FERMENTADORA RELAMPAGO","tarea":"LIMPIEZA Y REVISION EQUIPO 1","frecuencia":"SEMESTRAL"},
+{"id":234,"maquina":"FERMENTADORA RELAMPAGO","tarea":"LIMPIEZA Y REVISION EQUIPO 2","frecuencia":"SEMESTRAL"},
+{"id":235,"maquina":"FERMENTADORA RELAMPAGO","tarea":"LIMPIEZA Y REVISION EQUIPO 3","frecuencia":"SEMESTRAL"},
+{"id":236,"maquina":"FERMENTADORA RELAMPAGO","tarea":"LIMPIEZA Y REVISION EQUIPO 4","frecuencia":"SEMESTRAL"},
+{"id":237,"maquina":"FERMENTADORA RELAMPAGO","tarea":"CONDENSADORES (ABRIL Y OCTUBRE)","frecuencia":"SEMESTRAL"},
+{"id":238,"maquina":"TUNEL PREFRIO","tarea":"RELES Y CONTACTORES","frecuencia":"SEMESTRAL"},
+{"id":239,"maquina":"TUNEL PREFRIO","tarea":"VENTILADORES EVAPORADORES","frecuencia":"MENSUAL"},
+{"id":240,"maquina":"TUNEL PREFRIO","tarea":"VENTILADORES CONDENSADORES","frecuencia":"MENSUAL"},
+{"id":241,"maquina":"TUNEL PREFRIO","tarea":"LIMPIEZA PAJARITOS (ANUAL)","frecuencia":"ANUAL"},
+{"id":242,"maquina":"TUNEL PREFRIO","tarea":"EQUIPO 1 PRESIONES","frecuencia":"MENSUAL"},
+{"id":243,"maquina":"TUNEL PREFRIO","tarea":"EQUIPO 2 PRESIONES","frecuencia":"MENSUAL"},
+{"id":244,"maquina":"TUNEL PREFRIO","tarea":"TURBINA 1 CORREAS-TENSION Y ESTADO TURBINA","frecuencia":"MENSUAL"},
+{"id":245,"maquina":"TUNEL PREFRIO","tarea":"TURBINA 2 CORREAS-TENSION Y ESTADO TURBINA","frecuencia":"MENSUAL"},
+{"id":246,"maquina":"TUNEL PREFRIO","tarea":"COMPRESOR 1 ACEITE Y ESTADO GENERAL","frecuencia":"MENSUAL"},
+{"id":247,"maquina":"TUNEL PREFRIO","tarea":"COMPRESOR 2 ACEITE Y ESTADO GENERAL","frecuencia":"MENSUAL"},
+{"id":248,"maquina":"TUNEL PREFRIO","tarea":"CADENA IZDA ARRASTRE (VISTA ENTRADA)","frecuencia":"QUINCENAL"},
+{"id":249,"maquina":"TUNEL PREFRIO","tarea":"CADENA DCHA ARRASTRE (VISTA ENTRADA)","frecuencia":"QUINCENAL"},
+{"id":250,"maquina":"TUNEL PREFRIO","tarea":"PISTONES","frecuencia":"QUINCENAL"},
+{"id":251,"maquina":"TUNEL PREFRIO","tarea":"CUADRO (LIMPIEZA Y ORGANIZACION)","frecuencia":"MENSUAL"},
+{"id":252,"maquina":"TUNEL PREFRIO","tarea":"TOMA DE TIERRA A PARTE ALEATORIA METALICA","frecuencia":"MENSUAL"},
+{"id":253,"maquina":"TUNELES","tarea":"VENTILADORES EVAPORADORES","frecuencia":"MENSUAL"},
+{"id":254,"maquina":"TUNELES","tarea":"LUZ INTERIOR","frecuencia":"MENSUAL"},
+{"id":255,"maquina":"TUNELES","tarea":"RESISTENCIAS","frecuencia":"MENSUAL"},
+{"id":256,"maquina":"TUNELES","tarea":"RELES-CONTACTORES (RELES V.E. CADA 6 MESES)","frecuencia":"SEMESTRAL"},
+{"id":257,"maquina":"TUNELES","tarea":"PRESIONES","frecuencia":"MENSUAL"},
+{"id":258,"maquina":"TUNELES","tarea":"ESTADO Y CONSUMO COMPRESOR 1 (ANOTAR)","frecuencia":"MENSUAL"},
+{"id":259,"maquina":"TUNELES","tarea":"ESTADO Y CONSUMO COMPRESOR 2 (ANOTAR)","frecuencia":"MENSUAL"},
+{"id":260,"maquina":"TUNELES","tarea":"ENTRADA TUNEL","frecuencia":"QUINCENAL"},
+{"id":261,"maquina":"TUNELES","tarea":"MANETAS","frecuencia":"QUINCENAL"},
+{"id":262,"maquina":"TUNELES","tarea":"BISAGRAS O CORREDERAS","frecuencia":"QUINCENAL"},
+{"id":263,"maquina":"TUNELES","tarea":"AISLAMIENTO","frecuencia":"QUINCENAL"},
+{"id":264,"maquina":"TUNELES","tarea":"VENTILADORES CONDENSADORES","frecuencia":"MENSUAL"},
+{"id":265,"maquina":"TUNELES","tarea":"CUADRO, ESTADO GENERAL","frecuencia":"MENSUAL"},
+{"id":266,"maquina":"TUNELES","tarea":"PANTALLA Y SETA ESTADO GENERAL","frecuencia":"MENSUAL"},
+{"id":267,"maquina":"TUNELES","tarea":"DIFERENCIALES","frecuencia":"SEMESTRAL"},
+{"id":268,"maquina":"TUNELES","tarea":"TOMA DE TIERRA (COMPROBAR CON PARTE METALICA)","frecuencia":"MENSUAL"},
+{"id":269,"maquina":"TUNELES","tarea":"ESTADO CONDENSADORES","frecuencia":"MENSUAL"},
+{"id":270,"maquina":"TUNELES","tarea":"ESTADO EVAPORADORES","frecuencia":"MENSUAL"},
+{"id":271,"maquina":"DESMOLDEO","tarea":"MOTOR-REDUCTOR-HUSILLO","frecuencia":"QUINCENAL"},
+{"id":272,"maquina":"DESMOLDEO","tarea":"GUIAS SILLA-ENGRASE","frecuencia":"QUINCENAL"},
+{"id":273,"maquina":"DESMOLDEO","tarea":"BRAZOS SILLA (ESTADO)","frecuencia":"QUINCENAL"},
+{"id":274,"maquina":"DESMOLDEO","tarea":"INDUCTIVOS CARRO","frecuencia":"SEMANAL"},
+{"id":275,"maquina":"DESMOLDEO","tarea":"UÑAS CARRO","frecuencia":"SEMANAL"},
+{"id":276,"maquina":"DESMOLDEO","tarea":"CARRO EMPUJE LATAS (PISTON, INDUCTIVOS, EV)","frecuencia":"QUINCENAL"},
+{"id":277,"maquina":"DESMOLDEO","tarea":"FOTOCELULA SEGURIDAD BANDEJAS","frecuencia":"QUINCENAL"},
+{"id":278,"maquina":"DESMOLDEO","tarea":"PISTONES-GUIA CARRO (SUPERIORES)","frecuencia":"QUINCENAL"},
+{"id":279,"maquina":"DESMOLDEO","tarea":"MOTOR Y REDUCTOR + CADENAS-ANGULOS","frecuencia":"QUINCENAL"},
+{"id":280,"maquina":"DESMOLDEO","tarea":"MOTOR-REDUCTOR-HUSILLO (LADO 2)","frecuencia":"QUINCENAL"},
+{"id":281,"maquina":"DESMOLDEO","tarea":"GUIAS SILLA-ENGRASE (LADO 2)","frecuencia":"QUINCENAL"},
+{"id":282,"maquina":"DESMOLDEO","tarea":"BRAZOS SILLA (ESTADO) (LADO 2)","frecuencia":"QUINCENAL"},
+{"id":283,"maquina":"DESMOLDEO","tarea":"INDUCTIVOS CARRO (LADO 2)","frecuencia":"SEMANAL"},
+{"id":284,"maquina":"DESMOLDEO","tarea":"UÑAS CARRO (LADO 2)","frecuencia":"SEMANAL"},
+{"id":285,"maquina":"DESMOLDEO","tarea":"CARRO EMPUJE LATAS (LADO 2) (PISTON, INDUCTIVOS, EV)","frecuencia":"QUINCENAL"},
+{"id":286,"maquina":"DESMOLDEO","tarea":"FOTOCELULA SEGURIDAD BANDEJAS (LADO 2)","frecuencia":"QUINCENAL"},
+{"id":287,"maquina":"DESMOLDEO","tarea":"PISTONES-GUIA CARRO (SUPERIORES) (LADO 2)","frecuencia":"QUINCENAL"},
+{"id":288,"maquina":"DESMOLDEO","tarea":"MOTOR Y REDUCTOR + CADENAS-ANGULOS (LADO 2)","frecuencia":"QUINCENAL"},
+{"id":289,"maquina":"DESMOLDEO","tarea":"SALIDA DESMOLDEO - MOTOR-REDUCTOR-CADENAS-PINONES-CELULA BANDEJA","frecuencia":"QUINCENAL"},
+{"id":290,"maquina":"DESMOLDEO","tarea":"M4 MOTOR-REDUCTOR-CADENAS-PINONES","frecuencia":"QUINCENAL"},
+{"id":291,"maquina":"DESMOLDEO","tarea":"ENTRADA CARGADOR MOTOR-REDUCTOR-CADENAS-PINONES","frecuencia":"QUINCENAL"},
+{"id":292,"maquina":"DESMOLDEO","tarea":"INDUCTIVOS POSICION CADENAS - FOTOCELULAS","frecuencia":"QUINCENAL"},
+{"id":293,"maquina":"DESMOLDEO","tarea":"ORUGA","frecuencia":"MENSUAL"},
+{"id":294,"maquina":"DESMOLDEO","tarea":"MOTOR-REDUCTOR-EJE-PINONES BRONCE-GUIAS","frecuencia":"QUINCENAL"},
+{"id":295,"maquina":"DESMOLDEO","tarea":"FINALES DE CARRERA-CONTADOR PASOS","frecuencia":"QUINCENAL"},
+{"id":296,"maquina":"DESMOLDEO","tarea":"CEPILLOS","frecuencia":"SEMANAL"},
+{"id":297,"maquina":"DESMOLDEO","tarea":"PALAS","frecuencia":"MENSUAL"},
+{"id":298,"maquina":"DESMOLDEO","tarea":"SEGURIDADES","frecuencia":"QUINCENAL"},
+{"id":299,"maquina":"DESMOLDEO","tarea":"LONA AZUL: ESTADO","frecuencia":"QUINCENAL"},
+{"id":300,"maquina":"DESMOLDEO","tarea":"MOTOR-REDUCTOR-RODAMIENTOS-RODILLOS GOMA-GUIAS","frecuencia":"QUINCENAL"},
+{"id":301,"maquina":"DESMOLDEO","tarea":"CUADRO LIMPIEZA Y ORGANIZACION","frecuencia":"MENSUAL"},
+{"id":302,"maquina":"DESMOLDEO","tarea":"TOMA DE TIERRA A PARTE ALEATORIA METALICA","frecuencia":"MENSUAL"},
+{"id":303,"maquina":"CONTADORA","tarea":"ESTADO TEFLONES HUECO BARRA","frecuencia":"MENSUAL"},
+{"id":304,"maquina":"CONTADORA","tarea":"LECTURA CORRECTA DE TODOS LOS TOPES INDUCTIVO INFERIOR","frecuencia":"QUINCENAL"},
+{"id":305,"maquina":"CONTADORA","tarea":"FOTOCELULAS PRESENCIA BARRA Y CAJA","frecuencia":"QUINCENAL"},
+{"id":306,"maquina":"CONTADORA","tarea":"MOTOR-REDUCTOR-EJE Y PINONES MOTRIZ CANJILONES","frecuencia":"MENSUAL"},
+{"id":307,"maquina":"CONTADORA","tarea":"TENSION CADENA CANJILONES","frecuencia":"MENSUAL"},
+{"id":308,"maquina":"CONTADORA","tarea":"MOTOR-REDUCTOR-EJE Y PINONES CAJON","frecuencia":"MENSUAL"},
+{"id":309,"maquina":"CONTADORA","tarea":"PISTONES CAJON Y RETENEDORES","frecuencia":"QUINCENAL"},
+{"id":310,"maquina":"CONTADORA","tarea":"CUADRO LIMPIEZA","frecuencia":"MENSUAL"},
+{"id":311,"maquina":"CONTADORA","tarea":"ENGRASE Y LIMPIEZA GUIAS CAJON","frecuencia":"QUINCENAL"},
+{"id":312,"maquina":"CONTADORA","tarea":"CONTAR 4 CAJAS (VERIFICACION)","frecuencia":"SEMANAL"},
+{"id":313,"maquina":"CONTADORA","tarea":"TOMA DE TIERRA A PARTE ALEATORIA METALICA","frecuencia":"MENSUAL"},
+{"id":314,"maquina":"MAQUINA DE CAJAS","tarea":"LIMPIEZA CON CEPILLO Y SOPLANDO (ARRANCADA)","frecuencia":"SEMANAL"},
+{"id":315,"maquina":"MAQUINA DE CAJAS","tarea":"VENTURIS (SOPLAR)","frecuencia":"SEMANAL"},
+{"id":316,"maquina":"MAQUINA DE CAJAS","tarea":"PISTOLAS DE COLA MOVIMIENTO - CONTINUIDAD HILO PEGAMENTO","frecuencia":"SEMANAL"},
+{"id":317,"maquina":"MAQUINA DE CAJAS","tarea":"PRENSAS (MOVIMIENTO CORRECTO Y PAREJO)","frecuencia":"SEMANAL"},
+{"id":318,"maquina":"MAQUINA DE CAJAS","tarea":"RASPAR PEGAMENTO DEL MOLDE","frecuencia":"SEMANAL"},
+{"id":319,"maquina":"MAQUINA DE CAJAS","tarea":"CAMINO RODILLOS SALIDA (REVISAR CORREA)","frecuencia":"SEMANAL"},
+{"id":320,"maquina":"MAQUINA DE CAJAS","tarea":"TOMA DE TIERRA A PARTE ALEATORIA METALICA","frecuencia":"MENSUAL"},
+{"id":321,"maquina":"MAQUINA DE CAJAS","tarea":"PRESION DE TRABAJO 6 BARES +/-","frecuencia":"SEMANAL"},
+{"id":322,"maquina":"MAQUINA DE CAJAS","tarea":"FUGAS DE AIRE","frecuencia":"SEMANAL"},
+{"id":323,"maquina":"MAQUINA DE CAJAS","tarea":"LIMPIEZA CUADRO","frecuencia":"MENSUAL"},
+{"id":324,"maquina":"MAQUINA DE CAJAS","tarea":"TEMPERATURA SELECCIONADA CORRESPONDE CON TEMP. MOSTRADA","frecuencia":"QUINCENAL"},
+{"id":325,"maquina":"MAQUINA DE CAJAS","tarea":"PURGA PISTOLAS","frecuencia":"MENSUAL"},
+{"id":326,"maquina":"MAQUINA DE CAJAS","tarea":"FILTROS PISTOLAS","frecuencia":"SEMESTRAL"},
+{"id":327,"maquina":"MAQUINA DE CAJAS","tarea":"FILTRO ENCOLADOR","frecuencia":"ANUAL"},
+{"id":328,"maquina":"MAQUINA DE CAJAS","tarea":"LIMPIEZA ENCOLADOR (ANUAL)","frecuencia":"ANUAL"},
+{"id":329,"maquina":"MAQUINA DE CAJAS","tarea":"FILTRO ASPIRACION","frecuencia":"SEMESTRAL"},
+{"id":330,"maquina":"MAQUINA DE CAJAS","tarea":"ESTADO CUBO PEGAMENTO Y ASPIRACION","frecuencia":"MENSUAL"},
+{"id":331,"maquina":"MAQUINA DE CAJAS","tarea":"MANGUERAS EN BUEN ESTADO","frecuencia":"MENSUAL"},
+{"id":332,"maquina":"MAQUINA DE BOLSAS","tarea":"CUCHILLA - OBSERVAR - DAR LA VUELTA LOS LUNES","frecuencia":"SEMANAL"},
+{"id":333,"maquina":"MAQUINA DE BOLSAS","tarea":"GOMAS DE LAS PINZAS REVISAR","frecuencia":"SEMANAL"},
+{"id":334,"maquina":"MAQUINA DE BOLSAS","tarea":"GUIAS LINEALES (ENGRASAR Y LIMPIAR DESPUES)","frecuencia":"SEMANAL"},
+{"id":335,"maquina":"MAQUINA DE BOLSAS","tarea":"SOPLAR LA MAQUINA","frecuencia":"SEMANAL"},
+{"id":336,"maquina":"MAQUINA DE BOLSAS","tarea":"SEGURIDADES (COMPROBAR) (SETA Y PUERTA)","frecuencia":"SEMANAL"},
+{"id":337,"maquina":"MAQUINA DE BOLSAS","tarea":"TOMA DE TIERRA A PARTE ALEATORIA METALICA","frecuencia":"MENSUAL"},
+{"id":338,"maquina":"MAQUINA DE BOLSAS","tarea":"LIMPIEZA PISTONES LARGOS","frecuencia":"MENSUAL"},
+{"id":339,"maquina":"MAQUINA DE BOLSAS","tarea":"PISTONES PALAS","frecuencia":"SEMANAL"},
+{"id":340,"maquina":"MAQUINA DE BOLSAS","tarea":"PALAS","frecuencia":"SEMANAL"},
+{"id":341,"maquina":"MAQUINA DE BOLSAS","tarea":"RODILLOS","frecuencia":"MENSUAL"},
+{"id":342,"maquina":"MAQUINA DE BOLSAS","tarea":"FOTOCELULAS","frecuencia":"MENSUAL"},
+{"id":343,"maquina":"MAQUINA DE BOLSAS","tarea":"PINZAS","frecuencia":"SEMANAL"},
+{"id":344,"maquina":"MAQUINA DE BOLSAS","tarea":"PRESIONES PISTONES","frecuencia":"MENSUAL"},
+{"id":345,"maquina":"MAQUINA DE BOLSAS","tarea":"ESTADO GENERAL","frecuencia":"QUINCENAL"},
+{"id":346,"maquina":"BASCULA Y PRECINTADORA","tarea":"LONA","frecuencia":"QUINCENAL"},
+{"id":347,"maquina":"BASCULA Y PRECINTADORA","tarea":"CALIBRADO","frecuencia":"SEMANAL"},
+{"id":348,"maquina":"BASCULA Y PRECINTADORA","tarea":"ENTRADA CAJA","frecuencia":"SEMANAL"},
+{"id":349,"maquina":"BASCULA Y PRECINTADORA","tarea":"SALIDA CAJA","frecuencia":"SEMANAL"},
+{"id":350,"maquina":"BASCULA Y PRECINTADORA","tarea":"ERROR DE PESO","frecuencia":"SEMANAL"},
+{"id":351,"maquina":"BASCULA Y PRECINTADORA","tarea":"ESTADO DE LAS CORREAS-TENSION","frecuencia":"SEMANAL"},
+{"id":352,"maquina":"BASCULA Y PRECINTADORA","tarea":"RODILLOS INFERIORES","frecuencia":"SEMANAL"},
+{"id":353,"maquina":"BASCULA Y PRECINTADORA","tarea":"ENTRADA CAJA PRECINTADORA","frecuencia":"SEMANAL"},
+{"id":354,"maquina":"BASCULA Y PRECINTADORA","tarea":"RODILLOS PRECINTO","frecuencia":"SEMANAL"},
+{"id":355,"maquina":"BASCULA Y PRECINTADORA","tarea":"RUEDAS CIERRE SOLAPAS","frecuencia":"SEMANAL"},
+{"id":356,"maquina":"BASCULA Y PRECINTADORA","tarea":"CAMBIO DE CABEZAL","frecuencia":"SEMANAL"},
+{"id":357,"maquina":"BASCULA Y PRECINTADORA","tarea":"TOMA DE TIERRA A PARTE ALEATORIA METALICA","frecuencia":"MENSUAL"},
+{"id":358,"maquina":"BASCULA Y PRECINTADORA","tarea":"ESTADO RODILLOS","frecuencia":"QUINCENAL"},
+{"id":359,"maquina":"BASCULA Y PRECINTADORA","tarea":"BARANDILLAS","frecuencia":"QUINCENAL"},
+{"id":360,"maquina":"BASCULA Y PRECINTADORA","tarea":"GOMAS","frecuencia":"SEMANAL"},
+{"id":361,"maquina":"BASCULA Y PRECINTADORA","tarea":"CORREAS","frecuencia":"SEMANAL"},
+{"id":362,"maquina":"BASCULA Y PRECINTADORA","tarea":"MOTORES-REDUCTORES","frecuencia":"QUINCENAL"},
+{"id":363,"maquina":"BASCULA Y PRECINTADORA","tarea":"BY-PASS","frecuencia":"SEMANAL"},
+{"id":364,"maquina":"BASCULA Y PRECINTADORA","tarea":"IMPRESORA - CORRECTO FECHADO","frecuencia":"SEMANAL"},
+{"id":365,"maquina":"BASCULA Y PRECINTADORA","tarea":"CUADRO","frecuencia":"MENSUAL"},
+{"id":366,"maquina":"BASCULA Y PRECINTADORA","tarea":"CUADRO EV","frecuencia":"MENSUAL"},
+{"id":367,"maquina":"CENTRADORES ENTABLADO","tarea":"CINTAS TRANSPORTE (ESTADO Y TENSION)","frecuencia":"QUINCENAL"},
+{"id":368,"maquina":"CENTRADORES ENTABLADO","tarea":"SERVOS-REDUCTORES SI LOS LLEVA","frecuencia":"QUINCENAL"},
+{"id":369,"maquina":"CENTRADORES ENTABLADO","tarea":"APERTURA","frecuencia":"QUINCENAL"},
+{"id":370,"maquina":"CENTRADORES ENTABLADO","tarea":"L5 Y L6 - PALA APERTURA","frecuencia":"QUINCENAL"},
+{"id":371,"maquina":"CENTRADORES ENTABLADO","tarea":"PISTON APERTURA (ESTADO-HOLGURAS-PRESION)","frecuencia":"QUINCENAL"},
+{"id":372,"maquina":"CENTRADORES ENTABLADO","tarea":"FOTOCELULAS","frecuencia":"QUINCENAL"},
+{"id":373,"maquina":"CENTRADORES ENTABLADO","tarea":"CABLEADO GENERAL","frecuencia":"QUINCENAL"},
+{"id":374,"maquina":"CENTRADORES ENTABLADO","tarea":"FUNCIONAMIENTO GENERAL","frecuencia":"QUINCENAL"},
+{"id":375,"maquina":"CENTRADORES ENTABLADO","tarea":"REVISAR CORREA L5","frecuencia":"SEMANAL"},
+{"id":376,"maquina":"CENTRADORES ENTABLADO","tarea":"REVISAR ACTUADOR L6","frecuencia":"SEMANAL"},
+{"id":377,"maquina":"TRUENO","tarea":"GUIAS SUBIDA (ENGRASAR)","frecuencia":"QUINCENAL"},
+{"id":378,"maquina":"TRUENO","tarea":"INDUCTIVO CACEROLA","frecuencia":"QUINCENAL"},
+{"id":379,"maquina":"TRUENO","tarea":"AJUSTE MICROS SUBIDA Y BAJADA","frecuencia":"QUINCENAL"},
+{"id":380,"maquina":"TRUENO","tarea":"HOLGURA BRAZO PABAT","frecuencia":"QUINCENAL"},
+{"id":381,"maquina":"TRUENO","tarea":"CORREAS","frecuencia":"MENSUAL"},
+{"id":382,"maquina":"TRUENO","tarea":"TOMA DE TIERRA A PARTE ALEATORIA METALICA","frecuencia":"MENSUAL"},
+{"id":383,"maquina":"TRUENO","tarea":"LONA AZUL - EJES - MOTOR - REDUCTOR - RODAMIENTOS","frecuencia":"QUINCENAL"},
+{"id":384,"maquina":"TRUENO","tarea":"RODILLOS","frecuencia":"QUINCENAL"},
+{"id":385,"maquina":"TRUENO","tarea":"RODAMIENTOS","frecuencia":"QUINCENAL"},
+{"id":386,"maquina":"TRUENO","tarea":"SETAS","frecuencia":"QUINCENAL"},
+{"id":387,"maquina":"TRUENO","tarea":"FUNCIONAMIENTO GENERAL","frecuencia":"QUINCENAL"},
+{"id":388,"maquina":"TRUENO","tarea":"TOMA DE TIERRA A PARTE ALEATORIA METALICA (2)","frecuencia":"MENSUAL"},
+{"id":389,"maquina":"TRUENO","tarea":"CENTRADOR 2 - PALAS - FOTOCEL - PINONES - PISTON - EV","frecuencia":"QUINCENAL"},
+{"id":390,"maquina":"TRUENO","tarea":"GIRO CACEROLA","frecuencia":"QUINCENAL"},
+{"id":391,"maquina":"TRUENO","tarea":"ELEVACION CACEROLA","frecuencia":"QUINCENAL"},
+{"id":392,"maquina":"TRUENO","tarea":"BOTONERA","frecuencia":"QUINCENAL"},
+{"id":393,"maquina":"TRUENO","tarea":"HOLGURAS","frecuencia":"QUINCENAL"},
+{"id":394,"maquina":"TRUENO","tarea":"PANTALLA","frecuencia":"QUINCENAL"},
+{"id":395,"maquina":"TRUENO","tarea":"TOMA DE TIERRA A PARTE ALEATORIA METALICA (3)","frecuencia":"MENSUAL"},
+{"id":396,"maquina":"TRUENO","tarea":"CADENAS: ESTADO-TENSION-LIMPIAR-ENGRASAR","frecuencia":"QUINCENAL"},
+{"id":397,"maquina":"TRUENO","tarea":"CUADRO HARINA (ASPIRAR)","frecuencia":"MENSUAL"},
+{"id":398,"maquina":"TRUENO","tarea":"TURBINA","frecuencia":"MENSUAL"},
+{"id":399,"maquina":"TRUENO","tarea":"VALVULAS SILOS","frecuencia":"MENSUAL"},
+{"id":400,"maquina":"TRUENO","tarea":"VIBRADORES SILOS","frecuencia":"MENSUAL"},
+{"id":401,"maquina":"TRUENO","tarea":"VIBRADOR CONO","frecuencia":"MENSUAL"},
+{"id":402,"maquina":"TRUENO","tarea":"ASPIRACION CONO","frecuencia":"MENSUAL"},
+{"id":403,"maquina":"TRUENO","tarea":"TOMA DE TIERRA A PARTE ALEATORIA METALICA (4)","frecuencia":"MENSUAL"},
+{"id":404,"maquina":"TRUENO","tarea":"RELES, CONTACTORES (TOPES Y CANJILONES) - CADA 6 MESES","frecuencia":"SEMESTRAL"},
+{"id":405,"maquina":"TRUENO","tarea":"CONTADOR DE BANDEJAS","frecuencia":"MENSUAL"},
+{"id":406,"maquina":"TRUENO","tarea":"HUSILLO SUBIDA ENGRASE","frecuencia":"QUINCENAL"},
+{"id":407,"maquina":"TRUENO","tarea":"MICRO PUERTA","frecuencia":"QUINCENAL"},
+{"id":408,"maquina":"TRUENO","tarea":"MOTOR-REDUCTOR","frecuencia":"QUINCENAL"},
+{"id":409,"maquina":"TRUENO","tarea":"BOTONERA (2)","frecuencia":"QUINCENAL"},
+{"id":410,"maquina":"TRUENO","tarea":"PROTECCION SUBIDA","frecuencia":"QUINCENAL"},
+{"id":411,"maquina":"TRUENO","tarea":"TOMA DE TIERRA A PARTE ALEATORIA METALICA (5)","frecuencia":"MENSUAL"},
+{"id":412,"maquina":"TRUENO","tarea":"ENGRASE","frecuencia":"QUINCENAL"}
+];
+
+/* ════════════════════════════════════════════
+   CONFIGURACION FRECUENCIAS
+   ════════════════════════════════════════════ */
+const FREQ_CFG = {
+  'DIARIO':     {color:'#ff6b6b', bg:'rgba(231,76,60,0.12)',  border:'rgba(231,76,60,0.3)',  icon:'🔴'},
+  'SEMANAL':    {color:'#74b9ff', bg:'rgba(52,152,219,0.12)', border:'rgba(52,152,219,0.3)', icon:'🔵'},
+  'QUINCENAL':  {color:'#55efc4', bg:'rgba(46,204,113,0.12)', border:'rgba(46,204,113,0.3)', icon:'🟢'},
+  'MENSUAL':    {color:'#ffd97d', bg:'rgba(201,162,39,0.12)', border:'rgba(201,162,39,0.3)', icon:'🟡'},
+  'TRIMESTRAL': {color:'#d6a3ff', bg:'rgba(155,89,182,0.12)', border:'rgba(155,89,182,0.3)', icon:'🟣'},
+  'SEMESTRAL':  {color:'#ffb347', bg:'rgba(230,126,34,0.12)', border:'rgba(230,126,34,0.3)', icon:'🟠'},
+  'ANUAL':      {color:'#b2bec3', bg:'rgba(149,165,166,0.12)',border:'rgba(149,165,166,0.3)',icon:'⚪'}
+};
+
+const PWD_KEY = 'preventivoPwd';
+
+/* ── Login ── */
+function intentarLogin(e){
+  e.preventDefault();
+  const pwd = document.getElementById('loginPwd').value;
+  const stored = localStorage.getItem(PWD_KEY) || 'admin';
+  if(pwd === stored){
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appScreen').style.display = 'block';
+    iniciarApp();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+    document.getElementById('loginPwd').value = '';
+    document.getElementById('loginPwd').focus();
+    setTimeout(()=>{ document.getElementById('loginError').style.display='none'; }, 3000);
+  }
+}
+
+function cerrarSesion(){
+  document.getElementById('appScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginPwd').value = '';
+}
+
+/* ── App init ── */
+function iniciarApp(){
+  switchTab('plan');
+  iniciarPlan();
+}
+
+/* ── Stats chips ── */
+function renderStats(data){
+  const strip = document.getElementById('statsStrip');
+  const counts = {};
+  data.forEach(t => { counts[t.frecuencia] = (counts[t.frecuencia]||0)+1; });
+
+  const order = ['DIARIO','SEMANAL','QUINCENAL','MENSUAL','TRIMESTRAL','SEMESTRAL','ANUAL'];
+  let html = '';
+  order.forEach(f => {
+    const n = counts[f]||0;
+    if(!n) return;
+    const cfg = FREQ_CFG[f];
+    html += `<span class="stat-chip" style="color:${cfg.color};background:${cfg.bg};border-color:${cfg.border}"
+      onclick="filtrarPorFreq('${f}')" title="Filtrar por ${f}">
+      ${cfg.icon} <span class="chip-count">${n}</span> ${f}
+    </span>`;
+  });
+  html += `<span class="count-display" id="countDisplay">Mostrando <b>${data.length}</b> de ${TAREAS.length} tareas</span>`;
+  strip.innerHTML = html;
+}
+
+function filtrarPorFreq(freq){
+  const sel = document.getElementById('filtroFrecuencia');
+  if(sel.value === freq) sel.value = '';
+  else sel.value = freq;
+  aplicarFiltros();
+}
+
+/* ── Filters ── */
+function aplicarFiltros(){
+  const maq  = document.getElementById('filtroMaquina').value.trim().toUpperCase();
+  const freq = document.getElementById('filtroFrecuencia').value.trim().toUpperCase();
+  const txt  = document.getElementById('filtroTexto').value.trim().toUpperCase();
+
+  const result = TAREAS.filter(t => {
+    if(maq  && t.maquina !== maq) return false;
+    if(freq && t.frecuencia !== freq) return false;
+    if(txt  && !t.tarea.toUpperCase().includes(txt)) return false;
+    return true;
+  });
+
+  renderTabla(result);
+
+  // Update count
+  const cd = document.getElementById('countDisplay');
+  if(cd) cd.innerHTML = `Mostrando <b>${result.length}</b> de ${TAREAS.length} tareas`;
+}
+
+/* ── Render table ── */
+function renderTabla(data){
+  const tbody = document.getElementById('tareasBody');
+  const empty = document.getElementById('emptyState');
+
+  if(!data.length){
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  // Group by machine to show machine name only once per group
+  let lastMaq = null;
+  let rowNum = 0;
+  let html = '';
+
+  data.forEach(t => {
+    rowNum++;
+    const cfg = FREQ_CFG[t.frecuencia] || {color:'#fff',bg:'rgba(255,255,255,0.05)',border:'rgba(255,255,255,0.2)'};
+    const showMaq = t.maquina !== lastMaq;
+    lastMaq = t.maquina;
+    html += `<tr>
+      <td>${rowNum}</td>
+      <td class="td-machine">${showMaq ? escHtml(t.maquina) : '<span style="opacity:0.25">↳</span>'}</td>
+      <td class="td-task">${escHtml(t.tarea)}</td>
+      <td style="text-align:center">
+        <span class="freq-badge freq-${t.frecuencia}" style="color:${cfg.color};background:${cfg.bg};border-color:${cfg.border}">${t.frecuencia}</span>
+      </td>
+    </tr>`;
+  });
+
+  tbody.innerHTML = html;
+}
+
+function escHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ── Export to Excel ── */
+function exportarExcel(){
+  const maq  = document.getElementById('filtroMaquina').value;
+  const freq = document.getElementById('filtroFrecuencia').value;
+  const txt  = document.getElementById('filtroTexto').value.trim().toUpperCase();
+
+  const data = TAREAS.filter(t => {
+    if(maq  && t.maquina !== maq.toUpperCase()) return false;
+    if(freq && t.frecuencia !== freq.toUpperCase()) return false;
+    if(txt  && !t.tarea.toUpperCase().includes(txt)) return false;
+    return true;
+  });
+
+  if(!data.length){ alert('No hay tareas que exportar con los filtros actuales.'); return; }
+
+  const rows = [['Nº','MAQUINA / GRUPO','TAREA','FRECUENCIA']];
+  data.forEach((t,i) => rows.push([i+1, t.maquina, t.tarea, t.frecuencia]));
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+
+  // Column widths
+  ws['!cols'] = [{wch:5},{wch:28},{wch:70},{wch:14}];
+
+  // Style header row
+  const headerStyle = {
+    font: {bold:true, color:{rgb:'FFFFFF'}},
+    fill: {fgColor:{rgb:'1A2D42'}},
+    alignment: {horizontal:'center'}
+  };
+  ['A1','B1','C1','D1'].forEach(cell => {
+    if(ws[cell]) ws[cell].s = headerStyle;
+  });
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Preventivo');
+
+  const fecha = new Date().toISOString().slice(0,10);
+  const nombre = maq ? `Preventivo_${maq.replace(/\s+/g,'_')}_${fecha}` : `Preventivo_PANALCOR_${fecha}`;
+  XLSX.writeFile(wb, nombre+'.xlsx');
+}
+
+/* ════════════════════════════════════════════
+   PLAN SEMANAL — CONSTANTES Y ESTADO
+   ════════════════════════════════════════════ */
+const MAQUINAS = [...new Set(TAREAS.map(t => t.maquina))];
+const MEQ_DEFAULT = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO'];
+
+// Intervalos en semanas para cada frecuencia
+const FREQ_INT = {DIARIO:1, SEMANAL:1, QUINCENAL:2, MENSUAL:4, TRIMESTRAL:13, SEMESTRAL:26, ANUAL:52};
+const DIAS_ES  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const MESES_ES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const MESES_L  = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+let curMonday = null; // la semana que se está viendo ahora
+
+/* ── Storage helpers ── */
+const ST = {
+  pwd:  () => localStorage.getItem('preventivoPwd')    || 'admin',
+  ref:  () => localStorage.getItem('preventivoRef')    || '2026-06-01',
+  meqs: () => { try{ return JSON.parse(localStorage.getItem('preventivoMecanicos'))||MEQ_DEFAULT; }catch(e){return MEQ_DEFAULT;} },
+  asig: () => { try{ return JSON.parse(localStorage.getItem('preventivoAsig'))||{}; }catch(e){return {};} },
+  setRef:  v => localStorage.setItem('preventivoRef', v),
+  setMeqs: v => localStorage.setItem('preventivoMecanicos', JSON.stringify(v)),
+  setAsig: v => localStorage.setItem('preventivoAsig', JSON.stringify(v)),
+  setPwd:  v => localStorage.setItem('preventivoPwd', v),
+};
+
+/* ── Date utils ── */
+function getMondayOf(d) {
+  const dt = new Date(d); dt.setHours(0,0,0,0);
+  const day = dt.getDay();
+  dt.setDate(dt.getDate() - (day === 0 ? 6 : day - 1));
+  return dt;
+}
+function getRefMonday() {
+  return getMondayOf(new Date(ST.ref() + 'T12:00:00'));
+}
+function weekNumOf(monday) {
+  return Math.round((monday - getRefMonday()) / (7*24*3600*1000));
+}
+function fmtDate(d, long) {
+  if(long) return `${d.getDate()} de ${MESES_L[d.getMonth()]} de ${d.getFullYear()}`;
+  return `${d.getDate()} ${MESES_ES[d.getMonth()]}`;
+}
+function fmtDateShort(d) {
+  return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+}
+function isDue(freq, wn) {
+  if(wn < 0) return false;
+  return wn % (FREQ_INT[freq] || 1) === 0;
+}
+
+/* ════ TABS ════ */
+function switchTab(tab) {
+  ['plan','catalogo','ajustes'].forEach(t => {
+    document.getElementById('tab-'+t).style.display    = t===tab ? '' : 'none';
+    document.getElementById('tbtn-'+t).classList.toggle('active', t===tab);
+  });
+  if(tab==='ajustes') renderAjustes();
+  if(tab==='catalogo'){ iniciarCatalogo(); }
+}
+
+/* ════ PLAN SEMANAL ════ */
+function iniciarPlan() {
+  // Calcular el lunes de la semana actual (o el de referencia si aún no ha llegado)
+  const hoyLun = getMondayOf(new Date());
+  const refLun  = getRefMonday();
+  curMonday = hoyLun >= refLun ? hoyLun : refLun;
+  poblarPlanMecanicos();
+  renderPlan();
+}
+
+function navWeek(delta) {
+  curMonday = new Date(curMonday);
+  curMonday.setDate(curMonday.getDate() + delta*7);
+  renderPlan();
+}
+
+function poblarPlanMecanicos() {
+  const sel = document.getElementById('planMecanico');
+  sel.innerHTML = '<option value="">Todos los mecánicos</option>';
+  ST.meqs().forEach(m => {
+    const o = document.createElement('option'); o.value = o.textContent = m; sel.appendChild(o);
+  });
+}
+
+function renderPlan() {
+  const wn    = weekNumOf(curMonday);
+  const sun   = new Date(curMonday); sun.setDate(sun.getDate()+6);
+  const meq   = document.getElementById('planMecanico').value;
+  const asig  = ST.asig();
+
+  // Header
+  const semLabel = wn >= 0 ? `Semana ${wn+1}` : '⚠️ Antes del inicio';
+  document.getElementById('weekTitle').textContent =
+    `${semLabel}  ·  Lun ${fmtDate(curMonday)} — Dom ${fmtDate(sun)} ${curMonday.getFullYear()}`;
+  document.getElementById('weekSub').textContent =
+    `Referencia: ${fmtDate(getRefMonday(), true)}`;
+
+  // Si la semana es anterior a la referencia
+  if(wn < 0) {
+    document.getElementById('planStats').innerHTML = '';
+    document.getElementById('planWrap').innerHTML = `
+      <div class="pre-ref-msg" style="margin:2rem auto">
+        <h3>⚠️ SEMANA ANTERIOR AL INICIO DEL PLAN</h3>
+        <p>El plan comienza el <b>lunes ${fmtDate(getRefMonday(),true)}</b>.<br>Navega hacia adelante para ver las tareas.</p>
+        <button type="button" onclick="curMonday=getRefMonday();renderPlan()">Ir a la semana de inicio →</button>
+      </div>`;
+    return;
+  }
+
+  // Tareas que tocan esta semana, filtradas por mecánico
+  const tareasDueSemana = TAREAS.filter(t => isDue(t.frecuencia, wn));
+  const tareasFiltradas = meq
+    ? tareasDueSemana.filter(t => asig[t.maquina] === meq)
+    : tareasDueSemana;
+
+  // Stats chips
+  const counts = {};
+  tareasFiltradas.forEach(t => { counts[t.frecuencia] = (counts[t.frecuencia]||0)+1; });
+  const orden = ['DIARIO','SEMANAL','QUINCENAL','MENSUAL','TRIMESTRAL','SEMESTRAL','ANUAL'];
+  let statsHtml = '';
+  let total = 0;
+  orden.forEach(f => {
+    const n = counts[f]||0; if(!n) return;
+    total += n;
+    const cfg = FREQ_CFG[f];
+    statsHtml += `<span class="stat-chip" style="color:${cfg.color};background:${cfg.bg};border-color:${cfg.border};font-size:0.78rem;padding:4px 10px">
+      <span style="font-family:Oswald,sans-serif;font-size:0.95rem;font-weight:700">${n}</span>&nbsp;${f}
+    </span>`;
+  });
+  statsHtml += `<span style="font-size:0.8rem;color:var(--text-dim);align-self:center;margin-left:4px">Total: <b style="color:var(--gold)">${total}</b> tareas</span>`;
+  document.getElementById('planStats').innerHTML = statsHtml;
+
+  // Agrupar por máquina
+  const grupos = {};
+  tareasFiltradas.forEach(t => {
+    if(!grupos[t.maquina]) grupos[t.maquina] = [];
+    grupos[t.maquina].push(t);
+  });
+
+  if(!Object.keys(grupos).length) {
+    document.getElementById('planWrap').innerHTML = `
+      <div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <p>No hay tareas asignadas a <b>${meq}</b> esta semana.</p></div>`;
+    return;
+  }
+
+  let n = 0;
+  let html = '';
+  // Mantener orden original de máquinas
+  MAQUINAS.filter(m => grupos[m]).forEach(maq => {
+    const tareas = grupos[maq];
+    const mecAsig = asig[maq] || '';
+    html += `<div class="plan-machine-group">
+      <div class="plan-machine-header">
+        <span class="plan-machine-name">${escHtml(maq)}</span>
+        ${mecAsig ? `<span class="plan-mec-badge">👷 ${escHtml(mecAsig)}</span>` : ''}
+        <span class="plan-count-badge">${tareas.length} tarea${tareas.length!==1?'s':''}</span>
+      </div>`;
+    tareas.forEach(t => {
+      n++;
+      const cfg = FREQ_CFG[t.frecuencia] || {color:'#fff',bg:'rgba(255,255,255,0.05)',border:'rgba(255,255,255,0.2)'};
+      html += `<div class="plan-task-row">
+        <span class="plan-task-num">${n}</span>
+        <span class="plan-task-text">${escHtml(t.tarea)}</span>
+        <span class="freq-badge freq-${t.frecuencia}" style="color:${cfg.color};background:${cfg.bg};border-color:${cfg.border}">${t.frecuencia}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  document.getElementById('planWrap').innerHTML = html;
+}
+
+/* ── Export plan to Excel ── */
+function exportPlan() {
+  const wn   = weekNumOf(curMonday);
+  if(wn < 0){ alert('Navega a una semana dentro del plan para exportar.'); return; }
+
+  const sun  = new Date(curMonday); sun.setDate(sun.getDate()+6);
+  const meq  = document.getElementById('planMecanico').value;
+  const asig = ST.asig();
+
+  const tareasSemana = TAREAS.filter(t => isDue(t.frecuencia, wn));
+  const tareasFilt   = meq ? tareasSemana.filter(t => asig[t.maquina]===meq) : tareasSemana;
+
+  if(!tareasFilt.length){ alert('No hay tareas que exportar esta semana.'); return; }
+
+  // Construir filas
+  const rows = [];
+  rows.push(['MANTENIMIENTO PREVENTIVO — PANALCOR S.L.']);
+  rows.push([`Semana ${wn+1}  ·  Lunes ${fmtDateShort(curMonday)} — Domingo ${fmtDateShort(sun)}`]);
+  rows.push([`Mecánico: ${meq || 'Todos los mecánicos'}`]);
+  rows.push([]);
+  rows.push(['Nº','MÁQUINA','MECÁNICO ASIGNADO','TAREA','FRECUENCIA','✓ REALIZADO']);
+
+  let n = 0;
+  let lastMaq = null;
+  tareasFilt.forEach(t => {
+    n++;
+    const mecAsig = asig[t.maquina] || '—';
+    rows.push([n, t.maquina, mecAsig, t.tarea, t.frecuencia, '']);
+    lastMaq = t.maquina;
+  });
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:4},{wch:26},{wch:16},{wch:60},{wch:13},{wch:12}];
+  // Merge title rows
+  ws['!merges'] = [{s:{r:0,c:0},e:{r:0,c:5}},{s:{r:1,c:0},e:{r:1,c:5}},{s:{r:2,c:0},e:{r:2,c:5}}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Plan Semana');
+
+  const meqFile = meq ? '_'+meq.replace(/\s+/g,'_') : '';
+  XLSX.writeFile(wb, `Plan_Preventivo_Semana${wn+1}_${fmtDateShort(curMonday).replace(/\//g,'-')}${meqFile}.xlsx`);
+}
+
+/* ════ AJUSTES ════ */
+function renderAjustes() {
+  document.getElementById('ajRefDate').value = ST.ref();
+  renderMecList();
+  renderAsigGrid();
+}
+
+function guardarRefDate() {
+  const v = document.getElementById('ajRefDate').value;
+  if(!v){ alert('Introduce una fecha válida.'); return; }
+  // Asegurarse de que sea lunes
+  const d = new Date(v+'T12:00:00');
+  const lun = getMondayOf(d);
+  const iso = lun.toISOString().slice(0,10);
+  ST.setRef(iso);
+  document.getElementById('ajRefDate').value = iso;
+  showOk('okRef');
+  // Reiniciar plan con nueva referencia
+  curMonday = getMondayOf(new Date()) >= getRefMonday() ? getMondayOf(new Date()) : getRefMonday();
+}
+
+function renderMecList() {
+  const meqs = ST.meqs();
+  const el = document.getElementById('mecList');
+  el.innerHTML = meqs.map((m,i) => `
+    <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);padding:5px 10px;border-radius:20px;font-size:0.85rem;color:var(--cream)">
+      <span>👷 ${escHtml(m)}</span>
+      <button type="button" onclick="delMecanico(${i})" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:1rem;padding:0;line-height:1" title="Eliminar">✕</button>
+    </div>`).join('');
+}
+
+function addMecanico() {
+  const nm = document.getElementById('newMecName').value.trim().toUpperCase();
+  if(!nm) return;
+  const meqs = ST.meqs();
+  if(meqs.includes(nm)){ alert('Ya existe ese mecánico.'); return; }
+  meqs.push(nm);
+  ST.setMeqs(meqs);
+  document.getElementById('newMecName').value = '';
+  renderMecList();
+  renderAsigGrid();
+  poblarPlanMecanicos();
+}
+
+function delMecanico(i) {
+  const meqs = ST.meqs();
+  const nombre = meqs[i];
+  if(!confirm(`¿Eliminar a ${nombre} de la lista?`)) return;
+  meqs.splice(i,1);
+  ST.setMeqs(meqs);
+  // Limpiar asignaciones de ese mecánico
+  const asig = ST.asig();
+  Object.keys(asig).forEach(k => { if(asig[k]===nombre) delete asig[k]; });
+  ST.setAsig(asig);
+  renderMecList();
+  renderAsigGrid();
+  poblarPlanMecanicos();
+}
+
+function renderAsigGrid() {
+  const meqs = ['', ...ST.meqs()];
+  const asig = ST.asig();
+  let html = '';
+  MAQUINAS.forEach(maq => {
+    const opts = meqs.map(m => `<option value="${escHtml(m)}" ${asig[maq]===m?'selected':''}>${m||'— Sin asignar —'}</option>`).join('');
+    html += `<div class="asig-row">
+      <span class="asig-maq">${escHtml(maq)}</span>
+      <select class="asig-mec" data-maq="${escHtml(maq)}">${opts}</select>
+    </div>`;
+  });
+  document.getElementById('asigGrid').innerHTML = html;
+}
+
+function guardarAsig() {
+  const asig = {};
+  document.querySelectorAll('.asig-mec').forEach(sel => {
+    if(sel.value) asig[sel.dataset.maq] = sel.value;
+  });
+  ST.setAsig(asig);
+  showOk('okAsig');
+  renderPlan();
+}
+
+function cambiarPwd() {
+  const old  = document.getElementById('pwdOld').value;
+  const nw   = document.getElementById('pwdNew').value;
+  const nw2  = document.getElementById('pwdNew2').value;
+  const err  = document.getElementById('pwdErr');
+  err.style.display = 'none';
+  if(old !== ST.pwd()){ err.textContent='❌ La contraseña actual no es correcta.'; err.style.display='block'; return; }
+  if(nw.length < 4)   { err.textContent='❌ La nueva contraseña debe tener al menos 4 caracteres.'; err.style.display='block'; return; }
+  if(nw !== nw2)      { err.textContent='❌ Las contraseñas no coinciden.'; err.style.display='block'; return; }
+  ST.setPwd(nw);
+  ['pwdOld','pwdNew','pwdNew2'].forEach(id => document.getElementById(id).value='');
+  showOk('okPwd');
+}
+
+function showOk(id) {
+  const el = document.getElementById(id);
+  el.style.display = 'inline';
+  setTimeout(() => el.style.display='none', 2500);
+}
+
+/* ── Update iniciarApp to launch plan by default ── */
+function iniciarCatalogo(){
+  renderStats(TAREAS);
+  renderTabla(TAREAS);
+}
+</script>
+</body>
+</html>
