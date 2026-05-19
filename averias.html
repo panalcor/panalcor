@@ -280,16 +280,19 @@ a{color:inherit;text-decoration:none}
         </div>
         <div class="field">
           <label>Hora inicio avería</label>
-          <input type="time" id="fHoraInicio" required>
+          <input type="time" id="fHoraInicio" required oninput="syncTurnoConHora()">
         </div>
         <div class="field">
           <label>Turno</label>
-          <select id="fTurno">
+          <select id="fTurno" onchange="validarTurnoHora()">
             <option value="">— Turno —</option>
             <option>MAÑANA (06-14h)</option>
             <option>TARDE (14-22h)</option>
             <option>NOCHE (22-06h)</option>
           </select>
+          <div id="turnoWarn" style="display:none;margin-top:6px;padding:7px 10px;background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);border-radius:6px;font-size:0.8rem;color:#ff8a80">
+            ⚠️ La hora no corresponde con el turno seleccionado
+          </div>
         </div>
       </div>
       <div class="row2">
@@ -467,7 +470,7 @@ a{color:inherit;text-decoration:none}
 // ══════════════════════════════════════════════
 const MECANICOS = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO'];
 
-const MAQUINAS = [
+let MAQUINAS = [
   {id:'MAQ-001',n:'PABAT 1',t:'AMASADORA',f:'NEOTECH',a:'OBRADOR',c:'A'},
   {id:'MAQ-002',n:'PABAT 2',t:'AMASADORA',f:'NEOTECH',a:'OBRADOR',c:'A'},
   {id:'MAQ-003',n:'PABAT 3',t:'AMASADORA',f:'NEOTECH',a:'OBRADOR',c:'A'},
@@ -679,7 +682,17 @@ let charts = {};
 // ══════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════
-(function init(){
+// Cargar máquinas extra del admin y luego arrancar
+DB.ref('maquinas_extra').once('value').then(snap=>{
+  const val = snap.val();
+  if(val){
+    Object.values(val).forEach(m=>{
+      if(!MAQUINAS.find(x=>x.id===m.id)) MAQUINAS.push(m);
+    });
+  }
+}).catch(()=>{}).finally(()=>{ init(); });
+
+function init(){
   poblarMaquinas();
   poblarMecanicos();
   poblarFiltroMecanicos();
@@ -710,7 +723,7 @@ let charts = {};
       showToast('📱 Máquina pre-seleccionada desde QR');
     }
   }
-})();
+}
 
 function poblarMaquinas(){
   const sel = document.getElementById('fMaquina');
@@ -761,6 +774,45 @@ function setTurnoAuto(){
   for(let i=0;i<sel.options.length;i++){
     if(sel.options[i].value===t){sel.selectedIndex=i;break;}
   }
+}
+
+function turnoDeHora(h){
+  if(h>=6&&h<14) return 'MAÑANA (06-14h)';
+  if(h>=14&&h<22) return 'TARDE (14-22h)';
+  return 'NOCHE (22-06h)';
+}
+
+// Cuando cambia la hora → actualiza el turno automáticamente
+function syncTurnoConHora(){
+  const horaVal = document.getElementById('fHoraInicio').value;
+  if(!horaVal) return;
+  const h = parseInt(horaVal.split(':')[0]);
+  const turnoCorr = turnoDeHora(h);
+  const sel = document.getElementById('fTurno');
+  for(let i=0;i<sel.options.length;i++){
+    if(sel.options[i].value===turnoCorr){sel.selectedIndex=i;break;}
+  }
+  document.getElementById('turnoWarn').style.display='none';
+}
+
+// Cuando cambia el turno manualmente → avisa si no cuadra con la hora
+function validarTurnoHora(){
+  const horaVal = document.getElementById('fHoraInicio').value;
+  const turnoSel = document.getElementById('fTurno').value;
+  const warn = document.getElementById('turnoWarn');
+  if(!horaVal||!turnoSel){warn.style.display='none';return;}
+  const h = parseInt(horaVal.split(':')[0]);
+  const turnoCorr = turnoDeHora(h);
+  warn.style.display = (turnoSel!==turnoCorr)?'block':'none';
+}
+
+// Devuelve true si hora y turno son coherentes
+function turnoHoraOk(){
+  const horaVal = document.getElementById('fHoraInicio').value;
+  const turnoSel = document.getElementById('fTurno').value;
+  if(!horaVal||!turnoSel) return true; // si falta alguno, se valida aparte
+  const h = parseInt(horaVal.split(':')[0]);
+  return turnoSel === turnoDeHora(h);
 }
 
 function cargarRepuestos(){
@@ -919,6 +971,14 @@ function guardarAveria(){
   if(!grav){showToast('⚠️ Selecciona la gravedad');return;}
   if(!desc){showToast('⚠️ Escribe una descripción');return;}
   if(!estado){showToast('⚠️ Indica el estado final');return;}
+  if(!turnoHoraOk()){
+    const h = parseInt(document.getElementById('fHoraInicio').value.split(':')[0]);
+    const correcto = turnoDeHora(h);
+    showToast(`❌ La hora no corresponde con el turno — debería ser ${correcto}`);
+    document.getElementById('turnoWarn').style.display='block';
+    document.getElementById('fTurno').focus();
+    return;
+  }
 
   const maq = MAQUINAS.find(m=>m.id===maqId);
   const horaFin = document.getElementById('fHoraFin').value;
