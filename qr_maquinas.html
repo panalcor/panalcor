@@ -357,18 +357,10 @@ const MAQUINAS = [
 ];
 
 /* ══ Estado y base URL ══ */
-let serverBase = '';
-
-// Detectar si estamos en el servidor
-if(window.location.protocol === 'http:' && window.location.port === '8080') {
-  serverBase = window.location.origin; // http://192.168.x.x:8080
-} else if(window.location.protocol === 'http:') {
-  serverBase = window.location.origin;
-} else {
-  // file:// — mostrar aviso
-  document.getElementById('noServerWarn').style.display = 'block';
-  serverBase = 'http://TU_IP:8080';
-}
+// Detectar base automáticamente — funciona en GitHub Pages, servidor local y file://
+const serverBase = (window.location.protocol === 'file:')
+  ? (() => { document.getElementById('noServerWarn').style.display = 'block'; return 'http://TU_IP:8080'; })()
+  : window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
 
 // Poblar filtros
 const areas = [...new Set(MAQUINAS.map(m => m.a))].sort();
