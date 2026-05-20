@@ -307,13 +307,6 @@ tbody td{padding:9px 8px;vertical-align:middle}
     <label>👷 Mecánico:</label>
     <select id="mecSelect">
       <option value="">— Nombre —</option>
-      <option>ALEX</option>
-      <option>RAFA</option>
-      <option>GREGORIO</option>
-      <option>JAVIER E</option>
-      <option>JAVIER H</option>
-      <option>RUBIEL</option>
-      <option>ALBERTO</option>
     </select>
     <label style="margin-left:6px">⏰ Turno:</label>
     <select id="turnoSelect" onchange="checkTurnoWarning()">
@@ -747,5 +740,40 @@ function showAlert(msg, bg){
 }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+const _FB_MEC = {
+  apiKey:"AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU",
+  authDomain:"panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:"https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"panalcor-mantenimiento",
+  storageBucket:"panalcor-mantenimiento.firebasestorage.app",
+  messagingSenderId:"67593058609",
+  appId:"1:67593058609:web:c33fa1fa4fce2932485810"
+};
+const _FB_APP_MEC = firebase.apps.find(a=>a.name==='mec') || firebase.initializeApp(_FB_MEC,'mec');
+const _DB_MEC = _FB_APP_MEC.database();
+
+const _MEC_FALLBACK = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE'];
+
+(function cargarMecanicos(){
+  const sel = document.getElementById('mecSelect');
+  function poblar(lista){
+    lista.forEach(n=>{
+      const o = document.createElement('option');
+      o.value = n; o.textContent = n;
+      sel.appendChild(o);
+    });
+  }
+  _DB_MEC.ref('config/mecanicos').once('value')
+    .then(snap=>{
+      const val = snap.val();
+      poblar(val && val.length ? val : _MEC_FALLBACK);
+    })
+    .catch(()=>poblar(_MEC_FALLBACK));
+})();
+</script>
 </body>
 </html>
