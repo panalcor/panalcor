@@ -124,28 +124,15 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
 </head>
 <body>
 
-<!-- ══ LOGIN ══ -->
-<div class="login-screen" id="loginScreen">
-  <div class="login-box">
-    <div style="font-size:2.5rem;margin-bottom:10px">📋</div>
-    <h2>PLAN PREVENTIVO</h2>
-    <div class="sub">PANALCOR S.L. · Administración</div>
-    <input type="password" id="pwInput" placeholder="Contraseña admin" onkeydown="if(event.key==='Enter') doLogin()">
-    <button class="login-btn" onclick="doLogin()">ENTRAR</button>
-    <div class="login-err" id="loginErr"></div>
-  </div>
-</div>
-
 <!-- ══ APP ══ -->
-<div id="app" style="display:none">
+<div id="app">
 
 <div class="topbar">
-  <a href="panalcor_inicio.html" class="tbtn" style="text-decoration:none">🏠</a>
+  <a href="admin.html" class="tbtn" style="text-decoration:none">← Admin</a>
   <div>
     <div class="sub">PANALCOR S.L.</div>
     <h1>📋 Plan de Mantenimiento Preventivo</h1>
   </div>
-  <button class="tbtn tbtn-logout" onclick="doLogout()">Cerrar sesión</button>
 </div>
 
 <div class="tabs">
@@ -411,35 +398,12 @@ const CATALOGO = [{"id": "CAT-0001", "parte": "000", "maquina": "LEVADURA", "sub
 let catalogoActivo = [...CATALOGO];
 
 // ══ ESTADO ══
-const SESSION_KEY = 'planPrevAdminAuth';
-function getPwd(){ return localStorage.getItem('adminPwd') || 'admin'; }
 let mecanicosLista = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE'];
 let planActual     = null;
 let seleccionadas  = []; // {catId, instancia, mecanico}
 let editModalIdx   = null;
 
-// ══ LOGIN ══
-function doLogin(){
-  const v = document.getElementById('pwInput').value;
-  const err = document.getElementById('loginErr');
-  if(v === getPwd()){
-    sessionStorage.setItem(SESSION_KEY,'1');
-    err.textContent='';
-    arrancarApp();
-  } else {
-    err.textContent='❌ Contraseña incorrecta';
-    document.getElementById('pwInput').value='';
-    document.getElementById('pwInput').focus();
-  }
-}
-function doLogout(){ sessionStorage.removeItem(SESSION_KEY); location.reload(); }
-(function(){
-  if(sessionStorage.getItem(SESSION_KEY)==='1'){ arrancarApp(); }
-})();
-
 function arrancarApp(){
-  document.getElementById('loginScreen').style.display='none';
-  document.getElementById('app').style.display='block';
   // Cargar mecánicos desde Firebase
   DB.ref('config/mecanicos').once('value').then(s=>{
     const v=s.val();
@@ -836,6 +800,9 @@ function guardarModalEdit(){
   cerrarModal();
   renderSelList();
 }
+
+// Arrancar directamente al cargar
+arrancarApp();
 </script>
 </body>
 </html>
