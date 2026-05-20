@@ -412,7 +412,7 @@ let catalogoActivo = [...CATALOGO];
 
 // ══ ESTADO ══
 const SESSION_KEY = 'planPrevAdminAuth';
-const PW_DEFAULT  = 'panalcor1234';
+function getPwd(){ return localStorage.getItem('adminPwd') || 'admin'; }
 let mecanicosLista = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE'];
 let planActual     = null;
 let seleccionadas  = []; // {catId, instancia, mecanico}
@@ -422,19 +422,15 @@ let editModalIdx   = null;
 function doLogin(){
   const v = document.getElementById('pwInput').value;
   const err = document.getElementById('loginErr');
-  DB.ref('config/adminPwd').once('value').then(s=>{
-    const pwd = s.val() || PW_DEFAULT;
-    if(v===pwd){
-      sessionStorage.setItem(SESSION_KEY,'1');
-      arrancarApp();
-    } else {
-      err.textContent='❌ Contraseña incorrecta';
-      document.getElementById('pwInput').value='';
-    }
-  }).catch(()=>{
-    if(v===PW_DEFAULT){ sessionStorage.setItem(SESSION_KEY,'1'); arrancarApp(); }
-    else err.textContent='❌ Sin conexión y contraseña incorrecta';
-  });
+  if(v === getPwd()){
+    sessionStorage.setItem(SESSION_KEY,'1');
+    err.textContent='';
+    arrancarApp();
+  } else {
+    err.textContent='❌ Contraseña incorrecta';
+    document.getElementById('pwInput').value='';
+    document.getElementById('pwInput').focus();
+  }
 }
 function doLogout(){ sessionStorage.removeItem(SESSION_KEY); location.reload(); }
 (function(){
