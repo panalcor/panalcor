@@ -615,7 +615,7 @@ function renderCatBrowser(){
     html+=`<div class="cat-group-hdr">${m}</div>`;
     arr.forEach(c=>{
       const added=addedIds.has(c.id);
-      html+=`<div class="cat-item${added?' added':''}" onclick="${added?'':'addToSel(''+c.id+'')'}">
+      html+=`<div class="cat-item${added?' added':''}" data-id="${c.id}" onclick="${added?'':'addToSel(this.dataset.id)'}">
         <span class="cat-maq">${c.subtipo||c.maquina}</span>
         <span class="cat-tarea">${c.tarea}</span>
         <span class="cat-freq">${freqBadge(c.frecuencia)}</span>
