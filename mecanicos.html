@@ -363,6 +363,25 @@ const REPUESTOS = [{"ubicacion":"0C1-6","ref":"1","desc":"800E  (F) N8   ALLEN B
 const TAREAS    = [{"id":"DI-001","tarea":"REVISION ACEITES 1","maquina":"DIVISORAS","area":"OBRADOR","detalle":"MAÑANA LIMPIAR GARRAFAS Y RELLENAR","turno":"TODOS","prioridad":"ALTA"},{"id":"DI-002","tarea":"REVISION ACEITES 2","maquina":"DIVISORAS","area":"OBRADOR","detalle":"RELLENAR ACEITES","turno":"TODOS","prioridad":"ALTA"},{"id":"DI-003","tarea":"FILTROS AIRE ACONDICIONADO OBRADOR","maquina":"A/A","area":"OBRADOR","detalle":"QUITAR FILTROS Y SOPLAR","turno":"TODOS","prioridad":"MEDIA"},{"id":"DI-004","tarea":"VACIAR BANDEJAS DIVISORAS","maquina":"DIVISORAS","area":"OBRADOR","detalle":"VACIAR Y LIMPIAR","turno":"TODOS","prioridad":"BAJA"},{"id":"DI-005","tarea":"FILTROS Y RADIADORES COMPRESORES","maquina":"COMPRESORES","area":"SALA COMPRESORES","detalle":"SOPLAR","turno":"TODOS","prioridad":"MEDIA"},{"id":"DI-006","tarea":"TENSION CADENAS LINEAS","maquina":"LINEAS","area":"OBRADOR","detalle":"","turno":"MAÑANA","prioridad":"ALTA"}];
 
 // ══════════════════════════════════════
+// TAREAS DIARIAS - carga desde Firebase
+// ══════════════════════════════════════
+var tareasActivas = TAREAS.slice(); // fallback al array base
+
+function cargarTareasDiarias(){
+  if(typeof firebase === 'undefined' || !firebase.apps.length) return;
+  var DB2 = firebase.database();
+  DB2.ref('tareas_diarias').once('value').then(function(snap){
+    var val = snap.val();
+    if(val && typeof val === 'object'){
+      tareasActivas = Object.values(val).sort(function(a,b){
+        return (a.orden||0)-(b.orden||0)||(a.id||'').localeCompare(b.id||'');
+      });
+      renderTasks();
+    }
+  }).catch(function(){ /* usa tareasActivas base */ });
+}
+
+// ══════════════════════════════════════
 // CLOCK
 // ══════════════════════════════════════
 function updateClock(){
@@ -557,7 +576,7 @@ function renderTasks(){
   const turno = document.getElementById('turnoSelect').value;
   const bloqueado = turnoYaGuardado(fecha, turno) && !adminUnlocked;
   let done=0;
-  grid.innerHTML = TAREAS.map(t=>{
+  grid.innerHTML = tareasActivas.map(t=>{
     const isDone = !!checks[t.id];
     if(isDone) done++;
     const info = getSavedInfo(t.id);
@@ -577,7 +596,7 @@ function renderTasks(){
       </div>
     </div>`;
   }).join('');
-  const total = TAREAS.length;
+  const total = tareasActivas.length;
   document.getElementById('sDone').textContent = done;
   document.getElementById('sPending').textContent = total-done;
   document.getElementById('sTotal').textContent = total;
@@ -587,7 +606,7 @@ function resetChecks(){
   if(!confirm('¿Resetear todos los checks de este día?')) return;
   const fecha = getSelectedDate();
   checks = {};
-  TAREAS.forEach(t=>localStorage.removeItem('info_'+fecha+'_'+t.id));
+  tareasActivas.forEach(t=>localStorage.removeItem('info_'+fecha+'_'+t.id));
   saveChecks();
   renderTasks();
 }
@@ -601,7 +620,8 @@ function getTurnoActual(){
 
 // Init: fecha y turno actuales
 (function(){
-  poblarFechas();
+  cargarTareasDiarias();
+poblarFechas();
   document.getElementById('fechaSelect').value = getTodayKey();
   const sel = document.getElementById('turnoSelect');
   const t = getTurnoActual();
@@ -674,7 +694,7 @@ function guardarChecks(){
   }
 
   const done = Object.values(checks).filter(Boolean).length;
-  const total = TAREAS.length;
+  const total = tareasActivas.length;
 
   // Si existe, borrar registro anterior antes de guardar
   if(adminUnlocked){
@@ -689,7 +709,7 @@ function guardarChecks(){
     hora: new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),
     done, total,
     editadoPorAdmin: adminUnlocked,
-    tareas: TAREAS.map(t=>({ id:t.id, tarea:t.tarea, ok:!!checks[t.id], info:getSavedInfo(t.id) }))
+    tareas: tareasActivas.map(t=>({ id:t.id, tarea:t.tarea, ok:!!checks[t.id], info:getSavedInfo(t.id) }))
   };
 
   localStorage.setItem('turno_'+fecha+'_'+Date.now(), JSON.stringify(registro));
