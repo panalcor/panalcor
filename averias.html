@@ -498,7 +498,7 @@ a{color:inherit;text-decoration:none}
 // ══════════════════════════════════════════════
 // DATOS
 // ══════════════════════════════════════════════
-const MECANICOS = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO'];
+let MECANICOS = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE'];
 
 let MAQUINAS = [
   {id:'MAQ-001',n:'PABAT 1',t:'AMASADORA',f:'NEOTECH',a:'OBRADOR',c:'A'},
@@ -713,14 +713,16 @@ let charts = {};
 // INIT
 // ══════════════════════════════════════════════
 // Cargar máquinas extra del admin y luego arrancar
-DB.ref('maquinas_extra').once('value').then(snap=>{
+// Cargar mecánicos activos desde Firebase, luego máquinas extra, luego arrancar
+DB.ref('config/mecanicos').once('value').then(snap=>{
   const val = snap.val();
-  if(val){
-    Object.values(val).forEach(m=>{
-      if(!MAQUINAS.find(x=>x.id===m.id)) MAQUINAS.push(m);
-    });
-  }
-}).catch(()=>{}).finally(()=>{ init(); });
+  if(val && Array.isArray(val) && val.length) MECANICOS = val;
+}).catch(()=>{}).finally(()=>{
+  DB.ref('maquinas_extra').once('value').then(snap=>{
+    const val = snap.val();
+    if(val){ Object.values(val).forEach(m=>{ if(!MAQUINAS.find(x=>x.id===m.id)) MAQUINAS.push(m); }); }
+  }).catch(()=>{}).finally(()=>{ init(); });
+});
 
 function init(){
   poblarMaquinas();

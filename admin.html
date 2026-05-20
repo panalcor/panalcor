@@ -233,6 +233,70 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
     <div class="chart-title">Intervenciones por mecánico</div>
     <canvas id="cMecanicos" height="140"></canvas>
   </div>
+
+  <!-- ── GESTIÓN DE PERSONAL ── -->
+  <div class="card" style="margin-top:20px">
+    <div class="sec-title">👷 Personal de Mantenimiento</div>
+
+    <!-- Formulario añadir/editar -->
+    <div id="mecFormWrap" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-bottom:18px">
+      <div style="font-size:0.8rem;color:var(--gold);font-weight:700;margin-bottom:12px;letter-spacing:0.05em" id="mecFormTitle">➕ NUEVO MECÁNICO</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:12px">
+        <div>
+          <label style="font-size:0.72rem;color:rgba(255,255,255,0.5);display:block;margin-bottom:4px">NOMBRE *</label>
+          <input id="pmNombre" type="text" placeholder="Ej: ANTONIO" style="width:100%;background:var(--navy-deep);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:8px 10px;color:#fff;font-family:Barlow,sans-serif;font-size:0.88rem;text-transform:uppercase;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:0.72rem;color:rgba(255,255,255,0.5);display:block;margin-bottom:4px">TURNO</label>
+          <select id="pmTurno" style="width:100%;background:var(--navy-deep);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:8px 10px;color:#fff;font-family:Barlow,sans-serif;font-size:0.88rem">
+            <option value="">—</option>
+            <option>MAÑANA</option><option>TARDE</option><option>NOCHE</option>
+            <option>MAÑANA-TARDE</option><option>TARDE-NOCHE</option><option>NOCHE-MAÑANA</option>
+            <option>ROTATIVO</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.72rem;color:rgba(255,255,255,0.5);display:block;margin-bottom:4px">ESPECIALIDAD</label>
+          <select id="pmEspec" style="width:100%;background:var(--navy-deep);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:8px 10px;color:#fff;font-family:Barlow,sans-serif;font-size:0.88rem">
+            <option value="">—</option>
+            <option>MECANICA</option><option>ELECTRICIDAD</option>
+            <option>ELECTRICIDAD-MECANICA</option><option>FONTANERIA</option>
+            <option>MANTENIMIENTO</option><option>POLIVALENTE</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.72rem;color:rgba(255,255,255,0.5);display:block;margin-bottom:4px">ESTADO</label>
+          <select id="pmEstado" style="width:100%;background:var(--navy-deep);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:8px 10px;color:#fff;font-family:Barlow,sans-serif;font-size:0.88rem">
+            <option>ACTIVO</option><option>BAJA</option><option>DESPEDIDO</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.72rem;color:rgba(255,255,255,0.5);display:block;margin-bottom:4px">CONTRASEÑA APP</label>
+          <input id="pmPwd" type="text" placeholder="Ej: nombre2024" style="width:100%;background:var(--navy-deep);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:8px 10px;color:#fff;font-family:Barlow,sans-serif;font-size:0.88rem;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:0.72rem;color:rgba(255,255,255,0.5);display:block;margin-bottom:4px">NOTAS</label>
+          <input id="pmNotas" type="text" placeholder="Opcional" style="width:100%;background:var(--navy-deep);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:8px 10px;color:#fff;font-family:Barlow,sans-serif;font-size:0.88rem;box-sizing:border-box">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-export btn-green" onclick="guardarPersonal()">💾 Guardar</button>
+        <button class="btn-export" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.2)" onclick="cancelarEditarPersonal()">✕ Cancelar</button>
+        <input type="hidden" id="pmEditId">
+      </div>
+    </div>
+
+    <!-- Tabla personal -->
+    <div style="overflow-x:auto">
+      <table class="data-table" id="tPersonal">
+        <thead><tr>
+          <th>ID</th><th>Nombre</th><th>Turno</th><th>Especialidad</th><th>Estado</th><th>Contraseña</th><th>Notas</th><th>Acciones</th>
+        </tr></thead>
+        <tbody id="bPersonal"></tbody>
+      </table>
+    </div>
+    <div id="personalCount" style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-top:10px"></div>
+  </div>
 </div>
 
 <!-- ═══ IA ANÁLISIS ═══ -->
@@ -1282,10 +1346,140 @@ function switchTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('panel-'+name).classList.add('active');
   document.getElementById('tab-'+name).classList.add('active');
-  if(name==='mec') renderMecanicos();
+  if(name==='mec') { renderMecanicos(); loadPersonal(renderPersonal); }
   if(name==='inf') renderInformes();
   if(name==='maq') { loadMaquinasExtra(renderMaquinas); }
   if(name==='cfg') renderEstadoDatos();
+}
+
+// ══════════════════════════════════════════════════
+// GESTIÓN DE PERSONAL
+// ══════════════════════════════════════════════════
+const PERSONAL_DEFAULT = [
+  {id:'MEC-001',nombre:'ALEX',      turno:'NOCHE-MAÑANA',    espec:'MECANICA',               estado:'ACTIVO',    pwd:'alex2001',      notas:''},
+  {id:'MEC-002',nombre:'RAFA',      turno:'NOCHE',           espec:'',                       estado:'ACTIVO',    pwd:'rafa2002',      notas:''},
+  {id:'MEC-003',nombre:'GREGORIO',  turno:'MAÑANA-TARDE',    espec:'ELECTRICIDAD-MECANICA',  estado:'ACTIVO',    pwd:'gregorio2003',  notas:''},
+  {id:'MEC-004',nombre:'JAVIER E',  turno:'MAÑANA-TARDE',    espec:'ELECTRICIDAD-MECANICA',  estado:'ACTIVO',    pwd:'javier2004',    notas:''},
+  {id:'MEC-005',nombre:'ALEX 2',    turno:'MAÑANA-TARDE',    espec:'',                       estado:'DESPEDIDO', pwd:'alex2',         notas:''},
+  {id:'MEC-006',nombre:'JAVIER H',  turno:'MAÑANA',          espec:'ELECTRICIDAD-MECANICA',  estado:'ACTIVO',    pwd:'admin1234',     notas:''},
+  {id:'MEC-007',nombre:'RUBIEL',    turno:'MAÑANA',          espec:'MANTENIMIENTO',          estado:'ACTIVO',    pwd:'rubiel0000',    notas:''},
+  {id:'MEC-008',nombre:'ALBERTO',   turno:'MAÑANA',          espec:'FONTANERIA',             estado:'ACTIVO',    pwd:'alberto0000',   notas:''},
+  {id:'MEC-009',nombre:'MANOLO H',  turno:'MAÑANA-TARDE',    espec:'ELECTRICIDAD-MECANICA',  estado:'DESPEDIDO', pwd:'manoloh',       notas:''},
+  {id:'MEC-010',nombre:'JOSE',      turno:'MAÑANA-TARDE',    espec:'ELECTRICIDAD-MECANICA',  estado:'ACTIVO',    pwd:'jose2000',      notas:''}
+];
+
+let personalData = [];
+
+function loadPersonal(callback){
+  DB.ref('config/personal').once('value').then(snap=>{
+    const val = snap.val();
+    if(val && Array.isArray(val) && val.length){
+      personalData = val;
+    } else {
+      // Primera carga: guardar los datos del Excel como base
+      personalData = PERSONAL_DEFAULT;
+      syncPersonalFirebase();
+    }
+    if(callback) callback();
+  }).catch(()=>{ personalData = PERSONAL_DEFAULT; if(callback) callback(); });
+}
+
+function syncPersonalFirebase(){
+  // Guarda lista completa y también el array de nombres activos para los selectores
+  DB.ref('config/personal').set(personalData);
+  const activos = personalData.filter(m=>m.estado==='ACTIVO').map(m=>m.nombre);
+  DB.ref('config/mecanicos').set(activos);
+}
+
+function renderPersonal(){
+  const tbody = document.getElementById('bPersonal');
+  const count = document.getElementById('personalCount');
+  if(!tbody) return;
+
+  const estadoColor = {ACTIVO:'#2ecc71', BAJA:'#f39c12', DESPEDIDO:'#e74c3c'};
+
+  tbody.innerHTML = personalData.map(m=>`
+    <tr style="${m.estado!=='ACTIVO'?'opacity:0.5':''}">
+      <td><span style="font-size:0.75rem;color:rgba(255,255,255,0.4)">${m.id}</span></td>
+      <td><b>${m.nombre}</b></td>
+      <td style="font-size:0.82rem">${m.turno||'—'}</td>
+      <td style="font-size:0.82rem">${m.espec||'—'}</td>
+      <td><span style="display:inline-block;padding:3px 8px;border-radius:20px;font-size:0.72rem;font-weight:700;background:${estadoColor[m.estado]||'#888'}22;color:${estadoColor[m.estado]||'#888'};border:1px solid ${estadoColor[m.estado]||'#888'}55">${m.estado}</span></td>
+      <td style="font-size:0.8rem;font-family:monospace;color:rgba(255,255,255,0.5)">${m.pwd||'—'}</td>
+      <td style="font-size:0.8rem;color:rgba(255,255,255,0.4)">${m.notas||''}</td>
+      <td style="white-space:nowrap">
+        <button onclick="editarPersonal('${m.id}')" style="background:rgba(52,152,219,0.2);border:1px solid rgba(52,152,219,0.4);color:#3498db;border-radius:5px;padding:4px 10px;cursor:pointer;font-size:0.78rem;margin-right:4px">✏️</button>
+        <button onclick="eliminarPersonal('${m.id}')" style="background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.3);color:#e74c3c;border-radius:5px;padding:4px 10px;cursor:pointer;font-size:0.78rem">🗑️</button>
+      </td>
+    </tr>`).join('');
+
+  const activos = personalData.filter(m=>m.estado==='ACTIVO').length;
+  count.textContent = `${personalData.length} mecánicos en total · ${activos} activos`;
+}
+
+function guardarPersonal(){
+  const nombre = document.getElementById('pmNombre').value.trim().toUpperCase();
+  if(!nombre){ showToast('⚠️ El nombre es obligatorio'); return; }
+  const editId = document.getElementById('pmEditId').value;
+  const dato = {
+    id:       editId || generarIdPersonal(),
+    nombre,
+    turno:    document.getElementById('pmTurno').value,
+    espec:    document.getElementById('pmEspec').value,
+    estado:   document.getElementById('pmEstado').value,
+    pwd:      document.getElementById('pmPwd').value.trim(),
+    notas:    document.getElementById('pmNotas').value.trim()
+  };
+  if(editId){
+    const idx = personalData.findIndex(m=>m.id===editId);
+    if(idx>=0) personalData[idx]=dato;
+  } else {
+    personalData.push(dato);
+  }
+  syncPersonalFirebase();
+  renderPersonal();
+  cancelarEditarPersonal();
+  showToast(editId ? '✅ Mecánico actualizado' : '✅ Mecánico añadido');
+}
+
+function generarIdPersonal(){
+  const nums = personalData.map(m=>parseInt(m.id.replace('MEC-',''))||0);
+  const max = nums.length ? Math.max(...nums) : 0;
+  return 'MEC-'+String(max+1).padStart(3,'0');
+}
+
+function editarPersonal(id){
+  const m = personalData.find(x=>x.id===id);
+  if(!m) return;
+  document.getElementById('pmNombre').value  = m.nombre;
+  document.getElementById('pmTurno').value   = m.turno||'';
+  document.getElementById('pmEspec').value   = m.espec||'';
+  document.getElementById('pmEstado').value  = m.estado||'ACTIVO';
+  document.getElementById('pmPwd').value     = m.pwd||'';
+  document.getElementById('pmNotas').value   = m.notas||'';
+  document.getElementById('pmEditId').value  = m.id;
+  document.getElementById('mecFormTitle').textContent = '✏️ EDITANDO: '+m.nombre;
+  document.getElementById('mecFormWrap').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function cancelarEditarPersonal(){
+  ['pmNombre','pmTurno','pmEspec','pmPwd','pmNotas'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.value='';
+  });
+  document.getElementById('pmEstado').value = 'ACTIVO';
+  document.getElementById('pmEditId').value = '';
+  document.getElementById('mecFormTitle').textContent = '➕ NUEVO MECÁNICO';
+}
+
+function eliminarPersonal(id){
+  const m = personalData.find(x=>x.id===id);
+  if(!m) return;
+  if(!confirm('¿Eliminar a '+m.nombre+'? Esta acción no se puede deshacer.')) return;
+  personalData = personalData.filter(x=>x.id!==id);
+  syncPersonalFirebase();
+  renderPersonal();
+  showToast('🗑️ '+m.nombre+' eliminado');
 }
 
 // ══════════════════════════════════════════════════
