@@ -16,8 +16,6 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;min-height:100vh}
-
-/* ── LOGIN ── */
 .login-screen{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:999}
 .login-box{background:var(--navy-mid);border:1px solid rgba(201,162,39,0.3);border-radius:16px;padding:40px;width:320px;text-align:center}
 .login-box h2{font-size:1.4rem;font-weight:900;color:var(--gold-light);margin-bottom:4px}
@@ -26,110 +24,102 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
 .login-box input:focus{outline:none;border-color:var(--gold)}
 .login-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a;border:none;border-radius:8px;font-family:'Barlow',sans-serif;font-size:1rem;font-weight:900;cursor:pointer}
 .login-err{color:var(--red);font-size:0.85rem;margin-top:8px;min-height:18px}
-
-/* ── TOPBAR ── */
-.topbar{background:linear-gradient(135deg,#0a1520,var(--navy-mid));border-bottom:2px solid var(--gold);padding:14px 20px;display:flex;align-items:center;gap:14px}
-.topbar h1{font-size:1.3rem;font-weight:900;color:var(--gold-light);letter-spacing:0.05em}
-.topbar .sub{font-size:0.75rem;color:rgba(255,255,255,0.45)}
-.tbtn{background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.4);color:var(--gold);padding:8px 14px;border-radius:7px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.85rem;transition:all .2s}
-.tbtn:hover{background:rgba(201,162,39,0.3)}
+.topbar{background:linear-gradient(135deg,#0a1520,var(--navy-mid));border-bottom:2px solid var(--gold);padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.topbar h1{font-size:1.2rem;font-weight:900;color:var(--gold-light);letter-spacing:0.05em}
+.topbar .sub{font-size:0.72rem;color:rgba(255,255,255,0.45)}
+.tbtn{background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.4);color:var(--gold);padding:8px 14px;border-radius:7px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.85rem}
 .tbtn-logout{margin-left:auto;background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.15);color:rgba(255,255,255,0.45)}
-
-/* ── TABS ── */
 .tabs{display:flex;background:var(--navy-mid);border-bottom:2px solid rgba(201,162,39,0.2);overflow-x:auto}
 .tab{padding:13px 20px;cursor:pointer;font-size:0.95rem;font-weight:600;color:rgba(255,255,255,0.5);border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap}
 .tab:hover{color:var(--white)}
 .tab.active{color:var(--gold-light);border-bottom-color:var(--gold)}
-
-/* ── PANELS ── */
-.panel{display:none;padding:20px;max-width:1100px}
+.panel{display:none;padding:20px;max-width:1200px}
 .panel.active{display:block}
-
-/* ── CARDS ── */
 .card{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius);padding:18px;margin-bottom:16px}
 .sec-title{font-size:0.72rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid rgba(201,162,39,0.2)}
-
-/* ── BOTONES ── */
-.btn{padding:11px 20px;border-radius:8px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.95rem;font-weight:700;letter-spacing:0.05em;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:7px}
+.btn{padding:10px 18px;border-radius:8px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.9rem;font-weight:700;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
 .btn-gold{background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a}
-.btn-gold:hover{background:linear-gradient(135deg,var(--gold-light),var(--gold))}
-.btn-green{background:rgba(46,204,113,0.2);border:1px solid rgba(46,204,113,0.4)!important;border-style:solid;color:var(--green)}
-.btn-green:hover{background:rgba(46,204,113,0.35)}
-.btn-red{background:rgba(231,76,60,0.18);border:1px solid rgba(231,76,60,0.4)!important;border-style:solid;color:var(--red)}
-.btn-red:hover{background:rgba(231,76,60,0.3)}
-.btn-blue{background:rgba(52,152,219,0.2);border:1px solid rgba(52,152,219,0.4)!important;border-style:solid;color:var(--blue)}
-.btn-blue:hover{background:rgba(52,152,219,0.35)}
-.btn-sm{padding:6px 12px;font-size:0.8rem}
-
-/* ── FORM ── */
+.btn-green{background:rgba(46,204,113,0.2);border:1px solid rgba(46,204,113,0.4);color:var(--green)}
+.btn-red{background:rgba(231,76,60,0.18);border:1px solid rgba(231,76,60,0.4);color:var(--red)}
+.btn-blue{background:rgba(52,152,219,0.2);border:1px solid rgba(52,152,219,0.4);color:var(--blue)}
+.btn-sm{padding:5px 11px;font-size:0.78rem}
 .field{margin-bottom:14px}
 .field label{display:block;font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:5px}
-.field input,.field select{width:100%;background:var(--navy);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:10px 14px;font-family:'Barlow',sans-serif;font-size:0.95rem}
+.field input,.field select,.fld-sel{width:100%;background:var(--navy);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:10px 14px;font-family:'Barlow',sans-serif;font-size:0.9rem}
 .field input:focus,.field select:focus{outline:none;border-color:var(--gold)}
-.field select option{background:#1a2d42}
+.fld-sel{padding:7px 10px;font-size:0.84rem}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:0.7rem;font-weight:700}
+.badge-semanal{background:rgba(52,152,219,0.2);color:#5dade2;border:1px solid rgba(52,152,219,0.3)}
+.badge-quincenal{background:rgba(155,89,182,0.2);color:#c39bd3;border:1px solid rgba(155,89,182,0.3)}
+.badge-mensual{background:rgba(46,204,113,0.2);color:var(--green);border:1px solid rgba(46,204,113,0.3)}
+.badge-diario{background:rgba(231,76,60,0.2);color:#f1948a;border:1px solid rgba(231,76,60,0.3)}
+.badge-semestral{background:rgba(243,156,18,0.2);color:var(--yellow);border:1px solid rgba(243,156,18,0.3)}
+.badge-anual{background:rgba(201,162,39,0.2);color:var(--gold);border:1px solid rgba(201,162,39,0.3)}
+.badge-trimestral{background:rgba(52,73,94,0.4);color:#aab;border:1px solid rgba(100,130,160,0.3)}
+.badge-done{background:rgba(46,204,113,0.2);color:var(--green);border:1px solid rgba(46,204,113,0.3)}
+.badge-pend{background:rgba(243,156,18,0.2);color:var(--yellow);border:1px solid rgba(243,156,18,0.3)}
+
+/* ── CREAR PLAN ── */
+.crear-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.crear-grid{grid-template-columns:1fr}}
+.filtros{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.filtros select,.filtros input{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:7px 11px;color:var(--white);font-family:'Barlow',sans-serif;font-size:0.85rem;min-width:0}
+.filtros select option{background:#1a2d42}
+.cat-list{max-height:460px;overflow-y:auto;border:1px solid rgba(255,255,255,0.08);border-radius:8px}
+.cat-group-hdr{padding:8px 12px;background:rgba(201,162,39,0.1);font-size:0.72rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);font-weight:700;position:sticky;top:0}
+.cat-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.85rem;cursor:pointer;transition:background .12s}
+.cat-item:hover{background:rgba(255,255,255,0.04)}
+.cat-item.added{opacity:0.4;cursor:default}
+.cat-cb{width:18px;height:18px;flex-shrink:0;accent-color:var(--gold)}
+.cat-maq{font-weight:700;color:var(--gold-light);min-width:110px;font-size:0.8rem}
+.cat-sub{color:rgba(255,255,255,0.4);font-size:0.75rem;min-width:90px}
+.cat-tarea{flex:1;color:rgba(255,255,255,0.85)}
+.sel-list{max-height:460px;overflow-y:auto;border:1px solid rgba(255,255,255,0.08);border-radius:8px}
+.sel-hdr{display:grid;grid-template-columns:2.5fr 1.5fr 1.5fr auto;gap:8px;padding:8px 12px;font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid rgba(201,162,39,0.2)}
+.sel-row{display:grid;grid-template-columns:2.5fr 1.5fr 1.5fr auto;gap:8px;align-items:center;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.83rem}
+.sel-row:hover{background:rgba(255,255,255,0.02)}
+.sel-name{line-height:1.3}
+.sel-maq{font-size:0.74rem;color:rgba(255,255,255,0.4);margin-top:2px}
+.sel-del{background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.3);color:var(--red);border-radius:5px;padding:3px 8px;cursor:pointer;font-size:0.75rem;white-space:nowrap}
+
+/* ── CATÁLOGO ── */
+.cat-table-row{display:grid;grid-template-columns:1.2fr 1fr 2.5fr 0.8fr auto;gap:8px;align-items:center;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.83rem}
+.cat-table-row.hdr{font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);padding:6px 12px;border-bottom:1px solid rgba(201,162,39,0.2)}
+.cat-table-list{border:1px solid rgba(255,255,255,0.08);border-radius:8px;max-height:500px;overflow-y:auto}
 
 /* ── PLAN ACTIVO ── */
 .plan-banner{background:linear-gradient(135deg,rgba(201,162,39,0.15),rgba(201,162,39,0.05));border:1px solid rgba(201,162,39,0.3);border-radius:12px;padding:20px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px}
 .plan-titulo{font-size:1.2rem;font-weight:900;color:var(--gold-light)}
 .plan-periodo{font-size:0.85rem;color:rgba(255,255,255,0.5);margin-top:3px}
 .plan-stats{display:flex;gap:20px;flex-wrap:wrap}
-.plan-stat{text-align:center}
 .plan-stat .num{font-size:1.6rem;font-weight:900;color:var(--gold-light)}
 .plan-stat .lbl{font-size:0.7rem;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.1em}
-
-/* ── PROGRESO POR MECÁNICO ── */
-.mec-progress-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:16px}
-.mec-progress-card{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px}
-.mec-pname{font-weight:900;font-size:1rem;margin-bottom:10px;color:var(--gold-light)}
-.prog-bar-bg{background:rgba(255,255,255,0.08);border-radius:4px;height:8px;overflow:hidden;margin-bottom:5px}
+.mec-progress-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:16px}
+.mec-progress-card{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px}
+.mec-pname{font-weight:900;font-size:0.95rem;margin-bottom:8px;color:var(--gold-light)}
+.prog-bar-bg{background:rgba(255,255,255,0.08);border-radius:4px;height:7px;overflow:hidden;margin-bottom:4px}
 .prog-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--gold),var(--gold-light));transition:width .5s}
-.prog-label{font-size:0.78rem;color:rgba(255,255,255,0.45);display:flex;justify-content:space-between}
-.prog-label b{color:var(--gold-light)}
-
-/* ── TABLA TAREAS ── */
-.tarea-row{display:grid;grid-template-columns:2fr 2fr 1.5fr 1.5fr auto;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.88rem}
-.tarea-row:hover{background:rgba(255,255,255,0.02)}
-.tarea-row.header{font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);padding:8px 14px;border-bottom:1px solid rgba(201,162,39,0.2)}
-.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:0.72rem;font-weight:700}
-.badge-green{background:rgba(46,204,113,0.2);color:var(--green);border:1px solid rgba(46,204,113,0.3)}
-.badge-yellow{background:rgba(243,156,18,0.2);color:var(--yellow);border:1px solid rgba(243,156,18,0.3)}
-
-/* ── CREAR PLAN ── */
-.catalogo-filtros{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
-.catalogo-filtros select,.catalogo-filtros input{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:8px 12px;color:var(--white);font-family:'Barlow',sans-serif;font-size:0.88rem}
-.catalogo-filtros select option{background:#1a2d42}
-.cat-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.88rem;cursor:pointer;transition:background .15s}
-.cat-item:hover{background:rgba(255,255,255,0.04)}
-.cat-item.selected{background:rgba(201,162,39,0.1)}
-.cat-check{width:20px;height:20px;flex-shrink:0;border:2px solid rgba(255,255,255,0.25);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.8rem}
-.cat-item.selected .cat-check{background:rgba(201,162,39,0.3);border-color:var(--gold);color:var(--gold)}
-.cat-maq{font-weight:700;min-width:130px;color:var(--gold-light)}
-.cat-desc{flex:1;color:rgba(255,255,255,0.8)}
-.cat-freq{font-size:0.72rem;color:rgba(255,255,255,0.35);min-width:80px}
-
-/* ── TAREAS SELECCIONADAS ── */
-.sel-tarea{display:grid;grid-template-columns:2fr 2fr 1.5fr auto;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.88rem}
-.sel-tarea select{background:var(--navy);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:6px 10px;font-family:'Barlow',sans-serif;font-size:0.85rem}
-.sel-tarea select option{background:#1a2d42}
+.prog-label{font-size:0.75rem;color:rgba(255,255,255,0.45);display:flex;justify-content:space-between}
+.tarea-table{border:1px solid rgba(255,255,255,0.08);border-radius:8px;overflow:hidden}
+.tarea-row{display:grid;grid-template-columns:2fr 1.2fr 1.2fr 1fr 1fr;gap:8px;align-items:center;padding:9px 14px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.84rem}
+.tarea-row.hdr{font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);background:rgba(201,162,39,0.06)}
 
 /* ── HISTORIAL ── */
-.hist-item{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.hist-item{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
 .hist-titulo{font-weight:700;font-size:1rem}
-.hist-meta{font-size:0.8rem;color:rgba(255,255,255,0.4);margin-top:3px}
+.hist-meta{font-size:0.78rem;color:rgba(255,255,255,0.4);margin-top:3px}
 .hist-pct{font-size:1.4rem;font-weight:900;color:var(--gold-light)}
 
-/* ── TOAST ── */
-.toast{position:fixed;bottom:24px;right:24px;background:var(--navy-mid);border:1px solid rgba(201,162,39,0.5);border-radius:10px;padding:13px 22px;font-size:0.92rem;font-weight:600;z-index:9999;opacity:0;transform:translateY(20px);transition:all .3s;pointer-events:none}
-.toast.show{opacity:1;transform:translateY(0)}
+/* ── MODAL EDIT TAREA ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:500;padding:16px}
+.modal-bg.open{display:flex}
+.modal{background:var(--navy-mid);border:1px solid rgba(201,162,39,0.3);border-radius:14px;padding:24px;width:100%;max-width:520px}
+.modal h3{color:var(--gold-light);font-size:1rem;margin-bottom:16px}
 
-@media(max-width:700px){
-  .row2,.row3{grid-template-columns:1fr}
-  .tarea-row{grid-template-columns:1fr 1fr;font-size:0.8rem}
-  .sel-tarea{grid-template-columns:1fr 1fr}
-  .mec-progress-grid{grid-template-columns:1fr 1fr}
-}
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy-mid);border:1px solid rgba(201,162,39,0.5);border-radius:10px;padding:12px 20px;font-size:0.9rem;font-weight:600;z-index:9999;opacity:0;transform:translateY(20px);transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
 </style>
 </head>
 <body>
@@ -140,8 +130,7 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
     <div style="font-size:2.5rem;margin-bottom:10px">📋</div>
     <h2>PLAN PREVENTIVO</h2>
     <div class="sub">PANALCOR S.L. · Administración</div>
-    <input type="password" id="pwInput" placeholder="Contraseña admin"
-           onkeydown="if(event.key==='Enter') doLogin()">
+    <input type="password" id="pwInput" placeholder="Contraseña admin" onkeydown="if(event.key==='Enter') doLogin()">
     <button class="login-btn" onclick="doLogin()">ENTRAR</button>
     <div class="login-err" id="loginErr"></div>
   </div>
@@ -151,7 +140,7 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
 <div id="app" style="display:none">
 
 <div class="topbar">
-  <button class="tbtn" onclick="history.back()">← Volver</button>
+  <a href="panalcor_inicio.html" class="tbtn" style="text-decoration:none">🏠</a>
   <div>
     <div class="sub">PANALCOR S.L.</div>
     <h1>📋 Plan de Mantenimiento Preventivo</h1>
@@ -160,50 +149,37 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
 </div>
 
 <div class="tabs">
-  <div class="tab active" id="tab-activo"  onclick="switchTab('activo')">📊 Plan Activo</div>
-  <div class="tab"        id="tab-crear"   onclick="switchTab('crear')">➕ Crear Plan</div>
-  <div class="tab"        id="tab-historial" onclick="switchTab('historial')">🗂 Historial</div>
+  <div class="tab active" onclick="switchTab('activo')" id="tab-activo">📊 Plan Activo</div>
+  <div class="tab" onclick="switchTab('crear')"  id="tab-crear">➕ Crear Plan</div>
+  <div class="tab" onclick="switchTab('cat')"    id="tab-cat">📚 Catálogo</div>
+  <div class="tab" onclick="switchTab('hist')"   id="tab-hist">🗂 Historial</div>
 </div>
 
 <!-- ═══ PLAN ACTIVO ═══ -->
 <div class="panel active" id="panel-activo">
-
-  <div id="noActivoBanner" style="display:none">
-    <div class="card" style="text-align:center;padding:40px">
-      <div style="font-size:3rem;margin-bottom:14px">📋</div>
-      <div style="font-size:1.1rem;font-weight:700;margin-bottom:8px">No hay ningún plan activo</div>
-      <div style="font-size:0.88rem;color:rgba(255,255,255,0.4);margin-bottom:20px">Crea un plan nuevo desde la pestaña <b>Crear Plan</b></div>
-      <button class="btn btn-gold" onclick="switchTab('crear')">➕ Crear Plan</button>
+  <div id="activoBanner"></div>
+  <div class="mec-progress-grid" id="mecProgGrid"></div>
+  <div class="card">
+    <div class="sec-title">Tareas del plan</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <select id="filtMecActivo" class="fld-sel" style="width:auto" onchange="renderTablaPlan()">
+        <option value="">Todos los mecánicos</option>
+      </select>
+      <select id="filtEstActivo" class="fld-sel" style="width:auto" onchange="renderTablaPlan()">
+        <option value="">Todos los estados</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="hecho">Hecho</option>
+      </select>
+      <select id="filtMaqActivo" class="fld-sel" style="width:auto" onchange="renderTablaPlan()">
+        <option value="">Todas las máquinas</option>
+      </select>
     </div>
-  </div>
-
-  <div id="planActivoContent" style="display:none">
-    <div class="plan-banner" id="planBanner"></div>
-
-    <div class="card">
-      <div class="sec-title">👷 Progreso por mecánico</div>
-      <div class="mec-progress-grid" id="mecProgressGrid"></div>
+    <div class="tarea-table">
+      <div class="tarea-row hdr"><span>Tarea</span><span>Máquina</span><span>Mecánico</span><span>Frecuencia</span><span>Estado</span></div>
+      <div id="tablaPlan"></div>
     </div>
-
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
-        <div class="sec-title" style="margin:0;border:none;padding:0">📋 Todas las tareas del plan</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <a id="btnMecLink" href="mis_tareas.html" target="_blank" class="btn btn-blue btn-sm">📱 Ver como mecánico</a>
-          <button class="btn btn-red btn-sm" onclick="cerrarPlan()">🏁 Cerrar y archivar plan</button>
-        </div>
-      </div>
-      <div style="margin-bottom:10px">
-        <select id="filtroMecActivo" onchange="renderTablaPlan()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:7px 12px;color:var(--white);font-family:'Barlow',sans-serif;font-size:0.88rem">
-          <option value="">Todos los mecánicos</option>
-        </select>
-      </div>
-      <div style="overflow-x:auto">
-        <div class="tarea-row header">
-          <span>Máquina</span><span>Tarea</span><span>Mecánico</span><span>Estado</span><span></span>
-        </div>
-        <div id="tablaPlan"></div>
-      </div>
+    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-red" onclick="cerrarPlan()">🔒 Cerrar y archivar plan</button>
     </div>
   </div>
 </div>
@@ -211,77 +187,210 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
 <!-- ═══ CREAR PLAN ═══ -->
 <div class="panel" id="panel-crear">
   <div class="card">
-    <div class="sec-title">📝 Datos del plan</div>
-    <div class="row3">
-      <div class="field">
-        <label>Título del plan *</label>
-        <input type="text" id="planTitulo" placeholder="Ej: Semana 22 — Mayo 2026">
+    <div class="sec-title">Nuevo Plan Mensual</div>
+    <div class="row2" style="margin-bottom:16px">
+      <div class="field" style="margin:0">
+        <label>Mes</label>
+        <select id="nMes" class="fld-sel" style="width:100%">
+          <option value="01">Enero</option><option value="02">Febrero</option>
+          <option value="03">Marzo</option><option value="04">Abril</option>
+          <option value="05">Mayo</option><option value="06">Junio</option>
+          <option value="07">Julio</option><option value="08">Agosto</option>
+          <option value="09">Septiembre</option><option value="10">Octubre</option>
+          <option value="11">Noviembre</option><option value="12">Diciembre</option>
+        </select>
       </div>
-      <div class="field">
-        <label>Período</label>
-        <input type="text" id="planPeriodo" placeholder="Ej: 25 May - 1 Jun 2026">
+      <div class="field" style="margin:0">
+        <label>Año</label>
+        <input type="number" id="nAnio" style="background:var(--navy);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:10px 14px;font-family:Barlow,sans-serif;font-size:0.9rem;width:100%" value="2026">
       </div>
+    </div>
+    <div style="font-size:0.8rem;color:rgba(255,255,255,0.4);margin-bottom:6px">
+      ⚠️ Crear un nuevo plan reemplaza el plan activo actual.
     </div>
   </div>
 
-  <div class="card">
-    <div class="sec-title">🔍 Seleccionar tareas del catálogo</div>
-    <div class="catalogo-filtros">
-      <select id="filtroMaqCat" onchange="renderCatalogo()">
-        <option value="">Todas las máquinas</option>
-      </select>
-      <select id="filtroFreqCat" onchange="renderCatalogo()">
-        <option value="">Todas las frecuencias</option>
-        <option>DIARIO</option><option>SEMANAL</option><option>QUINCENAL</option>
-        <option>MENSUAL</option><option>TRIMESTRAL</option><option>SEMESTRAL</option><option>ANUAL</option>
-      </select>
-      <input type="text" id="filtroTextCat" placeholder="Buscar tarea..." oninput="renderCatalogo()" style="min-width:180px">
-      <button class="btn btn-sm" style="background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.3);color:var(--gold);font-family:'Barlow',sans-serif" onclick="seleccionarFiltradas()">✅ Seleccionar filtradas</button>
-      <button class="btn btn-sm" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);font-family:'Barlow',sans-serif" onclick="deseleccionarTodas()">✕ Deseleccionar todas</button>
+  <div class="crear-grid">
+    <!-- IZQUIERDA: Catálogo browser -->
+    <div class="card" style="margin:0">
+      <div class="sec-title">Seleccionar tareas del catálogo</div>
+      <div class="filtros">
+        <select id="crFiltMaq" onchange="renderCatBrowser()" style="flex:1;min-width:140px">
+          <option value="">Todas las máquinas</option>
+          <option value="LEVADURA">LEVADURA</option>
+<option value="HARINA-ADITIVOS">HARINA-ADITIVOS</option>
+<option value="COMPRESORES-SECADORES">COMPRESORES-SECADORES</option>
+<option value="LINEAS">LINEAS</option>
+<option value="CARRUSEL">CARRUSEL</option>
+<option value="TOLVAS-AGUA">TOLVAS-AGUA</option>
+<option value="DIVISORAS">DIVISORAS</option>
+<option value="REPARTIDORES">REPARTIDORES</option>
+<option value="TALLADORA RELAMPAGO">TALLADORA RELAMPAGO</option>
+<option value="HORNOS">HORNOS</option>
+<option value="FERMENTADORA RELAMPAGO">FERMENTADORA RELAMPAGO</option>
+<option value="TUNEL PREFRIO">TUNEL PREFRIO</option>
+<option value="TUNELES">TUNELES</option>
+<option value="DESMOLDEO">DESMOLDEO</option>
+<option value="CONTADORA">CONTADORA</option>
+<option value="M CAJAS">M CAJAS</option>
+<option value="M BOLSAS">M BOLSAS</option>
+<option value="BASCULA-PRECINTADORA">BASCULA-PRECINTADORA</option>
+<option value="CENTRADOR ENTABLADO">CENTRADOR ENTABLADO</option>
+<option value="TRUENO">TRUENO</option>
+        </select>
+        <select id="crFiltFreq" onchange="renderCatBrowser()" style="min-width:110px">
+          <option value="">Todas las frecuencias</option>
+          <option>DIARIO</option><option>SEMANAL</option><option>QUINCENAL</option>
+          <option>MENSUAL</option><option>SEMESTRAL</option><option>ANUAL</option><option>TRIMESTRAL</option>
+        </select>
+        <input id="crSearch" type="text" placeholder="Buscar..." oninput="renderCatBrowser()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:7px 11px;color:var(--white);font-family:Barlow,sans-serif;font-size:0.85rem;flex:1;min-width:100px">
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button class="btn btn-blue btn-sm" onclick="selAllVisible()">✓ Añadir visibles</button>
+        <span id="crCount" style="font-size:0.78rem;color:rgba(255,255,255,0.35);align-self:center"></span>
+      </div>
+      <div class="cat-list" id="catBrowser"></div>
     </div>
-    <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);margin-bottom:8px" id="catCount"></div>
-    <div style="max-height:380px;overflow-y:auto;border:1px solid rgba(255,255,255,0.08);border-radius:8px" id="catalogoList"></div>
-  </div>
 
-  <div class="card" id="asignacionCard" style="display:none">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
-      <div class="sec-title" style="margin:0;border:none;padding:0">👷 Asignar mecánicos</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <select id="asigTodosSelect" style="background:var(--navy);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:7px 12px;color:var(--white);font-family:'Barlow',sans-serif;font-size:0.85rem">
+    <!-- DERECHA: Tareas seleccionadas -->
+    <div class="card" style="margin:0">
+      <div class="sec-title">Tareas seleccionadas <span id="selCount" style="color:rgba(255,255,255,0.4);font-weight:400"></span></div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        <select id="mecMasivo" class="fld-sel" style="flex:1;min-width:120px">
           <option value="">Asignar todos a...</option>
         </select>
-        <button class="btn btn-sm btn-blue" onclick="asignarTodos()">Aplicar a todos</button>
+        <button class="btn btn-blue btn-sm" onclick="asignarTodosAMecanico()">⚡ Asignar</button>
+        <button class="btn btn-sm" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5)" onclick="vaciarSeleccion()">🗑 Vaciar</button>
       </div>
-    </div>
-    <div style="overflow-x:auto">
-      <div class="sel-tarea" style="font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid rgba(201,162,39,0.2);padding:6px 12px">
-        <span>Máquina</span><span>Tarea</span><span>Mecánico</span><span></span>
+      <div class="sel-list">
+        <div class="sel-hdr"><span>Tarea</span><span>Instancia</span><span>Mecánico</span><span></span></div>
+        <div id="selList"></div>
       </div>
-      <div id="tareasSelList"></div>
+      <div style="margin-top:14px">
+        <button class="btn btn-gold" style="width:100%;justify-content:center;font-size:1rem" onclick="crearPlan()">✅ Crear Plan</button>
+      </div>
     </div>
   </div>
+</div>
 
-  <div style="display:flex;gap:12px;flex-wrap:wrap;padding:0 0 30px">
-    <button class="btn btn-gold" onclick="activarPlan()" id="btnActivar">🚀 Activar Plan</button>
-    <span style="font-size:0.85rem;color:rgba(255,255,255,0.35);align-self:center" id="activarMsg"></span>
+<!-- ═══ CATÁLOGO ═══ -->
+<div class="panel" id="panel-cat">
+  <div class="card">
+    <div class="sec-title">➕ Añadir / Editar tarea al catálogo</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:12px">
+      <div>
+        <label style="font-size:0.72rem;color:var(--gold);display:block;margin-bottom:4px">MÁQUINA *</label>
+        <select id="ctMaq" class="fld-sel">
+          <option value="">— Seleccionar —</option>
+          <option value="LEVADURA">LEVADURA</option>
+<option value="HARINA-ADITIVOS">HARINA-ADITIVOS</option>
+<option value="COMPRESORES-SECADORES">COMPRESORES-SECADORES</option>
+<option value="LINEAS">LINEAS</option>
+<option value="CARRUSEL">CARRUSEL</option>
+<option value="TOLVAS-AGUA">TOLVAS-AGUA</option>
+<option value="DIVISORAS">DIVISORAS</option>
+<option value="REPARTIDORES">REPARTIDORES</option>
+<option value="TALLADORA RELAMPAGO">TALLADORA RELAMPAGO</option>
+<option value="HORNOS">HORNOS</option>
+<option value="FERMENTADORA RELAMPAGO">FERMENTADORA RELAMPAGO</option>
+<option value="TUNEL PREFRIO">TUNEL PREFRIO</option>
+<option value="TUNELES">TUNELES</option>
+<option value="DESMOLDEO">DESMOLDEO</option>
+<option value="CONTADORA">CONTADORA</option>
+<option value="M CAJAS">M CAJAS</option>
+<option value="M BOLSAS">M BOLSAS</option>
+<option value="BASCULA-PRECINTADORA">BASCULA-PRECINTADORA</option>
+<option value="CENTRADOR ENTABLADO">CENTRADOR ENTABLADO</option>
+<option value="TRUENO">TRUENO</option>
+          <option value="__nueva__">+ Nueva...</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:0.72rem;color:var(--gold);display:block;margin-bottom:4px">SUBTIPO / PARTE</label>
+        <input type="text" id="ctSubtipo" placeholder="Ej: DESCARGADOR" class="fld-sel" style="text-transform:uppercase">
+      </div>
+      <div style="grid-column:span 2">
+        <label style="font-size:0.72rem;color:var(--gold);display:block;margin-bottom:4px">TAREA *</label>
+        <input type="text" id="ctTarea" placeholder="Descripción de la tarea" class="fld-sel">
+      </div>
+      <div>
+        <label style="font-size:0.72rem;color:var(--gold);display:block;margin-bottom:4px">FRECUENCIA *</label>
+        <select id="ctFreq" class="fld-sel">
+          <option>DIARIO</option><option>SEMANAL</option><option selected>QUINCENAL</option>
+          <option>MENSUAL</option><option>SEMESTRAL</option><option>ANUAL</option><option>TRIMESTRAL</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-green" onclick="guardarCatTarea()">💾 Guardar en catálogo</button>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5)" onclick="cancelarEditCat()">✕ Cancelar</button>
+      <input type="hidden" id="ctEditId">
+    </div>
+  </div>
+  <div class="card">
+    <div class="sec-title">Tareas del catálogo <span id="catTotal" style="color:rgba(255,255,255,0.4);font-weight:400"></span></div>
+    <div class="filtros" style="margin-bottom:10px">
+      <select id="catFiltMaq" onchange="renderCatTabla()" style="flex:1;min-width:140px">
+        <option value="">Todas las máquinas</option>
+        <option value="LEVADURA">LEVADURA</option>
+<option value="HARINA-ADITIVOS">HARINA-ADITIVOS</option>
+<option value="COMPRESORES-SECADORES">COMPRESORES-SECADORES</option>
+<option value="LINEAS">LINEAS</option>
+<option value="CARRUSEL">CARRUSEL</option>
+<option value="TOLVAS-AGUA">TOLVAS-AGUA</option>
+<option value="DIVISORAS">DIVISORAS</option>
+<option value="REPARTIDORES">REPARTIDORES</option>
+<option value="TALLADORA RELAMPAGO">TALLADORA RELAMPAGO</option>
+<option value="HORNOS">HORNOS</option>
+<option value="FERMENTADORA RELAMPAGO">FERMENTADORA RELAMPAGO</option>
+<option value="TUNEL PREFRIO">TUNEL PREFRIO</option>
+<option value="TUNELES">TUNELES</option>
+<option value="DESMOLDEO">DESMOLDEO</option>
+<option value="CONTADORA">CONTADORA</option>
+<option value="M CAJAS">M CAJAS</option>
+<option value="M BOLSAS">M BOLSAS</option>
+<option value="BASCULA-PRECINTADORA">BASCULA-PRECINTADORA</option>
+<option value="CENTRADOR ENTABLADO">CENTRADOR ENTABLADO</option>
+<option value="TRUENO">TRUENO</option>
+      </select>
+      <input id="catFiltSearch" type="text" placeholder="Buscar..." oninput="renderCatTabla()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:7px 11px;color:var(--white);font-family:Barlow,sans-serif;font-size:0.85rem;flex:1;min-width:100px">
+    </div>
+    <div class="cat-table-list">
+      <div class="cat-table-row hdr"><span>Máquina</span><span>Subtipo</span><span>Tarea</span><span>Frecuencia</span><span>Acciones</span></div>
+      <div id="catTablaBody"></div>
+    </div>
   </div>
 </div>
 
 <!-- ═══ HISTORIAL ═══ -->
-<div class="panel" id="panel-historial">
+<div class="panel" id="panel-hist">
   <div class="card">
-    <div class="sec-title">🗂 Planes archivados</div>
-    <div id="historialList"></div>
+    <div class="sec-title">Planes archivados</div>
+    <div id="histList"><div style="color:rgba(255,255,255,0.3);font-size:0.9rem">Cargando...</div></div>
   </div>
 </div>
 
 </div><!-- /app -->
+
 <div class="toast" id="toast"></div>
 
+<!-- ══ MODAL EDIT TAREA PLAN ══ -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h3>✏️ Editar asignación</h3>
+    <div class="field"><label>Instancia</label>
+      <select id="modalInst" class="fld-sel"></select></div>
+    <div class="field"><label>Mecánico</label>
+      <select id="modalMec" class="fld-sel"></select></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-gold" onclick="guardarModalEdit()">💾 Guardar</button>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5)" onclick="cerrarModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <script>
-// ══════════════════════════════════════════════════
-// FIREBASE
-// ══════════════════════════════════════════════════
+// ══ FIREBASE ══
 const FB_CFG = {
   apiKey:"AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU",
   authDomain:"panalcor-mantenimiento.firebaseapp.com",
@@ -294,478 +403,440 @@ const FB_CFG = {
 if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
 const DB = firebase.database();
 
-// ══════════════════════════════════════════════════
-// CATÁLOGO DE TAREAS (412 tareas)
-// Se carga del preventivo.html existente en la misma carpeta
-// Para no duplicar, las cargamos desde Firebase si están ahí,
-// o usamos las frecuencias estándar
-// ══════════════════════════════════════════════════
-let CATALOGO = []; // se carga desde Firebase (preventivo guarda ahí)
-let MECANICOS = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO'];
-let tareasSeleccionadas = new Set(); // IDs de tareas seleccionadas del catálogo
-let planActivo = null;
+// ══ CATÁLOGO BASE (del Excel) ══
+const CATALOGO = [{"id": "CAT-0001", "parte": "000", "maquina": "LEVADURA", "subtipo": "LEVADURA", "tarea": "GLICOL", "frecuencia": "MENSUAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0002", "parte": "000", "maquina": "LEVADURA", "subtipo": "LEVADURA", "tarea": "ENFRIAMIENTO TANQUES", "frecuencia": "QUINCENAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0003", "parte": "000", "maquina": "LEVADURA", "subtipo": "LEVADURA", "tarea": "AGITADORES", "frecuencia": "QUINCENAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0004", "parte": "000", "maquina": "LEVADURA", "subtipo": "LEVADURA", "tarea": "TEMPERATURA TANQUES", "frecuencia": "QUINCENAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0005", "parte": "000", "maquina": "LEVADURA", "subtipo": "LEVADURA", "tarea": "CUADRO LEVADURA T1 (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "frecuencia": "QUINCENAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0006", "parte": "000", "maquina": "LEVADURA", "subtipo": "CUADRO LEVADURA (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "tarea": "BOMBAS (FUNCIONAMIENTO CORRECTO Y SIN PERDIDAS)", "frecuencia": "QUINCENAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0007", "parte": "000", "maquina": "LEVADURA", "subtipo": "CUADRO LEVADURA (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "tarea": "CUADRO GENERAL LIMPIEZA", "frecuencia": "TRIMESTRAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0008", "parte": "000", "maquina": "LEVADURA", "subtipo": "CUADRO LEVADURA (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "tarea": "CUADRO TANQUE 1 LIMPIEZA", "frecuencia": "TRIMESTRAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0009", "parte": "000", "maquina": "LEVADURA", "subtipo": "CUADRO LEVADURA (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "tarea": "ESTADO DE LAS LLAVES", "frecuencia": "MENSUAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0010", "parte": "000", "maquina": "LEVADURA", "subtipo": "CUADRO LEVADURA (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "tarea": "ESTADO DE LAS MANGUERAS", "frecuencia": "MENSUAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0011", "parte": "000", "maquina": "LEVADURA", "subtipo": "CUADRO LEVADURA (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "tarea": "DOSIFICACION LINEA 1", "frecuencia": "MENSUAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0012", "parte": "000", "maquina": "LEVADURA", "subtipo": "CUADRO LEVADURA (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "tarea": "DOSIFICACION LINEA 2", "frecuencia": "MENSUAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0013", "parte": "000", "maquina": "LEVADURA", "subtipo": "CUADRO LEVADURA (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "tarea": "DOSIFICACION LINEA 3", "frecuencia": "MENSUAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0014", "parte": "000", "maquina": "LEVADURA", "subtipo": "CUADRO LEVADURA (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "tarea": "DOSIFICACION LINEA 4", "frecuencia": "MENSUAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0015", "parte": "000", "maquina": "LEVADURA", "subtipo": "CUADRO LEVADURA (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "tarea": "DOSIFICACION LINEA 5", "frecuencia": "MENSUAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0016", "parte": "000", "maquina": "LEVADURA", "subtipo": "CUADRO LEVADURA (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "tarea": "DOSIFICACION LINEA 6", "frecuencia": "MENSUAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0017", "parte": "000", "maquina": "LEVADURA", "subtipo": "CUADRO LEVADURA (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "tarea": "ESTADO CONTADOR L1", "frecuencia": "MENSUAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0018", "parte": "000", "maquina": "LEVADURA", "subtipo": "CUADRO LEVADURA (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "tarea": "ESTADO CONTADOR L2", "frecuencia": "MENSUAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0019", "parte": "000", "maquina": "LEVADURA", "subtipo": "CUADRO LEVADURA (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "tarea": "ESTADO CONTADOR L3", "frecuencia": "MENSUAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0020", "parte": "000", "maquina": "LEVADURA", "subtipo": "CUADRO LEVADURA (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "tarea": "ESTADO CONTADOR L4", "frecuencia": "MENSUAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0021", "parte": "000", "maquina": "LEVADURA", "subtipo": "CUADRO LEVADURA (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "tarea": "ESTADO CONTADOR L5", "frecuencia": "MENSUAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0022", "parte": "000", "maquina": "LEVADURA", "subtipo": "CUADRO LEVADURA (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "tarea": "ESTADO CONTADOR L6", "frecuencia": "MENSUAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0023", "parte": "000", "maquina": "LEVADURA", "subtipo": "CUADRO LEVADURA (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "tarea": "CONTADOR IMPULSOS L1", "frecuencia": "MENSUAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0024", "parte": "000", "maquina": "LEVADURA", "subtipo": "CUADRO LEVADURA (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "tarea": "CONTADOR IMPULSOS L2", "frecuencia": "MENSUAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0025", "parte": "000", "maquina": "LEVADURA", "subtipo": "CUADRO LEVADURA (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "tarea": "CONTADOR IMPULSOS L3", "frecuencia": "MENSUAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0026", "parte": "000", "maquina": "LEVADURA", "subtipo": "CUADRO LEVADURA (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "tarea": "CONTADOR IMPULSOS L4", "frecuencia": "MENSUAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0027", "parte": "000", "maquina": "LEVADURA", "subtipo": "CUADRO LEVADURA (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "tarea": "CONTADOR IMPULSOS L5", "frecuencia": "MENSUAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0028", "parte": "000", "maquina": "LEVADURA", "subtipo": "CUADRO LEVADURA (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "tarea": "CONTADOR IMPULSOS L6", "frecuencia": "MENSUAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0029", "parte": "001", "maquina": "HARINA-ADITIVOS", "subtipo": "HARINA SILOS", "tarea": "CONOS SILOS, ESTADO", "frecuencia": "MENSUAL", "instancias": ["HARINA-ADITIVOS"]}, {"id": "CAT-0030", "parte": "001", "maquina": "HARINA-ADITIVOS", "subtipo": "HARINA SILOS", "tarea": "VALVULAS SALIDA HARINA", "frecuencia": "MENSUAL", "instancias": ["HARINA-ADITIVOS"]}, {"id": "CAT-0031", "parte": "001", "maquina": "HARINA-ADITIVOS", "subtipo": "HARINA SILOS", "tarea": "CODOS, MANGUITOS, UNIONES ETC TUBERIAS", "frecuencia": "SEMANAL", "instancias": ["HARINA-ADITIVOS"]}, {"id": "CAT-0032", "parte": "001", "maquina": "HARINA-ADITIVOS", "subtipo": "HARINA SILOS", "tarea": "TURBINAS (ESTADO EN TEJADO, TUBOS ETC)", "frecuencia": "QUINCENAL", "instancias": ["HARINA-ADITIVOS"]}, {"id": "CAT-0033", "parte": "001", "maquina": "HARINA-ADITIVOS", "subtipo": "HARINA SILOS", "tarea": "VALVULA SEGURIDAD ENTRADA HARINA", "frecuencia": "SEMANAL", "instancias": ["HARINA-ADITIVOS"]}, {"id": "CAT-0034", "parte": "001", "maquina": "HARINA-ADITIVOS", "subtipo": "HARINA SILOS", "tarea": "REVISION BOCAS SILOS", "frecuencia": "MENSUAL", "instancias": ["HARINA-ADITIVOS"]}, {"id": "CAT-0035", "parte": "001", "maquina": "HARINA-ADITIVOS", "subtipo": "HARINA SILOS", "tarea": "VIBRADORES SILOS", "frecuencia": "MENSUAL", "instancias": ["HARINA-ADITIVOS"]}, {"id": "CAT-0036", "parte": "001", "maquina": "HARINA-ADITIVOS", "subtipo": "HARINA SILOS", "tarea": "CUADRO PESOS HARINA", "frecuencia": "MENSUAL", "instancias": ["HARINA-ADITIVOS"]}, {"id": "CAT-0037", "parte": "001", "maquina": "HARINA-ADITIVOS", "subtipo": "ADITIVOS", "tarea": "TURBINA", "frecuencia": "QUINCENAL", "instancias": ["HARINA-ADITIVOS"]}, {"id": "CAT-0038", "parte": "001", "maquina": "HARINA-ADITIVOS", "subtipo": "ADITIVOS", "tarea": "ARRANCADOR", "frecuencia": "QUINCENAL", "instancias": ["HARINA-ADITIVOS"]}, {"id": "CAT-0039", "parte": "001", "maquina": "HARINA-ADITIVOS", "subtipo": "ADITIVOS", "tarea": "REVOLVER GIRO", "frecuencia": "QUINCENAL", "instancias": ["HARINA-ADITIVOS"]}, {"id": "CAT-0040", "parte": "001", "maquina": "HARINA-ADITIVOS", "subtipo": "ADITIVOS", "tarea": "CUADRO ADITIVOS Y CUADRO REVOLVER (MARCADO, LIMPIEZA ETC.)", "frecuencia": "QUINCENAL", "instancias": ["HARINA-ADITIVOS"]}, {"id": "CAT-0041", "parte": "001", "maquina": "HARINA-ADITIVOS", "subtipo": "ADITIVOS", "tarea": "BASCULA ADITIVOS (PESA BASCULA ENVASADO Y ANOTAR)", "frecuencia": "SEMANAL", "instancias": ["HARINA-ADITIVOS"]}, {"id": "CAT-0042", "parte": "001", "maquina": "HARINA-ADITIVOS", "subtipo": "ADITIVOS", "tarea": "PISTONES APERTURA TRAMPILLA", "frecuencia": "SEMANAL", "instancias": ["HARINA-ADITIVOS"]}, {"id": "CAT-0043", "parte": "001", "maquina": "HARINA-ADITIVOS", "subtipo": "ADITIVOS", "tarea": "VIBRADOR CONO", "frecuencia": "SEMANAL", "instancias": ["HARINA-ADITIVOS"]}, {"id": "CAT-0044", "parte": "001", "maquina": "HARINA-ADITIVOS", "subtipo": "ADITIVOS", "tarea": "ASPIRACION CONO", "frecuencia": "SEMANAL", "instancias": ["HARINA-ADITIVOS"]}, {"id": "CAT-0045", "parte": "001", "maquina": "HARINA-ADITIVOS", "subtipo": "ADITIVOS", "tarea": "TOLVAS ADITIVOS, ESTADO ETC", "frecuencia": "SEMANAL", "instancias": ["HARINA-ADITIVOS"]}, {"id": "CAT-0046", "parte": "001", "maquina": "HARINA-ADITIVOS", "subtipo": "ADITIVOS", "tarea": "MOTOR-REDUCTOR SINFÍN ADITIVOS (TODOS)", "frecuencia": "SEMANAL", "instancias": ["HARINA-ADITIVOS"]}, {"id": "CAT-0047", "parte": "001", "maquina": "HARINA-ADITIVOS", "subtipo": "CUADRO HARINA", "tarea": "LIMPIEZA", "frecuencia": "MENSUAL", "instancias": ["HARINA-ADITIVOS"]}, {"id": "CAT-0048", "parte": "001", "maquina": "HARINA-ADITIVOS", "subtipo": "CUADRO HARINA", "tarea": "ESTADO PANTALLA", "frecuencia": "MENSUAL", "instancias": ["HARINA-ADITIVOS"]}, {"id": "CAT-0049", "parte": "001", "maquina": "HARINA-ADITIVOS", "subtipo": "CUADRO HARINA", "tarea": "MARCADO BOTONERAS Y LUCES", "frecuencia": "MENSUAL", "instancias": ["HARINA-ADITIVOS"]}, {"id": "CAT-0050", "parte": "002", "maquina": "COMPRESORES-SECADORES", "subtipo": "", "tarea": "LIMPIEZA TOMAS DE AIRE", "frecuencia": "SEMANAL", "instancias": ["COMPRESORES-SECADORES"]}, {"id": "CAT-0051", "parte": "002", "maquina": "COMPRESORES-SECADORES", "subtipo": "", "tarea": "REVISION NIVEL ACEITE", "frecuencia": "SEMANAL", "instancias": ["COMPRESORES-SECADORES"]}, {"id": "CAT-0052", "parte": "002", "maquina": "COMPRESORES-SECADORES", "subtipo": "", "tarea": "ROTACION COMPRESORES", "frecuencia": "SEMANAL", "instancias": ["COMPRESORES-SECADORES"]}, {"id": "CAT-0053", "parte": "002", "maquina": "COMPRESORES-SECADORES", "subtipo": "", "tarea": "LIMPIEZA RADIADORES", "frecuencia": "SEMANAL", "instancias": ["COMPRESORES-SECADORES"]}, {"id": "CAT-0054", "parte": "002", "maquina": "COMPRESORES-SECADORES", "subtipo": "", "tarea": "REVISION PURGAS", "frecuencia": "SEMANAL", "instancias": ["COMPRESORES-SECADORES"]}, {"id": "CAT-0055", "parte": "003", "maquina": "LINEAS", "subtipo": "PARTE 003", "tarea": "CADENAS AZULES-GRISES", "frecuencia": "SEMANAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0056", "parte": "003", "maquina": "LINEAS", "subtipo": "PARTE 003", "tarea": "MOTOR-REDUCTOR-EJE-PIÑONES-POLEAS  ENTRADA", "frecuencia": "QUINCENAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0057", "parte": "003", "maquina": "LINEAS", "subtipo": "PARTE 003", "tarea": "MOTOR-REDUCTOR-EJE-PIÑONES-CADENAS  SALIDA", "frecuencia": "QUINCENAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0058", "parte": "003", "maquina": "LINEAS", "subtipo": "PARTE 003", "tarea": "MOTOR-REDUCTOR-EJE-PIÑONES-CADENAS-ANGULOS PULMON", "frecuencia": "QUINCENAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0059", "parte": "003", "maquina": "LINEAS", "subtipo": "PARTE 003", "tarea": "MOTOR-REDUCTOR-CADENA-EJE-PIÑONES-TAPER-ENCODER TOPES", "frecuencia": "QUINCENAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0060", "parte": "003", "maquina": "LINEAS", "subtipo": "PARTE 003", "tarea": "INDUCTIVOS INTERIORES (NO ROZADOS O DAÑADOS-TOPES-BANDEJAS)", "frecuencia": "SEMANAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0061", "parte": "003", "maquina": "LINEAS", "subtipo": "PARTE 003", "tarea": "RETENEDORES BANDEJAS - PISTON ELEVADOR - ELECTROVALV.", "frecuencia": "SEMANAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0062", "parte": "003", "maquina": "LINEAS", "subtipo": "PARTE 003", "tarea": "LONA AZUL - EJES - MOTOR - REDUCTOR- RODAMIENTOS", "frecuencia": "QUINCENAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0063", "parte": "003", "maquina": "LINEAS", "subtipo": "PARTE 003", "tarea": "CADENA CANJILONES - TENSION - ESTADO - CADENA MOTRIZ(ENGRASAR)", "frecuencia": "SEMANAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0064", "parte": "003", "maquina": "LINEAS", "subtipo": "PARTE 003", "tarea": "PATIN SUP.- MOTOR-REDUCTOR-EJES-RODAMIENTOS-LONA", "frecuencia": "QUINCENAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0065", "parte": "003", "maquina": "LINEAS", "subtipo": "PARTE 003", "tarea": "PATIN INF.- MOTOR-REDUCTOR-EJES-RODAMIENTOS-LONA", "frecuencia": "QUINCENAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0066", "parte": "003", "maquina": "LINEAS", "subtipo": "PARTE 003", "tarea": "LONA VUELCO - RODILLO GRANDE- RODAMIENTOS - TEFLONES - TENSOR", "frecuencia": "QUINCENAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0067", "parte": "003", "maquina": "LINEAS", "subtipo": "PARTE 003", "tarea": "CENTRADOR 1 - PALAS - FOTOCEL - PIÑONES - PISTON - EV", "frecuencia": "QUINCENAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0068", "parte": "003", "maquina": "LINEAS", "subtipo": "PARTE 003", "tarea": "CENTRADOR 2 - PALAS - FOTOCEL - PIÑONES - PISTON - EV **", "frecuencia": "QUINCENAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0069", "parte": "003", "maquina": "LINEAS", "subtipo": "FORMADORA", "tarea": "PIÑONES TODOS", "frecuencia": "QUINCENAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0070", "parte": "003", "maquina": "LINEAS", "subtipo": "FORMADORA", "tarea": "MOTOR - POLEA - CORREAS (INCLUSO LAS VERDES)", "frecuencia": "QUINCENAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0071", "parte": "003", "maquina": "LINEAS", "subtipo": "FORMADORA", "tarea": "CADENAS: ESTADO-TENSION-LIMPIAR-ENGRASAR", "frecuencia": "QUINCENAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0072", "parte": "003", "maquina": "LINEAS", "subtipo": "FORMADORA", "tarea": "RODILLOS: ESTADO", "frecuencia": "QUINCENAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0073", "parte": "003", "maquina": "LINEAS", "subtipo": "FORMADORA", "tarea": "RODAMIENTOS DE LOS PIÑONES, LONAS, ETC", "frecuencia": "QUINCENAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0074", "parte": "003", "maquina": "LINEAS", "subtipo": "FORMADORA", "tarea": "LONAS ENTRADA, INTERMEDIA, SALIDA Y TENSORES", "frecuencia": "QUINCENAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0075", "parte": "003", "maquina": "LINEAS", "subtipo": "FORMADORA", "tarea": "HARINERO: MOTOR-REDUCTOR-VARIADOR (LIMPIAR VARIADOR)", "frecuencia": "QUINCENAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0076", "parte": "003", "maquina": "LINEAS", "subtipo": "GENERAL", "tarea": "SETAS ENTABLADO, CUADRO Y FORMADORA, REJILLA, TAPAS LATERALES", "frecuencia": "MENSUAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0077", "parte": "003", "maquina": "LINEAS", "subtipo": "RELES, CONTACTORES (TOPES Y CANJILONES) 6 MESES *", "tarea": "CONTADOR DE BANDEJAS", "frecuencia": "MENSUAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0078", "parte": "003", "maquina": "LINEAS", "subtipo": "RELES, CONTACTORES (TOPES Y CANJILONES) 6 MESES *", "tarea": "LIMPIEZA CUADRO, SOLO ANOTAR SI ES NECESARIA", "frecuencia": "MENSUAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0079", "parte": "003", "maquina": "LINEAS", "subtipo": "RELES, CONTACTORES (TOPES Y CANJILONES) 6 MESES *", "tarea": "PROTECCIONES TANTO DELANTERAS, LATERALES COMO TRASERAS", "frecuencia": "MENSUAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0080", "parte": "003", "maquina": "LINEAS", "subtipo": "RELES, CONTACTORES (TOPES Y CANJILONES) 6 MESES *", "tarea": "TOMA DE TIERRA (COMPROBAR CON PARTE METALICA)", "frecuencia": "MENSUAL", "instancias": ["LINEA 1", "LINEA 2", "LINEA 3", "LINEA 4", "LINEA 5", "LINEA 6", "LINEA 7"]}, {"id": "CAT-0081", "parte": "004", "maquina": "CARRUSEL", "subtipo": "CARRUSEL", "tarea": "MOTOR Y PIÑONES GIRO", "frecuencia": "MENSUAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0082", "parte": "004", "maquina": "CARRUSEL", "subtipo": "CARRUSEL", "tarea": "PISTONES MOVIMIENTO ENTRADA Y SALIDA CACEROLA (CON INDUCTIVOS)", "frecuencia": "SEMANAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0083", "parte": "004", "maquina": "CARRUSEL", "subtipo": "CARRUSEL", "tarea": "ELECTROVALVULAS PISTONES", "frecuencia": "SEMANAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0084", "parte": "004", "maquina": "CARRUSEL", "subtipo": "CARRUSEL", "tarea": "INDUCTIVOS DE PARADA Y ANILLO DESLIZANTE", "frecuencia": "SEMANAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0085", "parte": "004", "maquina": "CARRUSEL", "subtipo": "CARRUSEL", "tarea": "INDUCTIVOS DE CACEROLA", "frecuencia": "SEMANAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0086", "parte": "004", "maquina": "CARRUSEL", "subtipo": "CARRUSEL", "tarea": "CARRILES Y RUEDAS GUIA CACEROLA", "frecuencia": "SEMANAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0087", "parte": "004", "maquina": "CARRUSEL", "subtipo": "CARRUSEL", "tarea": "PERDIDAS DE AIRE Y TUBOS OBSOLETOS, MAL ESTADO", "frecuencia": "MENSUAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0088", "parte": "004", "maquina": "CARRUSEL", "subtipo": "CARRUSEL", "tarea": "RUEDAS GIRO CARRUSEL (LAS GRANDES Y LAS PEQUEÑAS)", "frecuencia": "MENSUAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0089", "parte": "004", "maquina": "CARRUSEL", "subtipo": "CARRUSEL", "tarea": "TAPA CACEROLA (AJUSTA CORRECTAMENTE)", "frecuencia": "MENSUAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0090", "parte": "004", "maquina": "CARRUSEL", "subtipo": "CARRUSEL", "tarea": "ENTRAN CORRECTAMENTE EN VOLCADOR Y AMASADORA", "frecuencia": "SEMANAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0091", "parte": "004", "maquina": "CARRUSEL", "subtipo": "CARRUSEL", "tarea": "PANTALLA CUADRO + BOTONERA + SEGURIDADES", "frecuencia": "QUINCENAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0092", "parte": "004", "maquina": "CARRUSEL", "subtipo": "CARRUSEL", "tarea": "TOMAS DE TIERRA (IMPORTANTE)", "frecuencia": "MENSUAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0093", "parte": "004", "maquina": "CARRUSEL", "subtipo": "VOLCADOR", "tarea": "ESTADO Y TENSION CADENAS", "frecuencia": "MENSUAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0094", "parte": "004", "maquina": "CARRUSEL", "subtipo": "VOLCADOR", "tarea": "PIÑONES Y CHAPAS GUIAS BRAZOS", "frecuencia": "MENSUAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0095", "parte": "004", "maquina": "CARRUSEL", "subtipo": "VOLCADOR", "tarea": "ESTADO INDUCTIVOS, MICROS Y CONECTORES", "frecuencia": "SEMANAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0096", "parte": "004", "maquina": "CARRUSEL", "subtipo": "VOLCADOR", "tarea": "MOTOR-REDUCTOR", "frecuencia": "MENSUAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0097", "parte": "004", "maquina": "CARRUSEL", "subtipo": "VOLCADOR", "tarea": "NIVELACION", "frecuencia": "MENSUAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0098", "parte": "004", "maquina": "CARRUSEL", "subtipo": "PABAT", "tarea": "GUIAS SUBIDA (ENGRASE, HOLGURA Y AJUSTE)", "frecuencia": "SEMANAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0099", "parte": "004", "maquina": "CARRUSEL", "subtipo": "PABAT", "tarea": "INDUCTIVO CACEROLA", "frecuencia": "SEMANAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0100", "parte": "004", "maquina": "CARRUSEL", "subtipo": "PABAT", "tarea": "AJUSTE MICROS SUBIDA Y BAJADA", "frecuencia": "QUINCENAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0101", "parte": "004", "maquina": "CARRUSEL", "subtipo": "PABAT", "tarea": "HOLGURAS BRAZO, MODULO ETC", "frecuencia": "QUINCENAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0102", "parte": "004", "maquina": "CARRUSEL", "subtipo": "PABAT", "tarea": "CORREAS - TENSION", "frecuencia": "MENSUAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0103", "parte": "004", "maquina": "CARRUSEL", "subtipo": "PABAT", "tarea": "JUNTAS", "frecuencia": "MENSUAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0104", "parte": "004", "maquina": "CARRUSEL", "subtipo": "PABAT", "tarea": "CONTACTORES (REVISAR Y CAMBIAR)", "frecuencia": "SEMESTRAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0105", "parte": "004", "maquina": "CARRUSEL", "subtipo": "PABAT", "tarea": "CIRCUITO ACEITE (NO FUGAS NI GOTEOS)", "frecuencia": "QUINCENAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0106", "parte": "004", "maquina": "CARRUSEL", "subtipo": "GENERAL", "tarea": "SETA CARRUSEL", "frecuencia": "MENSUAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0107", "parte": "004", "maquina": "CARRUSEL", "subtipo": "GENERAL", "tarea": "PUERTA CARRUSEL", "frecuencia": "MENSUAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0108", "parte": "004", "maquina": "CARRUSEL", "subtipo": "GENERAL", "tarea": "SETA VOLCADOR", "frecuencia": "MENSUAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0109", "parte": "004", "maquina": "CARRUSEL", "subtipo": "GENERAL", "tarea": "LIMPIEZA CUADRO", "frecuencia": "MENSUAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0110", "parte": "004", "maquina": "CARRUSEL", "subtipo": "GENERAL", "tarea": "CIRCUITO ENTRADA LEVADURA (LIMPIAR Y REVISAR EV Y LLAVES)", "frecuencia": "SEMANAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0111", "parte": "005", "maquina": "TOLVAS-AGUA", "subtipo": "TOLVA", "tarea": "ESTADO DE LA REJILLA DEL FILTRO", "frecuencia": "SEMESTRAL", "instancias": ["TOLVA L1", "TOLVA L2", "TOLVA L3", "TOLVA L4", "TOLVA L5", "TOLVA L6"]}, {"id": "CAT-0112", "parte": "005", "maquina": "TOLVAS-AGUA", "subtipo": "TOLVA", "tarea": "ESTADO DE LA MARIPOSA", "frecuencia": "SEMESTRAL", "instancias": ["TOLVA L1", "TOLVA L2", "TOLVA L3", "TOLVA L4", "TOLVA L5", "TOLVA L6"]}, {"id": "CAT-0113", "parte": "005", "maquina": "TOLVAS-AGUA", "subtipo": "TOLVA", "tarea": "EV MARIPOSA", "frecuencia": "MENSUAL", "instancias": ["TOLVA L1", "TOLVA L2", "TOLVA L3", "TOLVA L4", "TOLVA L5", "TOLVA L6"]}, {"id": "CAT-0114", "parte": "005", "maquina": "TOLVAS-AGUA", "subtipo": "TOLVA", "tarea": "MANGAS (DESCOMPRESION Y CAIDA)", "frecuencia": "SEMANAL", "instancias": ["TOLVA L1", "TOLVA L2", "TOLVA L3", "TOLVA L4", "TOLVA L5", "TOLVA L6"]}, {"id": "CAT-0115", "parte": "005", "maquina": "TOLVAS-AGUA", "subtipo": "TOLVA", "tarea": "MANGUITOS ENTRADA HARINA Y PRODUCTO", "frecuencia": "QUINCENAL", "instancias": ["TOLVA L1", "TOLVA L2", "TOLVA L3", "TOLVA L4", "TOLVA L5", "TOLVA L6"]}, {"id": "CAT-0116", "parte": "005", "maquina": "TOLVAS-AGUA", "subtipo": "TOLVA", "tarea": "REVISION EV DE BOLA ASPIRACION Y HARINA", "frecuencia": "MENSUAL", "instancias": ["TOLVA L1", "TOLVA L2", "TOLVA L3", "TOLVA L4", "TOLVA L5", "TOLVA L6"]}, {"id": "CAT-0117", "parte": "005", "maquina": "TOLVAS-AGUA", "subtipo": "TOLVA", "tarea": "VIBRADOR", "frecuencia": "MENSUAL", "instancias": ["TOLVA L1", "TOLVA L2", "TOLVA L3", "TOLVA L4", "TOLVA L5", "TOLVA L6"]}, {"id": "CAT-0118", "parte": "005", "maquina": "TOLVAS-AGUA", "subtipo": "TOLVA", "tarea": "TOMA DE TIERRA (COMPROBAR CON PARTE METALICA)", "frecuencia": "MENSUAL", "instancias": ["TOLVA L1", "TOLVA L2", "TOLVA L3", "TOLVA L4", "TOLVA L5", "TOLVA L6"]}, {"id": "CAT-0119", "parte": "005", "maquina": "TOLVAS-AGUA", "subtipo": "TOLVA", "tarea": "TAPA (PISTON - GUIA - JUNTA)", "frecuencia": "MENSUAL", "instancias": ["TOLVA L1", "TOLVA L2", "TOLVA L3", "TOLVA L4", "TOLVA L5", "TOLVA L6"]}, {"id": "CAT-0120", "parte": "005", "maquina": "TOLVAS-AGUA", "subtipo": "AGUA", "tarea": "EV AGUA, GOTEO", "frecuencia": "SEMANAL", "instancias": ["TOLVA L1", "TOLVA L2", "TOLVA L3", "TOLVA L4", "TOLVA L5", "TOLVA L6"]}, {"id": "CAT-0121", "parte": "005", "maquina": "TOLVAS-AGUA", "subtipo": "AGUA", "tarea": "MANGUERAS (CAMBIAR SI DETERIORADAS)", "frecuencia": "MENSUAL", "instancias": ["TOLVA L1", "TOLVA L2", "TOLVA L3", "TOLVA L4", "TOLVA L5", "TOLVA L6"]}, {"id": "CAT-0122", "parte": "005", "maquina": "TOLVAS-AGUA", "subtipo": "AGUA", "tarea": "CUENTA-LITROS (ESTADO VISUAL)", "frecuencia": "SEMANAL", "instancias": ["TOLVA L1", "TOLVA L2", "TOLVA L3", "TOLVA L4", "TOLVA L5", "TOLVA L6"]}, {"id": "CAT-0123", "parte": "005", "maquina": "TOLVAS-AGUA", "subtipo": "AGUA", "tarea": "PEDIR 2 LITROS Y MEDIR LA DOSIFICACION, APUNTARLO", "frecuencia": "MENSUAL", "instancias": ["TOLVA L1", "TOLVA L2", "TOLVA L3", "TOLVA L4", "TOLVA L5", "TOLVA L6"]}, {"id": "CAT-0124", "parte": "005", "maquina": "TOLVAS-AGUA", "subtipo": "AGUA", "tarea": "ESTADO DEL CUENTALITROS- SE HACE MEDICIÓN", "frecuencia": "SEMANAL", "instancias": ["TOLVA L1", "TOLVA L2", "TOLVA L3", "TOLVA L4", "TOLVA L5", "TOLVA L6"]}, {"id": "CAT-0125", "parte": "006", "maquina": "DIVISORAS", "subtipo": "TOLVA GIRATORIA", "tarea": "LIMPIEZA", "frecuencia": "QUINCENAL", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0126", "parte": "006", "maquina": "DIVISORAS", "subtipo": "TOLVA GIRATORIA", "tarea": "CORREAS", "frecuencia": "QUINCENAL", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0127", "parte": "006", "maquina": "DIVISORAS", "subtipo": "TOLVA GIRATORIA", "tarea": "MOTOR-REDUCTOR", "frecuencia": "QUINCENAL", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0128", "parte": "006", "maquina": "DIVISORAS", "subtipo": "TOLVA GIRATORIA", "tarea": "ESPIRAL", "frecuencia": "QUINCENAL", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0129", "parte": "006", "maquina": "DIVISORAS", "subtipo": "TOLVA", "tarea": "ESCENTRICAS", "frecuencia": "QUINCENAL", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0130", "parte": "006", "maquina": "DIVISORAS", "subtipo": "DIVISORA", "tarea": "RECIRCULACION ACEITE (TODOS LOS TURNOS)", "frecuencia": "DIARIO", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0131", "parte": "006", "maquina": "DIVISORAS", "subtipo": "DIVISORA", "tarea": "ESTADO VISUAL JUNTAS (NO RESTOS O MANCHADO)", "frecuencia": "DIARIO", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0132", "parte": "006", "maquina": "DIVISORAS", "subtipo": "DIVISORA", "tarea": "BOTONERA", "frecuencia": "DIARIO", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0133", "parte": "006", "maquina": "DIVISORAS", "subtipo": "DIVISORA", "tarea": "SETAS", "frecuencia": "DIARIO", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0134", "parte": "006", "maquina": "DIVISORAS", "subtipo": "DIVISORA", "tarea": "PERDIDAS DE ACEITE", "frecuencia": "DIARIO", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0135", "parte": "006", "maquina": "DIVISORAS", "subtipo": "DIVISORA", "tarea": "ESTADO VISUAL DE FUNCIONAMIENTO", "frecuencia": "DIARIO", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0136", "parte": "006", "maquina": "DIVISORAS", "subtipo": "DIVISORA", "tarea": "Nº DE BOLAS/M", "frecuencia": "DIARIO", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0137", "parte": "006", "maquina": "DIVISORAS", "subtipo": "CAMARAS DE BOLAS", "tarea": "HUEVERAS, TELA Y ESTRUCTURA (REVISAR SEEGUER)", "frecuencia": "QUINCENAL", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0138", "parte": "006", "maquina": "DIVISORAS", "subtipo": "CAMARAS DE BOLAS", "tarea": "CAIDA BOLA", "frecuencia": "QUINCENAL", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0139", "parte": "006", "maquina": "DIVISORAS", "subtipo": "CAMARAS DE BOLAS", "tarea": "HARINERO (CAIDA HARINA, MOTOR, REDUCTOR, PARTES MOVILES)", "frecuencia": "QUINCENAL", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0140", "parte": "006", "maquina": "DIVISORAS", "subtipo": "CAMARAS DE BOLAS", "tarea": "TRANSPORTIN (MOTOR, REDUCTOR, RODILLOS, LONA)", "frecuencia": "QUINCENAL", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0141", "parte": "006", "maquina": "DIVISORAS", "subtipo": "CAMARAS DE BOLAS", "tarea": "RELES", "frecuencia": "SEMESTRAL", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0142", "parte": "006", "maquina": "DIVISORAS", "subtipo": "CAMARAS DE BOLAS", "tarea": "CONTACTORES", "frecuencia": "SEMESTRAL", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0143", "parte": "006", "maquina": "DIVISORAS", "subtipo": "CAMARAS DE BOLAS", "tarea": "TENSION CADENAS", "frecuencia": "QUINCENAL", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0144", "parte": "006", "maquina": "DIVISORAS", "subtipo": "CAMARAS DE BOLAS", "tarea": "MOTOR , REDUCTOR TRACCION, EJE, PIÑONES Y RODAMIENTOS", "frecuencia": "QUINCENAL", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0145", "parte": "006", "maquina": "DIVISORAS", "subtipo": "CAMARAS DE BOLAS", "tarea": "RODETES VUELCO", "frecuencia": "SEMANAL", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0146", "parte": "006", "maquina": "DIVISORAS", "subtipo": "CAMARAS DE BOLAS", "tarea": "QUITA-DOBLES LONA, RODILLOS Y FOTOCELULA", "frecuencia": "SEMANAL", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0147", "parte": "006", "maquina": "DIVISORAS", "subtipo": "CAMARAS DE BOLAS", "tarea": "TOMA DE TIERRA DIVISORA", "frecuencia": "MENSUAL", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0148", "parte": "006", "maquina": "DIVISORAS", "subtipo": "CAMARAS DE BOLAS", "tarea": "TOMA DE TIERRA CAMARA DE BOLAS", "frecuencia": "MENSUAL", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0149", "parte": "007", "maquina": "REPARTIDORES", "subtipo": "FRECUENCIA", "tarea": "CORREAS (ESTADO Y TENSION)", "frecuencia": "MENSUAL", "instancias": ["REPARTIDOR 1", "REPARTIDOR 2", "REPARTIDOR 3", "REPARTIDOR 4", "REPARTIDOR 5", "REPARTIDOR 6", "REPARTIDOR 7"]}, {"id": "CAT-0150", "parte": "007", "maquina": "REPARTIDORES", "subtipo": "FRECUENCIA", "tarea": "CADENAS-PIÑONES (LIMPIAR - DESENGRASAR Y ENGRASAR)", "frecuencia": "MENSUAL", "instancias": ["REPARTIDOR 1", "REPARTIDOR 2", "REPARTIDOR 3", "REPARTIDOR 4", "REPARTIDOR 5", "REPARTIDOR 6", "REPARTIDOR 7"]}, {"id": "CAT-0151", "parte": "007", "maquina": "REPARTIDORES", "subtipo": "FRECUENCIA", "tarea": "MOTOR-REDUCTOR CARRO", "frecuencia": "MENSUAL", "instancias": ["REPARTIDOR 1", "REPARTIDOR 2", "REPARTIDOR 3", "REPARTIDOR 4", "REPARTIDOR 5", "REPARTIDOR 6", "REPARTIDOR 7"]}, {"id": "CAT-0152", "parte": "007", "maquina": "REPARTIDORES", "subtipo": "FRECUENCIA", "tarea": "MOTOR-REDUCTOR LONAS", "frecuencia": "MENSUAL", "instancias": ["REPARTIDOR 1", "REPARTIDOR 2", "REPARTIDOR 3", "REPARTIDOR 4", "REPARTIDOR 5", "REPARTIDOR 6", "REPARTIDOR 7"]}, {"id": "CAT-0153", "parte": "007", "maquina": "REPARTIDORES", "subtipo": "FRECUENCIA", "tarea": "CUCHILLA", "frecuencia": "MENSUAL", "instancias": ["REPARTIDOR 1", "REPARTIDOR 2", "REPARTIDOR 3", "REPARTIDOR 4", "REPARTIDOR 5", "REPARTIDOR 6", "REPARTIDOR 7"]}, {"id": "CAT-0154", "parte": "007", "maquina": "REPARTIDORES", "subtipo": "FRECUENCIA", "tarea": "RUEDAS REPARTIDOR", "frecuencia": "MENSUAL", "instancias": ["REPARTIDOR 1", "REPARTIDOR 2", "REPARTIDOR 3", "REPARTIDOR 4", "REPARTIDOR 5", "REPARTIDOR 6", "REPARTIDOR 7"]}, {"id": "CAT-0155", "parte": "007", "maquina": "REPARTIDORES", "subtipo": "FRECUENCIA", "tarea": "CABLEADO", "frecuencia": "MENSUAL", "instancias": ["REPARTIDOR 1", "REPARTIDOR 2", "REPARTIDOR 3", "REPARTIDOR 4", "REPARTIDOR 5", "REPARTIDOR 6", "REPARTIDOR 7"]}, {"id": "CAT-0156", "parte": "007", "maquina": "REPARTIDORES", "subtipo": "CONTACTOR (CAMBIO ANUAL-SEPTIEMBRE)", "tarea": "ESTADO SOPORTE E INDUCTIVOS CUCHILLA", "frecuencia": "MENSUAL", "instancias": ["REPARTIDOR 1", "REPARTIDOR 2", "REPARTIDOR 3", "REPARTIDOR 4", "REPARTIDOR 5", "REPARTIDOR 6", "REPARTIDOR 7"]}, {"id": "CAT-0157", "parte": "007", "maquina": "REPARTIDORES", "subtipo": "CONTACTOR (CAMBIO ANUAL-SEPTIEMBRE)", "tarea": "COMPROBACION DE SETAS", "frecuencia": "SEMANAL", "instancias": ["REPARTIDOR 1", "REPARTIDOR 2", "REPARTIDOR 3", "REPARTIDOR 4", "REPARTIDOR 5", "REPARTIDOR 6", "REPARTIDOR 7"]}, {"id": "CAT-0158", "parte": "007", "maquina": "REPARTIDORES", "subtipo": "CONTACTOR (CAMBIO ANUAL-SEPTIEMBRE)", "tarea": "TOMA DE TIERRA A PARTE ALEATORIA METALICA", "frecuencia": "MENSUAL", "instancias": ["REPARTIDOR 1", "REPARTIDOR 2", "REPARTIDOR 3", "REPARTIDOR 4", "REPARTIDOR 5", "REPARTIDOR 6", "REPARTIDOR 7"]}, {"id": "CAT-0159", "parte": "007", "maquina": "REPARTIDORES", "subtipo": "CONTACTOR (CAMBIO ANUAL-SEPTIEMBRE)", "tarea": "LONAS AZULES (ESTADO Y TENSION)", "frecuencia": "QUINCENAL", "instancias": ["REPARTIDOR 1", "REPARTIDOR 2", "REPARTIDOR 3", "REPARTIDOR 4", "REPARTIDOR 5", "REPARTIDOR 6", "REPARTIDOR 7"]}, {"id": "CAT-0160", "parte": "007", "maquina": "REPARTIDORES", "subtipo": "CONTACTOR (CAMBIO ANUAL-SEPTIEMBRE)", "tarea": "MOTOR-REDUCTOR CUCHILLA", "frecuencia": "MENSUAL", "instancias": ["REPARTIDOR 1", "REPARTIDOR 2", "REPARTIDOR 3", "REPARTIDOR 4", "REPARTIDOR 5", "REPARTIDOR 6", "REPARTIDOR 7"]}, {"id": "CAT-0161", "parte": "007", "maquina": "REPARTIDORES", "subtipo": "CONTACTOR (CAMBIO ANUAL-SEPTIEMBRE)", "tarea": "CUADRO REPARTIDOR ORIGINAL", "frecuencia": "MENSUAL", "instancias": ["REPARTIDOR 1", "REPARTIDOR 2", "REPARTIDOR 3", "REPARTIDOR 4", "REPARTIDOR 5", "REPARTIDOR 6", "REPARTIDOR 7"]}, {"id": "CAT-0162", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "DESCARGADOR", "tarea": "MOTOR-REDUCTOR-HUSILLO", "frecuencia": "QUINCENAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0163", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "DESCARGADOR", "tarea": "GUIAS SILLA-ENGRASE", "frecuencia": "QUINCENAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0164", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "DESCARGADOR", "tarea": "BRAZOS SILLA (ESTADO)", "frecuencia": "QUINCENAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0165", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "DESCARGADOR", "tarea": "INDUCTIVOS CARRO", "frecuencia": "SEMANAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0166", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "DESCARGADOR", "tarea": "UÑAS SILLA", "frecuencia": "QUINCENAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0167", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "DESCARGADOR", "tarea": "CARRO EMPUJE LATAS", "frecuencia": "QUINCENAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0168", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "DESCARGADOR", "tarea": "FOTOCELULA SEGURIDAD BANDEJAS", "frecuencia": "SEMANAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0169", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "DESCARGADOR", "tarea": "PISTONES-GUIA CARRO (SUPERIORES)", "frecuencia": "SEMANAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0170", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "DESCARGADOR", "tarea": "MOTOR Y REDUCTOR + CADENAS-ANGULOS + ROD.  (CIERRE)", "frecuencia": "SEMANAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0171", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "CARGADOR", "tarea": "MOTOR-REDUCTOR-HUSILLO(ENGRASE)", "frecuencia": "QUINCENAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0172", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "CARGADOR", "tarea": "GUIAS SILLA-ENGRASE", "frecuencia": "QUINCENAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0173", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "CARGADOR", "tarea": "BRAZOS SILLA (ESTADO)", "frecuencia": "QUINCENAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0174", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "CARGADOR", "tarea": "INDUCTIVOS CARRO", "frecuencia": "SEMANAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0175", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "CARGADOR", "tarea": "UÑAS SILLA", "frecuencia": "QUINCENAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0176", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "CARGADOR", "tarea": "CARRO EMPUJE LATAS (CON SERVO)", "frecuencia": "QUINCENAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0177", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "CARGADOR", "tarea": "FOTOCELULA SEGURIDAD BANDEJAS", "frecuencia": "SEMANAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0178", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "CARGADOR", "tarea": "PISTONES-GUIA CARRO (SUPERIORES)", "frecuencia": "SEMANAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0179", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "CARGADOR", "tarea": "MOTOR Y REDUCTOR + CADENAS-ANGULOS + ROD.  (CIERRE)", "frecuencia": "SEMANAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0180", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "CORTADOR", "tarea": "SERVOS (TEMPERATURA DE TRABAJO )", "frecuencia": "QUINCENAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0181", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "CORTADOR", "tarea": "RODAMIENTOS", "frecuencia": "MENSUAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0182", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "CORTADOR", "tarea": "CORREAS", "frecuencia": "MENSUAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0183", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "CORTADOR", "tarea": "MOLDE CUCHILLAS Y SOPORTES", "frecuencia": "QUINCENAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0184", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "TRANSPORTE", "tarea": "M3 MOTOR-REDUCTOR-CADENAS-PIÑONES-PISTON SUJECCION", "frecuencia": "SEMANAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0185", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "TRANSPORTE", "tarea": "M4 MOTOR-REDUCTOR-CADENAS-PIÑONES-ROD.", "frecuencia": "SEMANAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0186", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "TRANSPORTE", "tarea": "M5 MOTOR,REDUCTOR-CADENAS-PIÑONES-ROD.", "frecuencia": "SEMANAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0187", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "TRANSPORTE", "tarea": "INDUCTIVOS POSICION CADENAS- FOTOCELULAS", "frecuencia": "SEMANAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0188", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "OTROS", "tarea": "CUADRO ESTADO-ORGANIZACIÓN-CABLEADO", "frecuencia": "MENSUAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0189", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "OTROS", "tarea": "SETAS Y SEGURIDADES (FUNCIONAMIENTO)", "frecuencia": "QUINCENAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0190", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "OTROS", "tarea": "SOPLADO DRIVER SERVOS (SEGUIR PROCEDIMIENTO OJO)", "frecuencia": "SEMESTRAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0191", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "OTROS", "tarea": "TOMA DE TIERRA A PARTE ALEATORIA METALICA", "frecuencia": "MENSUAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0192", "parte": "009", "maquina": "HORNOS", "subtipo": "HORNOS", "tarea": "PUERTAS-BISAGRAS-MANETAS", "frecuencia": "SEMANAL", "instancias": ["HORNO 1", "HORNO 2", "HORNO 3", "HORNO 4", "HORNO 5", "HORNO 6", "HORNO 7", "HORNO 8", "HORNO 9", "HORNO 10", "HORNO 11", "HORNO 12", "HORNO 13", "HORNO 14", "HORNO 15", "HORNO 16", "HORNO 17", "HORNO 18", "HORNO 19"]}, {"id": "CAT-0193", "parte": "009", "maquina": "HORNOS", "subtipo": "HORNOS", "tarea": "PARADA CARRO", "frecuencia": "SEMANAL", "instancias": ["HORNO 1", "HORNO 2", "HORNO 3", "HORNO 4", "HORNO 5", "HORNO 6", "HORNO 7", "HORNO 8", "HORNO 9", "HORNO 10", "HORNO 11", "HORNO 12", "HORNO 13", "HORNO 14", "HORNO 15", "HORNO 16", "HORNO 17", "HORNO 18", "HORNO 19"]}, {"id": "CAT-0194", "parte": "009", "maquina": "HORNOS", "subtipo": "HORNOS", "tarea": "ESTADO CORREAS-TENSION", "frecuencia": "SEMANAL", "instancias": ["HORNO 1", "HORNO 2", "HORNO 3", "HORNO 4", "HORNO 5", "HORNO 6", "HORNO 7", "HORNO 8", "HORNO 9", "HORNO 10", "HORNO 11", "HORNO 12", "HORNO 13", "HORNO 14", "HORNO 15", "HORNO 16", "HORNO 17", "HORNO 18", "HORNO 19"]}, {"id": "CAT-0195", "parte": "009", "maquina": "HORNOS", "subtipo": "HORNOS", "tarea": "MICRO PUERTAS (IMPORTANTE)", "frecuencia": "SEMANAL", "instancias": ["HORNO 1", "HORNO 2", "HORNO 3", "HORNO 4", "HORNO 5", "HORNO 6", "HORNO 7", "HORNO 8", "HORNO 9", "HORNO 10", "HORNO 11", "HORNO 12", "HORNO 13", "HORNO 14", "HORNO 15", "HORNO 16", "HORNO 17", "HORNO 18", "HORNO 19"]}, {"id": "CAT-0196", "parte": "009", "maquina": "HORNOS", "subtipo": "HORNOS", "tarea": "TURBINA", "frecuencia": "SEMANAL", "instancias": ["HORNO 1", "HORNO 2", "HORNO 3", "HORNO 4", "HORNO 5", "HORNO 6", "HORNO 7", "HORNO 8", "HORNO 9", "HORNO 10", "HORNO 11", "HORNO 12", "HORNO 13", "HORNO 14", "HORNO 15", "HORNO 16", "HORNO 17", "HORNO 18", "HORNO 19"]}, {"id": "CAT-0197", "parte": "009", "maquina": "HORNOS", "subtipo": "HORNOS", "tarea": "MOTOR-REDUCTOR CARRO", "frecuencia": "SEMANAL", "instancias": ["HORNO 1", "HORNO 2", "HORNO 3", "HORNO 4", "HORNO 5", "HORNO 6", "HORNO 7", "HORNO 8", "HORNO 9", "HORNO 10", "HORNO 11", "HORNO 12", "HORNO 13", "HORNO 14", "HORNO 15", "HORNO 16", "HORNO 17", "HORNO 18", "HORNO 19"]}, {"id": "CAT-0198", "parte": "009", "maquina": "HORNOS", "subtipo": "HORNOS", "tarea": "CUADRO FUNCIONAMIENTO CORRECTO - CERRADO", "frecuencia": "SEMANAL", "instancias": ["HORNO 1", "HORNO 2", "HORNO 3", "HORNO 4", "HORNO 5", "HORNO 6", "HORNO 7", "HORNO 8", "HORNO 9", "HORNO 10", "HORNO 11", "HORNO 12", "HORNO 13", "HORNO 14", "HORNO 15", "HORNO 16", "HORNO 17", "HORNO 18", "HORNO 19"]}, {"id": "CAT-0199", "parte": "009", "maquina": "HORNOS", "subtipo": "HORNOS", "tarea": "EV AGUA", "frecuencia": "SEMANAL", "instancias": ["HORNO 1", "HORNO 2", "HORNO 3", "HORNO 4", "HORNO 5", "HORNO 6", "HORNO 7", "HORNO 8", "HORNO 9", "HORNO 10", "HORNO 11", "HORNO 12", "HORNO 13", "HORNO 14", "HORNO 15", "HORNO 16", "HORNO 17", "HORNO 18", "HORNO 19"]}, {"id": "CAT-0200", "parte": "009", "maquina": "HORNOS", "subtipo": "HORNOS", "tarea": "TOMA DE TIERRA A PARTE ALEATORIA METALICA", "frecuencia": "MENSUAL", "instancias": ["HORNO 1", "HORNO 2", "HORNO 3", "HORNO 4", "HORNO 5", "HORNO 6", "HORNO 7", "HORNO 8", "HORNO 9", "HORNO 10", "HORNO 11", "HORNO 12", "HORNO 13", "HORNO 14", "HORNO 15", "HORNO 16", "HORNO 17", "HORNO 18", "HORNO 19"]}, {"id": "CAT-0201", "parte": "009", "maquina": "HORNOS", "subtipo": "HORNOS", "tarea": "ALTURA UÑA/PLATAFORMA/ESTADO SUELO-UÑA", "frecuencia": "SEMANAL", "instancias": ["HORNO 1", "HORNO 2", "HORNO 3", "HORNO 4", "HORNO 5", "HORNO 6", "HORNO 7", "HORNO 8", "HORNO 9", "HORNO 10", "HORNO 11", "HORNO 12", "HORNO 13", "HORNO 14", "HORNO 15", "HORNO 16", "HORNO 17", "HORNO 18", "HORNO 19"]}, {"id": "CAT-0202", "parte": "009", "maquina": "HORNOS", "subtipo": "HORNOS", "tarea": "PUERTAS-BISAGRAS-MANETAS", "frecuencia": "SEMANAL", "instancias": ["HORNO 1", "HORNO 2", "HORNO 3", "HORNO 4", "HORNO 5", "HORNO 6", "HORNO 7", "HORNO 8", "HORNO 9", "HORNO 10", "HORNO 11", "HORNO 12", "HORNO 13", "HORNO 14", "HORNO 15", "HORNO 16", "HORNO 17", "HORNO 18", "HORNO 19"]}, {"id": "CAT-0203", "parte": "009", "maquina": "HORNOS", "subtipo": "HORNOS", "tarea": "PARADA CARRO", "frecuencia": "SEMANAL", "instancias": ["HORNO 1", "HORNO 2", "HORNO 3", "HORNO 4", "HORNO 5", "HORNO 6", "HORNO 7", "HORNO 8", "HORNO 9", "HORNO 10", "HORNO 11", "HORNO 12", "HORNO 13", "HORNO 14", "HORNO 15", "HORNO 16", "HORNO 17", "HORNO 18", "HORNO 19"]}, {"id": "CAT-0204", "parte": "009", "maquina": "HORNOS", "subtipo": "HORNOS", "tarea": "ESTADO CORREAS-TENSION", "frecuencia": "SEMANAL", "instancias": ["HORNO 1", "HORNO 2", "HORNO 3", "HORNO 4", "HORNO 5", "HORNO 6", "HORNO 7", "HORNO 8", "HORNO 9", "HORNO 10", "HORNO 11", "HORNO 12", "HORNO 13", "HORNO 14", "HORNO 15", "HORNO 16", "HORNO 17", "HORNO 18", "HORNO 19"]}, {"id": "CAT-0205", "parte": "009", "maquina": "HORNOS", "subtipo": "HORNOS", "tarea": "MICRO PUERTAS (IMPORTANTE)", "frecuencia": "SEMANAL", "instancias": ["HORNO 1", "HORNO 2", "HORNO 3", "HORNO 4", "HORNO 5", "HORNO 6", "HORNO 7", "HORNO 8", "HORNO 9", "HORNO 10", "HORNO 11", "HORNO 12", "HORNO 13", "HORNO 14", "HORNO 15", "HORNO 16", "HORNO 17", "HORNO 18", "HORNO 19"]}, {"id": "CAT-0206", "parte": "009", "maquina": "HORNOS", "subtipo": "HORNOS", "tarea": "TURBINA", "frecuencia": "SEMANAL", "instancias": ["HORNO 1", "HORNO 2", "HORNO 3", "HORNO 4", "HORNO 5", "HORNO 6", "HORNO 7", "HORNO 8", "HORNO 9", "HORNO 10", "HORNO 11", "HORNO 12", "HORNO 13", "HORNO 14", "HORNO 15", "HORNO 16", "HORNO 17", "HORNO 18", "HORNO 19"]}, {"id": "CAT-0207", "parte": "009", "maquina": "HORNOS", "subtipo": "HORNOS", "tarea": "MOTOR-REDUCTOR CARRO", "frecuencia": "SEMANAL", "instancias": ["HORNO 1", "HORNO 2", "HORNO 3", "HORNO 4", "HORNO 5", "HORNO 6", "HORNO 7", "HORNO 8", "HORNO 9", "HORNO 10", "HORNO 11", "HORNO 12", "HORNO 13", "HORNO 14", "HORNO 15", "HORNO 16", "HORNO 17", "HORNO 18", "HORNO 19"]}, {"id": "CAT-0208", "parte": "009", "maquina": "HORNOS", "subtipo": "HORNOS", "tarea": "CUADRO FUNCIONAMIENTO CORRECTO - CERRADO", "frecuencia": "SEMANAL", "instancias": ["HORNO 1", "HORNO 2", "HORNO 3", "HORNO 4", "HORNO 5", "HORNO 6", "HORNO 7", "HORNO 8", "HORNO 9", "HORNO 10", "HORNO 11", "HORNO 12", "HORNO 13", "HORNO 14", "HORNO 15", "HORNO 16", "HORNO 17", "HORNO 18", "HORNO 19"]}, {"id": "CAT-0209", "parte": "009", "maquina": "HORNOS", "subtipo": "HORNOS", "tarea": "EV AGUA", "frecuencia": "SEMANAL", "instancias": ["HORNO 1", "HORNO 2", "HORNO 3", "HORNO 4", "HORNO 5", "HORNO 6", "HORNO 7", "HORNO 8", "HORNO 9", "HORNO 10", "HORNO 11", "HORNO 12", "HORNO 13", "HORNO 14", "HORNO 15", "HORNO 16", "HORNO 17", "HORNO 18", "HORNO 19"]}, {"id": "CAT-0210", "parte": "009", "maquina": "HORNOS", "subtipo": "HORNOS", "tarea": "TOMA DE TIERRA A PARTE ALEATORIA METALICA", "frecuencia": "MENSUAL", "instancias": ["HORNO 1", "HORNO 2", "HORNO 3", "HORNO 4", "HORNO 5", "HORNO 6", "HORNO 7", "HORNO 8", "HORNO 9", "HORNO 10", "HORNO 11", "HORNO 12", "HORNO 13", "HORNO 14", "HORNO 15", "HORNO 16", "HORNO 17", "HORNO 18", "HORNO 19"]}, {"id": "CAT-0211", "parte": "009", "maquina": "HORNOS", "subtipo": "HORNOS", "tarea": "ALTURA UÑA/PLATAFORMA/ESTADO SUELO-UÑA", "frecuencia": "SEMANAL", "instancias": ["HORNO 1", "HORNO 2", "HORNO 3", "HORNO 4", "HORNO 5", "HORNO 6", "HORNO 7", "HORNO 8", "HORNO 9", "HORNO 10", "HORNO 11", "HORNO 12", "HORNO 13", "HORNO 14", "HORNO 15", "HORNO 16", "HORNO 17", "HORNO 18", "HORNO 19"]}, {"id": "CAT-0212", "parte": "010", "maquina": "FERMENTADORA RELAMPAGO", "subtipo": "FERMENTADORA", "tarea": "TOMA DE TIERRA A PARTE ALEATORIA METALICA", "frecuencia": "MENSUAL", "instancias": ["FERMENTADORA RELAMPAGO"]}, {"id": "CAT-0213", "parte": "010", "maquina": "FERMENTADORA RELAMPAGO", "subtipo": "FERMENTADORA", "tarea": "CORTINAS", "frecuencia": "SEMANAL", "instancias": ["FERMENTADORA RELAMPAGO"]}, {"id": "CAT-0214", "parte": "010", "maquina": "FERMENTADORA RELAMPAGO", "subtipo": "FERMENTADORA", "tarea": "CARRILES GUIAS", "frecuencia": "MENSUAL", "instancias": ["FERMENTADORA RELAMPAGO"]}, {"id": "CAT-0215", "parte": "010", "maquina": "FERMENTADORA RELAMPAGO", "subtipo": "FERMENTADORA", "tarea": "SUELO", "frecuencia": "MENSUAL", "instancias": ["FERMENTADORA RELAMPAGO"]}, {"id": "CAT-0216", "parte": "010", "maquina": "FERMENTADORA RELAMPAGO", "subtipo": "FERMENTADORA", "tarea": "TIRAS ANTIDESLI. ENTRADA", "frecuencia": "SEMANAL", "instancias": ["FERMENTADORA RELAMPAGO"]}, {"id": "CAT-0217", "parte": "010", "maquina": "FERMENTADORA RELAMPAGO", "subtipo": "FERMENTADORA", "tarea": "TIRAS ANTIDESLI. PASILLO", "frecuencia": "SEMANAL", "instancias": ["FERMENTADORA RELAMPAGO"]}, {"id": "CAT-0218", "parte": "010", "maquina": "FERMENTADORA RELAMPAGO", "subtipo": "FERMENTADORA", "tarea": "GOTERAS EQUIPOS", "frecuencia": "SEMANAL", "instancias": ["FERMENTADORA RELAMPAGO"]}, {"id": "CAT-0219", "parte": "010", "maquina": "FERMENTADORA RELAMPAGO", "subtipo": "FERMENTADORA", "tarea": "DESAGUES", "frecuencia": "MENSUAL", "instancias": ["FERMENTADORA RELAMPAGO"]}, {"id": "CAT-0220", "parte": "010", "maquina": "FERMENTADORA RELAMPAGO", "subtipo": "FERMENTADORA", "tarea": "VAPAC 1 LLENADO Y VAPOR", "frecuencia": "QUINCENAL", "instancias": ["FERMENTADORA RELAMPAGO"]}, {"id": "CAT-0221", "parte": "010", "maquina": "FERMENTADORA RELAMPAGO", "subtipo": "FERMENTADORA", "tarea": "VAPAC 2 LLENADO Y VAPOR", "frecuencia": "QUINCENAL", "instancias": ["FERMENTADORA RELAMPAGO"]}, {"id": "CAT-0222", "parte": "010", "maquina": "FERMENTADORA RELAMPAGO", "subtipo": "FERMENTADORA", "tarea": "VAPAC 3 LLENADO Y VAPOR", "frecuencia": "QUINCENAL", "instancias": ["FERMENTADORA RELAMPAGO"]}, {"id": "CAT-0223", "parte": "010", "maquina": "FERMENTADORA RELAMPAGO", "subtipo": "FERMENTADORA", "tarea": "VAPAC 4 LLENADO Y VAPOR", "frecuencia": "QUINCENAL", "instancias": ["FERMENTADORA RELAMPAGO"]}, {"id": "CAT-0224", "parte": "010", "maquina": "FERMENTADORA RELAMPAGO", "subtipo": "FERMENTADORA", "tarea": "PRESIONES EQUIPO 1 (VERANO E INVIERNO)", "frecuencia": "QUINCENAL", "instancias": ["FERMENTADORA RELAMPAGO"]}, {"id": "CAT-0225", "parte": "010", "maquina": "FERMENTADORA RELAMPAGO", "subtipo": "FERMENTADORA", "tarea": "PRESIONES EQUIPO 2 (VERANO E INVIERNO)", "frecuencia": "QUINCENAL", "instancias": ["FERMENTADORA RELAMPAGO"]}, {"id": "CAT-0226", "parte": "010", "maquina": "FERMENTADORA RELAMPAGO", "subtipo": "FERMENTADORA", "tarea": "PRESIONES EQUIPO 3 (VERANO E INVIERNO)", "frecuencia": "QUINCENAL", "instancias": ["FERMENTADORA RELAMPAGO"]}, {"id": "CAT-0227", "parte": "010", "maquina": "FERMENTADORA RELAMPAGO", "subtipo": "FERMENTADORA", "tarea": "PRESIONES EQUIPO 4 (VERANO E INVIERNO)", "frecuencia": "QUINCENAL", "instancias": ["FERMENTADORA RELAMPAGO"]}, {"id": "CAT-0228", "parte": "010", "maquina": "FERMENTADORA RELAMPAGO", "subtipo": "FERMENTADORA", "tarea": "VENTILADORES EVAPORADORES", "frecuencia": "QUINCENAL", "instancias": ["FERMENTADORA RELAMPAGO"]}, {"id": "CAT-0229", "parte": "010", "maquina": "FERMENTADORA RELAMPAGO", "subtipo": "FERMENTADORA", "tarea": "VENTILADORES CONDENSADORES", "frecuencia": "QUINCENAL", "instancias": ["FERMENTADORA RELAMPAGO"]}, {"id": "CAT-0230", "parte": "010", "maquina": "FERMENTADORA RELAMPAGO", "subtipo": "LIMPIEZA EQUIPOS FERMENTADORA", "tarea": "CONDENSADORES (ABRIL Y OCTUBRE)", "frecuencia": "SEMESTRAL", "instancias": ["FERMENTADORA RELAMPAGO"]}, {"id": "CAT-0231", "parte": "011", "maquina": "TUNEL PREFRIO", "subtipo": "TUNEL PREFRIO", "tarea": "RELES Y CONTACTORES", "frecuencia": "SEMESTRAL", "instancias": ["TUNEL PREFRIO"]}, {"id": "CAT-0232", "parte": "011", "maquina": "TUNEL PREFRIO", "subtipo": "TUNEL PREFRIO", "tarea": "VENTILADORES EVAPORADORES", "frecuencia": "MENSUAL", "instancias": ["TUNEL PREFRIO"]}, {"id": "CAT-0233", "parte": "011", "maquina": "TUNEL PREFRIO", "subtipo": "TUNEL PREFRIO", "tarea": "VENTILADORES CONDENSADORES", "frecuencia": "MENSUAL", "instancias": ["TUNEL PREFRIO"]}, {"id": "CAT-0234", "parte": "011", "maquina": "TUNEL PREFRIO", "subtipo": "TUNEL PREFRIO", "tarea": "PAJARITOS", "frecuencia": "ANUAL", "instancias": ["TUNEL PREFRIO"]}, {"id": "CAT-0235", "parte": "011", "maquina": "TUNEL PREFRIO", "subtipo": "TUNEL PREFRIO", "tarea": "EQUIPO 1 PRESIONES", "frecuencia": "MENSUAL", "instancias": ["TUNEL PREFRIO"]}, {"id": "CAT-0236", "parte": "011", "maquina": "TUNEL PREFRIO", "subtipo": "TUNEL PREFRIO", "tarea": "EQUIPO 2 PRESIONES", "frecuencia": "MENSUAL", "instancias": ["TUNEL PREFRIO"]}, {"id": "CAT-0237", "parte": "011", "maquina": "TUNEL PREFRIO", "subtipo": "TUNEL PREFRIO", "tarea": "TURBINA 1 CORREAS-TENSION Y ESTADO TURBINA", "frecuencia": "MENSUAL", "instancias": ["TUNEL PREFRIO"]}, {"id": "CAT-0238", "parte": "011", "maquina": "TUNEL PREFRIO", "subtipo": "TUNEL PREFRIO", "tarea": "TURBINA 2 CORREAS-TENSION Y ESTADO TURBINA", "frecuencia": "MENSUAL", "instancias": ["TUNEL PREFRIO"]}, {"id": "CAT-0239", "parte": "011", "maquina": "TUNEL PREFRIO", "subtipo": "TUNEL PREFRIO", "tarea": "COMPRESOR 1 ACEITE Y ESTADO GENERAL", "frecuencia": "MENSUAL", "instancias": ["TUNEL PREFRIO"]}, {"id": "CAT-0240", "parte": "011", "maquina": "TUNEL PREFRIO", "subtipo": "TUNEL PREFRIO", "tarea": "COMPRESOR 2 ACEITE Y ESTADO GENERAL", "frecuencia": "MENSUAL", "instancias": ["TUNEL PREFRIO"]}, {"id": "CAT-0241", "parte": "011", "maquina": "TUNEL PREFRIO", "subtipo": "TUNEL PREFRIO", "tarea": "CADENA IZDA ARRASTRE (VISTA ENTRADA)", "frecuencia": "QUINCENAL", "instancias": ["TUNEL PREFRIO"]}, {"id": "CAT-0242", "parte": "011", "maquina": "TUNEL PREFRIO", "subtipo": "TUNEL PREFRIO", "tarea": "CADENA DCHA ARRASTRE (VISTA ENTRADA)", "frecuencia": "QUINCENAL", "instancias": ["TUNEL PREFRIO"]}, {"id": "CAT-0243", "parte": "011", "maquina": "TUNEL PREFRIO", "subtipo": "TUNEL PREFRIO", "tarea": "PISTONES", "frecuencia": "QUINCENAL", "instancias": ["TUNEL PREFRIO"]}, {"id": "CAT-0244", "parte": "011", "maquina": "TUNEL PREFRIO", "subtipo": "TUNEL PREFRIO", "tarea": "CUADRO (LIMPIEZA Y ORGANIZACIÓN)", "frecuencia": "MENSUAL", "instancias": ["TUNEL PREFRIO"]}, {"id": "CAT-0245", "parte": "011", "maquina": "TUNEL PREFRIO", "subtipo": "TUNEL PREFRIO", "tarea": "TOMA DE TIERRA A PARTE ALEATORIA METALICA", "frecuencia": "MENSUAL", "instancias": ["TUNEL PREFRIO"]}, {"id": "CAT-0246", "parte": "012", "maquina": "TUNELES", "subtipo": "TUNEL Nº", "tarea": "VENTILADORES EVAPORADORES", "frecuencia": "MENSUAL", "instancias": ["TUNEL 1", "TUNEL 2", "TUNEL 3", "TUNEL 4", "TUNEL 5"]}, {"id": "CAT-0247", "parte": "012", "maquina": "TUNELES", "subtipo": "TUNEL Nº", "tarea": "LUZ INTERIOR", "frecuencia": "MENSUAL", "instancias": ["TUNEL 1", "TUNEL 2", "TUNEL 3", "TUNEL 4", "TUNEL 5"]}, {"id": "CAT-0248", "parte": "012", "maquina": "TUNELES", "subtipo": "TUNEL Nº", "tarea": "RESISTENCIAS", "frecuencia": "MENSUAL", "instancias": ["TUNEL 1", "TUNEL 2", "TUNEL 3", "TUNEL 4", "TUNEL 5"]}, {"id": "CAT-0249", "parte": "012", "maquina": "TUNELES", "subtipo": "TUNEL Nº", "tarea": "RELES-CONTACTORES (RELES V.E. CADA 6 MESES)", "frecuencia": "SEMESTRAL", "instancias": ["TUNEL 1", "TUNEL 2", "TUNEL 3", "TUNEL 4", "TUNEL 5"]}, {"id": "CAT-0250", "parte": "012", "maquina": "TUNELES", "subtipo": "TUNEL Nº", "tarea": "PRESIONES", "frecuencia": "MENSUAL", "instancias": ["TUNEL 1", "TUNEL 2", "TUNEL 3", "TUNEL 4", "TUNEL 5"]}, {"id": "CAT-0251", "parte": "012", "maquina": "TUNELES", "subtipo": "TUNEL Nº", "tarea": "ESTADO Y CONSUMO COMPRESOR 1 (ANOTAR)", "frecuencia": "MENSUAL", "instancias": ["TUNEL 1", "TUNEL 2", "TUNEL 3", "TUNEL 4", "TUNEL 5"]}, {"id": "CAT-0252", "parte": "012", "maquina": "TUNELES", "subtipo": "TUNEL Nº", "tarea": "ESTADO Y CONSUMO COMPRESOR 2 (ANOTAR)", "frecuencia": "MENSUAL", "instancias": ["TUNEL 1", "TUNEL 2", "TUNEL 3", "TUNEL 4", "TUNEL 5"]}, {"id": "CAT-0253", "parte": "012", "maquina": "TUNELES", "subtipo": "TUNEL Nº", "tarea": "ENTRADA TUNEL", "frecuencia": "QUINCENAL", "instancias": ["TUNEL 1", "TUNEL 2", "TUNEL 3", "TUNEL 4", "TUNEL 5"]}, {"id": "CAT-0254", "parte": "012", "maquina": "TUNELES", "subtipo": "TUNEL Nº", "tarea": "MANETAS", "frecuencia": "QUINCENAL", "instancias": ["TUNEL 1", "TUNEL 2", "TUNEL 3", "TUNEL 4", "TUNEL 5"]}, {"id": "CAT-0255", "parte": "012", "maquina": "TUNELES", "subtipo": "TUNEL Nº", "tarea": "BISAGRAS O CORREDERAS", "frecuencia": "QUINCENAL", "instancias": ["TUNEL 1", "TUNEL 2", "TUNEL 3", "TUNEL 4", "TUNEL 5"]}, {"id": "CAT-0256", "parte": "012", "maquina": "TUNELES", "subtipo": "TUNEL Nº", "tarea": "AISLAMIENTO", "frecuencia": "QUINCENAL", "instancias": ["TUNEL 1", "TUNEL 2", "TUNEL 3", "TUNEL 4", "TUNEL 5"]}, {"id": "CAT-0257", "parte": "012", "maquina": "TUNELES", "subtipo": "TUNEL Nº", "tarea": "VENTILADORES CONDENSADORES", "frecuencia": "MENSUAL", "instancias": ["TUNEL 1", "TUNEL 2", "TUNEL 3", "TUNEL 4", "TUNEL 5"]}, {"id": "CAT-0258", "parte": "012", "maquina": "TUNELES", "subtipo": "TUNEL Nº", "tarea": "CUADRO, ESTADO GENERAL", "frecuencia": "MENSUAL", "instancias": ["TUNEL 1", "TUNEL 2", "TUNEL 3", "TUNEL 4", "TUNEL 5"]}, {"id": "CAT-0259", "parte": "012", "maquina": "TUNELES", "subtipo": "TUNEL Nº", "tarea": "PANTALLA Y SETA ESTADO GENERAL", "frecuencia": "MENSUAL", "instancias": ["TUNEL 1", "TUNEL 2", "TUNEL 3", "TUNEL 4", "TUNEL 5"]}, {"id": "CAT-0260", "parte": "012", "maquina": "TUNELES", "subtipo": "TUNEL Nº", "tarea": "DIFERENCIALES", "frecuencia": "SEMESTRAL", "instancias": ["TUNEL 1", "TUNEL 2", "TUNEL 3", "TUNEL 4", "TUNEL 5"]}, {"id": "CAT-0261", "parte": "012", "maquina": "TUNELES", "subtipo": "TUNEL Nº", "tarea": "TOMA DE TIERRA (COMPROBAR CON PARTE METALICA)", "frecuencia": "MENSUAL", "instancias": ["TUNEL 1", "TUNEL 2", "TUNEL 3", "TUNEL 4", "TUNEL 5"]}, {"id": "CAT-0262", "parte": "012", "maquina": "TUNELES", "subtipo": "TUNEL Nº", "tarea": "ESTADO CONDENSADORES", "frecuencia": "MENSUAL", "instancias": ["TUNEL 1", "TUNEL 2", "TUNEL 3", "TUNEL 4", "TUNEL 5"]}, {"id": "CAT-0263", "parte": "012", "maquina": "TUNELES", "subtipo": "TUNEL Nº", "tarea": "ESTADO EVAPORADORES", "frecuencia": "MENSUAL", "instancias": ["TUNEL 1", "TUNEL 2", "TUNEL 3", "TUNEL 4", "TUNEL 5"]}, {"id": "CAT-0264", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "DESCARGADOR", "tarea": "MOTOR-REDUCTOR-HUSILLO", "frecuencia": "QUINCENAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0265", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "DESCARGADOR", "tarea": "GUIAS SILLA-ENGRASE", "frecuencia": "QUINCENAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0266", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "DESCARGADOR", "tarea": "BRAZOS SILLA (ESTADO)", "frecuencia": "QUINCENAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0267", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "DESCARGADOR", "tarea": "INDUCTIVOS CARRO", "frecuencia": "SEMANAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0268", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "DESCARGADOR", "tarea": "UÑAS CARRO", "frecuencia": "SEMANAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0269", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "DESCARGADOR", "tarea": "CARRO EMPUJE LATAS (PISTON, INDUCTIVOS,EV)", "frecuencia": "QUINCENAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0270", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "DESCARGADOR", "tarea": "FOTOCELULA SEGURIDAD BANDEJAS", "frecuencia": "QUINCENAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0271", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "DESCARGADOR", "tarea": "PISTONES-GUIA CARRO (SUPERIORES)", "frecuencia": "QUINCENAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0272", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "DESCARGADOR", "tarea": "MOTOR Y REDUCTOR + CADENAS-ANGULOS", "frecuencia": "QUINCENAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0273", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "CARGADOR", "tarea": "MOTOR-REDUCTOR-HUSILLO", "frecuencia": "QUINCENAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0274", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "CARGADOR", "tarea": "GUIAS SILLA-ENGRASE", "frecuencia": "QUINCENAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0275", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "CARGADOR", "tarea": "BRAZOS SILLA (ESTADO)", "frecuencia": "QUINCENAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0276", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "CARGADOR", "tarea": "INDUCTIVOS CARRO", "frecuencia": "SEMANAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0277", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "CARGADOR", "tarea": "UÑAS CARRO", "frecuencia": "SEMANAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0278", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "CARGADOR", "tarea": "CARRO EMPUJE LATAS (PISTON, INDUCTIVOS,EV)", "frecuencia": "QUINCENAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0279", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "CARGADOR", "tarea": "FOTOCELULA SEGURIDAD BANDEJAS", "frecuencia": "QUINCENAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0280", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "CARGADOR", "tarea": "PISTONES-GUIA CARRO (SUPERIORES)", "frecuencia": "QUINCENAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0281", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "CARGADOR", "tarea": "MOTOR Y REDUCTOR + CADENAS-ANGULOS", "frecuencia": "QUINCENAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0282", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "TRANSPORTE", "tarea": "SALIDA DES. MOTOR-REDUCTOR-CADENAS-PIÑONES-CELULA BANDEJA", "frecuencia": "QUINCENAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0283", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "TRANSPORTE", "tarea": "M4 MOTOR-REDUCTOR-CADENAS-PIÑONES", "frecuencia": "QUINCENAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0284", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "TRANSPORTE", "tarea": "ENTRADA CARGADOR MOTOR,REDUCTOR-CADENAS-PIÑONES", "frecuencia": "QUINCENAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0285", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "TRANSPORTE", "tarea": "INDUCTIVOS POSICION CADENAS- FOTOCELULAS", "frecuencia": "QUINCENAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0286", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "DESMOLDEO", "tarea": "ORUGA", "frecuencia": "MENSUAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0287", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "DESMOLDEO", "tarea": "MOTOR-REDUCTOR-EJE-PIÑONES BRONCE-GUIAS", "frecuencia": "QUINCENAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0288", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "DESMOLDEO", "tarea": "FINALES DE CARRERA-CONTADOR PASOS", "frecuencia": "QUINCENAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0289", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "DESMOLDEO", "tarea": "CEPILLOS", "frecuencia": "SEMANAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0290", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "DESMOLDEO", "tarea": "PALAS", "frecuencia": "MENSUAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0291", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "DESMOLDEO", "tarea": "SEGURIDADES", "frecuencia": "QUINCENAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0292", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "DESMOLDEO", "tarea": "LONA AZUL: ESTADO", "frecuencia": "QUINCENAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0293", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "DESMOLDEO", "tarea": "MOTOR-REDUCTOR-RODAMIENTOS-RODILLOS GOMA-GUIAS", "frecuencia": "QUINCENAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0294", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "DESMOLDEO", "tarea": "CUADRO LIMPIEZA Y ORGANIZACIÓN", "frecuencia": "MENSUAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0295", "parte": "013", "maquina": "DESMOLDEO", "subtipo": "DESMOLDEO", "tarea": "TOMA DE TIERRA A PARTE ALEATORIA METALICA", "frecuencia": "MENSUAL", "instancias": ["DESMOLDEO 1", "DESMOLDEO 2", "DESMOLDEO 3", "DESMOLDEO 4", "DESMOLDEO 5", "DESMOLDEO 6"]}, {"id": "CAT-0296", "parte": "014", "maquina": "CONTADORA", "subtipo": "CONTADORA Nº", "tarea": "ESTADO TEFLONES HUECO BARRA", "frecuencia": "MENSUAL", "instancias": ["CONTADORA 1", "CONTADORA 2", "CONTADORA 3", "CONTADORA 4", "CONTADORA 5", "CONTADORA 6"]}, {"id": "CAT-0297", "parte": "014", "maquina": "CONTADORA", "subtipo": "CONTADORA Nº", "tarea": "LECTURA CORRECTA DE TODOS LOS TOPES INDUCTIVO INFERIOR", "frecuencia": "QUINCENAL", "instancias": ["CONTADORA 1", "CONTADORA 2", "CONTADORA 3", "CONTADORA 4", "CONTADORA 5", "CONTADORA 6"]}, {"id": "CAT-0298", "parte": "014", "maquina": "CONTADORA", "subtipo": "CONTADORA Nº", "tarea": "FOTOCELULAS PRESENCIA BARRA Y CAJA", "frecuencia": "QUINCENAL", "instancias": ["CONTADORA 1", "CONTADORA 2", "CONTADORA 3", "CONTADORA 4", "CONTADORA 5", "CONTADORA 6"]}, {"id": "CAT-0299", "parte": "014", "maquina": "CONTADORA", "subtipo": "CONTADORA Nº", "tarea": "MOTOR-REDUCTOR-EJE Y PIÑONES MOTRIZ CANJILONES", "frecuencia": "MENSUAL", "instancias": ["CONTADORA 1", "CONTADORA 2", "CONTADORA 3", "CONTADORA 4", "CONTADORA 5", "CONTADORA 6"]}, {"id": "CAT-0300", "parte": "014", "maquina": "CONTADORA", "subtipo": "CONTADORA Nº", "tarea": "TENSION CADENA CANJILONES", "frecuencia": "MENSUAL", "instancias": ["CONTADORA 1", "CONTADORA 2", "CONTADORA 3", "CONTADORA 4", "CONTADORA 5", "CONTADORA 6"]}, {"id": "CAT-0301", "parte": "014", "maquina": "CONTADORA", "subtipo": "CONTADORA Nº", "tarea": "MOTOR-REDUCTOR-EJE Y PIÑONES CAJON", "frecuencia": "MENSUAL", "instancias": ["CONTADORA 1", "CONTADORA 2", "CONTADORA 3", "CONTADORA 4", "CONTADORA 5", "CONTADORA 6"]}, {"id": "CAT-0302", "parte": "014", "maquina": "CONTADORA", "subtipo": "CONTADORA Nº", "tarea": "PISTONES CAJON Y RETENEDORES", "frecuencia": "QUINCENAL", "instancias": ["CONTADORA 1", "CONTADORA 2", "CONTADORA 3", "CONTADORA 4", "CONTADORA 5", "CONTADORA 6"]}, {"id": "CAT-0303", "parte": "014", "maquina": "CONTADORA", "subtipo": "CONTADORA Nº", "tarea": "CUADRO LIMPIEZA", "frecuencia": "MENSUAL", "instancias": ["CONTADORA 1", "CONTADORA 2", "CONTADORA 3", "CONTADORA 4", "CONTADORA 5", "CONTADORA 6"]}, {"id": "CAT-0304", "parte": "014", "maquina": "CONTADORA", "subtipo": "CONTADORA Nº", "tarea": "ENGRASE Y LIMPIEZA GUIAS CAJON", "frecuencia": "QUINCENAL", "instancias": ["CONTADORA 1", "CONTADORA 2", "CONTADORA 3", "CONTADORA 4", "CONTADORA 5", "CONTADORA 6"]}, {"id": "CAT-0305", "parte": "014", "maquina": "CONTADORA", "subtipo": "CONTADORA Nº", "tarea": "CONTAR 4 CAJAS", "frecuencia": "SEMANAL", "instancias": ["CONTADORA 1", "CONTADORA 2", "CONTADORA 3", "CONTADORA 4", "CONTADORA 5", "CONTADORA 6"]}, {"id": "CAT-0306", "parte": "014", "maquina": "CONTADORA", "subtipo": "CONTADORA Nº", "tarea": "TOMA DE TIERRA A PARTE ALEATORIA METALICA", "frecuencia": "MENSUAL", "instancias": ["CONTADORA 1", "CONTADORA 2", "CONTADORA 3", "CONTADORA 4", "CONTADORA 5", "CONTADORA 6"]}, {"id": "CAT-0307", "parte": "015", "maquina": "M CAJAS", "subtipo": "MAQUINA DE CAJAS", "tarea": "LIMPIEZA CON CEPILLO Y SOPLANDO (ARRANCADA)", "frecuencia": "SEMANAL", "instancias": ["M CAJAS"]}, {"id": "CAT-0308", "parte": "015", "maquina": "M CAJAS", "subtipo": "MAQUINA DE CAJAS", "tarea": "VENTURIS (SOPLAR)", "frecuencia": "SEMANAL", "instancias": ["M CAJAS"]}, {"id": "CAT-0309", "parte": "015", "maquina": "M CAJAS", "subtipo": "MAQUINA DE CAJAS", "tarea": "PISTOLAS DE COLA MOVIMIENTO - CONTINUIDAD HILO PEGAMENTO", "frecuencia": "SEMANAL", "instancias": ["M CAJAS"]}, {"id": "CAT-0310", "parte": "015", "maquina": "M CAJAS", "subtipo": "MAQUINA DE CAJAS", "tarea": "PRENSAS (MOVIMIENTO CORRECTO Y PAREJO)", "frecuencia": "SEMANAL", "instancias": ["M CAJAS"]}, {"id": "CAT-0311", "parte": "015", "maquina": "M CAJAS", "subtipo": "MAQUINA DE CAJAS", "tarea": "RASPAR PEGAMENTO DEL MOLDE", "frecuencia": "SEMANAL", "instancias": ["M CAJAS"]}, {"id": "CAT-0312", "parte": "015", "maquina": "M CAJAS", "subtipo": "MAQUINA DE CAJAS", "tarea": "CAMINO RODILLOS SALIDA (REVISAR CORREA)", "frecuencia": "SEMANAL", "instancias": ["M CAJAS"]}, {"id": "CAT-0313", "parte": "015", "maquina": "M CAJAS", "subtipo": "MAQUINA DE CAJAS", "tarea": "TOMA DE TIERRA A PARTE ALEATORIA METALICA", "frecuencia": "MENSUAL", "instancias": ["M CAJAS"]}, {"id": "CAT-0314", "parte": "015", "maquina": "M CAJAS", "subtipo": "MAQUINA DE CAJAS", "tarea": "PRESION DE TRABAJO 6 Bares +-", "frecuencia": "SEMANAL", "instancias": ["M CAJAS"]}, {"id": "CAT-0315", "parte": "015", "maquina": "M CAJAS", "subtipo": "MAQUINA DE CAJAS", "tarea": "FUGAS DE AIRE", "frecuencia": "SEMANAL", "instancias": ["M CAJAS"]}, {"id": "CAT-0316", "parte": "015", "maquina": "M CAJAS", "subtipo": "MAQUINA DE CAJAS", "tarea": "LIMPIEZA CUADRO", "frecuencia": "MENSUAL", "instancias": ["M CAJAS"]}, {"id": "CAT-0317", "parte": "015", "maquina": "M CAJAS", "subtipo": "ENCOLADOR", "tarea": "TEMPERATURA SELECCIONADA CORRESPONDE CON TEMP. MOSTRADA*", "frecuencia": "QUINCENAL", "instancias": ["M CAJAS"]}, {"id": "CAT-0318", "parte": "015", "maquina": "M CAJAS", "subtipo": "ENCOLADOR", "tarea": "PURGA PISTOLAS", "frecuencia": "MENSUAL", "instancias": ["M CAJAS"]}, {"id": "CAT-0319", "parte": "015", "maquina": "M CAJAS", "subtipo": "ENCOLADOR", "tarea": "FILTROS PISTOLAS", "frecuencia": "SEMESTRAL", "instancias": ["M CAJAS"]}, {"id": "CAT-0320", "parte": "015", "maquina": "M CAJAS", "subtipo": "ENCOLADOR", "tarea": "FILTRO ENCOLADOR", "frecuencia": "ANUAL", "instancias": ["M CAJAS"]}, {"id": "CAT-0321", "parte": "015", "maquina": "M CAJAS", "subtipo": "ENCOLADOR", "tarea": "LIMPIEZA ENCOLADOR (ANUAL)", "frecuencia": "ANUAL", "instancias": ["M CAJAS"]}, {"id": "CAT-0322", "parte": "015", "maquina": "M CAJAS", "subtipo": "ENCOLADOR", "tarea": "FILTRO ASPIRACION", "frecuencia": "SEMESTRAL", "instancias": ["M CAJAS"]}, {"id": "CAT-0323", "parte": "015", "maquina": "M CAJAS", "subtipo": "ENCOLADOR", "tarea": "ESTADO CUBO PEGAMENTO Y ASPIRACION", "frecuencia": "MENSUAL", "instancias": ["M CAJAS"]}, {"id": "CAT-0324", "parte": "015", "maquina": "M CAJAS", "subtipo": "ENCOLADOR", "tarea": "MANGUERAS EN BUEN ESTADO", "frecuencia": "MENSUAL", "instancias": ["M CAJAS"]}, {"id": "CAT-0325", "parte": "016", "maquina": "M BOLSAS", "subtipo": "M BOLSAS", "tarea": "CUCHILLA OBSERVAR DAR LA VUELTA LOS LUNES", "frecuencia": "SEMANAL", "instancias": ["M BOLSAS"]}, {"id": "CAT-0326", "parte": "016", "maquina": "M BOLSAS", "subtipo": "M BOLSAS", "tarea": "GOMAS DE LAS PINZAS REVISAR", "frecuencia": "SEMANAL", "instancias": ["M BOLSAS"]}, {"id": "CAT-0327", "parte": "016", "maquina": "M BOLSAS", "subtipo": "M BOLSAS", "tarea": "GUIAS LINEALES (ENGRASAR Y LIMPIAR DESPUES)*", "frecuencia": "SEMANAL", "instancias": ["M BOLSAS"]}, {"id": "CAT-0328", "parte": "016", "maquina": "M BOLSAS", "subtipo": "M BOLSAS", "tarea": "SOPLAR LA MAQUINA", "frecuencia": "SEMANAL", "instancias": ["M BOLSAS"]}, {"id": "CAT-0329", "parte": "016", "maquina": "M BOLSAS", "subtipo": "M BOLSAS", "tarea": "SEGURIDADES (COMPROBAR) (SETA Y PUERTA)", "frecuencia": "SEMANAL", "instancias": ["M BOLSAS"]}, {"id": "CAT-0330", "parte": "016", "maquina": "M BOLSAS", "subtipo": "M BOLSAS", "tarea": "TOMA DE TIERRA A PARTE ALEATORIA METALICA", "frecuencia": "MENSUAL", "instancias": ["M BOLSAS"]}, {"id": "CAT-0331", "parte": "016", "maquina": "M BOLSAS", "subtipo": "M BOLSAS", "tarea": "LIMPIEZA PISTONES LARGOS", "frecuencia": "MENSUAL", "instancias": ["M BOLSAS"]}, {"id": "CAT-0332", "parte": "016", "maquina": "M BOLSAS", "subtipo": "M BOLSAS", "tarea": "PISTONES PALAS", "frecuencia": "SEMANAL", "instancias": ["M BOLSAS"]}, {"id": "CAT-0333", "parte": "016", "maquina": "M BOLSAS", "subtipo": "M BOLSAS", "tarea": "PALAS", "frecuencia": "SEMANAL", "instancias": ["M BOLSAS"]}, {"id": "CAT-0334", "parte": "016", "maquina": "M BOLSAS", "subtipo": "M BOLSAS", "tarea": "RODILLOS", "frecuencia": "MENSUAL", "instancias": ["M BOLSAS"]}, {"id": "CAT-0335", "parte": "016", "maquina": "M BOLSAS", "subtipo": "M BOLSAS", "tarea": "FOTOCELULAS", "frecuencia": "MENSUAL", "instancias": ["M BOLSAS"]}, {"id": "CAT-0336", "parte": "016", "maquina": "M BOLSAS", "subtipo": "M BOLSAS", "tarea": "PINZAS", "frecuencia": "SEMANAL", "instancias": ["M BOLSAS"]}, {"id": "CAT-0337", "parte": "016", "maquina": "M BOLSAS", "subtipo": "M BOLSAS", "tarea": "PRESIONES PISTONES", "frecuencia": "MENSUAL", "instancias": ["M BOLSAS"]}, {"id": "CAT-0338", "parte": "016", "maquina": "M BOLSAS", "subtipo": "M BOLSAS", "tarea": "ESTADO GENERAL", "frecuencia": "QUINCENAL", "instancias": ["M BOLSAS"]}, {"id": "CAT-0339", "parte": "017", "maquina": "BASCULA-PRECINTADORA", "subtipo": "BASCULA", "tarea": "LONA", "frecuencia": "QUINCENAL", "instancias": ["BASCULA-PRECINTADORA L1", "BASCULA-PRECINTADORA L2", "BASCULA-PRECINTADORA L3", "BASCULA-PRECINTADORA L4", "BASCULA-PRECINTADORA L5", "BASCULA-PRECINTADORA L6", "BASCULA-PRECINTADORA L7"]}, {"id": "CAT-0340", "parte": "017", "maquina": "BASCULA-PRECINTADORA", "subtipo": "BASCULA", "tarea": "CALIBRADO", "frecuencia": "SEMANAL", "instancias": ["BASCULA-PRECINTADORA L1", "BASCULA-PRECINTADORA L2", "BASCULA-PRECINTADORA L3", "BASCULA-PRECINTADORA L4", "BASCULA-PRECINTADORA L5", "BASCULA-PRECINTADORA L6", "BASCULA-PRECINTADORA L7"]}, {"id": "CAT-0341", "parte": "017", "maquina": "BASCULA-PRECINTADORA", "subtipo": "BASCULA", "tarea": "ENTRADA CAJA", "frecuencia": "SEMANAL", "instancias": ["BASCULA-PRECINTADORA L1", "BASCULA-PRECINTADORA L2", "BASCULA-PRECINTADORA L3", "BASCULA-PRECINTADORA L4", "BASCULA-PRECINTADORA L5", "BASCULA-PRECINTADORA L6", "BASCULA-PRECINTADORA L7"]}, {"id": "CAT-0342", "parte": "017", "maquina": "BASCULA-PRECINTADORA", "subtipo": "BASCULA", "tarea": "SALIDA CAJA", "frecuencia": "SEMANAL", "instancias": ["BASCULA-PRECINTADORA L1", "BASCULA-PRECINTADORA L2", "BASCULA-PRECINTADORA L3", "BASCULA-PRECINTADORA L4", "BASCULA-PRECINTADORA L5", "BASCULA-PRECINTADORA L6", "BASCULA-PRECINTADORA L7"]}, {"id": "CAT-0343", "parte": "017", "maquina": "BASCULA-PRECINTADORA", "subtipo": "BASCULA", "tarea": "ERROR DE PESO", "frecuencia": "SEMANAL", "instancias": ["BASCULA-PRECINTADORA L1", "BASCULA-PRECINTADORA L2", "BASCULA-PRECINTADORA L3", "BASCULA-PRECINTADORA L4", "BASCULA-PRECINTADORA L5", "BASCULA-PRECINTADORA L6", "BASCULA-PRECINTADORA L7"]}, {"id": "CAT-0344", "parte": "017", "maquina": "BASCULA-PRECINTADORA", "subtipo": "PRECINTADORA", "tarea": "ESTADO DE LAS CORREAS-TENSION", "frecuencia": "SEMANAL", "instancias": ["BASCULA-PRECINTADORA L1", "BASCULA-PRECINTADORA L2", "BASCULA-PRECINTADORA L3", "BASCULA-PRECINTADORA L4", "BASCULA-PRECINTADORA L5", "BASCULA-PRECINTADORA L6", "BASCULA-PRECINTADORA L7"]}, {"id": "CAT-0345", "parte": "017", "maquina": "BASCULA-PRECINTADORA", "subtipo": "PRECINTADORA", "tarea": "RODILLOS INFERIORES", "frecuencia": "SEMANAL", "instancias": ["BASCULA-PRECINTADORA L1", "BASCULA-PRECINTADORA L2", "BASCULA-PRECINTADORA L3", "BASCULA-PRECINTADORA L4", "BASCULA-PRECINTADORA L5", "BASCULA-PRECINTADORA L6", "BASCULA-PRECINTADORA L7"]}, {"id": "CAT-0346", "parte": "017", "maquina": "BASCULA-PRECINTADORA", "subtipo": "PRECINTADORA", "tarea": "ENTRADA CAJA", "frecuencia": "SEMANAL", "instancias": ["BASCULA-PRECINTADORA L1", "BASCULA-PRECINTADORA L2", "BASCULA-PRECINTADORA L3", "BASCULA-PRECINTADORA L4", "BASCULA-PRECINTADORA L5", "BASCULA-PRECINTADORA L6", "BASCULA-PRECINTADORA L7"]}, {"id": "CAT-0347", "parte": "017", "maquina": "BASCULA-PRECINTADORA", "subtipo": "PRECINTADORA", "tarea": "RODILLOS PRECINTO", "frecuencia": "SEMANAL", "instancias": ["BASCULA-PRECINTADORA L1", "BASCULA-PRECINTADORA L2", "BASCULA-PRECINTADORA L3", "BASCULA-PRECINTADORA L4", "BASCULA-PRECINTADORA L5", "BASCULA-PRECINTADORA L6", "BASCULA-PRECINTADORA L7"]}, {"id": "CAT-0348", "parte": "017", "maquina": "BASCULA-PRECINTADORA", "subtipo": "PRECINTADORA", "tarea": "RUEDAS CIERRE SOLAPAS", "frecuencia": "SEMANAL", "instancias": ["BASCULA-PRECINTADORA L1", "BASCULA-PRECINTADORA L2", "BASCULA-PRECINTADORA L3", "BASCULA-PRECINTADORA L4", "BASCULA-PRECINTADORA L5", "BASCULA-PRECINTADORA L6", "BASCULA-PRECINTADORA L7"]}, {"id": "CAT-0349", "parte": "017", "maquina": "BASCULA-PRECINTADORA", "subtipo": "PRECINTADORA", "tarea": "CAMBIO DE CABEZAL", "frecuencia": "SEMANAL", "instancias": ["BASCULA-PRECINTADORA L1", "BASCULA-PRECINTADORA L2", "BASCULA-PRECINTADORA L3", "BASCULA-PRECINTADORA L4", "BASCULA-PRECINTADORA L5", "BASCULA-PRECINTADORA L6", "BASCULA-PRECINTADORA L7"]}, {"id": "CAT-0350", "parte": "017", "maquina": "BASCULA-PRECINTADORA", "subtipo": "PRECINTADORA", "tarea": "TOMA DE TIERRA A PARTE ALEATORIA METALICA", "frecuencia": "MENSUAL", "instancias": ["BASCULA-PRECINTADORA L1", "BASCULA-PRECINTADORA L2", "BASCULA-PRECINTADORA L3", "BASCULA-PRECINTADORA L4", "BASCULA-PRECINTADORA L5", "BASCULA-PRECINTADORA L6", "BASCULA-PRECINTADORA L7"]}, {"id": "CAT-0351", "parte": "017", "maquina": "BASCULA-PRECINTADORA", "subtipo": "CAMINO DE RODILLOS", "tarea": "ESTADO RODILLOS", "frecuencia": "QUINCENAL", "instancias": ["BASCULA-PRECINTADORA L1", "BASCULA-PRECINTADORA L2", "BASCULA-PRECINTADORA L3", "BASCULA-PRECINTADORA L4", "BASCULA-PRECINTADORA L5", "BASCULA-PRECINTADORA L6", "BASCULA-PRECINTADORA L7"]}, {"id": "CAT-0352", "parte": "017", "maquina": "BASCULA-PRECINTADORA", "subtipo": "CAMINO DE RODILLOS", "tarea": "BARANDILLAS", "frecuencia": "QUINCENAL", "instancias": ["BASCULA-PRECINTADORA L1", "BASCULA-PRECINTADORA L2", "BASCULA-PRECINTADORA L3", "BASCULA-PRECINTADORA L4", "BASCULA-PRECINTADORA L5", "BASCULA-PRECINTADORA L6", "BASCULA-PRECINTADORA L7"]}, {"id": "CAT-0353", "parte": "017", "maquina": "BASCULA-PRECINTADORA", "subtipo": "CAMINO DE RODILLOS", "tarea": "GOMAS", "frecuencia": "SEMANAL", "instancias": ["BASCULA-PRECINTADORA L1", "BASCULA-PRECINTADORA L2", "BASCULA-PRECINTADORA L3", "BASCULA-PRECINTADORA L4", "BASCULA-PRECINTADORA L5", "BASCULA-PRECINTADORA L6", "BASCULA-PRECINTADORA L7"]}, {"id": "CAT-0354", "parte": "017", "maquina": "BASCULA-PRECINTADORA", "subtipo": "CAMINO DE RODILLOS", "tarea": "CORREAS", "frecuencia": "SEMANAL", "instancias": ["BASCULA-PRECINTADORA L1", "BASCULA-PRECINTADORA L2", "BASCULA-PRECINTADORA L3", "BASCULA-PRECINTADORA L4", "BASCULA-PRECINTADORA L5", "BASCULA-PRECINTADORA L6", "BASCULA-PRECINTADORA L7"]}, {"id": "CAT-0355", "parte": "017", "maquina": "BASCULA-PRECINTADORA", "subtipo": "CAMINO DE RODILLOS", "tarea": "MOTORES-REDUCTORES", "frecuencia": "QUINCENAL", "instancias": ["BASCULA-PRECINTADORA L1", "BASCULA-PRECINTADORA L2", "BASCULA-PRECINTADORA L3", "BASCULA-PRECINTADORA L4", "BASCULA-PRECINTADORA L5", "BASCULA-PRECINTADORA L6", "BASCULA-PRECINTADORA L7"]}, {"id": "CAT-0356", "parte": "017", "maquina": "BASCULA-PRECINTADORA", "subtipo": "CAMINO DE RODILLOS", "tarea": "BY-PASS", "frecuencia": "SEMANAL", "instancias": ["BASCULA-PRECINTADORA L1", "BASCULA-PRECINTADORA L2", "BASCULA-PRECINTADORA L3", "BASCULA-PRECINTADORA L4", "BASCULA-PRECINTADORA L5", "BASCULA-PRECINTADORA L6", "BASCULA-PRECINTADORA L7"]}, {"id": "CAT-0357", "parte": "017", "maquina": "BASCULA-PRECINTADORA", "subtipo": "CAMINO DE RODILLOS", "tarea": "IMPRESORA - CORRECTO FECHADO", "frecuencia": "SEMANAL", "instancias": ["BASCULA-PRECINTADORA L1", "BASCULA-PRECINTADORA L2", "BASCULA-PRECINTADORA L3", "BASCULA-PRECINTADORA L4", "BASCULA-PRECINTADORA L5", "BASCULA-PRECINTADORA L6", "BASCULA-PRECINTADORA L7"]}, {"id": "CAT-0358", "parte": "017", "maquina": "BASCULA-PRECINTADORA", "subtipo": "CAMINO DE RODILLOS", "tarea": "CUADRO", "frecuencia": "MENSUAL", "instancias": ["BASCULA-PRECINTADORA L1", "BASCULA-PRECINTADORA L2", "BASCULA-PRECINTADORA L3", "BASCULA-PRECINTADORA L4", "BASCULA-PRECINTADORA L5", "BASCULA-PRECINTADORA L6", "BASCULA-PRECINTADORA L7"]}, {"id": "CAT-0359", "parte": "017", "maquina": "BASCULA-PRECINTADORA", "subtipo": "CAMINO DE RODILLOS", "tarea": "CUADRO EV", "frecuencia": "MENSUAL", "instancias": ["BASCULA-PRECINTADORA L1", "BASCULA-PRECINTADORA L2", "BASCULA-PRECINTADORA L3", "BASCULA-PRECINTADORA L4", "BASCULA-PRECINTADORA L5", "BASCULA-PRECINTADORA L6", "BASCULA-PRECINTADORA L7"]}, {"id": "CAT-0360", "parte": "018", "maquina": "CENTRADOR ENTABLADO", "subtipo": "CENTRADOR ENTABLADO Nº", "tarea": "CINTAS TRANSPORTE (ESTADO Y TENSION)", "frecuencia": "QUINCENAL", "instancias": ["CENTRADOR ENTABLADO L1", "CENTRADOR ENTABLADO L2", "CENTRADOR ENTABLADO L3", "CENTRADOR ENTABLADO L4", "CENTRADOR ENTABLADO L5", "CENTRADOR ENTABLADO L6", "CENTRADOR ENTABLADO L7"]}, {"id": "CAT-0361", "parte": "018", "maquina": "CENTRADOR ENTABLADO", "subtipo": "CENTRADOR ENTABLADO Nº", "tarea": "SERVOS-REDUCTORES SI LOS LLEVA", "frecuencia": "QUINCENAL", "instancias": ["CENTRADOR ENTABLADO L1", "CENTRADOR ENTABLADO L2", "CENTRADOR ENTABLADO L3", "CENTRADOR ENTABLADO L4", "CENTRADOR ENTABLADO L5", "CENTRADOR ENTABLADO L6", "CENTRADOR ENTABLADO L7"]}, {"id": "CAT-0362", "parte": "018", "maquina": "CENTRADOR ENTABLADO", "subtipo": "CENTRADOR ENTABLADO Nº", "tarea": "APERTURA", "frecuencia": "QUINCENAL", "instancias": ["CENTRADOR ENTABLADO L1", "CENTRADOR ENTABLADO L2", "CENTRADOR ENTABLADO L3", "CENTRADOR ENTABLADO L4", "CENTRADOR ENTABLADO L5", "CENTRADOR ENTABLADO L6", "CENTRADOR ENTABLADO L7"]}, {"id": "CAT-0363", "parte": "018", "maquina": "CENTRADOR ENTABLADO", "subtipo": "CENTRADOR ENTABLADO Nº", "tarea": "L5 Y L6 - PALA APERTURA", "frecuencia": "QUINCENAL", "instancias": ["CENTRADOR ENTABLADO L1", "CENTRADOR ENTABLADO L2", "CENTRADOR ENTABLADO L3", "CENTRADOR ENTABLADO L4", "CENTRADOR ENTABLADO L5", "CENTRADOR ENTABLADO L6", "CENTRADOR ENTABLADO L7"]}, {"id": "CAT-0364", "parte": "018", "maquina": "CENTRADOR ENTABLADO", "subtipo": "CENTRADOR ENTABLADO Nº", "tarea": "PISTON APERTURA (ESTADO-HOLGURAS-PRESION)", "frecuencia": "QUINCENAL", "instancias": ["CENTRADOR ENTABLADO L1", "CENTRADOR ENTABLADO L2", "CENTRADOR ENTABLADO L3", "CENTRADOR ENTABLADO L4", "CENTRADOR ENTABLADO L5", "CENTRADOR ENTABLADO L6", "CENTRADOR ENTABLADO L7"]}, {"id": "CAT-0365", "parte": "018", "maquina": "CENTRADOR ENTABLADO", "subtipo": "CENTRADOR ENTABLADO Nº", "tarea": "FOTOCELULAS", "frecuencia": "QUINCENAL", "instancias": ["CENTRADOR ENTABLADO L1", "CENTRADOR ENTABLADO L2", "CENTRADOR ENTABLADO L3", "CENTRADOR ENTABLADO L4", "CENTRADOR ENTABLADO L5", "CENTRADOR ENTABLADO L6", "CENTRADOR ENTABLADO L7"]}, {"id": "CAT-0366", "parte": "018", "maquina": "CENTRADOR ENTABLADO", "subtipo": "CENTRADOR ENTABLADO Nº", "tarea": "CABLEADO GENERAL", "frecuencia": "QUINCENAL", "instancias": ["CENTRADOR ENTABLADO L1", "CENTRADOR ENTABLADO L2", "CENTRADOR ENTABLADO L3", "CENTRADOR ENTABLADO L4", "CENTRADOR ENTABLADO L5", "CENTRADOR ENTABLADO L6", "CENTRADOR ENTABLADO L7"]}, {"id": "CAT-0367", "parte": "018", "maquina": "CENTRADOR ENTABLADO", "subtipo": "CENTRADOR ENTABLADO Nº", "tarea": "FUNCIONAMIENTO GENERAL", "frecuencia": "QUINCENAL", "instancias": ["CENTRADOR ENTABLADO L1", "CENTRADOR ENTABLADO L2", "CENTRADOR ENTABLADO L3", "CENTRADOR ENTABLADO L4", "CENTRADOR ENTABLADO L5", "CENTRADOR ENTABLADO L6", "CENTRADOR ENTABLADO L7"]}, {"id": "CAT-0368", "parte": "018", "maquina": "CENTRADOR ENTABLADO", "subtipo": "CENTRADOR ENTABLADO Nº", "tarea": "REVISAR CORREA  L5", "frecuencia": "SEMANAL", "instancias": ["CENTRADOR ENTABLADO L1", "CENTRADOR ENTABLADO L2", "CENTRADOR ENTABLADO L3", "CENTRADOR ENTABLADO L4", "CENTRADOR ENTABLADO L5", "CENTRADOR ENTABLADO L6", "CENTRADOR ENTABLADO L7"]}, {"id": "CAT-0369", "parte": "018", "maquina": "CENTRADOR ENTABLADO", "subtipo": "CENTRADOR ENTABLADO Nº", "tarea": "REVISAR ACTUADOR  L6", "frecuencia": "SEMANAL", "instancias": ["CENTRADOR ENTABLADO L1", "CENTRADOR ENTABLADO L2", "CENTRADOR ENTABLADO L3", "CENTRADOR ENTABLADO L4", "CENTRADOR ENTABLADO L5", "CENTRADOR ENTABLADO L6", "CENTRADOR ENTABLADO L7"]}, {"id": "CAT-0370", "parte": "019", "maquina": "TRUENO", "subtipo": "PABAT", "tarea": "GUIAS SUBIDA (ENGRASAR)", "frecuencia": "QUINCENAL", "instancias": ["TRUENO"]}, {"id": "CAT-0371", "parte": "019", "maquina": "TRUENO", "subtipo": "PABAT", "tarea": "INDUCTIVO CACEROLA", "frecuencia": "QUINCENAL", "instancias": ["TRUENO"]}, {"id": "CAT-0372", "parte": "019", "maquina": "TRUENO", "subtipo": "PABAT", "tarea": "AJUSTE MICROS SUBIDA Y BAJADA", "frecuencia": "QUINCENAL", "instancias": ["TRUENO"]}, {"id": "CAT-0373", "parte": "019", "maquina": "TRUENO", "subtipo": "PABAT", "tarea": "HOLGURA BRAZO PABAT", "frecuencia": "QUINCENAL", "instancias": ["TRUENO"]}, {"id": "CAT-0374", "parte": "019", "maquina": "TRUENO", "subtipo": "PABAT", "tarea": "CORREAS", "frecuencia": "MENSUAL", "instancias": ["TRUENO"]}, {"id": "CAT-0375", "parte": "019", "maquina": "TRUENO", "subtipo": "PABAT", "tarea": "RETENEDORES BANDEJAS - PISTON ELEVADOR - ELECTROVALV.", "frecuencia": "MENSUAL", "instancias": ["TRUENO"]}, {"id": "CAT-0376", "parte": "019", "maquina": "TRUENO", "subtipo": "REFINADORA", "tarea": "RODILLOS", "frecuencia": "QUINCENAL", "instancias": ["TRUENO"]}, {"id": "CAT-0377", "parte": "019", "maquina": "TRUENO", "subtipo": "REFINADORA", "tarea": "RODAMIENTOS", "frecuencia": "QUINCENAL", "instancias": ["TRUENO"]}, {"id": "CAT-0378", "parte": "019", "maquina": "TRUENO", "subtipo": "REFINADORA", "tarea": "SETAS", "frecuencia": "QUINCENAL", "instancias": ["TRUENO"]}, {"id": "CAT-0379", "parte": "019", "maquina": "TRUENO", "subtipo": "REFINADORA", "tarea": "FUNCIONAMIENTO GENERAL", "frecuencia": "QUINCENAL", "instancias": ["TRUENO"]}, {"id": "CAT-0380", "parte": "019", "maquina": "TRUENO", "subtipo": "REFINADORA", "tarea": "CENTRADOR 1 - PALAS - FOTOCEL - PIÑONES - PISTON - EV", "frecuencia": "MENSUAL", "instancias": ["TRUENO"]}, {"id": "CAT-0381", "parte": "019", "maquina": "TRUENO", "subtipo": "AMASADORA CANDEAL", "tarea": "GIRO CACEROLA", "frecuencia": "QUINCENAL", "instancias": ["TRUENO"]}, {"id": "CAT-0382", "parte": "019", "maquina": "TRUENO", "subtipo": "AMASADORA CANDEAL", "tarea": "ELEVACION CACEROLA", "frecuencia": "QUINCENAL", "instancias": ["TRUENO"]}, {"id": "CAT-0383", "parte": "019", "maquina": "TRUENO", "subtipo": "AMASADORA CANDEAL", "tarea": "BOTONERA", "frecuencia": "QUINCENAL", "instancias": ["TRUENO"]}, {"id": "CAT-0384", "parte": "019", "maquina": "TRUENO", "subtipo": "AMASADORA CANDEAL", "tarea": "HOLGURAS", "frecuencia": "QUINCENAL", "instancias": ["TRUENO"]}, {"id": "CAT-0385", "parte": "019", "maquina": "TRUENO", "subtipo": "AMASADORA CANDEAL", "tarea": "PANTALLA", "frecuencia": "QUINCENAL", "instancias": ["TRUENO"]}, {"id": "CAT-0386", "parte": "019", "maquina": "TRUENO", "subtipo": "AMASADORA CANDEAL", "tarea": "MOTOR - POLEA - CORREAS (INCLUSO LAS VERDES)", "frecuencia": "MENSUAL", "instancias": ["TRUENO"]}, {"id": "CAT-0387", "parte": "019", "maquina": "TRUENO", "subtipo": "HARINA-AGUA-SILOS", "tarea": "CUADRO HARINA (ASPIRAR)", "frecuencia": "MENSUAL", "instancias": ["TRUENO"]}, {"id": "CAT-0388", "parte": "019", "maquina": "TRUENO", "subtipo": "HARINA-AGUA-SILOS", "tarea": "TURBINA", "frecuencia": "MENSUAL", "instancias": ["TRUENO"]}, {"id": "CAT-0389", "parte": "019", "maquina": "TRUENO", "subtipo": "HARINA-AGUA-SILOS", "tarea": "VALVULAS SILOS", "frecuencia": "MENSUAL", "instancias": ["TRUENO"]}, {"id": "CAT-0390", "parte": "019", "maquina": "TRUENO", "subtipo": "HARINA-AGUA-SILOS", "tarea": "VIBRADORES SILOS", "frecuencia": "MENSUAL", "instancias": ["TRUENO"]}, {"id": "CAT-0391", "parte": "019", "maquina": "TRUENO", "subtipo": "HARINA-AGUA-SILOS", "tarea": "VIBRADOR CONO", "frecuencia": "MENSUAL", "instancias": ["TRUENO"]}, {"id": "CAT-0392", "parte": "019", "maquina": "TRUENO", "subtipo": "HARINA-AGUA-SILOS", "tarea": "ASPIRACION CONO", "frecuencia": "MENSUAL", "instancias": ["TRUENO"]}, {"id": "CAT-0393", "parte": "019", "maquina": "TRUENO", "subtipo": "HARINA-AGUA-SILOS", "tarea": "SETA ENTABLADO, CUADRO, SETAS FORMADORA, REJILLA, TAPAS LATERALES", "frecuencia": "MENSUAL", "instancias": ["TRUENO"]}, {"id": "CAT-0394", "parte": "019", "maquina": "TRUENO", "subtipo": "HARINA-AGUA-SILOS", "tarea": "RELES, CONTACTORES (TOPES Y CANJILONES) 6 MESES", "frecuencia": "SEMESTRAL", "instancias": ["TRUENO"]}, {"id": "CAT-0395", "parte": "019", "maquina": "TRUENO", "subtipo": "VOLCADOR", "tarea": "HUSILLO SUBIDA ENGRASE", "frecuencia": "QUINCENAL", "instancias": ["TRUENO"]}, {"id": "CAT-0396", "parte": "019", "maquina": "TRUENO", "subtipo": "VOLCADOR", "tarea": "MICRO PUERTA", "frecuencia": "QUINCENAL", "instancias": ["TRUENO"]}, {"id": "CAT-0397", "parte": "019", "maquina": "TRUENO", "subtipo": "VOLCADOR", "tarea": "MOTOR-REDUCTOR", "frecuencia": "QUINCENAL", "instancias": ["TRUENO"]}, {"id": "CAT-0398", "parte": "019", "maquina": "TRUENO", "subtipo": "VOLCADOR", "tarea": "BOTONERA", "frecuencia": "QUINCENAL", "instancias": ["TRUENO"]}, {"id": "CAT-0399", "parte": "019", "maquina": "TRUENO", "subtipo": "VOLCADOR", "tarea": "PROTECCION SUBIDA", "frecuencia": "QUINCENAL", "instancias": ["TRUENO"]}, {"id": "CAT-0400", "parte": "019", "maquina": "TRUENO", "subtipo": "VOLCADOR", "tarea": "FUNCIONAMIENTO", "frecuencia": "MENSUAL", "instancias": ["TRUENO"]}, {"id": "CAT-0401", "parte": "019", "maquina": "TRUENO", "subtipo": "VOLCADOR", "tarea": "ENGRASE", "frecuencia": "QUINCENAL", "instancias": ["TRUENO"]}];
 
-// ══════════════════════════════════════════════════
-// LOGIN
-// ══════════════════════════════════════════════════
-const PW_KEY = 'adminPwd';
-function getPwd(){ return localStorage.getItem(PW_KEY)||'admin'; }
 
+// Catálogo activo (puede tener extras de Firebase)
+let catalogoActivo = [...CATALOGO];
+
+// ══ ESTADO ══
+const SESSION_KEY = 'planPrevAdminAuth';
+const PW_DEFAULT  = 'panalcor1234';
+let mecanicosLista = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE'];
+let planActual     = null;
+let seleccionadas  = []; // {catId, instancia, mecanico}
+let editModalIdx   = null;
+
+// ══ LOGIN ══
 function doLogin(){
-  const val = document.getElementById('pwInput').value;
+  const v = document.getElementById('pwInput').value;
   const err = document.getElementById('loginErr');
-  if(val === getPwd()){
-    document.getElementById('loginScreen').style.display='none';
-    document.getElementById('app').style.display='block';
-    initApp();
-  } else {
-    err.textContent='❌ Contraseña incorrecta';
-    document.getElementById('pwInput').value='';
-    document.getElementById('pwInput').focus();
-  }
-}
-function doLogout(){
-  document.getElementById('app').style.display='none';
-  document.getElementById('loginScreen').style.display='flex';
-  document.getElementById('pwInput').value='';
-}
-document.getElementById('pwInput').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
-
-// ══════════════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════════════
-function initApp(){
-  // Cargar mecánicos de Firebase
-  DB.ref('config/mecanicos').once('value').then(s=>{
-    if(s.val()&&s.val().length) MECANICOS = s.val();
-    poblarSelectsMecanicos();
-  }).catch(()=> poblarSelectsMecanicos());
-
-  // Cargar catálogo desde Firebase (guardado por preventivo.html)
-  // Si no hay nada, usar catálogo reducido embebido
-  DB.ref('catalogo_tareas').once('value').then(s=>{
-    const val = s.val();
-    if(val && Array.isArray(val) && val.length){
-      CATALOGO = val;
+  DB.ref('config/adminPwd').once('value').then(s=>{
+    const pwd = s.val() || PW_DEFAULT;
+    if(v===pwd){
+      sessionStorage.setItem(SESSION_KEY,'1');
+      arrancarApp();
     } else {
-      CATALOGO = getCatalogoEmbebido();
+      err.textContent='❌ Contraseña incorrecta';
+      document.getElementById('pwInput').value='';
     }
-    poblarFiltroMaquinas();
-    renderCatalogo();
   }).catch(()=>{
-    CATALOGO = getCatalogoEmbebido();
-    poblarFiltroMaquinas();
-    renderCatalogo();
+    if(v===PW_DEFAULT){ sessionStorage.setItem(SESSION_KEY,'1'); arrancarApp(); }
+    else err.textContent='❌ Sin conexión y contraseña incorrecta';
   });
+}
+function doLogout(){ sessionStorage.removeItem(SESSION_KEY); location.reload(); }
+(function(){
+  if(sessionStorage.getItem(SESSION_KEY)==='1'){ arrancarApp(); }
+})();
 
+function arrancarApp(){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('app').style.display='block';
+  // Cargar mecánicos desde Firebase
+  DB.ref('config/mecanicos').once('value').then(s=>{
+    const v=s.val();
+    if(v && v.length) mecanicosLista=v;
+    poblarSelectsMecanicos();
+  }).catch(()=>poblarSelectsMecanicos());
+  // Cargar catálogo extra de Firebase
+  DB.ref('catalogo_extra').once('value').then(s=>{
+    const v=s.val();
+    if(v) catalogoActivo=[...CATALOGO, ...Object.values(v)];
+  }).catch(()=>{});
   // Cargar plan activo
   cargarPlanActivo();
-
-  // Escuchar cambios en tiempo real del plan activo
-  DB.ref('plan_activo').on('value', snap=>{
-    planActivo = snap.val();
-    if(document.getElementById('panel-activo').classList.contains('active')){
-      renderPlanActivo();
-    }
-  });
+  // Init tab crear plan
+  initCrearPlan();
 }
 
 function poblarSelectsMecanicos(){
-  // Selector filtro tabla
-  const selFiltro = document.getElementById('filtroMecActivo');
-  selFiltro.innerHTML = '<option value="">Todos los mecánicos</option>' +
-    MECANICOS.map(m=>`<option>${m}</option>`).join('');
-  // Selector "asignar todos"
-  const selTodos = document.getElementById('asigTodosSelect');
-  selTodos.innerHTML = '<option value="">Asignar todos a...</option>' +
-    MECANICOS.map(m=>`<option>${m}</option>`).join('');
-}
-
-function poblarFiltroMaquinas(){
-  const maquinas = [...new Set(CATALOGO.map(t=>t.maquina))].sort();
-  const sel = document.getElementById('filtroMaqCat');
-  sel.innerHTML = '<option value="">Todas las máquinas</option>' +
-    maquinas.map(m=>`<option>${m}</option>`).join('');
-}
-
-// ══════════════════════════════════════════════════
-// PLAN ACTIVO
-// ══════════════════════════════════════════════════
-function cargarPlanActivo(){
-  DB.ref('plan_activo').once('value').then(snap=>{
-    planActivo = snap.val();
-    renderPlanActivo();
-  });
-}
-
-function renderPlanActivo(){
-  const noActivo = document.getElementById('noActivoBanner');
-  const content  = document.getElementById('planActivoContent');
-
-  if(!planActivo || !planActivo.id){
-    noActivo.style.display='block';
-    content.style.display='none';
-    return;
-  }
-  noActivo.style.display='none';
-  content.style.display='block';
-
-  const tareas = planActivo.tareas ? Object.values(planActivo.tareas) : [];
-  const total  = tareas.length;
-  const hechas = tareas.filter(t=>t.hecho).length;
-  const pct    = total ? Math.round(hechas/total*100) : 0;
-
-  document.getElementById('planBanner').innerHTML = `
-    <div>
-      <div class="plan-titulo">${planActivo.titulo||'Plan sin título'}</div>
-      <div class="plan-periodo">${planActivo.periodo||''} · Creado: ${planActivo.creadoEn ? new Date(planActivo.creadoEn).toLocaleDateString('es-ES') : '—'}</div>
-    </div>
-    <div class="plan-stats">
-      <div class="plan-stat"><div class="num">${total}</div><div class="lbl">Tareas</div></div>
-      <div class="plan-stat"><div class="num" style="color:var(--green)">${hechas}</div><div class="lbl">Hechas</div></div>
-      <div class="plan-stat"><div class="num" style="color:${pct>=80?'var(--green)':pct>=50?'var(--yellow)':'var(--red)'}">${pct}%</div><div class="lbl">Cumplimiento</div></div>
-    </div>`;
-
-  // Progreso por mecánico
-  const porMec = {};
-  tareas.forEach(t=>{
-    const m = t.mecanico||'Sin asignar';
-    if(!porMec[m]) porMec[m]={total:0,hechas:0};
-    porMec[m].total++;
-    if(t.hecho) porMec[m].hechas++;
-  });
-  document.getElementById('mecProgressGrid').innerHTML = Object.entries(porMec)
-    .sort((a,b)=>b[1].total-a[1].total)
-    .map(([m,s])=>{
-      const p = s.total ? Math.round(s.hechas/s.total*100) : 0;
-      return `<div class="mec-progress-card">
-        <div class="mec-pname">👷 ${m}</div>
-        <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:${p}%"></div></div>
-        <div class="prog-label"><span>${s.hechas}/${s.total} tareas</span><b>${p}%</b></div>
-      </div>`;
-    }).join('');
-
-  renderTablaPlan();
-}
-
-function renderTablaPlan(){
-  if(!planActivo || !planActivo.tareas) return;
-  const filtroMec = document.getElementById('filtroMecActivo').value;
-  let tareas = Object.values(planActivo.tareas);
-  if(filtroMec) tareas = tareas.filter(t=>t.mecanico===filtroMec);
-
-  const div = document.getElementById('tablaPlan');
-  if(!tareas.length){ div.innerHTML='<div style="text-align:center;padding:30px;color:rgba(255,255,255,0.3)">Sin tareas</div>'; return; }
-
-  div.innerHTML = tareas.map(t=>`
-    <div class="tarea-row">
-      <span style="font-weight:700;color:var(--gold-light)">${t.maqNombre}</span>
-      <span style="color:rgba(255,255,255,0.8)">${t.desc}</span>
-      <span>👷 ${t.mecanico||'—'}</span>
-      <span><span class="badge ${t.hecho?'badge-green':'badge-yellow'}">${t.hecho?'✅ Hecha':'⏳ Pendiente'}</span></span>
-      <span><button onclick="eliminarTareaDelPlan('${t.id}')" style="background:none;border:none;color:rgba(255,255,255,0.25);cursor:pointer;font-size:1rem" title="Eliminar del plan">🗑</button></span>
-    </div>`).join('');
-}
-
-function eliminarTareaDelPlan(id){
-  if(!confirm('¿Eliminar esta tarea del plan activo?')) return;
-  DB.ref(`plan_activo/tareas/${id}`).remove()
-    .then(()=> showToast('🗑 Tarea eliminada del plan'))
-    .catch(()=> showToast('❌ Error al eliminar'));
-}
-
-function cerrarPlan(){
-  if(!planActivo) return;
-  const tareas = planActivo.tareas ? Object.values(planActivo.tareas) : [];
-  const hechas = tareas.filter(t=>t.hecho).length;
-  const pct    = tareas.length ? Math.round(hechas/tareas.length*100) : 0;
-  if(!confirm(`¿Cerrar y archivar el plan "${planActivo.titulo}"?\nCumplimiento final: ${pct}%\n\nLos mecánicos ya no podrán ver este plan.`)) return;
-
-  const archivo = {
-    ...planActivo,
-    cerradoEn: Date.now(),
-    pctFinal: pct,
-    totalTareas: tareas.length,
-    tareasHechas: hechas
-  };
-  const histId = 'hist_' + Date.now();
-  Promise.all([
-    DB.ref(`historial_planes/${histId}`).set(archivo),
-    DB.ref('plan_activo').remove()
-  ]).then(()=>{
-    showToast('🏁 Plan archivado correctamente');
-    planActivo = null;
-    renderPlanActivo();
-  }).catch(()=> showToast('❌ Error al cerrar el plan'));
-}
-
-// ══════════════════════════════════════════════════
-// CATÁLOGO
-// ══════════════════════════════════════════════════
-function renderCatalogo(){
-  const filtroMaq  = document.getElementById('filtroMaqCat').value;
-  const filtroFreq = document.getElementById('filtroFreqCat').value;
-  const filtroTxt  = document.getElementById('filtroTextCat').value.toLowerCase();
-
-  const filtradas = CATALOGO.filter(t=>{
-    if(filtroMaq && t.maquina !== filtroMaq) return false;
-    if(filtroFreq && t.frecuencia !== filtroFreq) return false;
-    if(filtroTxt && !t.tarea.toLowerCase().includes(filtroTxt) && !t.maquina.toLowerCase().includes(filtroTxt)) return false;
-    return true;
-  });
-
-  document.getElementById('catCount').textContent =
-    `${filtradas.length} tareas · ${tareasSeleccionadas.size} seleccionadas`;
-
-  const div = document.getElementById('catalogoList');
-  if(!filtradas.length){
-    div.innerHTML='<div style="text-align:center;padding:24px;color:rgba(255,255,255,0.3)">Sin resultados</div>';
-    return;
-  }
-
-  div.innerHTML = filtradas.map(t=>{
-    const sel = tareasSeleccionadas.has(t.id);
-    return `<div class="cat-item ${sel?'selected':''}" onclick="toggleCatItem(${t.id})" data-id="${t.id}">
-      <div class="cat-check">${sel?'✓':''}</div>
-      <div class="cat-maq">${t.maquina}</div>
-      <div class="cat-desc">${t.tarea}</div>
-      <div class="cat-freq">${t.frecuencia}</div>
-    </div>`;
-  }).join('');
-
-  renderTareasSeleccionadas();
-}
-
-function toggleCatItem(id){
-  if(tareasSeleccionadas.has(id)) tareasSeleccionadas.delete(id);
-  else tareasSeleccionadas.add(id);
-  renderCatalogo();
-}
-
-function seleccionarFiltradas(){
-  const filtroMaq  = document.getElementById('filtroMaqCat').value;
-  const filtroFreq = document.getElementById('filtroFreqCat').value;
-  const filtroTxt  = document.getElementById('filtroTextCat').value.toLowerCase();
-  CATALOGO.filter(t=>{
-    if(filtroMaq && t.maquina !== filtroMaq) return false;
-    if(filtroFreq && t.frecuencia !== filtroFreq) return false;
-    if(filtroTxt && !t.tarea.toLowerCase().includes(filtroTxt)) return false;
-    return true;
-  }).forEach(t=> tareasSeleccionadas.add(t.id));
-  renderCatalogo();
-  showToast(`✅ ${tareasSeleccionadas.size} tareas seleccionadas`);
-}
-
-function deseleccionarTodas(){
-  tareasSeleccionadas.clear();
-  renderCatalogo();
-}
-
-function renderTareasSeleccionadas(){
-  const card = document.getElementById('asignacionCard');
-  const lista = document.getElementById('tareasSelList');
-
-  if(!tareasSeleccionadas.size){
-    card.style.display='none';
-    document.getElementById('activarMsg').textContent='Selecciona al menos una tarea del catálogo';
-    return;
-  }
-
-  card.style.display='block';
-  document.getElementById('activarMsg').textContent=`${tareasSeleccionadas.size} tareas listas para activar`;
-
-  const tareas = CATALOGO.filter(t=>tareasSeleccionadas.has(t.id));
-  lista.innerHTML = tareas.map(t=>`
-    <div class="sel-tarea" id="srow_${t.id}">
-      <span style="font-weight:700;color:var(--gold-light)">${t.maquina}</span>
-      <span style="color:rgba(255,255,255,0.8);font-size:0.85rem">${t.tarea}</span>
-      <select id="mec_${t.id}" style="background:var(--navy);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:6px 8px;font-family:'Barlow',sans-serif;font-size:0.83rem">
-        <option value="">— Asignar —</option>
-        ${MECANICOS.map(m=>`<option>${m}</option>`).join('')}
-      </select>
-      <button onclick="tareasSeleccionadas.delete(${t.id});renderCatalogo()" style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:1rem">✕</button>
-    </div>`).join('');
-}
-
-function asignarTodos(){
-  const mec = document.getElementById('asigTodosSelect').value;
-  if(!mec){ showToast('⚠️ Selecciona un mecánico'); return; }
-  tareasSeleccionadas.forEach(id=>{
-    const sel = document.getElementById(`mec_${id}`);
-    if(sel) sel.value = mec;
-  });
-  showToast(`✅ Todas asignadas a ${mec}`);
-}
-
-// ══════════════════════════════════════════════════
-// ACTIVAR PLAN
-// ══════════════════════════════════════════════════
-function activarPlan(){
-  const titulo = document.getElementById('planTitulo').value.trim();
-  const periodo= document.getElementById('planPeriodo').value.trim();
-  if(!titulo){ showToast('⚠️ Escribe el título del plan'); return; }
-  if(!tareasSeleccionadas.size){ showToast('⚠️ Selecciona al menos una tarea'); return; }
-
-  // Comprobar que todas tienen mecánico asignado
-  const sinAsignar = [...tareasSeleccionadas].filter(id=>{
-    const sel = document.getElementById(`mec_${id}`);
-    return !sel || !sel.value;
-  });
-  if(sinAsignar.length){
-    showToast(`⚠️ ${sinAsignar.length} tareas sin mecánico asignado`);
-    return;
-  }
-
-  if(planActivo && planActivo.id){
-    if(!confirm('Ya hay un plan activo. ¿Deseas reemplazarlo por este nuevo plan?\nEl plan actual se archivará automáticamente.')) return;
-    // Archivar primero
-    const tareas = planActivo.tareas ? Object.values(planActivo.tareas) : [];
-    const hechas = tareas.filter(t=>t.hecho).length;
-    const histId = 'hist_' + Date.now();
-    DB.ref(`historial_planes/${histId}`).set({
-      ...planActivo, cerradoEn:Date.now(),
-      pctFinal: tareas.length ? Math.round(hechas/tareas.length*100) : 0,
-      totalTareas: tareas.length, tareasHechas: hechas
+  const selectors = ['mecMasivo','modalMec','filtMecActivo'];
+  selectors.forEach(id=>{
+    const s=document.getElementById(id);
+    if(!s) return;
+    const first = s.options[0];
+    s.innerHTML='';
+    s.appendChild(first.cloneNode(true));
+    mecanicosLista.forEach(m=>{
+      const o=document.createElement('option'); o.value=m; o.textContent=m; s.appendChild(o);
     });
-  }
-
-  const planId = 'plan_' + Date.now();
-  const tareasFB = {};
-  [...tareasSeleccionadas].forEach((catId, i)=>{
-    const cat = CATALOGO.find(t=>t.id===catId);
-    if(!cat) return;
-    const tId = 't_' + Date.now() + '_' + i;
-    tareasFB[tId] = {
-      id: tId,
-      maqId: cat.maqId || '',
-      maqNombre: cat.maquina,
-      desc: cat.tarea,
-      frecuencia: cat.frecuencia,
-      mecanico: document.getElementById(`mec_${catId}`).value,
-      hecho: false,
-      hechoEn: null,
-      hechoBy: null
-    };
-  });
-
-  const plan = { id: planId, titulo, periodo, creadoEn: Date.now(), tareas: tareasFB };
-
-  DB.ref('plan_activo').set(plan).then(()=>{
-    showToast('🚀 Plan activado — los mecánicos ya pueden verlo');
-    tareasSeleccionadas.clear();
-    document.getElementById('planTitulo').value='';
-    document.getElementById('planPeriodo').value='';
-    renderCatalogo();
-    switchTab('activo');
-  }).catch(()=> showToast('❌ Error al activar el plan'));
-}
-
-// ══════════════════════════════════════════════════
-// HISTORIAL
-// ══════════════════════════════════════════════════
-function cargarHistorial(){
-  DB.ref('historial_planes').once('value').then(snap=>{
-    const val = snap.val();
-    const div = document.getElementById('historialList');
-    if(!val){
-      div.innerHTML='<div style="text-align:center;padding:30px;color:rgba(255,255,255,0.3)">Sin planes archivados todavía</div>';
-      return;
-    }
-    const planes = Object.values(val).sort((a,b)=>(b.cerradoEn||0)-(a.cerradoEn||0));
-    div.innerHTML = planes.map(p=>`
-      <div class="hist-item">
-        <div>
-          <div class="hist-titulo">${p.titulo||'Sin título'}</div>
-          <div class="hist-meta">${p.periodo||''} · Cerrado: ${p.cerradoEn?new Date(p.cerradoEn).toLocaleDateString('es-ES'):'—'} · ${p.totalTareas||0} tareas</div>
-        </div>
-        <div class="hist-pct" style="color:${(p.pctFinal||0)>=80?'var(--green)':(p.pctFinal||0)>=50?'var(--yellow)':'var(--red)'}">
-          ${p.pctFinal||0}%
-        </div>
-      </div>`).join('');
   });
 }
 
-// ══════════════════════════════════════════════════
-// TABS
-// ══════════════════════════════════════════════════
+// ══ TABS ══
 function switchTab(name){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('panel-'+name).classList.add('active');
   document.getElementById('tab-'+name).classList.add('active');
-  if(name==='historial') cargarHistorial();
-  if(name==='activo') renderPlanActivo();
+  if(name==='activo') cargarPlanActivo();
+  if(name==='crear')  initCrearPlan();
+  if(name==='cat')    renderCatTabla();
+  if(name==='hist')   cargarHistorial();
 }
 
-// ══════════════════════════════════════════════════
-// TOAST
-// ══════════════════════════════════════════════════
-let toastT;
+// ══ HELPERS ══
+function freqBadge(f){
+  const cls={DIARIO:'diario',SEMANAL:'semanal',QUINCENAL:'quincenal',MENSUAL:'mensual',
+    SEMESTRAL:'semestral',ANUAL:'anual',TRIMESTRAL:'trimestral'}[f]||'mensual';
+  const rep={DIARIO:'~20×',SEMANAL:'4×',QUINCENAL:'2×',MENSUAL:'1×',SEMESTRAL:'2/año',ANUAL:'1/año',TRIMESTRAL:'4/año'}[f]||'';
+  return `<span class="badge badge-${cls}" title="${rep} mes">${f}</span>`;
+}
 function showToast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
-  clearTimeout(toastT);
-  toastT=setTimeout(()=>t.classList.remove('show'),3000);
+  setTimeout(()=>t.classList.remove('show'),2800);
 }
 
-// ══════════════════════════════════════════════════
-// CATÁLOGO EMBEBIDO (versión reducida, se amplia desde preventivo.html)
-// Las tareas reales vienen de Firebase 'catalogo_tareas'
-// Si no hay nada, se usa este resumen por tipo de máquina
-// ══════════════════════════════════════════════════
-function getCatalogoEmbebido(){
-  // Catálogo básico generado a partir de los tipos de máquinas reales
-  const base = [
-    // AMASADORAS
-    {id:1,maquina:'PABAT 1',maqId:'MAQ-001',tarea:'Revisar brazos y fijaciones',frecuencia:'SEMANAL'},
-    {id:2,maquina:'PABAT 1',maqId:'MAQ-001',tarea:'Limpiar filtros de aceite',frecuencia:'MENSUAL'},
-    {id:3,maquina:'PABAT 1',maqId:'MAQ-001',tarea:'Comprobar nivel de aceite',frecuencia:'SEMANAL'},
-    {id:4,maquina:'PABAT 1',maqId:'MAQ-001',tarea:'Revisar cuadro eléctrico',frecuencia:'MENSUAL'},
-    {id:5,maquina:'PABAT 2',maqId:'MAQ-002',tarea:'Revisar brazos y fijaciones',frecuencia:'SEMANAL'},
-    {id:6,maquina:'PABAT 2',maqId:'MAQ-002',tarea:'Limpiar filtros de aceite',frecuencia:'MENSUAL'},
-    {id:7,maquina:'PABAT 2',maqId:'MAQ-002',tarea:'Comprobar nivel de aceite',frecuencia:'SEMANAL'},
-    {id:8,maquina:'PABAT 3',maqId:'MAQ-003',tarea:'Revisar brazos y fijaciones',frecuencia:'SEMANAL'},
-    {id:9,maquina:'PABAT 3',maqId:'MAQ-003',tarea:'Limpiar filtros de aceite',frecuencia:'MENSUAL'},
-    {id:10,maquina:'PABAT 4',maqId:'MAQ-004',tarea:'Revisar brazos y fijaciones',frecuencia:'SEMANAL'},
-    {id:11,maquina:'PABAT 4',maqId:'MAQ-004',tarea:'Comprobar nivel de aceite',frecuencia:'SEMANAL'},
-    {id:12,maquina:'PABAT 5',maqId:'MAQ-005',tarea:'Revisar brazos y fijaciones',frecuencia:'SEMANAL'},
-    {id:13,maquina:'PABAT 6',maqId:'MAQ-006',tarea:'Revisar brazos y fijaciones',frecuencia:'SEMANAL'},
-    {id:14,maquina:'PABAT 7',maqId:'MAQ-007',tarea:'Revisar brazos y fijaciones',frecuencia:'SEMANAL'},
-    {id:15,maquina:'PABAT 8',maqId:'MAQ-008',tarea:'Revisar brazos y fijaciones',frecuencia:'SEMANAL'},
-    // LÍNEAS
-    {id:20,maquina:'LINEA 1',maqId:'MAQ-010',tarea:'Revisar lonas y tensión',frecuencia:'SEMANAL'},
-    {id:21,maquina:'LINEA 1',maqId:'MAQ-010',tarea:'Engrasar cadenas',frecuencia:'SEMANAL'},
-    {id:22,maquina:'LINEA 1',maqId:'MAQ-010',tarea:'Revisar entablado',frecuencia:'MENSUAL'},
-    {id:23,maquina:'LINEA 2',maqId:'MAQ-011',tarea:'Revisar lonas y tensión',frecuencia:'SEMANAL'},
-    {id:24,maquina:'LINEA 2',maqId:'MAQ-011',tarea:'Engrasar cadenas',frecuencia:'SEMANAL'},
-    {id:25,maquina:'LINEA 3',maqId:'MAQ-012',tarea:'Revisar lonas y tensión',frecuencia:'SEMANAL'},
-    {id:26,maquina:'LINEA 3',maqId:'MAQ-012',tarea:'Engrasar cadenas',frecuencia:'SEMANAL'},
-    {id:27,maquina:'LINEA 4',maqId:'MAQ-013',tarea:'Revisar lonas y tensión',frecuencia:'SEMANAL'},
-    {id:28,maquina:'LINEA 5',maqId:'MAQ-014',tarea:'Revisar lonas y tensión',frecuencia:'SEMANAL'},
-    {id:29,maquina:'LINEA 6',maqId:'MAQ-015',tarea:'Revisar lonas y tensión',frecuencia:'SEMANAL'},
-    {id:30,maquina:'LINEA 7',maqId:'MAQ-016',tarea:'Revisar lonas y tensión',frecuencia:'SEMANAL'},
-    // HORNOS
-    {id:40,maquina:'HORNO 1',maqId:'MAQ-060',tarea:'Revisar quemador',frecuencia:'SEMANAL'},
-    {id:41,maquina:'HORNO 1',maqId:'MAQ-060',tarea:'Revisar plataforma y uñas',frecuencia:'SEMANAL'},
-    {id:42,maquina:'HORNO 1',maqId:'MAQ-060',tarea:'Comprobar cuadro eléctrico',frecuencia:'MENSUAL'},
-    {id:43,maquina:'HORNO 2',maqId:'MAQ-061',tarea:'Revisar quemador',frecuencia:'SEMANAL'},
-    {id:44,maquina:'HORNO 2',maqId:'MAQ-061',tarea:'Revisar plataforma y uñas',frecuencia:'SEMANAL'},
-    {id:45,maquina:'HORNO 3',maqId:'MAQ-062',tarea:'Revisar quemador',frecuencia:'SEMANAL'},
-    {id:46,maquina:'HORNO 4',maqId:'MAQ-063',tarea:'Revisar quemador',frecuencia:'SEMANAL'},
-    {id:47,maquina:'HORNO 5',maqId:'MAQ-064',tarea:'Revisar quemador',frecuencia:'SEMANAL'},
-    // TÚNELES
-    {id:60,maquina:'TUNEL PREFRIO',maqId:'MAQ-081',tarea:'Revisar equipos de frío',frecuencia:'SEMANAL'},
-    {id:61,maquina:'TUNEL PREFRIO',maqId:'MAQ-081',tarea:'Limpiar condensadores',frecuencia:'MENSUAL'},
-    {id:62,maquina:'TUNEL 1',maqId:'MAQ-082',tarea:'Revisar equipos de frío',frecuencia:'SEMANAL'},
-    {id:63,maquina:'TUNEL 2',maqId:'MAQ-083',tarea:'Revisar equipos de frío',frecuencia:'SEMANAL'},
-    {id:64,maquina:'TUNEL 3',maqId:'MAQ-084',tarea:'Revisar equipos de frío',frecuencia:'SEMANAL'},
-    // ENVASADO
-    {id:80,maquina:'ROBOT',maqId:'MAQ-108',tarea:'Revisar pinza y ventosas',frecuencia:'SEMANAL'},
-    {id:81,maquina:'ROBOT',maqId:'MAQ-108',tarea:'Comprobar servos',frecuencia:'MENSUAL'},
-    {id:82,maquina:'MAQUINA DE CAJAS',maqId:'MAQ-092',tarea:'Revisar pegamento',frecuencia:'SEMANAL'},
-    {id:83,maquina:'MAQUINA DE BOLSAS',maqId:'MAQ-094',tarea:'Revisar pinzas y rodillos',frecuencia:'SEMANAL'},
-  ];
-  return base;
+// ══ PLAN ACTIVO ══
+function cargarPlanActivo(){
+  DB.ref('plan_activo').once('value').then(s=>{
+    planActual = s.val();
+    renderPlanActivo();
+  });
+}
+
+function renderPlanActivo(){
+  const banner=document.getElementById('activoBanner');
+  if(!planActual||!planActual.tareas){
+    banner.innerHTML='<div class="card" style="text-align:center;padding:40px;color:rgba(255,255,255,0.35)">Sin plan activo. Ve a ➕ Crear Plan para empezar.</div>';
+    document.getElementById('mecProgGrid').innerHTML='';
+    document.getElementById('tablaPlan').innerHTML='';
+    return;
+  }
+  const tareas=Object.values(planActual.tareas);
+  const total=tareas.length;
+  const hechas=tareas.filter(t=>t.hecho).length;
+  const pct=total?Math.round(hechas/total*100):0;
+  banner.innerHTML=`
+    <div class="plan-banner">
+      <div>
+        <div class="plan-titulo">📋 ${planActual.titulo||'Plan Preventivo'}</div>
+        <div class="plan-periodo">${planActual.periodo||''} · ${total} tareas</div>
+      </div>
+      <div class="plan-stats">
+        <div class="plan-stat"><div class="num">${total}</div><div class="lbl">Total</div></div>
+        <div class="plan-stat"><div class="num" style="color:var(--green)">${hechas}</div><div class="lbl">Hechas</div></div>
+        <div class="plan-stat"><div class="num">${total-hechas}</div><div class="lbl">Pendientes</div></div>
+        <div class="plan-stat"><div class="num">${pct}%</div><div class="lbl">Completado</div></div>
+      </div>
+    </div>`;
+
+  // Progreso por mecánico
+  const mecMap={};
+  tareas.forEach(t=>{
+    if(!mecMap[t.mecanico]) mecMap[t.mecanico]={total:0,hechas:0};
+    mecMap[t.mecanico].total++;
+    if(t.hecho) mecMap[t.mecanico].hechas++;
+  });
+  document.getElementById('mecProgGrid').innerHTML=Object.entries(mecMap).map(([m,d])=>{
+    const p=d.total?Math.round(d.hechas/d.total*100):0;
+    return `<div class="mec-progress-card">
+      <div class="mec-pname">👷 ${m}</div>
+      <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:${p}%"></div></div>
+      <div class="prog-label"><span>${d.hechas}/${d.total}</span><b>${p}%</b></div>
+    </div>`;
+  }).join('');
+
+  // Filtros máquinas
+  const maqSet=[...new Set(tareas.map(t=>t.instancia||t.maquina))].sort();
+  const selMaq=document.getElementById('filtMaqActivo');
+  const prevMaq=selMaq.value;
+  selMaq.innerHTML='<option value="">Todas las máquinas</option>';
+  maqSet.forEach(m=>{ const o=document.createElement('option');o.value=m;o.textContent=m;selMaq.appendChild(o); });
+  if(prevMaq) selMaq.value=prevMaq;
+
+  renderTablaPlan();
+}
+
+function renderTablaPlan(){
+  if(!planActual||!planActual.tareas) return;
+  const mec=document.getElementById('filtMecActivo').value;
+  const est=document.getElementById('filtEstActivo').value;
+  const maq=document.getElementById('filtMaqActivo').value;
+  const tareas=Object.entries(planActual.tareas)
+    .map(([id,t])=>{...t,_id:id})
+    .filter(t=>(!mec||t.mecanico===mec)&&(!est||(est==='hecho'?t.hecho:!t.hecho))&&(!maq||(t.instancia||t.maquina)===maq));
+  document.getElementById('tablaPlan').innerHTML=tareas.map(t=>`
+    <div class="tarea-row">
+      <span>${t.tarea}</span>
+      <span style="font-size:0.78rem;color:var(--gold-light)">${t.instancia||t.maquina}</span>
+      <span>👷 ${t.mecanico}</span>
+      <span>${freqBadge(t.frecuencia)}</span>
+      <span><span class="badge ${t.hecho?'badge-done':'badge-pend'}">${t.hecho?'✅ Hecho':'⏳ Pend.'}</span></span>
+    </div>`).join('');
+}
+
+function cerrarPlan(){
+  if(!planActual) return;
+  if(!confirm('¿Cerrar y archivar el plan actual?')) return;
+  const key = Date.now();
+  DB.ref('historial_planes/'+key).set(planActual)
+    .then(()=>DB.ref('plan_activo').remove())
+    .then(()=>{ planActual=null; renderPlanActivo(); showToast('✅ Plan archivado'); })
+    .catch(()=>showToast('❌ Error al archivar'));
+}
+
+// ══ CREAR PLAN ══
+function initCrearPlan(){
+  // Set current month/year
+  const now=new Date();
+  document.getElementById('nMes').value=String(now.getMonth()+1).padStart(2,'0');
+  document.getElementById('nAnio').value=now.getFullYear();
+  poblarSelectsMecanicos();
+  renderCatBrowser();
+  renderSelList();
+}
+
+function renderCatBrowser(){
+  const maq=document.getElementById('crFiltMaq').value;
+  const freq=document.getElementById('crFiltFreq').value;
+  const q=(document.getElementById('crSearch').value||'').toLowerCase().trim();
+  let items=catalogoActivo.filter(c=>
+    (!maq||c.maquina===maq) &&
+    (!freq||c.frecuencia===freq) &&
+    (!q||(c.tarea+' '+c.maquina+' '+(c.subtipo||'')).toLowerCase().includes(q))
+  );
+  document.getElementById('crCount').textContent=items.length+' tareas';
+  const addedIds=new Set(seleccionadas.map(s=>s.catId));
+  // Group by maquina
+  const byMaq={};
+  items.forEach(c=>{ if(!byMaq[c.maquina]) byMaq[c.maquina]=[]; byMaq[c.maquina].push(c); });
+  let html='';
+  Object.entries(byMaq).forEach(([m,arr])=>{
+    html+=`<div class="cat-group-hdr">${m}</div>`;
+    arr.forEach(c=>{
+      const added=addedIds.has(c.id);
+      html+=`<div class="cat-item${added?' added':''}" onclick="${added?'':'addToSel(''+c.id+'')'}">
+        <span class="cat-maq">${c.subtipo||c.maquina}</span>
+        <span class="cat-tarea">${c.tarea}</span>
+        <span class="cat-freq">${freqBadge(c.frecuencia)}</span>
+        <span style="font-size:0.75rem;color:${added?'var(--green)':'rgba(201,162,39,0.7)'};white-space:nowrap">${added?'✓ Añadida':'+'}</span>
+      </div>`;
+    });
+  });
+  document.getElementById('catBrowser').innerHTML=html||'<div style="padding:20px;text-align:center;color:rgba(255,255,255,0.3)">Sin resultados</div>';
+}
+
+function addToSel(catId){
+  const cat=catalogoActivo.find(c=>c.id===catId);
+  if(!cat) return;
+  // Default instance = first instancia
+  seleccionadas.push({catId, instancia:cat.instancias[0], mecanico:''});
+  renderSelList();
+  renderCatBrowser();
+}
+
+function selAllVisible(){
+  const maq=document.getElementById('crFiltMaq').value;
+  const freq=document.getElementById('crFiltFreq').value;
+  const q=(document.getElementById('crSearch').value||'').toLowerCase().trim();
+  const addedIds=new Set(seleccionadas.map(s=>s.catId));
+  catalogoActivo.filter(c=>
+    (!maq||c.maquina===maq)&&(!freq||c.frecuencia===freq)&&
+    (!q||(c.tarea+' '+c.maquina+' '+(c.subtipo||'')).toLowerCase().includes(q))&&
+    !addedIds.has(c.id)
+  ).forEach(c=>seleccionadas.push({catId:c.id, instancia:c.instancias[0], mecanico:''}));
+  renderSelList(); renderCatBrowser();
+}
+
+function vaciarSeleccion(){
+  if(seleccionadas.length && !confirm('¿Vaciar todas las tareas seleccionadas?')) return;
+  seleccionadas=[];
+  renderSelList(); renderCatBrowser();
+}
+
+function renderSelList(){
+  document.getElementById('selCount').textContent='('+seleccionadas.length+')';
+  if(!seleccionadas.length){
+    document.getElementById('selList').innerHTML='<div style="padding:20px;text-align:center;color:rgba(255,255,255,0.3);font-size:0.85rem">Selecciona tareas del catálogo →</div>';
+    return;
+  }
+  document.getElementById('selList').innerHTML=seleccionadas.map((s,i)=>{
+    const cat=catalogoActivo.find(c=>c.id===s.catId);
+    if(!cat) return '';
+    const instOpts=cat.instancias.map(inst=>`<option${inst===s.instancia?' selected':''}>${inst}</option>`).join('');
+    const mecOpts=mecanicosLista.map(m=>`<option${m===s.mecanico?' selected':''}>${m}</option>`).join('');
+    return `<div class="sel-row">
+      <div><div class="sel-name">${cat.tarea}</div><div class="sel-maq">${cat.maquina} · ${freqBadge(cat.frecuencia)}</div></div>
+      <select class="fld-sel" onchange="seleccionadas[${i}].instancia=this.value" style="font-size:0.8rem;padding:5px 8px">${instOpts}</select>
+      <select class="fld-sel" onchange="seleccionadas[${i}].mecanico=this.value" style="font-size:0.8rem;padding:5px 8px">
+        <option value="">— Mecánico —</option>${mecOpts}</select>
+      <button class="sel-del" onclick="quitarSel(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function quitarSel(i){ seleccionadas.splice(i,1); renderSelList(); renderCatBrowser(); }
+
+function asignarTodosAMecanico(){
+  const m=document.getElementById('mecMasivo').value;
+  if(!m) return;
+  seleccionadas.forEach(s=>s.mecanico=m);
+  renderSelList();
+}
+
+function crearPlan(){
+  if(!seleccionadas.length){ showToast('⚠️ Añade tareas al plan'); return; }
+  const sinMec=seleccionadas.filter(s=>!s.mecanico);
+  if(sinMec.length){ showToast('⚠️ '+sinMec.length+' tarea(s) sin mecánico asignado'); return; }
+  const mes=document.getElementById('nMes').value;
+  const anio=document.getElementById('nAnio').value;
+  const periodo=anio+'-'+mes;
+  const MESES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const titulo=MESES[parseInt(mes)]+' '+anio;
+  const tareas={};
+  seleccionadas.forEach((s,i)=>{
+    const cat=catalogoActivo.find(c=>c.id===s.catId);
+    if(!cat) return;
+    const id='T'+String(i+1).padStart(4,'0');
+    tareas[id]={
+      catalogId:s.catId, maquina:cat.maquina, instancia:s.instancia,
+      subtipo:cat.subtipo||'', tarea:cat.tarea, frecuencia:cat.frecuencia,
+      mecanico:s.mecanico, hecho:false, hechoEn:null, hechoBy:null
+    };
+  });
+  const plan={titulo, periodo, creadoEn:new Date().toISOString(), tareas};
+  if(planActual){
+    DB.ref('historial_planes/'+Date.now()).set(planActual).catch(()=>{});
+  }
+  DB.ref('plan_activo').set(plan).then(()=>{
+    planActual=plan;
+    seleccionadas=[];
+    showToast('✅ Plan "'+titulo+'" creado con '+Object.keys(tareas).length+' tareas');
+    switchTab('activo');
+  }).catch(()=>showToast('❌ Error al guardar el plan'));
+}
+
+// ══ CATÁLOGO ══
+function renderCatTabla(){
+  const maq=document.getElementById('catFiltMaq').value;
+  const q=(document.getElementById('catFiltSearch').value||'').toLowerCase().trim();
+  const items=catalogoActivo.filter(c=>
+    (!maq||c.maquina===maq)&&
+    (!q||(c.tarea+' '+c.maquina+' '+(c.subtipo||'')).toLowerCase().includes(q))
+  );
+  document.getElementById('catTotal').textContent='('+items.length+' de '+catalogoActivo.length+')';
+  document.getElementById('catTablaBody').innerHTML=items.map(c=>`
+    <div class="cat-table-row">
+      <span style="font-weight:700;color:var(--gold-light);font-size:0.8rem">${c.maquina}</span>
+      <span style="font-size:0.78rem;color:rgba(255,255,255,0.4)">${c.subtipo||'—'}</span>
+      <span>${c.tarea}</span>
+      <span>${freqBadge(c.frecuencia)}</span>
+      <span style="white-space:nowrap">
+        <button class="btn btn-sm btn-blue" style="padding:3px 8px" onclick="editCatTarea('${c.id}')">✏️</button>
+        <button class="btn btn-sm btn-red" style="padding:3px 8px;margin-left:4px" onclick="delCatTarea('${c.id}')">🗑</button>
+      </span>
+    </div>`).join('');
+}
+
+function editCatTarea(id){
+  const c=catalogoActivo.find(x=>x.id===id);
+  if(!c) return;
+  document.getElementById('ctMaq').value=c.maquina;
+  document.getElementById('ctSubtipo').value=c.subtipo||'';
+  document.getElementById('ctTarea').value=c.tarea;
+  document.getElementById('ctFreq').value=c.frecuencia;
+  document.getElementById('ctEditId').value=c.id;
+  document.getElementById('ctMaq').scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function cancelarEditCat(){
+  document.getElementById('ctMaq').value='';
+  document.getElementById('ctSubtipo').value='';
+  document.getElementById('ctTarea').value='';
+  document.getElementById('ctEditId').value='';
+}
+
+function guardarCatTarea(){
+  let maq=document.getElementById('ctMaq').value;
+  if(maq==='__nueva__'){
+    maq=prompt('Nombre de la nueva máquina (en mayúsculas):');
+    if(!maq) return;
+    maq=maq.trim().toUpperCase();
+  }
+  const tarea=document.getElementById('ctTarea').value.trim();
+  const subtipo=document.getElementById('ctSubtipo').value.trim().toUpperCase();
+  const freq=document.getElementById('ctFreq').value;
+  const editId=document.getElementById('ctEditId').value;
+  if(!maq||!tarea){ showToast('⚠️ Máquina y tarea son obligatorios'); return; }
+  if(editId){
+    // Editar en catálogo local
+    const idx=catalogoActivo.findIndex(c=>c.id===editId);
+    if(idx>=0){
+      catalogoActivo[idx]={...catalogoActivo[idx], maquina:maq, subtipo, tarea, frecuencia:freq};
+      // Si es extra, guardar en Firebase
+      if(!CATALOGO.find(c=>c.id===editId)){
+        DB.ref('catalogo_extra/'+editId).update({maquina:maq, subtipo, tarea, frecuencia:freq});
+      }
+    }
+    showToast('✅ Tarea actualizada');
+  } else {
+    // Nueva tarea
+    const newId='CEXT-'+Date.now();
+    const newItem={id:newId, parte:'EXT', maquina:maq, subtipo, tarea, frecuencia:freq, instancias:[maq]};
+    catalogoActivo.push(newItem);
+    DB.ref('catalogo_extra/'+newId).set(newItem);
+    showToast('✅ Tarea añadida al catálogo');
+  }
+  cancelarEditCat();
+  renderCatTabla();
+}
+
+function delCatTarea(id){
+  if(!CATALOGO.find(c=>c.id===id)){
+    if(!confirm('¿Eliminar esta tarea del catálogo?')) return;
+    catalogoActivo=catalogoActivo.filter(c=>c.id!==id);
+    DB.ref('catalogo_extra/'+id).remove();
+    renderCatTabla(); showToast('🗑 Tarea eliminada');
+  } else {
+    showToast('ℹ️ Las tareas del Excel no se pueden eliminar (solo las añadidas manualmente)');
+  }
+}
+
+// ══ HISTORIAL ══
+function cargarHistorial(){
+  DB.ref('historial_planes').once('value').then(s=>{
+    const val=s.val();
+    if(!val){ document.getElementById('histList').innerHTML='<div style="color:rgba(255,255,255,0.3);font-size:0.9rem">Sin planes archivados.</div>'; return; }
+    const planes=Object.entries(val).sort((a,b)=>b[0]-a[0]);
+    document.getElementById('histList').innerHTML=planes.map(([k,p])=>{
+      const tareas=p.tareas?Object.values(p.tareas):[];
+      const hechas=tareas.filter(t=>t.hecho).length;
+      const pct=tareas.length?Math.round(hechas/tareas.length*100):0;
+      return `<div class="hist-item">
+        <div><div class="hist-titulo">${p.titulo||p.periodo}</div>
+        <div class="hist-meta">${tareas.length} tareas · ${new Date(parseInt(k)).toLocaleDateString('es-ES')}</div></div>
+        <div style="text-align:right">
+          <div class="hist-pct">${pct}%</div>
+          <div style="font-size:0.75rem;color:rgba(255,255,255,0.35)">${hechas}/${tareas.length} hechas</div>
+        </div>
+      </div>`;
+    }).join('');
+  });
+}
+
+// ══ MODAL ══
+function cerrarModal(){ document.getElementById('modalBg').classList.remove('open'); editModalIdx=null; }
+document.getElementById('modalBg').addEventListener('click',function(e){ if(e.target===this) cerrarModal(); });
+function guardarModalEdit(){
+  if(editModalIdx===null) return;
+  seleccionadas[editModalIdx].instancia=document.getElementById('modalInst').value;
+  seleccionadas[editModalIdx].mecanico=document.getElementById('modalMec').value;
+  cerrarModal();
+  renderSelList();
 }
 </script>
 </body>

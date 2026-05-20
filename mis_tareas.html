@@ -237,7 +237,7 @@ function arrancarApp(){
 
   DB.ref('plan_activo').once('value').then(snap => {
     const val = snap.val();
-    if(!val || !val.id){
+    if(!val || !val.tareas){
       document.getElementById('hdrPeriod').textContent = 'Sin plan activo';
       document.getElementById('tareasWrap').innerHTML = `
         <div class="empty-state">
@@ -274,7 +274,8 @@ function renderTareas(){
     return;
   }
 
-  const misTareas = Object.values(planActivo.tareas)
+  const misTareas = Object.entries(planActivo.tareas)
+    .map(([id, t]) => ({...t, id}))
     .filter(t => t.mecanico === mecActual);
 
   if(!misTareas.length){
@@ -284,11 +285,11 @@ function renderTareas(){
     return;
   }
 
-  // Agrupar por máquina
+  // Agrupar por instancia/máquina
   const porMaquina = {};
   misTareas.forEach(t => {
-    const k = t.maqId || t.maqNombre;
-    if(!porMaquina[k]) porMaquina[k] = { nombre: t.maqNombre, tareas: [] };
+    const k = t.instancia || t.maquina || t.maqNombre || 'General';
+    if(!porMaquina[k]) porMaquina[k] = { nombre: k, tareas: [] };
     porMaquina[k].tareas.push(t);
   });
 
@@ -325,15 +326,20 @@ function renderTareas(){
         </div>
       </div>
       <div class="tareas-list">
-        ${maq.tareas.map(t => `
+        ${maq.tareas.map(t => {
+          const desc = t.tarea || t.desc || '—';
+          const freq = t.frecuencia || '';
+          const freqRep = {DIARIO:'~20× mes',SEMANAL:'4× mes',QUINCENAL:'2× mes',MENSUAL:'1× mes',SEMESTRAL:'2/año',ANUAL:'1/año',TRIMESTRAL:'4/año'}[freq] || freq;
+          return `
           <div class="tarea-item ${t.hecho?'done':''}" id="ti_${t.id}" onclick="toggleTarea('${t.id}')">
             <div class="tarea-check">${t.hecho?'✓':''}</div>
             <div class="tarea-body">
-              <div class="tarea-desc">${t.desc}</div>
-              <div class="tarea-meta">${t.frecuencia||''}</div>
+              <div class="tarea-desc">${desc}</div>
+              <div class="tarea-meta">${freq ? `<span style="background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.3);border-radius:10px;padding:1px 7px;font-size:0.7rem;color:#c9a227">${freq}</span> <span style="opacity:0.5">${freqRep}</span>` : ''}</div>
               ${t.hecho && t.hechoEn ? `<div class="tarea-done-info">✅ ${new Date(t.hechoEn).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</div>` : ''}
             </div>
-          </div>`).join('')}
+          </div>`;
+        }).join('')}
       </div>`;
     wrap.appendChild(card);
 
