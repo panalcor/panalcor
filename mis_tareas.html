@@ -121,7 +121,10 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
         <div class="header-name" id="hdrName">👷 —</div>
         <div class="header-period" id="hdrPeriod">Cargando plan...</div>
       </div>
-      <button class="header-back" onclick="cambiarMecanico()">Cambiar</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <a href="panalcor_inicio.html" style="display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:#fff;text-decoration:none;font-size:0.78rem;font-weight:600">🏠</a>
+        <button class="header-back" onclick="cambiarMecanico()">Cambiar</button>
+      </div>
     </div>
     <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
     <div class="progress-label"><span id="progressTxt">0 de 0 tareas</span><b id="progressPct">0%</b></div>
