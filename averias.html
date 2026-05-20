@@ -21,6 +21,19 @@
 body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-serif;font-size:1rem;min-height:100vh}
 a{color:inherit;text-decoration:none}
 
+/* ── LOGIN MECÁNICO ── */
+.mec-login{position:fixed;inset:0;background:var(--navy-deep);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:20px;padding:20px}
+.mec-login-box{background:var(--navy-mid);border:1px solid rgba(201,162,39,0.35);border-radius:18px;padding:36px 28px;width:100%;max-width:360px;text-align:center}
+.mec-login-box .logo{font-size:2.8rem;margin-bottom:10px}
+.mec-login-box h2{font-size:1.4rem;font-weight:900;color:var(--gold-light);letter-spacing:0.06em;margin-bottom:4px}
+.mec-login-box .sub{font-size:0.78rem;color:rgba(255,255,255,0.35);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:28px}
+.mec-login-box input{width:100%;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:9px;padding:14px 16px;font-family:'Barlow',sans-serif;font-size:1.2rem;text-align:center;letter-spacing:0.25em;margin-bottom:14px}
+.mec-login-box input:focus{outline:none;border-color:var(--gold)}
+.mec-login-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a;border:none;border-radius:9px;font-family:'Barlow',sans-serif;font-size:1.05rem;font-weight:900;letter-spacing:0.1em;cursor:pointer;transition:all .2s}
+.mec-login-btn:hover{background:linear-gradient(135deg,var(--gold-light),var(--gold))}
+.mec-login-err{color:var(--red);font-size:0.88rem;margin-top:8px;min-height:20px}
+.mec-login-hint{font-size:0.75rem;color:rgba(255,255,255,0.25);margin-top:14px}
+
 /* ── TOP BAR ── */
 .topbar{background:linear-gradient(135deg,#0a1520,var(--navy-mid));border-bottom:2px solid var(--gold);padding:14px 20px;display:flex;align-items:center;gap:14px}
 .topbar h1{font-size:1.4rem;font-weight:900;letter-spacing:0.06em;color:var(--gold-light)}
@@ -187,6 +200,23 @@ a{color:inherit;text-decoration:none}
 </style>
 </head>
 <body>
+
+<!-- ══ LOGIN MECÁNICO ══ -->
+<div class="mec-login" id="mecLogin">
+  <div class="mec-login-box">
+    <div class="logo">🔧</div>
+    <h2>PANALCOR S.L.</h2>
+    <div class="sub">Partes de Averías · Acceso</div>
+    <input type="password" id="mecPwInput" placeholder="Contraseña" autocomplete="off"
+           onkeydown="if(event.key==='Enter') mecLogin()">
+    <button class="mec-login-btn" onclick="mecLogin()">ENTRAR</button>
+    <div class="mec-login-err" id="mecLoginErr"></div>
+    <div class="mec-login-hint">Contacta con el responsable de mantenimiento si no tienes la contraseña</div>
+  </div>
+</div>
+
+<!-- ══ APP (oculta hasta autenticar) ══ -->
+<div id="appAverias" style="display:none">
 
 <div class="topbar">
   <button class="back-btn" onclick="history.back()">← Volver</button>
@@ -1322,6 +1352,47 @@ document.addEventListener('click',e=>{
   if(!e.target.closest('.mat-search-wrap'))
     document.getElementById('matDropdown').style.display='none';
 });
+</script>
+</div><!-- /appAverias -->
+
+<script>
+// ══════════════════════════════════════════════
+// LOGIN MECÁNICO
+// ══════════════════════════════════════════════
+const MEC_SESSION_KEY = 'mecAuth';
+const MEC_PW_DEFAULT  = 'panalcor';
+
+function getMecPwd(callback){
+  DB.ref('config/mecanicoPwd').once('value')
+    .then(snap => callback(snap.val() || MEC_PW_DEFAULT))
+    .catch(()  => callback(localStorage.getItem('mecanicoPwd') || MEC_PW_DEFAULT));
+}
+
+function mecLogin(){
+  const val = document.getElementById('mecPwInput').value;
+  const err = document.getElementById('mecLoginErr');
+  if(!val){ err.textContent = '⚠️ Introduce la contraseña'; return; }
+  getMecPwd(pwd => {
+    if(val === pwd){
+      sessionStorage.setItem(MEC_SESSION_KEY, '1');
+      document.getElementById('mecLogin').style.display   = 'none';
+      document.getElementById('appAverias').style.display = 'block';
+      err.textContent = '';
+    } else {
+      err.textContent = '❌ Contraseña incorrecta';
+      document.getElementById('mecPwInput').value = '';
+      document.getElementById('mecPwInput').focus();
+    }
+  });
+}
+
+// Comprobar sesión al cargar
+(function checkMecSession(){
+  if(sessionStorage.getItem(MEC_SESSION_KEY) === '1'){
+    document.getElementById('mecLogin').style.display   = 'none';
+    document.getElementById('appAverias').style.display = 'block';
+  }
+})();
 </script>
 </body>
 </html>

@@ -174,6 +174,7 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
   <div class="tab" onclick="switchTab('mec')"  id="tab-mec">👷 Mecánicos</div>
   <div class="tab" onclick="switchTab('ia')"   id="tab-ia">🤖 Análisis IA</div>
   <div class="tab" onclick="switchTab('inf')"  id="tab-inf">📋 Informes</div>
+  <div class="tab" onclick="switchTab('maq')"  id="tab-maq">🏭 Máquinas</div>
   <div class="tab" onclick="switchTab('cfg')"  id="tab-cfg">⚙️ Configuración</div>
 </div>
 
@@ -307,8 +308,74 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
   </div>
 </div>
 
+<!-- ═══ MÁQUINAS ═══ -->
+<div class="panel" id="panel-maq">
+  <div class="card">
+    <div class="sec-title">➕ Añadir nueva máquina</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:16px">
+      <div class="field" style="margin:0">
+        <label>Nombre *</label>
+        <input type="text" id="maqN" placeholder="Ej: PABAT 10" style="text-transform:uppercase">
+      </div>
+      <div class="field" style="margin:0">
+        <label>Tipo *</label>
+        <input type="text" id="maqT" placeholder="Ej: AMASADORA" list="maqTiposList" style="text-transform:uppercase">
+        <datalist id="maqTiposList"></datalist>
+      </div>
+      <div class="field" style="margin:0">
+        <label>Fabricante</label>
+        <input type="text" id="maqF" placeholder="Ej: NEOTECH" style="text-transform:uppercase">
+      </div>
+      <div class="field" style="margin:0">
+        <label>Área *</label>
+        <input type="text" id="maqA" placeholder="Ej: OBRADOR" list="maqAreasList" style="text-transform:uppercase">
+        <datalist id="maqAreasList"></datalist>
+      </div>
+      <div class="field" style="margin:0">
+        <label>Criticidad</label>
+        <select id="maqC" style="width:100%;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:11px 14px;font-family:'Barlow',sans-serif;font-size:1rem">
+          <option value="A">A — Alta</option>
+          <option value="B" selected>B — Media</option>
+          <option value="C">C — Baja</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-export btn-gold" onclick="guardarMaquina()">➕ Añadir máquina</button>
+  </div>
+
+  <div class="card">
+    <div class="sec-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>🏭 Máquinas personalizadas</span>
+      <span id="maqExtraCount" style="font-size:0.8rem;color:rgba(255,255,255,0.4)"></span>
+    </div>
+    <p style="font-size:0.82rem;color:rgba(255,255,255,0.4);margin-bottom:14px">
+      Las 129 máquinas base siempre están disponibles. Aquí solo aparecen las que añadas tú.
+    </p>
+    <div style="overflow-x:auto">
+      <table class="data-table" id="tMaquinasExtra">
+        <thead><tr>
+          <th>ID</th><th>Nombre</th><th>Tipo</th><th>Fabricante</th><th>Área</th><th>Crit.</th><th></th>
+        </tr></thead>
+        <tbody id="bMaquinasExtra"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ CONFIGURACIÓN ═══ -->
 <div class="panel" id="panel-cfg">
+  <div class="card config-section">
+    <div class="sec-title">🔧 Contraseña de mecánicos</div>
+    <p style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:16px;line-height:1.6">
+      Esta es la contraseña que pide el formulario de averías cuando un mecánico escanea un QR. Compártela solo con tu equipo.
+    </p>
+    <div class="field">
+      <label>Nueva contraseña de mecánicos</label>
+      <input type="text" id="cfgMecPw" placeholder="Contraseña actual: panalcor" autocomplete="off">
+    </div>
+    <button class="btn-export btn-gold" onclick="cambiarPwMecanicos()">💾 Guardar contraseña de mecánicos</button>
+  </div>
+
   <div class="card config-section">
     <div class="sec-title">🔑 Cambiar contraseña de administrador</div>
     <div class="field">
@@ -329,6 +396,28 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
   <div class="card config-section" style="margin-top:0">
     <div class="sec-title">🗄️ Estado de datos en memoria</div>
     <div id="cfgEstadoDatos" style="font-size:0.9rem;line-height:2"></div>
+  </div>
+
+  <div class="card config-section" style="margin-top:0">
+    <div class="sec-title">💾 Copias de seguridad</div>
+    <p style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:16px;line-height:1.6">
+      Descarga una copia de todos los datos en un fichero <b>.json</b>. Guárdalo en un lugar seguro (pendrive, correo, Drive…). Si alguna vez se pierden datos, puedes restaurarlos desde ese fichero.
+    </p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+      <button class="btn-export btn-green" onclick="descargarBackup()">⬇️ Descargar copia de seguridad</button>
+    </div>
+    <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:16px">
+      <p style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:12px;line-height:1.6">
+        Para <b>restaurar</b>, selecciona un fichero de copia de seguridad descargado anteriormente. <span style="color:var(--red)">Sobrescribirá los datos actuales.</span>
+      </p>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <label style="padding:12px 22px;background:rgba(52,152,219,0.2);border:1px solid rgba(52,152,219,0.4);border-radius:8px;color:var(--blue);font-family:'Barlow',sans-serif;font-size:0.95rem;font-weight:700;letter-spacing:0.06em;cursor:pointer;display:inline-flex;align-items:center;gap:8px">
+          📂 Seleccionar fichero de copia
+          <input type="file" id="backupFileInput" accept=".json" style="display:none" onchange="restaurarBackup(this)">
+        </label>
+        <span id="backupFileName" style="font-size:0.82rem;color:rgba(255,255,255,0.4)"></span>
+      </div>
+    </div>
   </div>
 
   <div class="card config-section" style="margin-top:0;border-color:rgba(231,76,60,0.3)">
@@ -966,6 +1055,17 @@ function exportarCompleto(){
 // ══════════════════════════════════════════════════
 // CONFIGURACIÓN
 // ══════════════════════════════════════════════════
+function cambiarPwMecanicos(){
+  const nueva = document.getElementById('cfgMecPw').value.trim();
+  if(!nueva){ showToast('⚠️ Escribe la nueva contraseña'); return; }
+  if(nueva.length < 3){ showToast('⚠️ Mínimo 3 caracteres'); return; }
+  DB.ref('config/mecanicoPwd').set(nueva).then(()=>{
+    localStorage.setItem('mecanicoPwd', nueva);
+    document.getElementById('cfgMecPw').value = '';
+    showToast('✅ Contraseña de mecánicos actualizada');
+  }).catch(()=>{ showToast('❌ Error al guardar. Comprueba la conexión.'); });
+}
+
 function cambiarPassword(){
   const actual=document.getElementById('cfgPwActual').value;
   const nueva=document.getElementById('cfgPwNueva').value;
@@ -995,6 +1095,89 @@ function renderEstadoDatos(){
   `;
 }
 
+// ══════════════════════════════════════════════════
+// COPIAS DE SEGURIDAD
+// ══════════════════════════════════════════════════
+function descargarBackup(){
+  showToast('⏳ Preparando copia de seguridad...');
+  // Leer todo de Firebase
+  Promise.all([
+    DB.ref('averias').once('value'),
+    DB.ref('maquinas_extra').once('value')
+  ]).then(([snapAv, snapMaq])=>{
+    const backup = {
+      _version:   1,
+      _fecha:     new Date().toISOString(),
+      _app:       'PANALCOR Mantenimiento',
+      averias:    snapAv.val()    || {},
+      maquinas_extra: snapMaq.val() || {}
+    };
+    const json = JSON.stringify(backup, null, 2);
+    const blob = new Blob([json], {type:'application/json'});
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const fecha = new Date().toISOString().split('T')[0];
+    a.href     = url;
+    a.download = `panalcor_backup_${fecha}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('✅ Copia de seguridad descargada');
+  }).catch(()=>{
+    showToast('❌ Error al conectar con la nube. ¿Tienes internet?');
+  });
+}
+
+function restaurarBackup(input){
+  const file = input.files[0];
+  if(!file) return;
+  document.getElementById('backupFileName').textContent = file.name;
+
+  const reader = new FileReader();
+  reader.onload = function(e){
+    let backup;
+    try{
+      backup = JSON.parse(e.target.result);
+    } catch(err){
+      showToast('❌ El fichero no es válido');
+      return;
+    }
+    if(!backup._app || backup._app !== 'PANALCOR Mantenimiento'){
+      showToast('❌ Este fichero no es una copia de PANALCOR');
+      return;
+    }
+    const totalAverias = Object.keys(backup.averias||{}).length;
+    const fechaBackup  = backup._fecha ? new Date(backup._fecha).toLocaleString('es-ES') : 'desconocida';
+    if(!confirm(
+      `¿Restaurar esta copia de seguridad?\n\n` +
+      `📅 Fecha de la copia: ${fechaBackup}\n` +
+      `📋 Averías: ${totalAverias}\n\n` +
+      `⚠️ Los datos actuales serán sustituidos por los de la copia.\n` +
+      `Esta acción no se puede deshacer.`
+    )) {
+      input.value = '';
+      document.getElementById('backupFileName').textContent = '';
+      return;
+    }
+    showToast('⏳ Restaurando datos...');
+    Promise.all([
+      DB.ref('averias').set(backup.averias || {}),
+      DB.ref('maquinas_extra').set(backup.maquinas_extra || {})
+    ]).then(()=>{
+      // Actualizar localStorage también
+      const avArray = Object.values(backup.averias||{}).sort((a,b)=>b.ts-a.ts);
+      localStorage.setItem('averias_v1', JSON.stringify(avArray));
+      showToast(`✅ Restauradas ${totalAverias} averías correctamente`);
+      renderDashboard();
+      renderEstadoDatos();
+      input.value = '';
+      document.getElementById('backupFileName').textContent = '';
+    }).catch(()=>{
+      showToast('❌ Error al restaurar. Comprueba la conexión.');
+    });
+  };
+  reader.readAsText(file);
+}
+
 function borrarAverias(){
   if(!confirm('⚠️ ¿Borrar TODAS las averías? Esta acción no se puede deshacer.\nSe borrarán también de la nube (Firebase).')) return;
   localStorage.removeItem('averias_v1');
@@ -1012,6 +1195,86 @@ function borrarMantenimientos(){
 }
 
 // ══════════════════════════════════════════════════
+// MÁQUINAS EXTRA
+// ══════════════════════════════════════════════════
+let maquinasExtra = [];
+
+function loadMaquinasExtra(callback){
+  DB.ref('maquinas_extra').once('value').then(snap=>{
+    const val = snap.val();
+    maquinasExtra = val ? Object.values(val) : [];
+    if(callback) callback();
+  }).catch(()=>{ if(callback) callback(); });
+}
+
+function saveMaquinasExtra(){
+  const obj = {};
+  maquinasExtra.forEach(m=>{ obj[m.id] = m; });
+  DB.ref('maquinas_extra').set(obj).catch(()=>{});
+}
+
+function renderMaquinas(){
+  // Rellenar datalists con tipos y áreas de las máquinas base
+  const BASE_TIPOS = ['AMASADORA','FORMADORA-ENTABLADORA','CARRUSEL','VOLCADOR','REPARTIDOR','DIVISORAS','CAMARA REPOSO','EMBOLADORA','FERMENTADORA','HORNO','TALLADORA','TUNEL','FORMADORA CAJAS','EMBOLSADORA','CARGADOR/DESCARGADOR','DESMOLDEO','CONTADORA','IMPRESORA','C. RODILLOS','PRECINTADORA','M. PEGATINAS','ROBOT','ENFARDADORA','SILOS HARINA','ADITIVOS','LEVADURA'];
+  const BASE_AREAS = ['OBRADOR','HORNOS','TUNELES','ENVASADO','SILOS','FERMENTADORA','TRUENO-FERMENTADORA'];
+  document.getElementById('maqTiposList').innerHTML = BASE_TIPOS.map(t=>`<option value="${t}">`).join('');
+  document.getElementById('maqAreasList').innerHTML = BASE_AREAS.map(a=>`<option value="${a}">`).join('');
+
+  const count = maquinasExtra.length;
+  document.getElementById('maqExtraCount').textContent = count ? `${count} máquina${count>1?'s':''} añadida${count>1?'s':''}` : 'Sin máquinas personalizadas';
+
+  const tbody = document.getElementById('bMaquinasExtra');
+  if(!count){
+    tbody.innerHTML='<tr><td colspan="7" class="no-data">Aún no has añadido ninguna máquina extra</td></tr>';
+    return;
+  }
+  tbody.innerHTML = maquinasExtra.map(m=>`<tr>
+    <td><code style="color:var(--gold);font-size:0.8rem">${m.id}</code></td>
+    <td><b>${m.n}</b></td>
+    <td><span class="badge badge-blue" style="font-size:0.7rem">${m.t}</span></td>
+    <td style="color:rgba(255,255,255,0.6)">${m.f||'—'}</td>
+    <td>${m.a}</td>
+    <td><span class="badge ${m.c==='A'?'badge-red':m.c==='B'?'badge-yellow':'badge-blue'}">${m.c||'—'}</span></td>
+    <td><button onclick="eliminarMaquina('${m.id}')" style="background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);color:var(--red);border-radius:5px;padding:4px 10px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.8rem;transition:all .2s" onmouseover="this.style.background='rgba(231,76,60,0.3)'" onmouseout="this.style.background='rgba(231,76,60,0.15)'">🗑 Eliminar</button></td>
+  </tr>`).join('');
+}
+
+function guardarMaquina(){
+  const n = document.getElementById('maqN').value.trim().toUpperCase();
+  const t = document.getElementById('maqT').value.trim().toUpperCase();
+  const f = document.getElementById('maqF').value.trim().toUpperCase();
+  const a = document.getElementById('maqA').value.trim().toUpperCase();
+  const c = document.getElementById('maqC').value;
+  if(!n||!t||!a){ showToast('⚠️ Nombre, tipo y área son obligatorios'); return; }
+
+  // Calcular siguiente ID (por encima de todos los existentes base + extra)
+  const BASE_MAX = 129;
+  const extraNums = maquinasExtra.map(m=>parseInt(m.id.replace('MAQ-',''))||0);
+  const nextNum = Math.max(BASE_MAX, ...extraNums) + 1;
+  const id = 'MAQ-' + String(nextNum).padStart(3,'0');
+
+  maquinasExtra.push({id, n, t, f, a, c});
+  saveMaquinasExtra();
+  renderMaquinas();
+
+  document.getElementById('maqN').value='';
+  document.getElementById('maqT').value='';
+  document.getElementById('maqF').value='';
+  document.getElementById('maqA').value='';
+  showToast(`✅ ${n} añadida (${id}) — ya aparece en el formulario y en los QR`);
+}
+
+function eliminarMaquina(id){
+  const maq = maquinasExtra.find(m=>m.id===id);
+  if(!maq) return;
+  if(!confirm(`¿Eliminar "${maq.n}" (${id})?\nDesaparecerá del formulario de averías y de los QR.`)) return;
+  maquinasExtra = maquinasExtra.filter(m=>m.id!==id);
+  saveMaquinasExtra();
+  renderMaquinas();
+  showToast(`🗑 ${maq.n} eliminada`);
+}
+
+// ══════════════════════════════════════════════════
 // TABS
 // ══════════════════════════════════════════════════
 function switchTab(name){
@@ -1021,6 +1284,7 @@ function switchTab(name){
   document.getElementById('tab-'+name).classList.add('active');
   if(name==='mec') renderMecanicos();
   if(name==='inf') renderInformes();
+  if(name==='maq') { loadMaquinasExtra(renderMaquinas); }
   if(name==='cfg') renderEstadoDatos();
 }
 

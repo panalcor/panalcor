@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PANALCOR — QR Máquinas</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -224,7 +226,7 @@ body {
 /* ══════════════════════════════════════════════════════
    MÁQUINAS — misma lista que averias.html
    ══════════════════════════════════════════════════════ */
-const MAQUINAS = [
+let MAQUINAS = [
   {id:'MAQ-001',n:'PABAT 1',t:'AMASADORA',f:'NEOTECH',a:'OBRADOR',c:'A'},
   {id:'MAQ-002',n:'PABAT 2',t:'AMASADORA',f:'NEOTECH',a:'OBRADOR',c:'A'},
   {id:'MAQ-003',n:'PABAT 3',t:'AMASADORA',f:'NEOTECH',a:'OBRADOR',c:'A'},
@@ -429,8 +431,27 @@ function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// Arrancar
-renderQR();
+// Arrancar — cargar máquinas extra del admin antes de renderizar
+const _FB_QR = {
+  apiKey:"AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU",
+  authDomain:"panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:"https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"panalcor-mantenimiento",
+  storageBucket:"panalcor-mantenimiento.firebasestorage.app",
+  messagingSenderId:"67593058609",
+  appId:"1:67593058609:web:c33fa1fa4fce2932485810"
+};
+if(!firebase.apps.length) firebase.initializeApp(_FB_QR);
+const _DB_QR = firebase.database();
+
+_DB_QR.ref('maquinas_extra').once('value').then(snap=>{
+  const val = snap.val();
+  if(val){
+    Object.values(val).forEach(m=>{
+      if(!MAQUINAS.find(x=>x.id===m.id)) MAQUINAS.push(m);
+    });
+  }
+}).catch(()=>{}).finally(()=>{ renderQR(); });
 </script>
 </body>
 </html>
