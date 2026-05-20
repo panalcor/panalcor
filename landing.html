@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>PANALCOR — Acceso rápido</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0d1b2a; --navy-mid:#1a2d42; --navy-light:#243d56;
+  --gold:#c9a227; --gold-light:#f0c040;
+  --white:#f0f4f8; --red:#e74c3c; --green:#2ecc71;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif}
+
+/* ── PANTALLAS ── */
+.screen{
+  position:fixed;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px;gap:0;
+  transition:opacity .3s,transform .3s;
+}
+.screen.hidden{opacity:0;pointer-events:none;transform:translateY(16px)}
+
+/* ── BANNER MÁQUINA ── */
+.maq-banner{
+  width:100%;max-width:360px;
+  background:linear-gradient(135deg,rgba(201,162,39,0.18),rgba(201,162,39,0.06));
+  border:1px solid rgba(201,162,39,0.4);
+  border-radius:14px;padding:16px 20px;
+  text-align:center;margin-bottom:24px;
+}
+.maq-banner .maq-id{font-size:0.72rem;letter-spacing:.2em;color:rgba(255,255,255,0.35);text-transform:uppercase;margin-bottom:4px}
+.maq-banner .maq-name{font-size:1.25rem;font-weight:900;color:var(--gold-light);letter-spacing:.04em}
+.maq-banner .maq-sub{font-size:0.8rem;color:rgba(255,255,255,0.4);margin-top:3px}
+
+/* ── CAJA LOGIN ── */
+.box{
+  background:var(--navy-mid);
+  border:1px solid rgba(201,162,39,0.3);
+  border-radius:18px;padding:32px 24px;
+  width:100%;max-width:360px;
+  text-align:center;
+}
+.box .ico{font-size:2.8rem;margin-bottom:10px}
+.box h2{font-size:1.3rem;font-weight:900;color:var(--gold-light);margin-bottom:4px}
+.box .sub{font-size:0.72rem;color:rgba(255,255,255,0.35);letter-spacing:.14em;text-transform:uppercase;margin-bottom:26px}
+.box input{
+  width:100%;background:var(--navy);color:var(--white);
+  border:1px solid rgba(255,255,255,0.2);border-radius:9px;
+  padding:14px;font-family:'Barlow',sans-serif;font-size:1.1rem;
+  text-align:center;letter-spacing:.2em;margin-bottom:14px;
+}
+.box input:focus{outline:none;border-color:var(--gold)}
+.btn-gold{
+  width:100%;padding:14px;
+  background:linear-gradient(135deg,var(--gold),#a07d1a);
+  color:#0d1b2a;border:none;border-radius:9px;
+  font-family:'Barlow',sans-serif;font-size:1rem;font-weight:900;
+  letter-spacing:.1em;cursor:pointer;transition:opacity .2s;
+}
+.btn-gold:active{opacity:.8}
+.err{color:var(--red);font-size:.85rem;margin-top:8px;min-height:20px}
+
+/* ── SELECTOR MECÁNICO ── */
+.mec-list{width:100%;max-width:360px;display:flex;flex-direction:column;gap:10px}
+.mec-list h2{font-size:1.1rem;font-weight:900;color:var(--gold-light);text-align:center;margin-bottom:6px}
+.mec-btn{
+  width:100%;padding:16px 18px;
+  background:var(--navy-mid);border:2px solid rgba(255,255,255,0.1);
+  border-radius:12px;color:var(--white);
+  font-family:'Barlow',sans-serif;font-size:1.05rem;font-weight:700;
+  cursor:pointer;text-align:left;display:flex;align-items:center;gap:12px;
+  transition:all .15s;
+}
+.mec-btn:active,.mec-btn:hover{background:rgba(201,162,39,0.15);border-color:var(--gold)}
+
+/* ── ELECCIÓN ── */
+.choice-wrap{width:100%;max-width:360px}
+.choice-wrap h2{font-size:1.15rem;font-weight:900;color:var(--gold-light);text-align:center;margin-bottom:6px}
+.choice-wrap .who{font-size:0.85rem;color:rgba(255,255,255,0.4);text-align:center;margin-bottom:22px}
+.choice-btn{
+  width:100%;padding:22px 20px;border-radius:14px;
+  border:none;font-family:'Barlow',sans-serif;cursor:pointer;
+  display:flex;align-items:center;gap:16px;margin-bottom:14px;
+  transition:transform .15s,box-shadow .15s;
+}
+.choice-btn:active{transform:scale(.97)}
+.choice-btn .ch-ico{font-size:2.4rem;flex-shrink:0}
+.choice-btn .ch-body{text-align:left}
+.choice-btn .ch-title{font-size:1.1rem;font-weight:900;letter-spacing:.04em}
+.choice-btn .ch-sub{font-size:0.8rem;opacity:.75;margin-top:3px}
+
+.btn-averia{
+  background:linear-gradient(135deg,rgba(231,76,60,0.25),rgba(192,57,43,0.15));
+  border:2px solid rgba(231,76,60,0.5);color:var(--white);
+  box-shadow:0 4px 20px rgba(231,76,60,0.15);
+}
+.btn-averia:hover{box-shadow:0 6px 28px rgba(231,76,60,0.3)}
+.btn-tareas{
+  background:linear-gradient(135deg,rgba(46,204,113,0.2),rgba(39,174,96,0.12));
+  border:2px solid rgba(46,204,113,0.45);color:var(--white);
+  box-shadow:0 4px 20px rgba(46,204,113,0.12);
+}
+.btn-tareas:hover{box-shadow:0 6px 28px rgba(46,204,113,0.25)}
+
+.btn-back{
+  width:100%;padding:10px;margin-top:4px;
+  background:transparent;border:1px solid rgba(255,255,255,0.12);
+  border-radius:8px;color:rgba(255,255,255,0.4);
+  font-family:'Barlow',sans-serif;font-size:.85rem;cursor:pointer;
+}
+.btn-back:active{background:rgba(255,255,255,0.05)}
+</style>
+</head>
+<body>
+
+<!-- ══ PANTALLA 1: LOGIN ══ -->
+<div class="screen" id="screenLogin">
+  <div class="maq-banner" id="maqBanner" style="display:none">
+    <div class="maq-id" id="maqId"></div>
+    <div class="maq-name" id="maqName"></div>
+    <div class="maq-sub" id="maqSub"></div>
+  </div>
+  <div class="box">
+    <div class="ico">🔧</div>
+    <h2>PANALCOR S.L.</h2>
+    <div class="sub">Mantenimiento</div>
+    <input type="password" id="pwInput" placeholder="Contraseña" autocomplete="off"
+           onkeydown="if(event.key==='Enter') doLogin()">
+    <button class="btn-gold" onclick="doLogin()">ENTRAR</button>
+    <div class="err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- ══ PANTALLA 2: MECÁNICO ══ -->
+<div class="screen hidden" id="screenMec">
+  <div class="maq-banner" id="maqBanner2" style="display:none">
+    <div class="maq-id" id="maqId2"></div>
+    <div class="maq-name" id="maqName2"></div>
+  </div>
+  <div class="mec-list">
+    <h2>👷 ¿Quién eres?</h2>
+    <div id="mecBtnList"></div>
+  </div>
+</div>
+
+<!-- ══ PANTALLA 3: ELECCIÓN ══ -->
+<div class="screen hidden" id="screenChoice">
+  <div class="choice-wrap">
+    <h2>¿Qué quieres hacer?</h2>
+    <div class="who" id="choiceWho"></div>
+
+    <button class="choice-btn btn-averia" onclick="irA('averia')">
+      <div class="ch-ico">🔴</div>
+      <div class="ch-body">
+        <div class="ch-title">Reportar Avería</div>
+        <div class="ch-sub">Registrar un fallo o incidencia en la máquina</div>
+      </div>
+    </button>
+
+    <button class="choice-btn btn-tareas" onclick="irA('tareas')">
+      <div class="ch-ico">✅</div>
+      <div class="ch-body">
+        <div class="ch-title">Mis Tareas</div>
+        <div class="ch-sub">Ver y marcar el plan de mantenimiento preventivo</div>
+      </div>
+    </button>
+
+    <button class="btn-back" onclick="volverAMec()">← Cambiar mecánico</button>
+  </div>
+</div>
+
+<script>
+/* ── FIREBASE ── */
+var FB_CFG = {
+  apiKey:"AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU",
+  authDomain:"panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:"https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"panalcor-mantenimiento",
+  storageBucket:"panalcor-mantenimiento.firebasestorage.app",
+  messagingSenderId:"67593058609",
+  appId:"1:67593058609:web:c33fa1fa4fce2932485810"
+};
+firebase.initializeApp(FB_CFG);
+var DB = firebase.database();
+
+/* ── CATÁLOGO DE MÁQUINAS (para mostrar nombre) ── */
+var MAQUINAS = [
+  {id:'MAQ-001',n:'PABAT 1',t:'AMASADORA',a:'OBRADOR'},
+  {id:'MAQ-002',n:'PABAT 2',t:'AMASADORA',a:'OBRADOR'},
+  {id:'MAQ-003',n:'PABAT 3',t:'AMASADORA',a:'OBRADOR'},
+  {id:'MAQ-004',n:'PABAT 4',t:'AMASADORA',a:'OBRADOR'},
+  {id:'MAQ-005',n:'PABAT 5',t:'AMASADORA',a:'OBRADOR'},
+  {id:'MAQ-006',n:'PABAT 6',t:'AMASADORA',a:'OBRADOR'},
+  {id:'MAQ-007',n:'PABAT 7',t:'AMASADORA',a:'OBRADOR'},
+  {id:'MAQ-008',n:'PABAT 8',t:'AMASADORA',a:'OBRADOR'},
+  {id:'MAQ-009',n:'AMASADORA CANDEAL',t:'AMASADORA',a:'OBRADOR'},
+  {id:'MAQ-010',n:'LINEA 1',t:'FORMADORA',a:'OBRADOR'},
+  {id:'MAQ-011',n:'LINEA 2',t:'FORMADORA',a:'OBRADOR'},
+  {id:'MAQ-012',n:'LINEA 3',t:'FORMADORA',a:'OBRADOR'},
+  {id:'MAQ-013',n:'LINEA 4',t:'FORMADORA',a:'OBRADOR'},
+  {id:'MAQ-014',n:'LINEA 5',t:'FORMADORA',a:'OBRADOR'},
+  {id:'MAQ-015',n:'LINEA 6',t:'FORMADORA',a:'OBRADOR'},
+  {id:'MAQ-016',n:'LINEA 7',t:'FORMADORA',a:'OBRADOR'},
+  {id:'MAQ-017',n:'CARRUSEL 1',t:'CARRUSEL',a:'OBRADOR'},
+  {id:'MAQ-018',n:'CARRUSEL 2',t:'CARRUSEL',a:'OBRADOR'},
+  {id:'MAQ-019',n:'CARRUSEL 3',t:'CARRUSEL',a:'OBRADOR'},
+  {id:'MAQ-020',n:'CARRUSEL 4',t:'CARRUSEL',a:'OBRADOR'},
+  {id:'MAQ-021',n:'CARRUSEL 5',t:'CARRUSEL',a:'OBRADOR'},
+  {id:'MAQ-022',n:'CARRUSEL 6',t:'CARRUSEL',a:'OBRADOR'},
+  {id:'MAQ-023',n:'DIVISORA 1',t:'DIVISORA',a:'OBRADOR'},
+  {id:'MAQ-024',n:'DIVISORA 2',t:'DIVISORA',a:'OBRADOR'},
+  {id:'MAQ-025',n:'DIVISORA 3',t:'DIVISORA',a:'OBRADOR'},
+  {id:'MAQ-026',n:'REPARTIDOR 1',t:'REPARTIDOR',a:'OBRADOR'},
+  {id:'MAQ-027',n:'REPARTIDOR 2',t:'REPARTIDOR',a:'OBRADOR'},
+  {id:'MAQ-028',n:'TALLADORA RELAMPAGO',t:'TALLADORA',a:'OBRADOR'},
+  {id:'MAQ-029',n:'HORNO 1',t:'HORNO',a:'HORNOS'},
+  {id:'MAQ-030',n:'HORNO 2',t:'HORNO',a:'HORNOS'},
+  {id:'MAQ-031',n:'HORNO 3',t:'HORNO',a:'HORNOS'},
+  {id:'MAQ-032',n:'HORNO 4',t:'HORNO',a:'HORNOS'},
+  {id:'MAQ-033',n:'HORNO 5',t:'HORNO',a:'HORNOS'},
+  {id:'MAQ-034',n:'HORNO 6',t:'HORNO',a:'HORNOS'},
+  {id:'MAQ-035',n:'FERMENTADORA RELAMPAGO',t:'FERMENTADORA',a:'OBRADOR'},
+  {id:'MAQ-036',n:'TUNEL PREFRIO',t:'TUNEL',a:'OBRADOR'},
+  {id:'MAQ-037',n:'TUNEL CONGELACION 1',t:'TUNEL',a:'TUNELES'},
+  {id:'MAQ-038',n:'TUNEL CONGELACION 2',t:'TUNEL',a:'TUNELES'},
+  {id:'MAQ-039',n:'TUNEL CONGELACION 3',t:'TUNEL',a:'TUNELES'},
+  {id:'MAQ-040',n:'DESMOLDEADORA',t:'DESMOLDEO',a:'TUNELES'},
+  {id:'MAQ-041',n:'CONTADORA',t:'CONTADORA',a:'EXPEDICION'},
+  {id:'MAQ-042',n:'M CAJAS',t:'MAQUINA CAJAS',a:'EXPEDICION'},
+  {id:'MAQ-043',n:'M BOLSAS',t:'MAQUINA BOLSAS',a:'EXPEDICION'},
+  {id:'MAQ-044',n:'BASCULA-PRECINTADORA',t:'BASCULA',a:'EXPEDICION'},
+  {id:'MAQ-045',n:'CENTRADOR ENTABLADO',t:'CENTRADOR',a:'OBRADOR'},
+  {id:'MAQ-046',n:'COMPRESOR 1',t:'COMPRESOR',a:'SALA COMPRESORES'},
+  {id:'MAQ-047',n:'COMPRESOR 2',t:'COMPRESOR',a:'SALA COMPRESORES'},
+  {id:'MAQ-048',n:'COMPRESOR 3',t:'COMPRESOR',a:'SALA COMPRESORES'},
+  {id:'MAQ-049',n:'COMPRESOR 4',t:'COMPRESOR',a:'SALA COMPRESORES'},
+  {id:'MAQ-050',n:'TRUENO',t:'TRUENO',a:'OBRADOR'}
+];
+
+/* ── ESTADO ── */
+var PW_DEFAULT   = 'panalcor';
+var mecActual    = null;
+var maqActual    = null;   // objeto máquina o null
+
+/* ── ARRANQUE ── */
+(function init(){
+  var params = new URLSearchParams(window.location.search);
+  var maqId  = params.get('maq');
+  if(maqId){
+    maqActual = MAQUINAS.find(function(m){ return m.id === maqId; }) || {id:maqId, n:maqId, t:'', a:''};
+    /* Mostrar banner en pantalla 1 y 2 */
+    mostrarBanner('maqBanner',  'maqId',  'maqName', null);
+    mostrarBanner('maqBanner2', 'maqId2', 'maqName2', null);
+  }
+})();
+
+function mostrarBanner(bannerId, idEl, nameEl, subEl){
+  if(!maqActual) return;
+  var b = document.getElementById(bannerId);
+  b.style.display = 'block';
+  document.getElementById(idEl).textContent  = maqActual.id;
+  document.getElementById(nameEl).textContent = maqActual.n;
+  if(subEl) document.getElementById(subEl).textContent = maqActual.t + (maqActual.a ? ' · '+maqActual.a : '');
+}
+
+/* ── PANTALLAS ── */
+function mostrar(id){
+  ['screenLogin','screenMec','screenChoice'].forEach(function(s){
+    var el = document.getElementById(s);
+    if(s === id){
+      el.classList.remove('hidden');
+    } else {
+      el.classList.add('hidden');
+    }
+  });
+}
+
+/* ── LOGIN ── */
+function doLogin(){
+  var val = document.getElementById('pwInput').value;
+  var err = document.getElementById('loginErr');
+  if(!val){ err.textContent = '⚠️ Introduce la contraseña'; return; }
+  err.textContent = 'Verificando...';
+
+  DB.ref('config/mecanicoPwd').once('value')
+    .then(function(s){ return s.val() || PW_DEFAULT; })
+    .catch(function(){ return localStorage.getItem('mecanicoPwd') || PW_DEFAULT; })
+    .then(function(pwd){
+      if(val === pwd){
+        err.textContent = '';
+        cargarMecanicos();
+      } else {
+        err.textContent = '❌ Contraseña incorrecta';
+        document.getElementById('pwInput').value = '';
+        document.getElementById('pwInput').focus();
+      }
+    });
+}
+
+/* ── MECÁNICOS ── */
+function cargarMecanicos(){
+  DB.ref('config/mecanicos').once('value')
+    .then(function(s){
+      var val = s.val();
+      return (val && val.length) ? val : ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO'];
+    })
+    .catch(function(){ return ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO']; })
+    .then(function(lista){
+      var div = document.getElementById('mecBtnList');
+      div.innerHTML = '';
+      lista.forEach(function(m){
+        var btn = document.createElement('button');
+        btn.className = 'mec-btn';
+        btn.innerHTML = '<span style="font-size:1.4rem">👷</span><span>'+m+'</span>';
+        btn.onclick = function(){ seleccionarMecanico(m); };
+        div.appendChild(btn);
+      });
+      mostrar('screenMec');
+    });
+}
+
+function seleccionarMecanico(nombre){
+  mecActual = nombre;
+  document.getElementById('choiceWho').textContent = '👷 ' + nombre
+    + (maqActual ? '  ·  🏭 ' + maqActual.n : '');
+  mostrar('screenChoice');
+}
+
+function volverAMec(){
+  mecActual = null;
+  mostrar('screenMec');
+}
+
+/* ── DESTINO ── */
+function irA(destino){
+  if(!mecActual) return;
+
+  if(destino === 'averia'){
+    /* averias.html usa sessionStorage['mecAuth']='1' */
+    sessionStorage.setItem('mecAuth', '1');
+    var url = 'averias.html';
+    if(maqActual) url += '?maq=' + encodeURIComponent(maqActual.id);
+    window.location.href = url;
+
+  } else {
+    /* mis_tareas.html usa sessionStorage['mecAuth_prev']='1' + mecSeleccionado */
+    sessionStorage.setItem('mecAuth_prev', '1');
+    sessionStorage.setItem('mecSeleccionado', mecActual);
+    window.location.href = 'mis_tareas.html';
+  }
+}
+</script>
+</body>
+</html>
