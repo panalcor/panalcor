@@ -130,47 +130,11 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
     <div style="font-size:2.5rem;margin-bottom:10px">📋</div>
     <h2>PLAN PREVENTIVO</h2>
     <div class="sub">PANALCOR S.L. · Administración</div>
-    <input type="password" id="pwInput" placeholder="Contraseña admin">
-    <button class="login-btn" id="loginBtn">ENTRAR</button>
+    <input type="password" id="pwInput" placeholder="Contraseña admin" onkeydown="if(event.key==='Enter') doLogin()">
+    <button class="login-btn" onclick="doLogin()">ENTRAR</button>
     <div class="login-err" id="loginErr"></div>
   </div>
 </div>
-<script>
-// Login independiente — no depende del script principal
-(function(){
-  var SK = 'planPrevAdminAuth';
-  function getPwd(){ return localStorage.getItem('adminPwd') || 'admin'; }
-  function tryLogin(){
-    var v = document.getElementById('pwInput').value;
-    var err = document.getElementById('loginErr');
-    if(v === getPwd()){
-      sessionStorage.setItem(SK,'1');
-      err.textContent = '';
-      // arrancarApp se define en el script principal; si ya está cargado, llamarla
-      if(typeof arrancarApp === 'function'){
-        arrancarApp();
-      } else {
-        // Esperar a que cargue el script principal
-        document.getElementById('loginScreen').style.display='none';
-        document.getElementById('app').style.display='block';
-      }
-    } else {
-      err.textContent = '❌ Contraseña incorrecta';
-      document.getElementById('pwInput').value = '';
-      document.getElementById('pwInput').focus();
-    }
-  }
-  document.getElementById('loginBtn').addEventListener('click', tryLogin);
-  document.getElementById('pwInput').addEventListener('keydown', function(e){
-    if(e.key==='Enter') tryLogin();
-  });
-  // Auto-login si ya hay sesión activa
-  if(sessionStorage.getItem(SK)==='1'){
-    document.getElementById('loginScreen').style.display='none';
-    document.getElementById('app').style.display='block';
-  }
-})();
-</script>
 
 <!-- ══ APP ══ -->
 <div id="app" style="display:none">
@@ -490,7 +454,7 @@ function arrancarApp(){
   // Cargar plan activo
   cargarPlanActivo();
   // Init tab crear plan
-  initCrearPlan();
+  try{ initCrearPlan(); }catch(e){ console.warn('initCrearPlan:', e); }
 }
 
 function poblarSelectsMecanicos(){
@@ -500,7 +464,7 @@ function poblarSelectsMecanicos(){
     if(!s) return;
     const first = s.options[0];
     s.innerHTML='';
-    s.appendChild(first.cloneNode(true));
+    if(first) s.appendChild(first.cloneNode(true));
     mecanicosLista.forEach(m=>{
       const o=document.createElement('option'); o.value=m; o.textContent=m; s.appendChild(o);
     });
@@ -513,10 +477,12 @@ function switchTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('panel-'+name).classList.add('active');
   document.getElementById('tab-'+name).classList.add('active');
-  if(name==='activo') cargarPlanActivo();
-  if(name==='crear')  initCrearPlan();
-  if(name==='cat')    renderCatTabla();
-  if(name==='hist')   cargarHistorial();
+  try{
+    if(name==='activo') cargarPlanActivo();
+    if(name==='crear')  initCrearPlan();
+    if(name==='cat')    renderCatTabla();
+    if(name==='hist')   cargarHistorial();
+  }catch(e){ console.warn('switchTab error:', e); }
 }
 
 // ══ HELPERS ══
