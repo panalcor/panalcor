@@ -4,129 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Administrador — PANALCOR</title>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js">
-// ══════════════════════════════════════════════════
-// GESTIÓN TAREAS DIARIAS
-// ══════════════════════════════════════════════════
-var tdEditId = null;
-var TD_BASE = [{"id":"DI-001","tarea":"REVISION ACEITES 1","maquina":"DIVISORAS","area":"OBRADOR","detalle":"MAÑANA LIMPIAR GARRAFAS Y RELLENAR","turno":"TODOS","prioridad":"ALTA"},{"id":"DI-002","tarea":"REVISION ACEITES 2","maquina":"DIVISORAS","area":"OBRADOR","detalle":"RELLENAR ACEITES","turno":"TODOS","prioridad":"ALTA"},{"id":"DI-003","tarea":"FILTROS AIRE ACONDICIONADO OBRADOR","maquina":"A/A","area":"OBRADOR","detalle":"QUITAR FILTROS Y SOPLAR","turno":"TODOS","prioridad":"MEDIA"},{"id":"DI-004","tarea":"VACIAR BANDEJAS DIVISORAS","maquina":"DIVISORAS","area":"OBRADOR","detalle":"VACIAR Y LIMPIAR","turno":"TODOS","prioridad":"BAJA"},{"id":"DI-005","tarea":"FILTROS Y RADIADORES COMPRESORES","maquina":"COMPRESORES","area":"SALA COMPRESORES","detalle":"SOPLAR","turno":"TODOS","prioridad":"MEDIA"},{"id":"DI-006","tarea":"TENSION CADENAS LINEAS","maquina":"LINEAS","area":"OBRADOR","detalle":"","turno":"MAÑANA","prioridad":"ALTA"}];
-
-function cargarTareasDiariasAdmin(){
-  DB.ref('tareas_diarias').once('value').then(function(snap){
-    var val = snap.val();
-    var lista = val ? Object.values(val).sort(function(a,b){ return (a.orden||0)-(b.orden||0)||(a.id||'').localeCompare(b.id||''); }) : null;
-    renderTareasDiariasAdmin(lista);
-  }).catch(function(e){
-    renderTareasDiariasAdmin(null);
-    console.warn('tareas_diarias:', e);
-  });
-}
-
-function renderTareasDiariasAdmin(lista){
-  var tbody = document.getElementById('tdAdminBody');
-  var fuente = document.getElementById('tdFuenteLabel');
-  if(!tbody) return;
-  var usaBase = !lista;
-  fuente.textContent = usaBase ? '📦 Usando tareas base (embebidas). Pulsa "Importar tareas base" para moverlas a Firebase.' : '📡 Datos desde Firebase · '+lista.length+' tareas';
-  var rows = usaBase ? TD_BASE : lista;
-  var priCol = {ALTA:'#e74c3c',MEDIA:'#f39c12',BAJA:'#2ecc71'};
-  tbody.innerHTML = rows.map(function(t){
-    var canEdit = !usaBase;
-    var btns = canEdit
-      ? '<button onclick="abrirModalTarea(\''+esc(t.id)+'\')" style="padding:3px 9px;background:rgba(52,152,219,0.2);border:1px solid rgba(52,152,219,0.4);color:#3498db;border-radius:5px;font-family:inherit;font-size:0.75rem;font-weight:700;cursor:pointer;margin-right:4px">✏️</button>'
-        + '<button onclick="eliminarTareaDiaria(\''+esc(t.id)+'\')" style="padding:3px 9px;background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.35);color:#e74c3c;border-radius:5px;font-family:inherit;font-size:0.75rem;font-weight:700;cursor:pointer">🗑</button>'
-      : '<span style="font-size:0.7rem;color:rgba(255,255,255,0.2)">Importa para editar</span>';
-    var pc = priCol[t.prioridad] || '#aaa';
-    return '<tr style="border-top:1px solid rgba(255,255,255,0.06)">'
-      + '<td style="padding:8px 12px;font-family:monospace;color:rgba(255,255,255,0.5);font-size:0.78rem">'+esc(t.id||'')+'</td>'
-      + '<td style="padding:8px 12px;font-weight:600">'+esc(t.tarea||'')+'</td>'
-      + '<td style="padding:8px 12px;color:rgba(255,255,255,0.6)">'+esc(t.maquina||'')+'</td>'
-      + '<td style="padding:8px 12px;color:rgba(255,255,255,0.5);font-size:0.82rem">'+esc(t.area||'')+'</td>'
-      + '<td style="padding:8px 12px;font-size:0.82rem">'+esc(t.turno||'')+'</td>'
-      + '<td style="padding:8px 12px"><span style="font-size:0.72rem;font-weight:700;color:'+pc+'">'+esc(t.prioridad||'')+'</span></td>'
-      + '<td style="padding:8px 12px">'+btns+'</td>'
-      + '</tr>';
-  }).join('');
-}
-
-function importarTareasBase(){
-  if(!confirm('¿Importar las '+TD_BASE.length+' tareas base a Firebase?\nEsto reemplazará lo que haya actualmente.')) return;
-  var obj = {};
-  TD_BASE.forEach(function(t,i){ obj[t.id] = Object.assign({orden:i}, t); });
-  DB.ref('tareas_diarias').set(obj).then(function(){
-    showToast('✅ Tareas importadas a Firebase');
-    cargarTareasDiariasAdmin();
-  }).catch(function(e){ showToast('❌ Error: '+e.message); });
-}
-
-function abrirModalTarea(id){
-  tdEditId = id;
-  var m = document.getElementById('modalTareasBg');
-  document.getElementById('modalTareasTitle').textContent = id ? '✏️ Editar tarea' : '➕ Nueva tarea';
-  if(id){
-    DB.ref('tareas_diarias/'+id).once('value').then(function(snap){
-      var t = snap.val() || {};
-      document.getElementById('tdId').value        = t.id        || id;
-      document.getElementById('tdId').disabled     = true;
-      document.getElementById('tdTarea').value     = t.tarea     || '';
-      document.getElementById('tdMaquina').value   = t.maquina   || '';
-      document.getElementById('tdArea').value      = t.area      || '';
-      document.getElementById('tdDetalle').value   = t.detalle   || '';
-      document.getElementById('tdTurno').value     = t.turno     || 'TODOS';
-      document.getElementById('tdPrioridad').value = t.prioridad || 'MEDIA';
-    });
-  } else {
-    document.getElementById('tdId').value = '';
-    document.getElementById('tdId').disabled = false;
-    document.getElementById('tdTarea').value = '';
-    document.getElementById('tdMaquina').value = '';
-    document.getElementById('tdArea').value = '';
-    document.getElementById('tdDetalle').value = '';
-    document.getElementById('tdTurno').value = 'TODOS';
-    document.getElementById('tdPrioridad').value = 'MEDIA';
-  }
-  m.style.display = 'flex';
-  setTimeout(function(){ document.getElementById('tdTarea').focus(); }, 50);
-}
-
-function cerrarModalTarea(){
-  document.getElementById('modalTareasBg').style.display = 'none';
-  tdEditId = null;
-}
-
-function guardarTareaDiaria(){
-  var id       = document.getElementById('tdId').value.trim().toUpperCase().replace(/\s+/g,'-');
-  var tarea    = document.getElementById('tdTarea').value.trim().toUpperCase();
-  var maquina  = document.getElementById('tdMaquina').value.trim().toUpperCase();
-  var area     = document.getElementById('tdArea').value.trim().toUpperCase();
-  var detalle  = document.getElementById('tdDetalle').value.trim().toUpperCase();
-  var turno    = document.getElementById('tdTurno').value;
-  var prioridad= document.getElementById('tdPrioridad').value;
-
-  if(!id || !tarea){ showToast('⚠️ ID y Tarea son obligatorios'); return; }
-
-  var obj = { id:id, tarea:tarea, maquina:maquina, area:area, detalle:detalle, turno:turno, prioridad:prioridad };
-
-  DB.ref('tareas_diarias/'+id).set(obj).then(function(){
-    cerrarModalTarea();
-    cargarTareasDiariasAdmin();
-    showToast(tdEditId ? '✅ Tarea actualizada' : '✅ Tarea añadida');
-  }).catch(function(e){ showToast('❌ Error: '+e.message); });
-}
-
-function eliminarTareaDiaria(id){
-  if(!confirm('¿Eliminar la tarea '+id+'?\nEsta acción no se puede deshacer.')) return;
-  DB.ref('tareas_diarias/'+id).remove().then(function(){
-    cargarTareasDiariasAdmin();
-    showToast('🗑 Tarea eliminada');
-  }).catch(function(e){ showToast('❌ Error: '+e.message); });
-}
-
-function esc(s){
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
-
-</script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -1653,6 +1531,130 @@ function showToast(msg){
 
 // Enter en login
 document.getElementById('pwInput').addEventListener('keydown',e=>{ if(e.key==='Enter') login(); });
+
+
+// ══════════════════════════════════════════════════
+// GESTIÓN TAREAS DIARIAS
+// ══════════════════════════════════════════════════
+var tdEditId = null;
+var TD_BASE = [{"id":"DI-001","tarea":"REVISION ACEITES 1","maquina":"DIVISORAS","area":"OBRADOR","detalle":"MAÑANA LIMPIAR GARRAFAS Y RELLENAR","turno":"TODOS","prioridad":"ALTA"},{"id":"DI-002","tarea":"REVISION ACEITES 2","maquina":"DIVISORAS","area":"OBRADOR","detalle":"RELLENAR ACEITES","turno":"TODOS","prioridad":"ALTA"},{"id":"DI-003","tarea":"FILTROS AIRE ACONDICIONADO OBRADOR","maquina":"A/A","area":"OBRADOR","detalle":"QUITAR FILTROS Y SOPLAR","turno":"TODOS","prioridad":"MEDIA"},{"id":"DI-004","tarea":"VACIAR BANDEJAS DIVISORAS","maquina":"DIVISORAS","area":"OBRADOR","detalle":"VACIAR Y LIMPIAR","turno":"TODOS","prioridad":"BAJA"},{"id":"DI-005","tarea":"FILTROS Y RADIADORES COMPRESORES","maquina":"COMPRESORES","area":"SALA COMPRESORES","detalle":"SOPLAR","turno":"TODOS","prioridad":"MEDIA"},{"id":"DI-006","tarea":"TENSION CADENAS LINEAS","maquina":"LINEAS","area":"OBRADOR","detalle":"","turno":"MAÑANA","prioridad":"ALTA"}];
+
+function cargarTareasDiariasAdmin(){
+  DB.ref('tareas_diarias').once('value').then(function(snap){
+    var val = snap.val();
+    var lista = val ? Object.values(val).sort(function(a,b){ return (a.orden||0)-(b.orden||0)||(a.id||'').localeCompare(b.id||''); }) : null;
+    renderTareasDiariasAdmin(lista);
+  }).catch(function(e){
+    renderTareasDiariasAdmin(null);
+    console.warn('tareas_diarias:', e);
+  });
+}
+
+function renderTareasDiariasAdmin(lista){
+  var tbody = document.getElementById('tdAdminBody');
+  var fuente = document.getElementById('tdFuenteLabel');
+  if(!tbody) return;
+  var usaBase = !lista;
+  fuente.textContent = usaBase ? '📦 Usando tareas base (embebidas). Pulsa "Importar tareas base" para moverlas a Firebase.' : '📡 Datos desde Firebase · '+lista.length+' tareas';
+  var rows = usaBase ? TD_BASE : lista;
+  var priCol = {ALTA:'#e74c3c',MEDIA:'#f39c12',BAJA:'#2ecc71'};
+  tbody.innerHTML = rows.map(function(t){
+    var canEdit = !usaBase;
+    var btns = canEdit
+      ? '<button onclick="abrirModalTarea(\''+esc(t.id)+'\')" style="padding:3px 9px;background:rgba(52,152,219,0.2);border:1px solid rgba(52,152,219,0.4);color:#3498db;border-radius:5px;font-family:inherit;font-size:0.75rem;font-weight:700;cursor:pointer;margin-right:4px">✏️</button>'
+        + '<button onclick="eliminarTareaDiaria(\''+esc(t.id)+'\')" style="padding:3px 9px;background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.35);color:#e74c3c;border-radius:5px;font-family:inherit;font-size:0.75rem;font-weight:700;cursor:pointer">🗑</button>'
+      : '<span style="font-size:0.7rem;color:rgba(255,255,255,0.2)">Importa para editar</span>';
+    var pc = priCol[t.prioridad] || '#aaa';
+    return '<tr style="border-top:1px solid rgba(255,255,255,0.06)">'
+      + '<td style="padding:8px 12px;font-family:monospace;color:rgba(255,255,255,0.5);font-size:0.78rem">'+esc(t.id||'')+'</td>'
+      + '<td style="padding:8px 12px;font-weight:600">'+esc(t.tarea||'')+'</td>'
+      + '<td style="padding:8px 12px;color:rgba(255,255,255,0.6)">'+esc(t.maquina||'')+'</td>'
+      + '<td style="padding:8px 12px;color:rgba(255,255,255,0.5);font-size:0.82rem">'+esc(t.area||'')+'</td>'
+      + '<td style="padding:8px 12px;font-size:0.82rem">'+esc(t.turno||'')+'</td>'
+      + '<td style="padding:8px 12px"><span style="font-size:0.72rem;font-weight:700;color:'+pc+'">'+esc(t.prioridad||'')+'</span></td>'
+      + '<td style="padding:8px 12px">'+btns+'</td>'
+      + '</tr>';
+  }).join('');
+}
+
+function importarTareasBase(){
+  if(!confirm('¿Importar las '+TD_BASE.length+' tareas base a Firebase?\nEsto reemplazará lo que haya actualmente.')) return;
+  var obj = {};
+  TD_BASE.forEach(function(t,i){ obj[t.id] = Object.assign({orden:i}, t); });
+  DB.ref('tareas_diarias').set(obj).then(function(){
+    showToast('✅ Tareas importadas a Firebase');
+    cargarTareasDiariasAdmin();
+  }).catch(function(e){ showToast('❌ Error: '+e.message); });
+}
+
+function abrirModalTarea(id){
+  tdEditId = id;
+  var m = document.getElementById('modalTareasBg');
+  document.getElementById('modalTareasTitle').textContent = id ? '✏️ Editar tarea' : '➕ Nueva tarea';
+  if(id){
+    DB.ref('tareas_diarias/'+id).once('value').then(function(snap){
+      var t = snap.val() || {};
+      document.getElementById('tdId').value        = t.id        || id;
+      document.getElementById('tdId').disabled     = true;
+      document.getElementById('tdTarea').value     = t.tarea     || '';
+      document.getElementById('tdMaquina').value   = t.maquina   || '';
+      document.getElementById('tdArea').value      = t.area      || '';
+      document.getElementById('tdDetalle').value   = t.detalle   || '';
+      document.getElementById('tdTurno').value     = t.turno     || 'TODOS';
+      document.getElementById('tdPrioridad').value = t.prioridad || 'MEDIA';
+    });
+  } else {
+    document.getElementById('tdId').value = '';
+    document.getElementById('tdId').disabled = false;
+    document.getElementById('tdTarea').value = '';
+    document.getElementById('tdMaquina').value = '';
+    document.getElementById('tdArea').value = '';
+    document.getElementById('tdDetalle').value = '';
+    document.getElementById('tdTurno').value = 'TODOS';
+    document.getElementById('tdPrioridad').value = 'MEDIA';
+  }
+  m.style.display = 'flex';
+  setTimeout(function(){ document.getElementById('tdTarea').focus(); }, 50);
+}
+
+function cerrarModalTarea(){
+  document.getElementById('modalTareasBg').style.display = 'none';
+  tdEditId = null;
+}
+
+function guardarTareaDiaria(){
+  var id       = document.getElementById('tdId').value.trim().toUpperCase().replace(/\s+/g,'-');
+  var tarea    = document.getElementById('tdTarea').value.trim().toUpperCase();
+  var maquina  = document.getElementById('tdMaquina').value.trim().toUpperCase();
+  var area     = document.getElementById('tdArea').value.trim().toUpperCase();
+  var detalle  = document.getElementById('tdDetalle').value.trim().toUpperCase();
+  var turno    = document.getElementById('tdTurno').value;
+  var prioridad= document.getElementById('tdPrioridad').value;
+
+  if(!id || !tarea){ showToast('⚠️ ID y Tarea son obligatorios'); return; }
+
+  var obj = { id:id, tarea:tarea, maquina:maquina, area:area, detalle:detalle, turno:turno, prioridad:prioridad };
+
+  DB.ref('tareas_diarias/'+id).set(obj).then(function(){
+    cerrarModalTarea();
+    cargarTareasDiariasAdmin();
+    showToast(tdEditId ? '✅ Tarea actualizada' : '✅ Tarea añadida');
+  }).catch(function(e){ showToast('❌ Error: '+e.message); });
+}
+
+function eliminarTareaDiaria(id){
+  if(!confirm('¿Eliminar la tarea '+id+'?\nEsta acción no se puede deshacer.')) return;
+  DB.ref('tareas_diarias/'+id).remove().then(function(){
+    cargarTareasDiariasAdmin();
+    showToast('🗑 Tarea eliminada');
+  }).catch(function(e){ showToast('❌ Error: '+e.message); });
+}
+
+function esc(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+
 </script>
 
 <!-- MODAL TAREA DIARIA -->
