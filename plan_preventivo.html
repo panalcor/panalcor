@@ -97,6 +97,7 @@ tbody td{padding:9px 12px;vertical-align:middle}
   <div class="tab" onclick="switchTab('seguimiento')" id="tab-seguimiento">📊 Seguimiento</div>
   <div class="tab" onclick="switchTab('historial')" id="tab-historial">🗂 Historial</div>
   <div class="tab" onclick="switchTab('imprimir')" id="tab-imprimir">🖨️ Imprimir</div>
+  <div class="tab" onclick="switchTab('catalogo')" id="tab-catalogo">⚙️ Catálogo</div>
 </div>
 
 <!-- ASIGNAR -->
@@ -202,6 +203,74 @@ tbody td{padding:9px 12px;vertical-align:middle}
   </div>
 </div>
 
+<!-- CATÁLOGO -->
+<div class="panel" id="panel-catalogo">
+  <div class="card">
+    <div class="sec-title">Gestión del Catálogo de Tareas</div>
+    <div class="filter-bar">
+      <select id="catFiltMaq" onchange="renderGestionCatalogo()">
+        <option value="">Todas las máquinas</option>
+      </select>
+      <select id="catFiltFreq" onchange="renderGestionCatalogo()">
+        <option value="">Todas las frecuencias</option>
+        <option>DIARIO</option><option>SEMANAL</option><option>QUINCENAL</option>
+        <option>MENSUAL</option><option>TRIMESTRAL</option><option>SEMESTRAL</option><option>ANUAL</option>
+      </select>
+      <input type="search" id="catSearch" placeholder="Buscar tarea..." oninput="renderGestionCatalogo()" style="flex:1;min-width:160px">
+      <button class="btn btn-gold" onclick="abrirModalCat(null)">+ Nueva tarea</button>
+      <button class="btn btn-blue" id="btnMigrar" onclick="migrarCatalogoAFirebase()" title="Importar las 401 tareas del catálogo base a Firebase (solo la primera vez)">⬆️ Importar base</button>
+    </div>
+    <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);margin-bottom:10px">
+      <span id="catFuenteLabel"></span>
+      &nbsp;·&nbsp;<span id="catCountLabel"></span>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Máquina</th><th>Subtipo</th><th>Tarea</th><th>Frecuencia</th><th>Instancia</th><th class="no-print" style="width:90px"></th>
+        </tr></thead>
+        <tbody id="catGestionBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CATÁLOGO ADD/EDIT -->
+<div class="modal-bg" id="modalCatBg">
+  <div class="modal" style="max-width:480px">
+    <h3 id="modalCatTitle">➕ Nueva tarea</h3>
+    <div class="field">
+      <label>Máquina</label>
+      <input type="text" id="catMaquina" placeholder="Ej: HORNOS" list="catMaquinasList">
+      <datalist id="catMaquinasList"></datalist>
+    </div>
+    <div class="field">
+      <label>Subtipo (opcional)</label>
+      <input type="text" id="catSubtipo" placeholder="Ej: ROTATIVO">
+    </div>
+    <div class="field">
+      <label>Tarea</label>
+      <input type="text" id="catTarea" placeholder="Descripción de la tarea">
+    </div>
+    <div class="field">
+      <label>Frecuencia</label>
+      <select id="catFrecuencia">
+        <option>DIARIO</option><option>SEMANAL</option><option>QUINCENAL</option>
+        <option selected>MENSUAL</option><option>TRIMESTRAL</option><option>SEMESTRAL</option><option>ANUAL</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Instancia</label>
+      <input type="text" id="catInstancia" placeholder="Ej: HORNO 1">
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px">
+      <button class="btn btn-gold" style="flex:1" onclick="guardarTareaFirebase()">💾 Guardar</button>
+      <button class="btn" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5)" onclick="cerrarModalCat()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+
 <!-- MODAL ASIGNACIÓN -->
 <div class="modal-bg" id="modalBg">
   <div class="modal">
@@ -253,6 +322,7 @@ function getMonth(){
 }
 
 function arrancarApp(){
+  cargarCatalogoFirebase();
   var cm = getMonth();
   document.getElementById('segMes').value = cm;
   document.getElementById('impMes').value = cm;
@@ -288,6 +358,7 @@ function switchTab(name){
   if(name==='seguimiento') cargarSeguimiento();
   if(name==='historial') cargarHistorial();
   if(name==='imprimir') renderImprimir();
+  if(name==='catalogo') renderGestionCatalogo();
 }
 
 // ── ASIGNAR ──
@@ -295,7 +366,7 @@ function renderCatalogo(){
   var maq=document.getElementById('asigFiltMaq').value;
   var freq=document.getElementById('asigFiltFreq').value;
   var q=(document.getElementById('asigSearch').value||'').toLowerCase().trim();
-  var items=CATALOGO.filter(function(c){
+  var items=getCatalogo().filter(function(c){
     return (!maq||c.maquina===maq)&&(!freq||c.frecuencia===freq)&&
       (!q||(c.tarea+' '+c.maquina+' '+(c.subtipo||'')).toLowerCase().indexOf(q)>=0);
   });
@@ -555,6 +626,200 @@ function showToast(msg){
 document.getElementById('modalBg').addEventListener('click',function(e){
   if(e.target===this) cerrarModal();
 });
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   GESTIÓN CATÁLOGO
+   catalogoActivo: array cargado de Firebase (o null → usa CATALOGO)
+   ═══════════════════════════════════════════════════════════════════ */
+var catalogoActivo = null;   // null = usar CATALOGO embebido
+var catEditId = null;        // id de tarea en edición (null = nueva)
+
+/* Devuelve el catálogo vigente */
+function getCatalogo(){
+  return catalogoActivo !== null ? catalogoActivo : CATALOGO;
+}
+
+/* Carga catálogo desde Firebase al arrancar */
+function cargarCatalogoFirebase(){
+  DB.ref('catalogo').once('value').then(function(snap){
+    var val = snap.val();
+    if(val && typeof val === 'object'){
+      /* Firebase devuelve objeto {id: {...}, ...} → convertir a array */
+      catalogoActivo = Object.values(val);
+      console.log('Catálogo cargado desde Firebase:', catalogoActivo.length, 'tareas');
+    } else {
+      catalogoActivo = null; /* usar embebido */
+    }
+    /* Re-renderizar si la pestaña asignar está activa */
+    if(document.getElementById('panel-asignar').classList.contains('active')){
+      renderCatalogo();
+    }
+  }).catch(function(e){
+    console.warn('No se pudo cargar catálogo de Firebase:', e);
+    catalogoActivo = null;
+  });
+}
+
+/* ── IMPORTAR CATÁLOGO BASE A FIREBASE ── */
+function migrarCatalogoAFirebase(){
+  if(!confirm('¿Importar las ' + CATALOGO.length + ' tareas del catálogo base a Firebase?\n\nEsto reemplazará cualquier catálogo existente en Firebase.')) return;
+  var obj = {};
+  CATALOGO.forEach(function(t){ obj[t.id] = t; });
+  DB.ref('catalogo').set(obj).then(function(){
+    catalogoActivo = CATALOGO.slice();
+    renderGestionCatalogo();
+    renderCatalogo();
+    showToast('✅ Catálogo importado a Firebase ('+CATALOGO.length+' tareas)');
+  }).catch(function(e){
+    showToast('❌ Error al importar: ' + e.message);
+  });
+}
+
+/* ── RENDER GESTIÓN ── */
+function renderGestionCatalogo(){
+  var cat    = getCatalogo();
+  var filtMaq  = (document.getElementById('catFiltMaq').value || '').toLowerCase();
+  var filtFreq = document.getElementById('catFiltFreq').value || '';
+  var search   = (document.getElementById('catSearch').value || '').toLowerCase();
+
+  /* Actualizar datalist de máquinas */
+  var maquinas = {};
+  cat.forEach(function(t){ if(t.maquina) maquinas[t.maquina] = 1; });
+  var dl = document.getElementById('catMaquinasList');
+  dl.innerHTML = Object.keys(maquinas).sort().map(function(m){ return '<option value="'+escH(m)+'">'; }).join('');
+
+  /* Poblar filtro máquinas si está vacío */
+  var selMaq = document.getElementById('catFiltMaq');
+  if(selMaq.options.length <= 1){
+    Object.keys(maquinas).sort().forEach(function(m){
+      var o = document.createElement('option'); o.value = m; o.textContent = m; selMaq.appendChild(o);
+    });
+  }
+
+  /* Fuente */
+  var fuente = catalogoActivo !== null ? '📡 Firebase' : '📦 Catálogo base (embebido)';
+  document.getElementById('catFuenteLabel').textContent = fuente;
+
+  /* Filtrar */
+  var vis = cat.filter(function(t){
+    if(filtMaq && (t.maquina||'').toLowerCase() !== filtMaq) return false;
+    if(filtFreq && t.frecuencia !== filtFreq) return false;
+    if(search){
+      var hay = ((t.maquina||'')+(t.subtipo||'')+(t.tarea||'')+(t.instancia||'')).toLowerCase();
+      if(hay.indexOf(search) < 0) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('catCountLabel').textContent = vis.length + ' / ' + cat.length + ' tareas';
+
+  var badgeCls = {DIARIO:'badge-diario',SEMANAL:'badge-semanal',QUINCENAL:'badge-quincenal',
+                  MENSUAL:'badge-mensual',TRIMESTRAL:'badge-trimestral',SEMESTRAL:'badge-semestral',ANUAL:'badge-anual'};
+
+  var tbody = document.getElementById('catGestionBody');
+  tbody.innerHTML = vis.map(function(t){
+    var bc = badgeCls[t.frecuencia] || '';
+    var isFirebase = catalogoActivo !== null;
+    var btns = isFirebase
+      ? '<button class="btn btn-blue btn-sm" onclick="abrirModalCat(\''+escH(t.id)+'\')">✏️</button> '
+        + '<button class="btn btn-red btn-sm" onclick="eliminarTareaFirebase(\''+escH(t.id)+'\')">🗑</button>'
+      : '<span style="font-size:0.7rem;color:rgba(255,255,255,0.25)">Importa para editar</span>';
+    return '<tr>'
+      + '<td style="font-weight:600">'+escH(t.maquina||'')+'</td>'
+      + '<td style="color:rgba(255,255,255,0.5)">'+escH(t.subtipo||'')+'</td>'
+      + '<td>'+escH(t.tarea||'')+'</td>'
+      + '<td><span class="badge '+bc+'">'+escH(t.frecuencia||'')+'</span></td>'
+      + '<td style="color:rgba(255,255,255,0.6)">'+escH(t.instancia||'')+'</td>'
+      + '<td class="no-print">'+btns+'</td>'
+      + '</tr>';
+  }).join('');
+
+  if(!vis.length){
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:rgba(255,255,255,0.25)">Sin resultados</td></tr>';
+  }
+}
+
+/* ── ABRIR MODAL ADD/EDIT ── */
+function abrirModalCat(id){
+  catEditId = id;
+  var titulo = document.getElementById('modalCatTitle');
+
+  if(id){
+    var cat = getCatalogo();
+    var t = cat.find(function(x){ return x.id === id; });
+    if(!t){ showToast('Tarea no encontrada'); return; }
+    titulo.textContent = '✏️ Editar tarea';
+    document.getElementById('catMaquina').value   = t.maquina   || '';
+    document.getElementById('catSubtipo').value   = t.subtipo   || '';
+    document.getElementById('catTarea').value     = t.tarea     || '';
+    document.getElementById('catFrecuencia').value = t.frecuencia || 'MENSUAL';
+    document.getElementById('catInstancia').value = t.instancia || '';
+  } else {
+    titulo.textContent = '➕ Nueva tarea';
+    document.getElementById('catMaquina').value   = '';
+    document.getElementById('catSubtipo').value   = '';
+    document.getElementById('catTarea').value     = '';
+    document.getElementById('catFrecuencia').value = 'MENSUAL';
+    document.getElementById('catInstancia').value = '';
+  }
+  document.getElementById('modalCatBg').classList.add('open');
+  document.getElementById('catTarea').focus();
+}
+
+function cerrarModalCat(){
+  document.getElementById('modalCatBg').classList.remove('open');
+  catEditId = null;
+}
+
+/* ── GUARDAR (ADD / EDIT) ── */
+function guardarTareaFirebase(){
+  var maquina    = document.getElementById('catMaquina').value.trim().toUpperCase();
+  var subtipo    = document.getElementById('catSubtipo').value.trim().toUpperCase();
+  var tarea      = document.getElementById('catTarea').value.trim().toUpperCase();
+  var frecuencia = document.getElementById('catFrecuencia').value;
+  var instancia  = document.getElementById('catInstancia').value.trim().toUpperCase();
+
+  if(!maquina || !tarea){ showToast('⚠️ Máquina y Tarea son obligatorios'); return; }
+
+  var id = catEditId;
+  if(!id){
+    /* Nueva tarea: generar id único */
+    var num = Date.now();
+    id = 'CAT-' + num;
+  }
+  var obj = { id:id, maquina:maquina, subtipo:subtipo, tarea:tarea, frecuencia:frecuencia, instancia:instancia||maquina };
+
+  DB.ref('catalogo/'+id).set(obj).then(function(){
+    cerrarModalCat();
+    /* Actualizar array local */
+    if(catalogoActivo === null) catalogoActivo = [];
+    var idx = catalogoActivo.findIndex(function(x){ return x.id === id; });
+    if(idx >= 0) catalogoActivo[idx] = obj;
+    else catalogoActivo.push(obj);
+    renderGestionCatalogo();
+    renderCatalogo();
+    showToast(catEditId ? '✅ Tarea actualizada' : '✅ Tarea añadida');
+  }).catch(function(e){ showToast('❌ Error: '+e.message); });
+}
+
+/* ── ELIMINAR ── */
+function eliminarTareaFirebase(id){
+  var cat = getCatalogo();
+  var t = cat.find(function(x){ return x.id === id; });
+  var nombre = t ? (t.maquina+' — '+t.tarea) : id;
+  if(!confirm('¿Eliminar esta tarea del catálogo?\n\n' + nombre + '\n\nLas asignaciones ya creadas no se verán afectadas.')) return;
+  DB.ref('catalogo/'+id).remove().then(function(){
+    if(catalogoActivo) catalogoActivo = catalogoActivo.filter(function(x){ return x.id !== id; });
+    renderGestionCatalogo();
+    renderCatalogo();
+    showToast('🗑 Tarea eliminada del catálogo');
+  }).catch(function(e){ showToast('❌ Error: '+e.message); });
+}
+
+function escH(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
 
 arrancarApp();
 </script>
