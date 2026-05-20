@@ -448,6 +448,11 @@ function buscar(){
   if(cached){
     try{
       repuestosData = JSON.parse(cached);
+      // Migrar campo 'ubi' → 'ubicacion' si la caché es del formato antiguo
+      if(repuestosData.length && repuestosData[0].ubi !== undefined){
+        repuestosData = repuestosData.map(r=>({...r, ubicacion:r.ubi}));
+        localStorage.setItem('repuestosCache', JSON.stringify(repuestosData));
+      }
       renderTabla(repuestosData, 50);
       document.getElementById('searchCount').textContent =
         'Mostrando primeros 50 de '+repuestosData.length+' repuestos — escribe para filtrar';
