@@ -456,8 +456,13 @@ function buscar(){
       return;
     }catch(e){}
   }
-  tip.innerHTML = '⚠️ Sin datos — vuelve a la <b>página principal</b> para cargar los repuestos';
-  tip.style.color = 'var(--gold)';
+  // Sin caché: usar los repuestos embebidos directamente
+  repuestosData = REPUESTOS;
+  renderTabla(repuestosData, 50);
+  document.getElementById('searchCount').textContent =
+    'Mostrando primeros 50 de '+repuestosData.length+' repuestos — escribe para filtrar';
+  tip.innerHTML = '✅ <b>'+repuestosData.length+'</b> repuestos cargados (datos base)';
+  tip.style.color = '#2ecc71';
 })();
 
 // ══════════════════════════════════════

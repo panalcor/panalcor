@@ -943,7 +943,7 @@ function buscarMaterial(){
   const q = document.getElementById('matSearch').value.trim().toLowerCase();
   const dd = document.getElementById('matDropdown');
   if(q.length<2){dd.style.display='none';return;}
-  _matResultados = repuestosData.filter(r=>r.desc.toLowerCase().includes(q)||r.ref.toLowerCase().includes(q)).slice(0,12);
+  _matResultados = repuestosData.filter(r=>(r.desc+' '+r.ref+' '+(r.ubicacion||'')).toLowerCase().includes(q)).slice(0,12);
   if(!_matResultados.length){
     dd.innerHTML='<div class="mat-option" style="color:rgba(255,255,255,0.4);cursor:default">Sin resultados — usa "Añadir manualmente"</div>';
     dd.style.display='block';
@@ -953,7 +953,7 @@ function buscarMaterial(){
     <div class="mat-option" style="display:flex;align-items:center;gap:10px;justify-content:space-between">
       <div style="flex:1;min-width:0">
         <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.desc}</div>
-        <div class="ref">${r.ref}${r.ubi?' · '+r.ubi:''}</div>
+        <div class="ref">${r.ref}${r.ubicacion?' · 📍 '+r.ubicacion:''}</div>
       </div>
       <button type="button" style="background:rgba(46,204,113,0.25);border:1px solid rgba(46,204,113,0.5);color:#2ecc71;border-radius:6px;padding:5px 12px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.85rem;font-weight:700;white-space:nowrap" data-idx="${i}">+ Añadir</button>
     </div>`).join('');

@@ -593,7 +593,7 @@ function procesarRepuestos(buf){
     const data = [];
     for(let i=1;i<rows.length;i++){
       const r=rows[i];
-      if(r[2]) data.push({ubi:String(r[0]||'').trim(),ref:String(r[1]||'').trim(),desc:String(r[2]||'').trim()});
+      if(r[2]) data.push({ubicacion:String(r[0]||'').trim(),ref:String(r[1]||'').trim(),desc:String(r[2]||'').trim()});
     }
     localStorage.setItem('repuestosCache', JSON.stringify(data));
     mostrarEstado('✅ Base de datos cargada y guardada — '+data.length+' repuestos disponibles en todas las páginas', '#2ecc71', false);
