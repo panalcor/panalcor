@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Plan Preventivo — PANALCOR</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0d1b2a;--navy-mid:#1a2d42;--navy-light:#243d56;
+  --gold:#c9a227;--gold-light:#f0c040;--white:#f0f4f8;
+  --red:#e74c3c;--green:#2ecc71;--yellow:#f39c12;--blue:#3498db;
+  --radius:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;min-height:100vh}
+
+/* ── LOGIN ── */
+.login-screen{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:999}
+.login-box{background:var(--navy-mid);border:1px solid rgba(201,162,39,0.3);border-radius:16px;padding:40px;width:320px;text-align:center}
+.login-box h2{font-size:1.4rem;font-weight:900;color:var(--gold-light);margin-bottom:4px}
+.login-box .sub{font-size:0.75rem;color:rgba(255,255,255,0.35);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:26px}
+.login-box input{width:100%;background:var(--navy);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:13px;font-family:'Barlow',sans-serif;font-size:1.1rem;text-align:center;letter-spacing:0.2em;margin-bottom:12px}
+.login-box input:focus{outline:none;border-color:var(--gold)}
+.login-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a;border:none;border-radius:8px;font-family:'Barlow',sans-serif;font-size:1rem;font-weight:900;cursor:pointer}
+.login-err{color:var(--red);font-size:0.85rem;margin-top:8px;min-height:18px}
+
+/* ── TOPBAR ── */
+.topbar{background:linear-gradient(135deg,#0a1520,var(--navy-mid));border-bottom:2px solid var(--gold);padding:14px 20px;display:flex;align-items:center;gap:14px}
+.topbar h1{font-size:1.3rem;font-weight:900;color:var(--gold-light);letter-spacing:0.05em}
+.topbar .sub{font-size:0.75rem;color:rgba(255,255,255,0.45)}
+.tbtn{background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.4);color:var(--gold);padding:8px 14px;border-radius:7px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.85rem;transition:all .2s}
+.tbtn:hover{background:rgba(201,162,39,0.3)}
+.tbtn-logout{margin-left:auto;background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.15);color:rgba(255,255,255,0.45)}
+
+/* ── TABS ── */
+.tabs{display:flex;background:var(--navy-mid);border-bottom:2px solid rgba(201,162,39,0.2);overflow-x:auto}
+.tab{padding:13px 20px;cursor:pointer;font-size:0.95rem;font-weight:600;color:rgba(255,255,255,0.5);border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap}
+.tab:hover{color:var(--white)}
+.tab.active{color:var(--gold-light);border-bottom-color:var(--gold)}
+
+/* ── PANELS ── */
+.panel{display:none;padding:20px;max-width:1100px}
+.panel.active{display:block}
+
+/* ── CARDS ── */
+.card{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius);padding:18px;margin-bottom:16px}
+.sec-title{font-size:0.72rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid rgba(201,162,39,0.2)}
+
+/* ── BOTONES ── */
+.btn{padding:11px 20px;border-radius:8px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.95rem;font-weight:700;letter-spacing:0.05em;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:7px}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a}
+.btn-gold:hover{background:linear-gradient(135deg,var(--gold-light),var(--gold))}
+.btn-green{background:rgba(46,204,113,0.2);border:1px solid rgba(46,204,113,0.4)!important;border-style:solid;color:var(--green)}
+.btn-green:hover{background:rgba(46,204,113,0.35)}
+.btn-red{background:rgba(231,76,60,0.18);border:1px solid rgba(231,76,60,0.4)!important;border-style:solid;color:var(--red)}
+.btn-red:hover{background:rgba(231,76,60,0.3)}
+.btn-blue{background:rgba(52,152,219,0.2);border:1px solid rgba(52,152,219,0.4)!important;border-style:solid;color:var(--blue)}
+.btn-blue:hover{background:rgba(52,152,219,0.35)}
+.btn-sm{padding:6px 12px;font-size:0.8rem}
+
+/* ── FORM ── */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:5px}
+.field input,.field select{width:100%;background:var(--navy);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:10px 14px;font-family:'Barlow',sans-serif;font-size:0.95rem}
+.field input:focus,.field select:focus{outline:none;border-color:var(--gold)}
+.field select option{background:#1a2d42}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+
+/* ── PLAN ACTIVO ── */
+.plan-banner{background:linear-gradient(135deg,rgba(201,162,39,0.15),rgba(201,162,39,0.05));border:1px solid rgba(201,162,39,0.3);border-radius:12px;padding:20px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px}
+.plan-titulo{font-size:1.2rem;font-weight:900;color:var(--gold-light)}
+.plan-periodo{font-size:0.85rem;color:rgba(255,255,255,0.5);margin-top:3px}
+.plan-stats{display:flex;gap:20px;flex-wrap:wrap}
+.plan-stat{text-align:center}
+.plan-stat .num{font-size:1.6rem;font-weight:900;color:var(--gold-light)}
+.plan-stat .lbl{font-size:0.7rem;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.1em}
+
+/* ── PROGRESO POR MECÁNICO ── */
+.mec-progress-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:16px}
+.mec-progress-card{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px}
+.mec-pname{font-weight:900;font-size:1rem;margin-bottom:10px;color:var(--gold-light)}
+.prog-bar-bg{background:rgba(255,255,255,0.08);border-radius:4px;height:8px;overflow:hidden;margin-bottom:5px}
+.prog-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--gold),var(--gold-light));transition:width .5s}
+.prog-label{font-size:0.78rem;color:rgba(255,255,255,0.45);display:flex;justify-content:space-between}
+.prog-label b{color:var(--gold-light)}
+
+/* ── TABLA TAREAS ── */
+.tarea-row{display:grid;grid-template-columns:2fr 2fr 1.5fr 1.5fr auto;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.88rem}
+.tarea-row:hover{background:rgba(255,255,255,0.02)}
+.tarea-row.header{font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);padding:8px 14px;border-bottom:1px solid rgba(201,162,39,0.2)}
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:0.72rem;font-weight:700}
+.badge-green{background:rgba(46,204,113,0.2);color:var(--green);border:1px solid rgba(46,204,113,0.3)}
+.badge-yellow{background:rgba(243,156,18,0.2);color:var(--yellow);border:1px solid rgba(243,156,18,0.3)}
+
+/* ── CREAR PLAN ── */
+.catalogo-filtros{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.catalogo-filtros select,.catalogo-filtros input{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:8px 12px;color:var(--white);font-family:'Barlow',sans-serif;font-size:0.88rem}
+.catalogo-filtros select option{background:#1a2d42}
+.cat-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.88rem;cursor:pointer;transition:background .15s}
+.cat-item:hover{background:rgba(255,255,255,0.04)}
+.cat-item.selected{background:rgba(201,162,39,0.1)}
+.cat-check{width:20px;height:20px;flex-shrink:0;border:2px solid rgba(255,255,255,0.25);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.8rem}
+.cat-item.selected .cat-check{background:rgba(201,162,39,0.3);border-color:var(--gold);color:var(--gold)}
+.cat-maq{font-weight:700;min-width:130px;color:var(--gold-light)}
+.cat-desc{flex:1;color:rgba(255,255,255,0.8)}
+.cat-freq{font-size:0.72rem;color:rgba(255,255,255,0.35);min-width:80px}
+
+/* ── TAREAS SELECCIONADAS ── */
+.sel-tarea{display:grid;grid-template-columns:2fr 2fr 1.5fr auto;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.88rem}
+.sel-tarea select{background:var(--navy);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:6px 10px;font-family:'Barlow',sans-serif;font-size:0.85rem}
+.sel-tarea select option{background:#1a2d42}
+
+/* ── HISTORIAL ── */
+.hist-item{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.hist-titulo{font-weight:700;font-size:1rem}
+.hist-meta{font-size:0.8rem;color:rgba(255,255,255,0.4);margin-top:3px}
+.hist-pct{font-size:1.4rem;font-weight:900;color:var(--gold-light)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy-mid);border:1px solid rgba(201,162,39,0.5);border-radius:10px;padding:13px 22px;font-size:0.92rem;font-weight:600;z-index:9999;opacity:0;transform:translateY(20px);transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+
+@media(max-width:700px){
+  .row2,.row3{grid-template-columns:1fr}
+  .tarea-row{grid-template-columns:1fr 1fr;font-size:0.8rem}
+  .sel-tarea{grid-template-columns:1fr 1fr}
+  .mec-progress-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div style="font-size:2.5rem;margin-bottom:10px">📋</div>
+    <h2>PLAN PREVENTIVO</h2>
+    <div class="sub">PANALCOR S.L. · Administración</div>
+    <input type="password" id="pwInput" placeholder="Contraseña admin"
+           onkeydown="if(event.key==='Enter') doLogin()">
+    <button class="login-btn" onclick="doLogin()">ENTRAR</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="app" style="display:none">
+
+<div class="topbar">
+  <button class="tbtn" onclick="history.back()">← Volver</button>
+  <div>
+    <div class="sub">PANALCOR S.L.</div>
+    <h1>📋 Plan de Mantenimiento Preventivo</h1>
+  </div>
+  <button class="tbtn tbtn-logout" onclick="doLogout()">Cerrar sesión</button>
+</div>
+
+<div class="tabs">
+  <div class="tab active" id="tab-activo"  onclick="switchTab('activo')">📊 Plan Activo</div>
+  <div class="tab"        id="tab-crear"   onclick="switchTab('crear')">➕ Crear Plan</div>
+  <div class="tab"        id="tab-historial" onclick="switchTab('historial')">🗂 Historial</div>
+</div>
+
+<!-- ═══ PLAN ACTIVO ═══ -->
+<div class="panel active" id="panel-activo">
+
+  <div id="noActivoBanner" style="display:none">
+    <div class="card" style="text-align:center;padding:40px">
+      <div style="font-size:3rem;margin-bottom:14px">📋</div>
+      <div style="font-size:1.1rem;font-weight:700;margin-bottom:8px">No hay ningún plan activo</div>
+      <div style="font-size:0.88rem;color:rgba(255,255,255,0.4);margin-bottom:20px">Crea un plan nuevo desde la pestaña <b>Crear Plan</b></div>
+      <button class="btn btn-gold" onclick="switchTab('crear')">➕ Crear Plan</button>
+    </div>
+  </div>
+
+  <div id="planActivoContent" style="display:none">
+    <div class="plan-banner" id="planBanner"></div>
+
+    <div class="card">
+      <div class="sec-title">👷 Progreso por mecánico</div>
+      <div class="mec-progress-grid" id="mecProgressGrid"></div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+        <div class="sec-title" style="margin:0;border:none;padding:0">📋 Todas las tareas del plan</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a id="btnMecLink" href="mis_tareas.html" target="_blank" class="btn btn-blue btn-sm">📱 Ver como mecánico</a>
+          <button class="btn btn-red btn-sm" onclick="cerrarPlan()">🏁 Cerrar y archivar plan</button>
+        </div>
+      </div>
+      <div style="margin-bottom:10px">
+        <select id="filtroMecActivo" onchange="renderTablaPlan()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:7px 12px;color:var(--white);font-family:'Barlow',sans-serif;font-size:0.88rem">
+          <option value="">Todos los mecánicos</option>
+        </select>
+      </div>
+      <div style="overflow-x:auto">
+        <div class="tarea-row header">
+          <span>Máquina</span><span>Tarea</span><span>Mecánico</span><span>Estado</span><span></span>
+        </div>
+        <div id="tablaPlan"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CREAR PLAN ═══ -->
+<div class="panel" id="panel-crear">
+  <div class="card">
+    <div class="sec-title">📝 Datos del plan</div>
+    <div class="row3">
+      <div class="field">
+        <label>Título del plan *</label>
+        <input type="text" id="planTitulo" placeholder="Ej: Semana 22 — Mayo 2026">
+      </div>
+      <div class="field">
+        <label>Período</label>
+        <input type="text" id="planPeriodo" placeholder="Ej: 25 May - 1 Jun 2026">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sec-title">🔍 Seleccionar tareas del catálogo</div>
+    <div class="catalogo-filtros">
+      <select id="filtroMaqCat" onchange="renderCatalogo()">
+        <option value="">Todas las máquinas</option>
+      </select>
+      <select id="filtroFreqCat" onchange="renderCatalogo()">
+        <option value="">Todas las frecuencias</option>
+        <option>DIARIO</option><option>SEMANAL</option><option>QUINCENAL</option>
+        <option>MENSUAL</option><option>TRIMESTRAL</option><option>SEMESTRAL</option><option>ANUAL</option>
+      </select>
+      <input type="text" id="filtroTextCat" placeholder="Buscar tarea..." oninput="renderCatalogo()" style="min-width:180px">
+      <button class="btn btn-sm" style="background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.3);color:var(--gold);font-family:'Barlow',sans-serif" onclick="seleccionarFiltradas()">✅ Seleccionar filtradas</button>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);font-family:'Barlow',sans-serif" onclick="deseleccionarTodas()">✕ Deseleccionar todas</button>
+    </div>
+    <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);margin-bottom:8px" id="catCount"></div>
+    <div style="max-height:380px;overflow-y:auto;border:1px solid rgba(255,255,255,0.08);border-radius:8px" id="catalogoList"></div>
+  </div>
+
+  <div class="card" id="asignacionCard" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+      <div class="sec-title" style="margin:0;border:none;padding:0">👷 Asignar mecánicos</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <select id="asigTodosSelect" style="background:var(--navy);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:7px 12px;color:var(--white);font-family:'Barlow',sans-serif;font-size:0.85rem">
+          <option value="">Asignar todos a...</option>
+        </select>
+        <button class="btn btn-sm btn-blue" onclick="asignarTodos()">Aplicar a todos</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <div class="sel-tarea" style="font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid rgba(201,162,39,0.2);padding:6px 12px">
+        <span>Máquina</span><span>Tarea</span><span>Mecánico</span><span></span>
+      </div>
+      <div id="tareasSelList"></div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:12px;flex-wrap:wrap;padding:0 0 30px">
+    <button class="btn btn-gold" onclick="activarPlan()" id="btnActivar">🚀 Activar Plan</button>
+    <span style="font-size:0.85rem;color:rgba(255,255,255,0.35);align-self:center" id="activarMsg"></span>
+  </div>
+</div>
+
+<!-- ═══ HISTORIAL ═══ -->
+<div class="panel" id="panel-historial">
+  <div class="card">
+    <div class="sec-title">🗂 Planes archivados</div>
+    <div id="historialList"></div>
+  </div>
+</div>
+
+</div><!-- /app -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════
+// FIREBASE
+// ══════════════════════════════════════════════════
+const FB_CFG = {
+  apiKey:"AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU",
+  authDomain:"panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:"https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"panalcor-mantenimiento",
+  storageBucket:"panalcor-mantenimiento.firebasestorage.app",
+  messagingSenderId:"67593058609",
+  appId:"1:67593058609:web:c33fa1fa4fce2932485810"
+};
+if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
+const DB = firebase.database();
+
+// ══════════════════════════════════════════════════
+// CATÁLOGO DE TAREAS (412 tareas)
+// Se carga del preventivo.html existente en la misma carpeta
+// Para no duplicar, las cargamos desde Firebase si están ahí,
+// o usamos las frecuencias estándar
+// ══════════════════════════════════════════════════
+let CATALOGO = []; // se carga desde Firebase (preventivo guarda ahí)
+let MECANICOS = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO'];
+let tareasSeleccionadas = new Set(); // IDs de tareas seleccionadas del catálogo
+let planActivo = null;
+
+// ══════════════════════════════════════════════════
+// LOGIN
+// ══════════════════════════════════════════════════
+const PW_KEY = 'adminPwd';
+function getPwd(){ return localStorage.getItem(PW_KEY)||'admin'; }
+
+function doLogin(){
+  const val = document.getElementById('pwInput').value;
+  const err = document.getElementById('loginErr');
+  if(val === getPwd()){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('app').style.display='block';
+    initApp();
+  } else {
+    err.textContent='❌ Contraseña incorrecta';
+    document.getElementById('pwInput').value='';
+    document.getElementById('pwInput').focus();
+  }
+}
+function doLogout(){
+  document.getElementById('app').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('pwInput').value='';
+}
+document.getElementById('pwInput').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+function initApp(){
+  // Cargar mecánicos de Firebase
+  DB.ref('config/mecanicos').once('value').then(s=>{
+    if(s.val()&&s.val().length) MECANICOS = s.val();
+    poblarSelectsMecanicos();
+  }).catch(()=> poblarSelectsMecanicos());
+
+  // Cargar catálogo desde Firebase (guardado por preventivo.html)
+  // Si no hay nada, usar catálogo reducido embebido
+  DB.ref('catalogo_tareas').once('value').then(s=>{
+    const val = s.val();
+    if(val && Array.isArray(val) && val.length){
+      CATALOGO = val;
+    } else {
+      CATALOGO = getCatalogoEmbebido();
+    }
+    poblarFiltroMaquinas();
+    renderCatalogo();
+  }).catch(()=>{
+    CATALOGO = getCatalogoEmbebido();
+    poblarFiltroMaquinas();
+    renderCatalogo();
+  });
+
+  // Cargar plan activo
+  cargarPlanActivo();
+
+  // Escuchar cambios en tiempo real del plan activo
+  DB.ref('plan_activo').on('value', snap=>{
+    planActivo = snap.val();
+    if(document.getElementById('panel-activo').classList.contains('active')){
+      renderPlanActivo();
+    }
+  });
+}
+
+function poblarSelectsMecanicos(){
+  // Selector filtro tabla
+  const selFiltro = document.getElementById('filtroMecActivo');
+  selFiltro.innerHTML = '<option value="">Todos los mecánicos</option>' +
+    MECANICOS.map(m=>`<option>${m}</option>`).join('');
+  // Selector "asignar todos"
+  const selTodos = document.getElementById('asigTodosSelect');
+  selTodos.innerHTML = '<option value="">Asignar todos a...</option>' +
+    MECANICOS.map(m=>`<option>${m}</option>`).join('');
+}
+
+function poblarFiltroMaquinas(){
+  const maquinas = [...new Set(CATALOGO.map(t=>t.maquina))].sort();
+  const sel = document.getElementById('filtroMaqCat');
+  sel.innerHTML = '<option value="">Todas las máquinas</option>' +
+    maquinas.map(m=>`<option>${m}</option>`).join('');
+}
+
+// ══════════════════════════════════════════════════
+// PLAN ACTIVO
+// ══════════════════════════════════════════════════
+function cargarPlanActivo(){
+  DB.ref('plan_activo').once('value').then(snap=>{
+    planActivo = snap.val();
+    renderPlanActivo();
+  });
+}
+
+function renderPlanActivo(){
+  const noActivo = document.getElementById('noActivoBanner');
+  const content  = document.getElementById('planActivoContent');
+
+  if(!planActivo || !planActivo.id){
+    noActivo.style.display='block';
+    content.style.display='none';
+    return;
+  }
+  noActivo.style.display='none';
+  content.style.display='block';
+
+  const tareas = planActivo.tareas ? Object.values(planActivo.tareas) : [];
+  const total  = tareas.length;
+  const hechas = tareas.filter(t=>t.hecho).length;
+  const pct    = total ? Math.round(hechas/total*100) : 0;
+
+  document.getElementById('planBanner').innerHTML = `
+    <div>
+      <div class="plan-titulo">${planActivo.titulo||'Plan sin título'}</div>
+      <div class="plan-periodo">${planActivo.periodo||''} · Creado: ${planActivo.creadoEn ? new Date(planActivo.creadoEn).toLocaleDateString('es-ES') : '—'}</div>
+    </div>
+    <div class="plan-stats">
+      <div class="plan-stat"><div class="num">${total}</div><div class="lbl">Tareas</div></div>
+      <div class="plan-stat"><div class="num" style="color:var(--green)">${hechas}</div><div class="lbl">Hechas</div></div>
+      <div class="plan-stat"><div class="num" style="color:${pct>=80?'var(--green)':pct>=50?'var(--yellow)':'var(--red)'}">${pct}%</div><div class="lbl">Cumplimiento</div></div>
+    </div>`;
+
+  // Progreso por mecánico
+  const porMec = {};
+  tareas.forEach(t=>{
+    const m = t.mecanico||'Sin asignar';
+    if(!porMec[m]) porMec[m]={total:0,hechas:0};
+    porMec[m].total++;
+    if(t.hecho) porMec[m].hechas++;
+  });
+  document.getElementById('mecProgressGrid').innerHTML = Object.entries(porMec)
+    .sort((a,b)=>b[1].total-a[1].total)
+    .map(([m,s])=>{
+      const p = s.total ? Math.round(s.hechas/s.total*100) : 0;
+      return `<div class="mec-progress-card">
+        <div class="mec-pname">👷 ${m}</div>
+        <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:${p}%"></div></div>
+        <div class="prog-label"><span>${s.hechas}/${s.total} tareas</span><b>${p}%</b></div>
+      </div>`;
+    }).join('');
+
+  renderTablaPlan();
+}
+
+function renderTablaPlan(){
+  if(!planActivo || !planActivo.tareas) return;
+  const filtroMec = document.getElementById('filtroMecActivo').value;
+  let tareas = Object.values(planActivo.tareas);
+  if(filtroMec) tareas = tareas.filter(t=>t.mecanico===filtroMec);
+
+  const div = document.getElementById('tablaPlan');
+  if(!tareas.length){ div.innerHTML='<div style="text-align:center;padding:30px;color:rgba(255,255,255,0.3)">Sin tareas</div>'; return; }
+
+  div.innerHTML = tareas.map(t=>`
+    <div class="tarea-row">
+      <span style="font-weight:700;color:var(--gold-light)">${t.maqNombre}</span>
+      <span style="color:rgba(255,255,255,0.8)">${t.desc}</span>
+      <span>👷 ${t.mecanico||'—'}</span>
+      <span><span class="badge ${t.hecho?'badge-green':'badge-yellow'}">${t.hecho?'✅ Hecha':'⏳ Pendiente'}</span></span>
+      <span><button onclick="eliminarTareaDelPlan('${t.id}')" style="background:none;border:none;color:rgba(255,255,255,0.25);cursor:pointer;font-size:1rem" title="Eliminar del plan">🗑</button></span>
+    </div>`).join('');
+}
+
+function eliminarTareaDelPlan(id){
+  if(!confirm('¿Eliminar esta tarea del plan activo?')) return;
+  DB.ref(`plan_activo/tareas/${id}`).remove()
+    .then(()=> showToast('🗑 Tarea eliminada del plan'))
+    .catch(()=> showToast('❌ Error al eliminar'));
+}
+
+function cerrarPlan(){
+  if(!planActivo) return;
+  const tareas = planActivo.tareas ? Object.values(planActivo.tareas) : [];
+  const hechas = tareas.filter(t=>t.hecho).length;
+  const pct    = tareas.length ? Math.round(hechas/tareas.length*100) : 0;
+  if(!confirm(`¿Cerrar y archivar el plan "${planActivo.titulo}"?\nCumplimiento final: ${pct}%\n\nLos mecánicos ya no podrán ver este plan.`)) return;
+
+  const archivo = {
+    ...planActivo,
+    cerradoEn: Date.now(),
+    pctFinal: pct,
+    totalTareas: tareas.length,
+    tareasHechas: hechas
+  };
+  const histId = 'hist_' + Date.now();
+  Promise.all([
+    DB.ref(`historial_planes/${histId}`).set(archivo),
+    DB.ref('plan_activo').remove()
+  ]).then(()=>{
+    showToast('🏁 Plan archivado correctamente');
+    planActivo = null;
+    renderPlanActivo();
+  }).catch(()=> showToast('❌ Error al cerrar el plan'));
+}
+
+// ══════════════════════════════════════════════════
+// CATÁLOGO
+// ══════════════════════════════════════════════════
+function renderCatalogo(){
+  const filtroMaq  = document.getElementById('filtroMaqCat').value;
+  const filtroFreq = document.getElementById('filtroFreqCat').value;
+  const filtroTxt  = document.getElementById('filtroTextCat').value.toLowerCase();
+
+  const filtradas = CATALOGO.filter(t=>{
+    if(filtroMaq && t.maquina !== filtroMaq) return false;
+    if(filtroFreq && t.frecuencia !== filtroFreq) return false;
+    if(filtroTxt && !t.tarea.toLowerCase().includes(filtroTxt) && !t.maquina.toLowerCase().includes(filtroTxt)) return false;
+    return true;
+  });
+
+  document.getElementById('catCount').textContent =
+    `${filtradas.length} tareas · ${tareasSeleccionadas.size} seleccionadas`;
+
+  const div = document.getElementById('catalogoList');
+  if(!filtradas.length){
+    div.innerHTML='<div style="text-align:center;padding:24px;color:rgba(255,255,255,0.3)">Sin resultados</div>';
+    return;
+  }
+
+  div.innerHTML = filtradas.map(t=>{
+    const sel = tareasSeleccionadas.has(t.id);
+    return `<div class="cat-item ${sel?'selected':''}" onclick="toggleCatItem(${t.id})" data-id="${t.id}">
+      <div class="cat-check">${sel?'✓':''}</div>
+      <div class="cat-maq">${t.maquina}</div>
+      <div class="cat-desc">${t.tarea}</div>
+      <div class="cat-freq">${t.frecuencia}</div>
+    </div>`;
+  }).join('');
+
+  renderTareasSeleccionadas();
+}
+
+function toggleCatItem(id){
+  if(tareasSeleccionadas.has(id)) tareasSeleccionadas.delete(id);
+  else tareasSeleccionadas.add(id);
+  renderCatalogo();
+}
+
+function seleccionarFiltradas(){
+  const filtroMaq  = document.getElementById('filtroMaqCat').value;
+  const filtroFreq = document.getElementById('filtroFreqCat').value;
+  const filtroTxt  = document.getElementById('filtroTextCat').value.toLowerCase();
+  CATALOGO.filter(t=>{
+    if(filtroMaq && t.maquina !== filtroMaq) return false;
+    if(filtroFreq && t.frecuencia !== filtroFreq) return false;
+    if(filtroTxt && !t.tarea.toLowerCase().includes(filtroTxt)) return false;
+    return true;
+  }).forEach(t=> tareasSeleccionadas.add(t.id));
+  renderCatalogo();
+  showToast(`✅ ${tareasSeleccionadas.size} tareas seleccionadas`);
+}
+
+function deseleccionarTodas(){
+  tareasSeleccionadas.clear();
+  renderCatalogo();
+}
+
+function renderTareasSeleccionadas(){
+  const card = document.getElementById('asignacionCard');
+  const lista = document.getElementById('tareasSelList');
+
+  if(!tareasSeleccionadas.size){
+    card.style.display='none';
+    document.getElementById('activarMsg').textContent='Selecciona al menos una tarea del catálogo';
+    return;
+  }
+
+  card.style.display='block';
+  document.getElementById('activarMsg').textContent=`${tareasSeleccionadas.size} tareas listas para activar`;
+
+  const tareas = CATALOGO.filter(t=>tareasSeleccionadas.has(t.id));
+  lista.innerHTML = tareas.map(t=>`
+    <div class="sel-tarea" id="srow_${t.id}">
+      <span style="font-weight:700;color:var(--gold-light)">${t.maquina}</span>
+      <span style="color:rgba(255,255,255,0.8);font-size:0.85rem">${t.tarea}</span>
+      <select id="mec_${t.id}" style="background:var(--navy);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:6px 8px;font-family:'Barlow',sans-serif;font-size:0.83rem">
+        <option value="">— Asignar —</option>
+        ${MECANICOS.map(m=>`<option>${m}</option>`).join('')}
+      </select>
+      <button onclick="tareasSeleccionadas.delete(${t.id});renderCatalogo()" style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:1rem">✕</button>
+    </div>`).join('');
+}
+
+function asignarTodos(){
+  const mec = document.getElementById('asigTodosSelect').value;
+  if(!mec){ showToast('⚠️ Selecciona un mecánico'); return; }
+  tareasSeleccionadas.forEach(id=>{
+    const sel = document.getElementById(`mec_${id}`);
+    if(sel) sel.value = mec;
+  });
+  showToast(`✅ Todas asignadas a ${mec}`);
+}
+
+// ══════════════════════════════════════════════════
+// ACTIVAR PLAN
+// ══════════════════════════════════════════════════
+function activarPlan(){
+  const titulo = document.getElementById('planTitulo').value.trim();
+  const periodo= document.getElementById('planPeriodo').value.trim();
+  if(!titulo){ showToast('⚠️ Escribe el título del plan'); return; }
+  if(!tareasSeleccionadas.size){ showToast('⚠️ Selecciona al menos una tarea'); return; }
+
+  // Comprobar que todas tienen mecánico asignado
+  const sinAsignar = [...tareasSeleccionadas].filter(id=>{
+    const sel = document.getElementById(`mec_${id}`);
+    return !sel || !sel.value;
+  });
+  if(sinAsignar.length){
+    showToast(`⚠️ ${sinAsignar.length} tareas sin mecánico asignado`);
+    return;
+  }
+
+  if(planActivo && planActivo.id){
+    if(!confirm('Ya hay un plan activo. ¿Deseas reemplazarlo por este nuevo plan?\nEl plan actual se archivará automáticamente.')) return;
+    // Archivar primero
+    const tareas = planActivo.tareas ? Object.values(planActivo.tareas) : [];
+    const hechas = tareas.filter(t=>t.hecho).length;
+    const histId = 'hist_' + Date.now();
+    DB.ref(`historial_planes/${histId}`).set({
+      ...planActivo, cerradoEn:Date.now(),
+      pctFinal: tareas.length ? Math.round(hechas/tareas.length*100) : 0,
+      totalTareas: tareas.length, tareasHechas: hechas
+    });
+  }
+
+  const planId = 'plan_' + Date.now();
+  const tareasFB = {};
+  [...tareasSeleccionadas].forEach((catId, i)=>{
+    const cat = CATALOGO.find(t=>t.id===catId);
+    if(!cat) return;
+    const tId = 't_' + Date.now() + '_' + i;
+    tareasFB[tId] = {
+      id: tId,
+      maqId: cat.maqId || '',
+      maqNombre: cat.maquina,
+      desc: cat.tarea,
+      frecuencia: cat.frecuencia,
+      mecanico: document.getElementById(`mec_${catId}`).value,
+      hecho: false,
+      hechoEn: null,
+      hechoBy: null
+    };
+  });
+
+  const plan = { id: planId, titulo, periodo, creadoEn: Date.now(), tareas: tareasFB };
+
+  DB.ref('plan_activo').set(plan).then(()=>{
+    showToast('🚀 Plan activado — los mecánicos ya pueden verlo');
+    tareasSeleccionadas.clear();
+    document.getElementById('planTitulo').value='';
+    document.getElementById('planPeriodo').value='';
+    renderCatalogo();
+    switchTab('activo');
+  }).catch(()=> showToast('❌ Error al activar el plan'));
+}
+
+// ══════════════════════════════════════════════════
+// HISTORIAL
+// ══════════════════════════════════════════════════
+function cargarHistorial(){
+  DB.ref('historial_planes').once('value').then(snap=>{
+    const val = snap.val();
+    const div = document.getElementById('historialList');
+    if(!val){
+      div.innerHTML='<div style="text-align:center;padding:30px;color:rgba(255,255,255,0.3)">Sin planes archivados todavía</div>';
+      return;
+    }
+    const planes = Object.values(val).sort((a,b)=>(b.cerradoEn||0)-(a.cerradoEn||0));
+    div.innerHTML = planes.map(p=>`
+      <div class="hist-item">
+        <div>
+          <div class="hist-titulo">${p.titulo||'Sin título'}</div>
+          <div class="hist-meta">${p.periodo||''} · Cerrado: ${p.cerradoEn?new Date(p.cerradoEn).toLocaleDateString('es-ES'):'—'} · ${p.totalTareas||0} tareas</div>
+        </div>
+        <div class="hist-pct" style="color:${(p.pctFinal||0)>=80?'var(--green)':(p.pctFinal||0)>=50?'var(--yellow)':'var(--red)'}">
+          ${p.pctFinal||0}%
+        </div>
+      </div>`).join('');
+  });
+}
+
+// ══════════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════════
+function switchTab(name){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  if(name==='historial') cargarHistorial();
+  if(name==='activo') renderPlanActivo();
+}
+
+// ══════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════
+let toastT;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastT);
+  toastT=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ══════════════════════════════════════════════════
+// CATÁLOGO EMBEBIDO (versión reducida, se amplia desde preventivo.html)
+// Las tareas reales vienen de Firebase 'catalogo_tareas'
+// Si no hay nada, se usa este resumen por tipo de máquina
+// ══════════════════════════════════════════════════
+function getCatalogoEmbebido(){
+  // Catálogo básico generado a partir de los tipos de máquinas reales
+  const base = [
+    // AMASADORAS
+    {id:1,maquina:'PABAT 1',maqId:'MAQ-001',tarea:'Revisar brazos y fijaciones',frecuencia:'SEMANAL'},
+    {id:2,maquina:'PABAT 1',maqId:'MAQ-001',tarea:'Limpiar filtros de aceite',frecuencia:'MENSUAL'},
+    {id:3,maquina:'PABAT 1',maqId:'MAQ-001',tarea:'Comprobar nivel de aceite',frecuencia:'SEMANAL'},
+    {id:4,maquina:'PABAT 1',maqId:'MAQ-001',tarea:'Revisar cuadro eléctrico',frecuencia:'MENSUAL'},
+    {id:5,maquina:'PABAT 2',maqId:'MAQ-002',tarea:'Revisar brazos y fijaciones',frecuencia:'SEMANAL'},
+    {id:6,maquina:'PABAT 2',maqId:'MAQ-002',tarea:'Limpiar filtros de aceite',frecuencia:'MENSUAL'},
+    {id:7,maquina:'PABAT 2',maqId:'MAQ-002',tarea:'Comprobar nivel de aceite',frecuencia:'SEMANAL'},
+    {id:8,maquina:'PABAT 3',maqId:'MAQ-003',tarea:'Revisar brazos y fijaciones',frecuencia:'SEMANAL'},
+    {id:9,maquina:'PABAT 3',maqId:'MAQ-003',tarea:'Limpiar filtros de aceite',frecuencia:'MENSUAL'},
+    {id:10,maquina:'PABAT 4',maqId:'MAQ-004',tarea:'Revisar brazos y fijaciones',frecuencia:'SEMANAL'},
+    {id:11,maquina:'PABAT 4',maqId:'MAQ-004',tarea:'Comprobar nivel de aceite',frecuencia:'SEMANAL'},
+    {id:12,maquina:'PABAT 5',maqId:'MAQ-005',tarea:'Revisar brazos y fijaciones',frecuencia:'SEMANAL'},
+    {id:13,maquina:'PABAT 6',maqId:'MAQ-006',tarea:'Revisar brazos y fijaciones',frecuencia:'SEMANAL'},
+    {id:14,maquina:'PABAT 7',maqId:'MAQ-007',tarea:'Revisar brazos y fijaciones',frecuencia:'SEMANAL'},
+    {id:15,maquina:'PABAT 8',maqId:'MAQ-008',tarea:'Revisar brazos y fijaciones',frecuencia:'SEMANAL'},
+    // LÍNEAS
+    {id:20,maquina:'LINEA 1',maqId:'MAQ-010',tarea:'Revisar lonas y tensión',frecuencia:'SEMANAL'},
+    {id:21,maquina:'LINEA 1',maqId:'MAQ-010',tarea:'Engrasar cadenas',frecuencia:'SEMANAL'},
+    {id:22,maquina:'LINEA 1',maqId:'MAQ-010',tarea:'Revisar entablado',frecuencia:'MENSUAL'},
+    {id:23,maquina:'LINEA 2',maqId:'MAQ-011',tarea:'Revisar lonas y tensión',frecuencia:'SEMANAL'},
+    {id:24,maquina:'LINEA 2',maqId:'MAQ-011',tarea:'Engrasar cadenas',frecuencia:'SEMANAL'},
+    {id:25,maquina:'LINEA 3',maqId:'MAQ-012',tarea:'Revisar lonas y tensión',frecuencia:'SEMANAL'},
+    {id:26,maquina:'LINEA 3',maqId:'MAQ-012',tarea:'Engrasar cadenas',frecuencia:'SEMANAL'},
+    {id:27,maquina:'LINEA 4',maqId:'MAQ-013',tarea:'Revisar lonas y tensión',frecuencia:'SEMANAL'},
+    {id:28,maquina:'LINEA 5',maqId:'MAQ-014',tarea:'Revisar lonas y tensión',frecuencia:'SEMANAL'},
+    {id:29,maquina:'LINEA 6',maqId:'MAQ-015',tarea:'Revisar lonas y tensión',frecuencia:'SEMANAL'},
+    {id:30,maquina:'LINEA 7',maqId:'MAQ-016',tarea:'Revisar lonas y tensión',frecuencia:'SEMANAL'},
+    // HORNOS
+    {id:40,maquina:'HORNO 1',maqId:'MAQ-060',tarea:'Revisar quemador',frecuencia:'SEMANAL'},
+    {id:41,maquina:'HORNO 1',maqId:'MAQ-060',tarea:'Revisar plataforma y uñas',frecuencia:'SEMANAL'},
+    {id:42,maquina:'HORNO 1',maqId:'MAQ-060',tarea:'Comprobar cuadro eléctrico',frecuencia:'MENSUAL'},
+    {id:43,maquina:'HORNO 2',maqId:'MAQ-061',tarea:'Revisar quemador',frecuencia:'SEMANAL'},
+    {id:44,maquina:'HORNO 2',maqId:'MAQ-061',tarea:'Revisar plataforma y uñas',frecuencia:'SEMANAL'},
+    {id:45,maquina:'HORNO 3',maqId:'MAQ-062',tarea:'Revisar quemador',frecuencia:'SEMANAL'},
+    {id:46,maquina:'HORNO 4',maqId:'MAQ-063',tarea:'Revisar quemador',frecuencia:'SEMANAL'},
+    {id:47,maquina:'HORNO 5',maqId:'MAQ-064',tarea:'Revisar quemador',frecuencia:'SEMANAL'},
+    // TÚNELES
+    {id:60,maquina:'TUNEL PREFRIO',maqId:'MAQ-081',tarea:'Revisar equipos de frío',frecuencia:'SEMANAL'},
+    {id:61,maquina:'TUNEL PREFRIO',maqId:'MAQ-081',tarea:'Limpiar condensadores',frecuencia:'MENSUAL'},
+    {id:62,maquina:'TUNEL 1',maqId:'MAQ-082',tarea:'Revisar equipos de frío',frecuencia:'SEMANAL'},
+    {id:63,maquina:'TUNEL 2',maqId:'MAQ-083',tarea:'Revisar equipos de frío',frecuencia:'SEMANAL'},
+    {id:64,maquina:'TUNEL 3',maqId:'MAQ-084',tarea:'Revisar equipos de frío',frecuencia:'SEMANAL'},
+    // ENVASADO
+    {id:80,maquina:'ROBOT',maqId:'MAQ-108',tarea:'Revisar pinza y ventosas',frecuencia:'SEMANAL'},
+    {id:81,maquina:'ROBOT',maqId:'MAQ-108',tarea:'Comprobar servos',frecuencia:'MENSUAL'},
+    {id:82,maquina:'MAQUINA DE CAJAS',maqId:'MAQ-092',tarea:'Revisar pegamento',frecuencia:'SEMANAL'},
+    {id:83,maquina:'MAQUINA DE BOLSAS',maqId:'MAQ-094',tarea:'Revisar pinzas y rodillos',frecuencia:'SEMANAL'},
+  ];
+  return base;
+}
+</script>
+</body>
+</html>
