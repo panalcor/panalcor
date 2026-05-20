@@ -40,6 +40,12 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
 .header-period{font-size:0.75rem;color:rgba(255,255,255,0.45);letter-spacing:0.08em}
 .header-back{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);padding:7px 12px;border-radius:7px;font-family:'Barlow',sans-serif;font-size:0.8rem;cursor:pointer}
 
+/* ── MES SELECTOR ── */
+.mes-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.mes-row label{font-size:0.78rem;color:rgba(255,255,255,0.45);letter-spacing:0.06em;flex-shrink:0}
+#mesSelect{background:var(--navy-light);color:var(--white);border:1px solid rgba(201,162,39,0.35);border-radius:7px;padding:5px 10px;font-family:'Barlow',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;flex:1;max-width:200px}
+#mesSelect:focus{outline:none;border-color:var(--gold)}
+
 /* ── PROGRESS BAR ── */
 .progress-wrap{background:rgba(255,255,255,0.07);border-radius:8px;height:10px;overflow:hidden}
 .progress-bar{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--gold),var(--gold-light));transition:width .5s}
@@ -75,6 +81,23 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
 .tarea-desc{font-size:0.95rem;line-height:1.4;font-weight:500}
 .tarea-meta{font-size:0.72rem;color:rgba(255,255,255,0.35);margin-top:3px}
 .tarea-done-info{font-size:0.7rem;color:var(--green);margin-top:3px}
+
+/* ── MODAL CHECK-OFF ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:900;padding:20px}
+.modal-box{background:var(--navy-mid);border:1px solid rgba(201,162,39,0.35);border-radius:16px;padding:24px;width:100%;max-width:360px}
+.modal-box h3{font-size:1.1rem;font-weight:900;color:var(--gold-light);margin-bottom:6px}
+.modal-tarea-desc{font-size:0.88rem;color:rgba(255,255,255,0.6);margin-bottom:18px;line-height:1.4;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px;border-left:3px solid var(--gold)}
+.modal-label{font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px}
+.turno-btns{display:flex;gap:8px;margin-bottom:18px}
+.turno-btn{flex:1;padding:10px 4px;background:var(--navy-light);border:2px solid rgba(255,255,255,0.1);border-radius:9px;color:var(--white);font-family:'Barlow',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;text-align:center;transition:all .2s}
+.turno-btn:hover{border-color:var(--gold);background:rgba(201,162,39,0.15)}
+.turno-btn.sel{background:rgba(201,162,39,0.25);border-color:var(--gold);color:var(--gold-light)}
+#checkNotas{width:100%;background:var(--navy);color:var(--white);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px;font-family:'Barlow',sans-serif;font-size:0.9rem;resize:none;height:80px;margin-bottom:18px}
+#checkNotas:focus{outline:none;border-color:var(--gold)}
+.modal-btns{display:flex;gap:10px}
+.btn-cancel{flex:1;padding:12px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);border-radius:8px;font-family:'Barlow',sans-serif;font-size:0.9rem;font-weight:700;cursor:pointer}
+.btn-confirm{flex:2;padding:12px;background:linear-gradient(135deg,var(--gold),#a07d1a);border:none;color:#0d1b2a;border-radius:8px;font-family:'Barlow',sans-serif;font-size:0.9rem;font-weight:900;cursor:pointer}
+.btn-uncheck{width:100%;padding:10px;background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.35);color:var(--red);border-radius:8px;font-family:'Barlow',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;margin-top:10px}
 
 /* ── ESTADO VACÍO ── */
 .empty-state{text-align:center;padding:60px 20px;color:rgba(255,255,255,0.3)}
@@ -119,12 +142,16 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
     <div class="header-top">
       <div>
         <div class="header-name" id="hdrName">👷 —</div>
-        <div class="header-period" id="hdrPeriod">Cargando plan...</div>
+        <div class="header-period" id="hdrPeriod">—</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
         <a href="panalcor_inicio.html" style="display:inline-flex;align-items:center;gap:4px;padding:6px 10px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:#fff;text-decoration:none;font-size:0.78rem;font-weight:600">🏠</a>
         <button class="header-back" onclick="cambiarMecanico()">Cambiar</button>
       </div>
+    </div>
+    <div class="mes-row">
+      <label>MES</label>
+      <select id="mesSelect" onchange="cambiarMes()"></select>
     </div>
     <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
     <div class="progress-label"><span id="progressTxt">0 de 0 tareas</span><b id="progressPct">0%</b></div>
@@ -139,11 +166,32 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
   </div>
 </div>
 
+<!-- ══ MODAL CHECK-OFF ══ -->
+<div class="modal-bg" id="checkModal" style="display:none">
+  <div class="modal-box">
+    <h3 id="checkModalTitle">✅ Marcar como hecha</h3>
+    <div class="modal-tarea-desc" id="checkTareaDesc">—</div>
+    <div class="modal-label">Turno</div>
+    <div class="turno-btns">
+      <button class="turno-btn" id="tb-MANANA" onclick="selTurno('MANANA')">🌅 Mañana</button>
+      <button class="turno-btn" id="tb-TARDE"  onclick="selTurno('TARDE')">🌇 Tarde</button>
+      <button class="turno-btn" id="tb-NOCHE"  onclick="selTurno('NOCHE')">🌙 Noche</button>
+    </div>
+    <div class="modal-label">Notas (opcional)</div>
+    <textarea id="checkNotas" placeholder="Observaciones, incidencias..."></textarea>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="cerrarCheckModal()">Cancelar</button>
+      <button class="btn-confirm" id="btnConfirm" onclick="confirmarCheck()">✅ Guardar</button>
+    </div>
+    <button class="btn-uncheck" id="btnUncheck" onclick="desmarcarTarea()" style="display:none">↩️ Desmarcar tarea</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
 /* ══ FIREBASE ══ */
-const FB_CFG = {
+var FB_CFG = {
   apiKey:"AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU",
   authDomain:"panalcor-mantenimiento.firebaseapp.com",
   databaseURL:"https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
@@ -153,35 +201,37 @@ const FB_CFG = {
   appId:"1:67593058609:web:c33fa1fa4fce2932485810"
 };
 if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
-const DB = firebase.database();
+var DB = firebase.database();
 
 /* ══ ESTADO ══ */
-const SESSION_KEY  = 'mecAuth_prev';
-const MEC_KEY      = 'mecSeleccionado';
-const PW_DEFAULT   = 'panalcor';
-let mecActual      = null;
-let planActivo     = null;
-let planId         = null;
+var SESSION_KEY = 'mecAuth_prev';
+var MEC_KEY     = 'mecSeleccionado';
+var PW_DEFAULT  = 'panalcor';
+
+var mecActual   = null;
+var mesActual   = '';       // YYYY-MM
+var asigs       = {};       // { pushId: {tarea,mecanico,hecho,...} }
+var dbListener  = null;     // referencia para detach
 
 /* ══ LOGIN ══ */
 function getMecPwd(cb){
   DB.ref('config/mecanicoPwd').once('value')
-    .then(s => cb(s.val() || PW_DEFAULT))
-    .catch(()=> cb(localStorage.getItem('mecanicoPwd') || PW_DEFAULT));
+    .then(function(s){ cb(s.val() || PW_DEFAULT); })
+    .catch(function(){ cb(localStorage.getItem('mecanicoPwd') || PW_DEFAULT); });
 }
 
 function doLogin(){
-  const val = document.getElementById('pwInput').value;
-  const err = document.getElementById('loginErr');
-  if(!val){ err.textContent='⚠️ Introduce la contraseña'; return; }
-  getMecPwd(pwd => {
+  var val = document.getElementById('pwInput').value;
+  var err = document.getElementById('loginErr');
+  if(!val){ err.textContent = '⚠️ Introduce la contraseña'; return; }
+  getMecPwd(function(pwd){
     if(val === pwd){
-      sessionStorage.setItem(SESSION_KEY,'1');
-      document.getElementById('loginScreen').style.display='none';
+      sessionStorage.setItem(SESSION_KEY, '1');
+      document.getElementById('loginScreen').style.display = 'none';
       mostrarSelectorMecanico();
     } else {
-      err.textContent='❌ Contraseña incorrecta';
-      document.getElementById('pwInput').value='';
+      err.textContent = '❌ Contraseña incorrecta';
+      document.getElementById('pwInput').value = '';
       document.getElementById('pwInput').focus();
     }
   });
@@ -190,214 +240,310 @@ function doLogin(){
 /* ══ SELECTOR MECÁNICO ══ */
 function getMecanicos(cb){
   DB.ref('config/mecanicos').once('value')
-    .then(s => {
-      const val = s.val();
+    .then(function(s){
+      var val = s.val();
       cb(val && val.length ? val : ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO']);
     })
-    .catch(() => cb(['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO']));
+    .catch(function(){ cb(['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO']); });
 }
 
 function mostrarSelectorMecanico(){
-  const guardado = sessionStorage.getItem(MEC_KEY);
+  var guardado = sessionStorage.getItem(MEC_KEY);
   if(guardado){
     mecActual = guardado;
     arrancarApp();
     return;
   }
-  getMecanicos(mecanicos => {
-    const div = document.getElementById('mecBtnList');
-    div.innerHTML = mecanicos.map(m=>`
-      <button class="mec-btn" onclick="seleccionarMecanico('${m}')">
-        <span style="font-size:1.4rem">👷</span>
-        <span>${m}</span>
-      </button>`).join('');
-    document.getElementById('mecSelector').style.display='flex';
+  getMecanicos(function(mecanicos){
+    var div = document.getElementById('mecBtnList');
+    div.innerHTML = mecanicos.map(function(m){
+      return '<button class="mec-btn" onclick="seleccionarMecanico(\''+m+'\')">'
+           + '<span style="font-size:1.4rem">👷</span><span>'+m+'</span></button>';
+    }).join('');
+    document.getElementById('mecSelector').style.display = 'flex';
   });
 }
 
 function seleccionarMecanico(nombre){
   mecActual = nombre;
   sessionStorage.setItem(MEC_KEY, nombre);
-  document.getElementById('mecSelector').style.display='none';
+  document.getElementById('mecSelector').style.display = 'none';
   arrancarApp();
 }
 
 function cambiarMecanico(){
   sessionStorage.removeItem(MEC_KEY);
   mecActual = null;
-  document.getElementById('app').style.display='none';
+  if(dbListener){ dbListener.off(); dbListener = null; }
+  document.getElementById('app').style.display = 'none';
   mostrarSelectorMecanico();
 }
 
-/* ══ CARGAR PLAN ACTIVO ══ */
+/* ══ HELPERS MES ══ */
+function mesActualISO(){
+  var d = new Date();
+  var m = d.getMonth()+1;
+  return d.getFullYear() + '-' + (m<10?'0'+m:m);
+}
+
+function labelMes(ym){
+  var parts = ym.split('-');
+  var meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  return meses[parseInt(parts[1])-1] + ' ' + parts[0];
+}
+
+/* Genera lista de meses: 6 hacia atrás + 6 hacia adelante desde hoy */
+function generarMeses(){
+  var meses = [];
+  var hoy = new Date();
+  for(var i=-6; i<=6; i++){
+    var d = new Date(hoy.getFullYear(), hoy.getMonth()+i, 1);
+    var m = d.getMonth()+1;
+    var ym = d.getFullYear()+'-'+(m<10?'0'+m:m);
+    meses.push(ym);
+  }
+  return meses;
+}
+
+/* ══ ARRANQUE ══ */
 function arrancarApp(){
-  document.getElementById('app').style.display='block';
+  document.getElementById('app').style.display = 'block';
   document.getElementById('hdrName').textContent = '👷 ' + mecActual;
-  document.getElementById('tareasWrap').innerHTML = '<div class="empty-state"><div class="ico">⏳</div><p>Cargando tareas...</p></div>';
 
-  DB.ref('plan_activo').once('value').then(snap => {
-    const val = snap.val();
-    if(!val || !val.tareas){
-      document.getElementById('hdrPeriod').textContent = 'Sin plan activo';
-      document.getElementById('tareasWrap').innerHTML = `
-        <div class="empty-state">
-          <div class="ico">📋</div>
-          <p>No hay ningún plan activo.<br>El responsable debe crear uno desde el panel de administración.</p>
-        </div>`;
-      return;
-    }
-    planId = val.id;
-    planActivo = val;
-    document.getElementById('hdrPeriod').textContent = val.titulo || val.periodo || '—';
-    renderTareas();
+  mesActual = mesActualISO();
 
-    // Escucha cambios en tiempo real
-    DB.ref('plan_activo/tareas').on('value', snap2 => {
-      if(planActivo) planActivo.tareas = snap2.val() || {};
-      renderTareas();
+  /* Poblar selector de meses */
+  var sel = document.getElementById('mesSelect');
+  var meses = generarMeses();
+  sel.innerHTML = '';
+  meses.forEach(function(ym){
+    var opt = document.createElement('option');
+    opt.value = ym;
+    opt.textContent = labelMes(ym);
+    if(ym === mesActual) opt.selected = true;
+    sel.appendChild(opt);
+  });
+
+  cargarMes(mesActual);
+}
+
+function cambiarMes(){
+  var sel = document.getElementById('mesSelect');
+  mesActual = sel.value;
+  cargarMes(mesActual);
+}
+
+/* ══ CARGAR MES DESDE FIREBASE ══ */
+function cargarMes(mes){
+  document.getElementById('hdrPeriod').textContent = labelMes(mes);
+  document.getElementById('tareasWrap').innerHTML =
+    '<div class="empty-state"><div class="ico">⏳</div><p>Cargando tareas...</p></div>';
+
+  /* Detach listener anterior si existe */
+  if(dbListener){ dbListener.off(); dbListener = null; }
+
+  var ref = DB.ref('asignaciones/' + mes);
+  dbListener = ref;
+
+  ref.on('value', function(snap){
+    var val = snap.val() || {};
+    /* Filtrar solo mis tareas */
+    asigs = {};
+    Object.keys(val).forEach(function(k){
+      if(val[k].mecanico === mecActual) asigs[k] = val[k];
     });
-  }).catch(() => {
-    document.getElementById('tareasWrap').innerHTML = `
-      <div class="empty-state">
-        <div class="ico">❌</div>
-        <p>Error de conexión.<br>Comprueba que tienes internet.</p>
-      </div>`;
+    renderTareas();
+  }, function(){
+    document.getElementById('tareasWrap').innerHTML =
+      '<div class="empty-state"><div class="ico">❌</div><p>Error de conexión.<br>Comprueba que tienes internet.</p></div>';
   });
 }
 
 /* ══ RENDER TAREAS ══ */
 function renderTareas(){
-  if(!planActivo || !planActivo.tareas){
-    document.getElementById('tareasWrap').innerHTML = `
-      <div class="empty-state"><div class="ico">✅</div><p>No tienes tareas asignadas en el plan actual.</p></div>`;
+  var lista = Object.keys(asigs).map(function(k){ return Object.assign({_id:k}, asigs[k]); });
+
+  if(!lista.length){
+    document.getElementById('tareasWrap').innerHTML =
+      '<div class="empty-state"><div class="ico">📋</div><p>No tienes tareas asignadas para '+labelMes(mesActual)+'.</p></div>';
     actualizarProgreso([]);
     return;
   }
 
-  const misTareas = Object.entries(planActivo.tareas)
-    .map(([id, t]) => ({...t, id}))
-    .filter(t => t.mecanico === mecActual);
-
-  if(!misTareas.length){
-    document.getElementById('tareasWrap').innerHTML = `
-      <div class="empty-state"><div class="ico">✅</div><p>No tienes tareas asignadas en este plan.</p></div>`;
-    actualizarProgreso([]);
-    return;
-  }
-
-  // Agrupar por instancia/máquina
-  const porMaquina = {};
-  misTareas.forEach(t => {
-    const k = t.instancia || t.maquina || t.maqNombre || 'General';
-    if(!porMaquina[k]) porMaquina[k] = { nombre: k, tareas: [] };
+  /* Agrupar por instancia */
+  var porMaquina = {};
+  lista.forEach(function(t){
+    var k = t.instancia || t.maquina || 'General';
+    if(!porMaquina[k]) porMaquina[k] = { nombre:k, tareas:[] };
     porMaquina[k].tareas.push(t);
   });
 
-  actualizarProgreso(misTareas);
+  actualizarProgreso(lista);
 
-  const wrap = document.getElementById('tareasWrap');
+  var wrap = document.getElementById('tareasWrap');
   wrap.innerHTML = '';
 
-  // Banner completado
-  const allDone = misTareas.every(t => t.hecho);
-  const banner = document.getElementById('bannerDone');
-  banner.style.display = allDone ? 'block' : 'none';
+  /* Banner completado */
+  var allDone = lista.every(function(t){ return t.hecho; });
+  document.getElementById('bannerDone').style.display = allDone ? 'block' : 'none';
 
-  Object.entries(porMaquina).forEach(([k, maq]) => {
-    const total = maq.tareas.length;
-    const hechas = maq.tareas.filter(t => t.hecho).length;
-    const allMaqDone = hechas === total;
+  var freqRep = {DIARIO:'~20× mes',SEMANAL:'4× mes',QUINCENAL:'2× mes',
+                 MENSUAL:'1× mes',SEMESTRAL:'2/año',ANUAL:'1/año',TRIMESTRAL:'4/año'};
 
-    const card = document.createElement('div');
+  Object.keys(porMaquina).sort().forEach(function(k){
+    var maq = porMaquina[k];
+    var total  = maq.tareas.length;
+    var hechas = maq.tareas.filter(function(t){ return t.hecho; }).length;
+    var allMaqDone = hechas === total;
+
+    var card = document.createElement('div');
     card.className = 'maq-card' + (allMaqDone ? ' done' : '');
-    card.dataset.key = k;
 
-    let countClass = allMaqDone ? 'all-done' : hechas > 0 ? 'pending' : 'empty';
-    let countTxt   = allMaqDone ? '✅ Completada' : `${hechas}/${total}`;
+    var countClass = allMaqDone ? 'all-done' : hechas > 0 ? 'pending' : 'empty';
+    var countTxt   = allMaqDone ? '✅ Completada' : hechas+'/'+total;
 
-    card.innerHTML = `
-      <div class="maq-header" onclick="toggleMaq(this.parentElement)">
-        <div>
-          <div class="maq-name">${maq.nombre}</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <span class="maq-count ${countClass}">${countTxt}</span>
-          <span class="maq-arrow">▼</span>
-        </div>
-      </div>
-      <div class="tareas-list">
-        ${maq.tareas.map(t => {
-          const desc = t.tarea || t.desc || '—';
-          const freq = t.frecuencia || '';
-          const freqRep = {DIARIO:'~20× mes',SEMANAL:'4× mes',QUINCENAL:'2× mes',MENSUAL:'1× mes',SEMESTRAL:'2/año',ANUAL:'1/año',TRIMESTRAL:'4/año'}[freq] || freq;
-          return `
-          <div class="tarea-item ${t.hecho?'done':''}" id="ti_${t.id}" onclick="toggleTarea('${t.id}')">
-            <div class="tarea-check">${t.hecho?'✓':''}</div>
-            <div class="tarea-body">
-              <div class="tarea-desc">${desc}</div>
-              <div class="tarea-meta">${freq ? `<span style="background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.3);border-radius:10px;padding:1px 7px;font-size:0.7rem;color:#c9a227">${freq}</span> <span style="opacity:0.5">${freqRep}</span>` : ''}</div>
-              ${t.hecho && t.hechoEn ? `<div class="tarea-done-info">✅ ${new Date(t.hechoEn).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</div>` : ''}
-            </div>
-          </div>`;
-        }).join('')}
-      </div>`;
+    var tareasHtml = maq.tareas.map(function(t){
+      var desc   = t.tarea || '—';
+      var freq   = t.frecuencia || '';
+      var rep    = freqRep[freq] || freq;
+      var turno  = t.turno ? ({MANANA:'🌅 Mañana',TARDE:'🌇 Tarde',NOCHE:'🌙 Noche'}[t.turno]||t.turno) : '';
+      var fechaStr = '';
+      if(t.hecho && t.hechoEn){
+        var d = new Date(t.hechoEn);
+        fechaStr = d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})
+                 + ' ' + d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+      }
+      var notaStr = t.notas ? '<span style="opacity:.6"> · '+escHtml(t.notas)+'</span>' : '';
+      return '<div class="tarea-item'+(t.hecho?' done':'')+'" id="ti_'+t._id+'" onclick="abrirCheckModal(\''+t._id+'\')">'
+           + '<div class="tarea-check">'+(t.hecho?'✓':'')+'</div>'
+           + '<div class="tarea-body">'
+           + '<div class="tarea-desc">'+escHtml(desc)+'</div>'
+           + '<div class="tarea-meta">'
+           + (freq ? '<span style="background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.3);border-radius:10px;padding:1px 7px;font-size:0.7rem;color:#c9a227">'+freq+'</span>'
+                   + (rep ? ' <span style="opacity:.5">'+rep+'</span>' : '') : '')
+           + '</div>'
+           + (t.hecho ? '<div class="tarea-done-info">✅ '+fechaStr+(turno?' · '+turno:'')+''+notaStr+'</div>' : '')
+           + '</div></div>';
+    }).join('');
+
+    card.innerHTML =
+      '<div class="maq-header" onclick="toggleMaq(this.parentElement)">'
+      + '<div><div class="maq-name">'+escHtml(maq.nombre)+'</div></div>'
+      + '<div style="display:flex;align-items:center;gap:6px">'
+      + '<span class="maq-count '+countClass+'">'+countTxt+'</span>'
+      + '<span class="maq-arrow">▼</span>'
+      + '</div></div>'
+      + '<div class="tareas-list">'+tareasHtml+'</div>';
+
     wrap.appendChild(card);
 
-    // Auto-abrir si tiene pendientes
-    if(!allMaqDone && hechas < total) {
-      card.classList.add('open');
-    }
+    if(!allMaqDone) card.classList.add('open');
   });
 }
 
-function toggleMaq(card){
-  card.classList.toggle('open');
+function escHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function toggleTarea(tareaId){
-  if(!planActivo || !planActivo.tareas || !planActivo.tareas[tareaId]) return;
-  const t = planActivo.tareas[tareaId];
-  const nuevoEstado = !t.hecho;
-  const ahora = Date.now();
-
-  // Actualizar Firebase
-  DB.ref(`plan_activo/tareas/${tareaId}`).update({
-    hecho: nuevoEstado,
-    hechoEn: nuevoEstado ? ahora : null,
-    hechoBy: nuevoEstado ? mecActual : null
-  }).catch(() => showToast('❌ Error al guardar'));
-
-  // Actualizar local para respuesta inmediata
-  t.hecho   = nuevoEstado;
-  t.hechoEn = nuevoEstado ? ahora : null;
-  t.hechoBy = nuevoEstado ? mecActual : null;
-
-  showToast(nuevoEstado ? '✅ Tarea completada' : '↩️ Tarea desmarcada');
-}
+function toggleMaq(card){ card.classList.toggle('open'); }
 
 /* ══ PROGRESO ══ */
-function actualizarProgreso(tareas){
-  const total  = tareas.length;
-  const hechas = tareas.filter(t => t.hecho).length;
-  const pct    = total ? Math.round(hechas/total*100) : 0;
-  document.getElementById('progressBar').style.width = pct + '%';
-  document.getElementById('progressTxt').textContent = `${hechas} de ${total} tareas`;
-  document.getElementById('progressPct').textContent  = pct + '%';
+function actualizarProgreso(lista){
+  var total  = lista.length;
+  var hechas = lista.filter(function(t){ return t.hecho; }).length;
+  var pct    = total ? Math.round(hechas/total*100) : 0;
+  document.getElementById('progressBar').style.width  = pct+'%';
+  document.getElementById('progressTxt').textContent  = hechas+' de '+total+' tareas';
+  document.getElementById('progressPct').textContent  = pct+'%';
+}
+
+/* ══ MODAL CHECK-OFF ══ */
+var checkId     = null;
+var turnoSel    = null;
+
+function abrirCheckModal(id){
+  var t = asigs[id];
+  if(!t) return;
+  checkId  = id;
+  turnoSel = t.turno || null;
+
+  document.getElementById('checkTareaDesc').textContent = (t.instancia||t.maquina||'') + ' — ' + (t.tarea||'—');
+  document.getElementById('checkNotas').value = t.notas || '';
+
+  /* Botones turno */
+  ['MANANA','TARDE','NOCHE'].forEach(function(tr){
+    var btn = document.getElementById('tb-'+tr);
+    btn.classList.toggle('sel', tr === turnoSel);
+  });
+
+  var esDone = !!t.hecho;
+  document.getElementById('checkModalTitle').textContent = esDone ? '📋 Detalle de tarea' : '✅ Marcar como hecha';
+  document.getElementById('btnConfirm').style.display  = esDone ? 'none' : '';
+  document.getElementById('btnUncheck').style.display  = esDone ? '' : 'none';
+
+  document.getElementById('checkModal').style.display = 'flex';
+}
+
+function selTurno(tr){
+  turnoSel = (turnoSel === tr) ? null : tr;
+  ['MANANA','TARDE','NOCHE'].forEach(function(t){
+    document.getElementById('tb-'+t).classList.toggle('sel', t === turnoSel);
+  });
+}
+
+function cerrarCheckModal(){
+  document.getElementById('checkModal').style.display = 'none';
+  checkId = null;
+  turnoSel = null;
+}
+
+function confirmarCheck(){
+  if(!checkId) return;
+  var notas = document.getElementById('checkNotas').value.trim();
+
+  DB.ref('asignaciones/'+mesActual+'/'+checkId).update({
+    hecho: true,
+    hechoEn: new Date().toISOString(),
+    turno: turnoSel || null,
+    notas: notas
+  }).then(function(){
+    showToast('✅ Tarea completada');
+    cerrarCheckModal();
+  }).catch(function(){
+    showToast('❌ Error al guardar');
+  });
+}
+
+function desmarcarTarea(){
+  if(!checkId) return;
+  DB.ref('asignaciones/'+mesActual+'/'+checkId).update({
+    hecho: false,
+    hechoEn: null,
+    turno: null,
+    notas: ''
+  }).then(function(){
+    showToast('↩️ Tarea desmarcada');
+    cerrarCheckModal();
+  }).catch(function(){
+    showToast('❌ Error al guardar');
+  });
 }
 
 /* ══ TOAST ══ */
-let toastT;
+var toastT;
 function showToast(msg){
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
   clearTimeout(toastT);
-  toastT = setTimeout(()=>t.classList.remove('show'), 2500);
+  toastT = setTimeout(function(){ t.classList.remove('show'); }, 2500);
 }
 
 /* ══ ARRANQUE ══ */
 (function(){
-  if(sessionStorage.getItem(SESSION_KEY)==='1'){
-    document.getElementById('loginScreen').style.display='none';
+  if(sessionStorage.getItem(SESSION_KEY) === '1'){
+    document.getElementById('loginScreen').style.display = 'none';
     mostrarSelectorMecanico();
   }
 })();
