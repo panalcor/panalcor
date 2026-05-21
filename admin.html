@@ -41,7 +41,6 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 .back-btn,.logout-btn{background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.4);color:var(--gold);padding:8px 14px;border-radius:7px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.85rem;letter-spacing:0.06em;transition:all .2s}
 .back-btn:hover,.logout-btn:hover{background:rgba(201,162,39,0.3)}
 .logout-btn{margin-left:auto;color:rgba(255,255,255,0.5);border-color:rgba(255,255,255,0.2)}
-@keyframes notifPulse{0%,100%{box-shadow:0 0 0 0 rgba(231,76,60,0.6)}50%{box-shadow:0 0 0 8px rgba(231,76,60,0)}}
 
 /* ── TABS ── */
 .tabs{display:flex;background:var(--navy-mid);border-bottom:2px solid rgba(201,162,39,0.2);overflow-x:auto}
@@ -172,10 +171,6 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
     <div class="sub">PANALCOR S.L. · ADMINISTRACIÓN</div>
     <h1>🛡️ PANEL DE ADMINISTRADOR</h1>
   </div>
-  <button id="notifBtn" onclick="toggleNotificaciones()" title="Notificaciones de averías"
-    style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);padding:8px 13px;border-radius:7px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.85rem;display:flex;align-items:center;gap:6px;transition:all .2s">
-    🔔 <span id="notifLabel">Avisos</span>
-  </button>
   <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
 </div>
 
@@ -193,9 +188,6 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
   <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
     <a href="plan_preventivo.html" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:linear-gradient(135deg,rgba(201,162,39,0.2),rgba(201,162,39,0.08));border:1px solid rgba(201,162,39,0.4);border-radius:10px;color:#f0c040;text-decoration:none;font-family:'Barlow',sans-serif;font-size:0.95rem;font-weight:700;letter-spacing:0.04em;transition:all .2s" onmouseover="this.style.background='linear-gradient(135deg,rgba(201,162,39,0.35),rgba(201,162,39,0.15))'" onmouseout="this.style.background='linear-gradient(135deg,rgba(201,162,39,0.2),rgba(201,162,39,0.08))'">
       📋 Plan Preventivo
-    </a>
-    <a href="maquinas_admin.html" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;background:linear-gradient(135deg,rgba(52,152,219,0.2),rgba(52,152,219,0.08));border:1px solid rgba(52,152,219,0.4);border-radius:10px;color:#5dade2;text-decoration:none;font-family:'Barlow',sans-serif;font-size:0.95rem;font-weight:700;letter-spacing:0.04em;transition:all .2s" onmouseover="this.style.background='linear-gradient(135deg,rgba(52,152,219,0.35),rgba(52,152,219,0.15))'" onmouseout="this.style.background='linear-gradient(135deg,rgba(52,152,219,0.2),rgba(52,152,219,0.08))'">
-      🏭 Fichas de Máquinas
     </a>
   </div>
   <div class="kpi-row" id="kpiRow"></div>
@@ -673,8 +665,6 @@ DB.ref('averias').on('value', snap => {
   if (val) {
     const nuevas = Object.values(val).sort((a,b) => b.ts - a.ts);
     localStorage.setItem('averias_v1', JSON.stringify(nuevas));
-    // Detectar averías graves nuevas y notificar
-    detectarAveriasCriticas(nuevas);
     // Si el dashboard está visible, refrescarlo silenciosamente
     if (document.getElementById('app') &&
         document.getElementById('app').style.display !== 'none') {
@@ -707,7 +697,6 @@ function getTurnos(){
 let charts = {};
 
 function initApp(){
-  initNotificaciones();
   renderDashboard();
   // fechas por defecto para mecánicos e informes (último mes)
   const hoy = new Date();
@@ -1934,132 +1923,6 @@ function cargarProgresoPreventivo(){
   }).catch(function(){
     document.getElementById('ppSub').textContent = 'Error al cargar datos';
   });
-}
-
-// ══════════════════════════════════════════════════
-// NOTIFICACIONES DE AVERÍAS GRAVES
-// ══════════════════════════════════════════════════
-
-// Actualizar botón del topbar según el estado del permiso
-function actualizarBotonNotif(){
-  var btn   = document.getElementById('notifBtn');
-  var label = document.getElementById('notifLabel');
-  if(!btn || !('Notification' in window)) return;
-  var perm = Notification.permission;
-  if(perm === 'granted'){
-    btn.style.borderColor = 'rgba(46,204,113,0.5)';
-    btn.style.color       = '#2ecc71';
-    label.textContent     = 'Avisos ON';
-  } else if(perm === 'denied'){
-    btn.style.borderColor = 'rgba(231,76,60,0.4)';
-    btn.style.color       = 'rgba(231,76,60,0.6)';
-    label.textContent     = 'Bloqueado';
-  } else {
-    btn.style.borderColor = 'rgba(255,255,255,0.15)';
-    btn.style.color       = 'rgba(255,255,255,0.5)';
-    label.textContent     = 'Avisos';
-  }
-}
-
-function toggleNotificaciones(){
-  if(!('Notification' in window)){
-    alert('Tu navegador no soporta notificaciones.');
-    return;
-  }
-  if(Notification.permission === 'granted'){
-    alert('Las notificaciones ya están activadas.
-Para desactivarlas ve a la configuración del navegador (icono del candado en la barra de dirección).');
-    return;
-  }
-  if(Notification.permission === 'denied'){
-    alert('Las notificaciones están bloqueadas.
-Pulsa el icono del candado en la barra de dirección y cambia el permiso a Permitir.');
-    return;
-  }
-  Notification.requestPermission().then(function(result){
-    actualizarBotonNotif();
-    if(result === 'granted'){
-      // Notificación de prueba
-      new Notification('✅ Notificaciones activadas', {
-        body: 'Recibirás avisos cuando se registre una avería CRÍTICA o GRAVE.',
-        icon: 'https://panalcor.github.io/panalcor/favicon.ico',
-        tag: 'test-notif'
-      });
-    }
-  });
-}
-
-// Detectar averías nuevas y notificar si son CRÍTICA o GRAVE
-var _ultimoTsNotif = parseInt(localStorage.getItem('notif_lastTs') || '0');
-var _primeraVez    = true;  // no notificar en la carga inicial
-
-function detectarAveriasCriticas(listaOrdenada){
-  if(!listaOrdenada || !listaOrdenada.length) return;
-
-  var maxTs = listaOrdenada[0].ts || 0;
-
-  if(_primeraVez){
-    // En la primera carga solo actualizar el ts, no notificar
-    _primeraVez = false;
-    if(maxTs > _ultimoTsNotif){
-      _ultimoTsNotif = maxTs;
-      localStorage.setItem('notif_lastTs', maxTs);
-    }
-    return;
-  }
-
-  // Buscar entradas nuevas (ts > último conocido) con gravedad alta
-  var nuevasGraves = listaOrdenada.filter(function(a){
-    var esNueva  = (a.ts || 0) > _ultimoTsNotif;
-    var esGrave  = a.gravedad === 'CRÍTICA' || a.gravedad === 'GRAVE';
-    return esNueva && esGrave;
-  });
-
-  nuevasGraves.forEach(function(a){
-    notificarAveria(a);
-  });
-
-  if(maxTs > _ultimoTsNotif){
-    _ultimoTsNotif = maxTs;
-    localStorage.setItem('notif_lastTs', maxTs);
-  }
-}
-
-function notificarAveria(a){
-  // Notificación del navegador
-  if('Notification' in window && Notification.permission === 'granted'){
-    var emoji  = a.gravedad === 'CRÍTICA' ? '🚨' : '⚠️';
-    var titulo = emoji + ' Avería ' + a.gravedad + ' — ' + (a.maqNombre || '');
-    var cuerpo = (a.descripcion || 'Sin descripción') +
-                 (a.mecanicos && a.mecanicos.length ? '
-Mecánico: ' + a.mecanicos.join(', ') : '');
-    var notif = new Notification(titulo, {
-      body   : cuerpo,
-      icon   : 'https://panalcor.github.io/panalcor/favicon.ico',
-      tag    : a.id || ('averia-' + a.ts),
-      requireInteraction: a.gravedad === 'CRÍTICA'
-    });
-    notif.onclick = function(){
-      window.focus();
-      // Ir a la pestaña de averías en el panel
-      var tab = document.querySelector('.tab[data-panel=panel-ia]');
-      if(tab) tab.click();
-      notif.close();
-    };
-  }
-
-  // Alerta visual adicional en el botón del topbar
-  var btn = document.getElementById('notifBtn');
-  if(btn){
-    btn.style.animation = 'none';
-    btn.offsetHeight;  // reflow
-    btn.style.animation = 'notifPulse 1s ease 3';
-  }
-}
-
-// Llamar al actualizar el estado del botón cuando carga la app
-function initNotificaciones(){
-  actualizarBotonNotif();
 }
 </script>
 
