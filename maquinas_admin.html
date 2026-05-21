@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Fichas de Máquinas — PANALCOR</title>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy-deep:#0d1b2a;--navy-mid:#1a2d42;--navy-light:#243d56;
+  --gold:#c9a227;--gold-light:#f0c040;--white:#f0f4f8;
+  --red:#e74c3c;--green:#2ecc71;--yellow:#f39c12;--blue:#3498db;
+  --purple:#9b59b6;--radius:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-serif;min-height:100vh}
+
+/* LOGIN */
+.login-screen{position:fixed;inset:0;background:var(--navy-deep);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:20px}
+.login-box{background:var(--navy-mid);border:1px solid rgba(201,162,39,0.3);border-radius:16px;padding:40px;width:340px;text-align:center}
+.login-box h2{font-size:1.5rem;font-weight:900;color:var(--gold-light);letter-spacing:0.08em;margin-bottom:6px}
+.login-box .sub{font-size:0.78rem;color:rgba(255,255,255,0.4);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:28px}
+.login-box input{width:100%;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:13px 16px;font-family:'Barlow',sans-serif;font-size:1.1rem;text-align:center;letter-spacing:0.2em;margin-bottom:14px}
+.login-box input:focus{outline:none;border-color:var(--gold)}
+.login-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a;border:none;border-radius:8px;font-family:'Barlow',sans-serif;font-size:1rem;font-weight:900;letter-spacing:0.1em;cursor:pointer}
+.login-btn:hover{filter:brightness(1.1)}
+.login-err{color:var(--red);font-size:0.85rem;margin-top:8px;display:none}
+
+/* TOPBAR */
+.topbar{background:linear-gradient(135deg,#0a1520,var(--navy-mid));border-bottom:2px solid var(--gold);padding:14px 20px;display:flex;align-items:center;gap:12px}
+.topbar h1{font-size:1.3rem;font-weight:900;letter-spacing:0.06em;color:var(--gold-light)}
+.topbar .sub{font-size:0.78rem;color:rgba(255,255,255,0.45)}
+.back-btn{background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.4);color:var(--gold);padding:8px 14px;border-radius:7px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.85rem;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.back-btn:hover{background:rgba(201,162,39,0.3)}
+.logout-btn{margin-left:auto;background:transparent;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.4);padding:8px 14px;border-radius:7px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.85rem}
+.logout-btn:hover{border-color:rgba(255,255,255,0.3);color:var(--white)}
+
+/* FILTROS */
+.filter-bar{padding:16px 20px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-bottom:1px solid rgba(255,255,255,0.07)}
+.search-box{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:9px 14px;color:var(--white);font-family:'Barlow',sans-serif;font-size:0.9rem;width:220px}
+.search-box:focus{outline:none;border-color:var(--gold)}
+.area-chip{padding:7px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);background:transparent;color:rgba(255,255,255,0.55);font-family:'Barlow',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+.area-chip:hover{border-color:var(--gold);color:var(--gold)}
+.area-chip.active{background:var(--gold);border-color:var(--gold);color:#0d1b2a}
+.maq-count{margin-left:auto;font-size:0.78rem;color:rgba(255,255,255,0.3)}
+
+/* GRID MAQUINAS */
+.maq-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;padding:20px}
+.maq-card{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:16px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.maq-card:hover{border-color:rgba(201,162,39,0.5);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.3)}
+.maq-card.has-data{border-left:3px solid var(--green)}
+.maq-card.no-data{border-left:3px solid rgba(255,255,255,0.1)}
+.maq-id{font-size:0.7rem;color:var(--gold);font-weight:700;letter-spacing:0.1em;margin-bottom:6px}
+.maq-name{font-size:0.95rem;font-weight:700;line-height:1.2;margin-bottom:8px}
+.maq-type{font-size:0.72rem;color:rgba(255,255,255,0.45);margin-bottom:4px}
+.maq-area-tag{display:inline-block;font-size:0.65rem;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);margin-top:4px}
+.maq-dot{position:absolute;top:12px;right:12px;width:8px;height:8px;border-radius:50%;background:var(--green)}
+.maq-dot.empty{background:rgba(255,255,255,0.2)}
+
+/* DETAIL PANEL */
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;display:none}
+.detail-panel{position:fixed;top:0;right:0;bottom:0;width:min(680px,100vw);background:var(--navy-deep);border-left:2px solid rgba(201,162,39,0.3);z-index:201;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s ease;overflow:hidden}
+.detail-panel.open{transform:translateX(0)}
+.detail-header{background:linear-gradient(135deg,#0a1520,var(--navy-mid));border-bottom:1px solid rgba(201,162,39,0.25);padding:18px 20px;display:flex;align-items:flex-start;gap:14px}
+.detail-header-info{flex:1}
+.detail-mid{font-size:1.2rem;font-weight:900;line-height:1.2;margin-bottom:4px}
+.detail-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tag{font-size:0.68rem;padding:3px 10px;border-radius:10px;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);font-weight:600}
+.tag.tipo{background:rgba(52,152,219,0.2);color:var(--blue)}
+.tag.area{background:rgba(201,162,39,0.15);color:var(--gold)}
+.close-btn{background:rgba(255,255,255,0.1);border:none;color:var(--white);width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center}
+.close-btn:hover{background:rgba(255,255,255,0.2)}
+
+/* TABS */
+.detail-tabs{display:flex;border-bottom:1px solid rgba(255,255,255,0.1);background:var(--navy-mid)}
+.dtab{padding:12px 16px;cursor:pointer;font-size:0.85rem;font-weight:600;color:rgba(255,255,255,0.45);border-bottom:3px solid transparent;transition:all .15s;white-space:nowrap}
+.dtab:hover{color:var(--white)}
+.dtab.active{color:var(--gold-light);border-bottom-color:var(--gold)}
+.detail-content{flex:1;overflow-y:auto;padding:20px}
+.dpanel{display:none}
+.dpanel.active{display:block}
+
+/* FORM INFO */
+.form-row{margin-bottom:14px}
+.form-row label{display:block;font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:5px}
+.form-row input,.form-row textarea,.form-row select{width:100%;background:var(--navy-mid);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 14px;color:var(--white);font-family:'Barlow',sans-serif;font-size:0.95rem}
+.form-row input:focus,.form-row textarea:focus{outline:none;border-color:var(--gold)}
+.form-row textarea{resize:vertical;min-height:80px}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.save-btn{background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a;border:none;border-radius:8px;padding:11px 28px;font-family:'Barlow',sans-serif;font-size:0.9rem;font-weight:900;cursor:pointer;letter-spacing:0.06em}
+.save-btn:hover{filter:brightness(1.1)}
+.save-msg{font-size:0.82rem;margin-left:12px;opacity:0;transition:opacity .3s}
+.save-msg.ok{color:var(--green);opacity:1}
+.save-msg.err{color:var(--red);opacity:1}
+
+/* FOTOS */
+.upload-area{border:2px dashed rgba(255,255,255,0.2);border-radius:10px;padding:24px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px}
+.upload-area:hover{border-color:var(--gold);background:rgba(201,162,39,0.05)}
+.upload-area.dragover{border-color:var(--gold);background:rgba(201,162,39,0.1)}
+.upload-area p{font-size:0.85rem;color:rgba(255,255,255,0.45);margin-top:8px}
+.upload-input{display:none}
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.photo-item{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--navy-mid)}
+.photo-item img{width:100%;height:100%;object-fit:cover;cursor:pointer}
+.photo-del{position:absolute;top:5px;right:5px;background:rgba(231,76,60,0.85);border:none;color:white;width:24px;height:24px;border-radius:5px;cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s}
+.photo-item:hover .photo-del{opacity:1}
+.photo-name{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.7);font-size:0.65rem;padding:3px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* DOCUMENTOS */
+.doc-list{display:flex;flex-direction:column;gap:8px}
+.doc-item{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:12px}
+.doc-icon{font-size:1.4rem;flex-shrink:0}
+.doc-info{flex:1;min-width:0}
+.doc-info .doc-name{font-size:0.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.doc-info .doc-meta{font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:2px}
+.doc-actions{display:flex;gap:6px;flex-shrink:0}
+.doc-btn{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:var(--white);padding:5px 10px;border-radius:6px;font-size:0.75rem;cursor:pointer;text-decoration:none;font-family:'Barlow',sans-serif;display:inline-flex;align-items:center;gap:4px}
+.doc-btn:hover{background:rgba(255,255,255,0.15)}
+.doc-btn.del{border-color:rgba(231,76,60,0.4);color:var(--red)}
+.doc-btn.del:hover{background:rgba(231,76,60,0.15)}
+
+/* PROGRESO UPLOAD */
+.upload-progress{margin-top:10px}
+.progress-bar{background:rgba(255,255,255,0.1);border-radius:20px;height:6px;overflow:hidden;margin-bottom:4px}
+.progress-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--gold),var(--gold-light));transition:width .3s}
+.progress-label{font-size:0.75rem;color:rgba(255,255,255,0.5)}
+
+/* HISTORIAL */
+.hist-section{margin-bottom:24px}
+.hist-title{font-size:0.72rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid rgba(201,162,39,0.2)}
+.hist-table{width:100%;border-collapse:collapse;font-size:0.82rem}
+.hist-table th{text-align:left;padding:7px 10px;font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.4);border-bottom:1px solid rgba(255,255,255,0.08)}
+.hist-table td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,0.05)}
+.hist-table tr:hover td{background:rgba(255,255,255,0.03)}
+.badge{display:inline-block;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:10px}
+.badge.critica{background:rgba(231,76,60,0.2);color:var(--red)}
+.badge.grave{background:rgba(243,156,18,0.2);color:var(--yellow)}
+.badge.leve{background:rgba(46,204,113,0.2);color:var(--green)}
+.badge.resuelta{background:rgba(46,204,113,0.15);color:var(--green)}
+.badge.pendiente{background:rgba(231,76,60,0.15);color:var(--red)}
+.no-data-msg{text-align:center;padding:30px;color:rgba(255,255,255,0.3);font-size:0.9rem}
+
+/* LIGHTBOX */
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:500;display:none;align-items:center;justify-content:center}
+.lightbox.open{display:flex}
+.lightbox img{max-width:90vw;max-height:90vh;border-radius:8px;object-fit:contain}
+.lightbox-close{position:absolute;top:20px;right:20px;background:rgba(255,255,255,0.15);border:none;color:white;width:40px;height:40px;border-radius:10px;cursor:pointer;font-size:1.3rem}
+
+/* STORAGE NOTICE */
+.storage-notice{background:rgba(243,156,18,0.1);border:1px solid rgba(243,156,18,0.3);border-radius:8px;padding:12px 14px;font-size:0.8rem;color:rgba(255,255,255,0.6);margin-bottom:16px;display:none}
+.storage-notice b{color:var(--yellow)}
+
+.sec-title{font-size:0.72rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+.empty-grid{grid-column:1/-1;text-align:center;padding:50px 20px;color:rgba(255,255,255,0.3)}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <h2>🏭 FICHAS</h2>
+    <div class="sub">Panel de Administrador</div>
+    <input type="password" id="pwInput" placeholder="Contraseña" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter')login()">
+    <button class="login-btn" onclick="login()">ENTRAR</button>
+    <div class="login-err" id="loginErr">Contraseña incorrecta</div>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app" style="display:none">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <a href="admin.html" class="back-btn">← Admin</a>
+    <div>
+      <div class="topbar h1" style="font-size:1.2rem;font-weight:900;letter-spacing:.06em;color:var(--gold-light)">🏭 Fichas de Máquinas</div>
+      <div class="topbar sub" style="font-size:0.75rem;color:rgba(255,255,255,0.4)">PANALCOR S.L.</div>
+    </div>
+    <button class="logout-btn" onclick="logout()">Salir</button>
+  </div>
+
+  <!-- FILTROS -->
+  <div class="filter-bar">
+    <input class="search-box" type="text" id="searchBox" placeholder="🔍  Buscar máquina..." oninput="filtrar()">
+    <button class="area-chip active" data-area="TODOS" onclick="setArea(this)">TODOS</button>
+    <button class="area-chip" data-area="OBRADOR" onclick="setArea(this)">OBRADOR</button>
+    <button class="area-chip" data-area="HORNOS" onclick="setArea(this)">HORNOS</button>
+    <button class="area-chip" data-area="TUNELES" onclick="setArea(this)">TÚNELES</button>
+    <button class="area-chip" data-area="EXPEDICION" onclick="setArea(this)">EXPEDICIÓN</button>
+    <button class="area-chip" data-area="SALA COMPRESORES" onclick="setArea(this)">COMPRESORES</button>
+    <span class="maq-count" id="maqCount"></span>
+  </div>
+
+  <!-- GRID -->
+  <div class="maq-grid" id="maqGrid"></div>
+
+</div>
+
+<!-- ═══ DETAIL OVERLAY ═══ -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail()"></div>
+
+<!-- ═══ DETAIL PANEL ═══ -->
+<div class="detail-panel" id="detailPanel">
+  <div class="detail-header">
+    <div class="detail-header-info">
+      <div style="font-size:0.72rem;color:var(--gold);font-weight:700;letter-spacing:.1em" id="dId"></div>
+      <div class="detail-mid" id="dName"></div>
+      <div class="detail-tags" id="dTags"></div>
+    </div>
+    <button class="close-btn" onclick="closeDetail()">✕</button>
+  </div>
+
+  <div class="detail-tabs">
+    <div class="dtab active" data-tab="info" onclick="switchTab(this)">📋 Info</div>
+    <div class="dtab" data-tab="fotos" onclick="switchTab(this)">📷 Fotos</div>
+    <div class="dtab" data-tab="docs" onclick="switchTab(this)">📄 Documentos</div>
+    <div class="dtab" data-tab="hist" onclick="switchTab(this)">📊 Historial</div>
+  </div>
+
+  <div class="detail-content">
+
+    <!-- TAB: INFO -->
+    <div class="dpanel active" id="dpanel-info">
+      <div class="form-row-2">
+        <div class="form-row">
+          <label>Modelo</label>
+          <input type="text" id="fModelo" placeholder="Ej: AMX-3000">
+        </div>
+        <div class="form-row">
+          <label>Fabricante</label>
+          <input type="text" id="fFabricante" placeholder="Ej: NEOTECH">
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row">
+          <label>Número de serie</label>
+          <input type="text" id="fSerie" placeholder="S/N">
+        </div>
+        <div class="form-row">
+          <label>Fecha de instalación</label>
+          <input type="date" id="fFechaInst">
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Ubicación exacta</label>
+        <input type="text" id="fUbicacion" placeholder="Ej: Nave principal, junto a línea 2">
+      </div>
+      <div class="form-row">
+        <label>Notas técnicas</label>
+        <textarea id="fNotas" placeholder="Observaciones, características especiales, etc."></textarea>
+      </div>
+      <div style="display:flex;align-items:center;margin-top:6px">
+        <button class="save-btn" onclick="guardarInfo()">💾 Guardar</button>
+        <span class="save-msg" id="saveMsg"></span>
+      </div>
+    </div>
+
+    <!-- TAB: FOTOS -->
+    <div class="dpanel" id="dpanel-fotos">
+      <div class="storage-notice" id="storageNotice">
+        <b>⚠️ Aviso primera vez:</b> Para subir fotos y documentos debes abrir Firebase Console →
+        Storage → Reglas y pegar: <code style="font-size:0.75rem;background:rgba(0,0,0,0.3);padding:1px 5px;border-radius:3px">allow read, write: if true;</code>
+      </div>
+      <div class="upload-area" id="fotoUploadArea"
+        onclick="document.getElementById('fotoInput').click()"
+        ondragover="event.preventDefault();this.classList.add('dragover')"
+        ondragleave="this.classList.remove('dragover')"
+        ondrop="dropFotos(event)">
+        <div style="font-size:2rem">📷</div>
+        <p>Pulsa o arrastra fotos aquí<br><span style="font-size:0.75rem">JPG, PNG, WEBP — máx. 5 MB por foto</span></p>
+      </div>
+      <input type="file" id="fotoInput" class="upload-input" multiple accept="image/*" onchange="subirFotos(this.files)">
+      <div class="upload-progress" id="fotoProgress" style="display:none">
+        <div class="progress-bar"><div class="progress-fill" id="fotoPFill" style="width:0%"></div></div>
+        <div class="progress-label" id="fotoPLabel">Subiendo...</div>
+      </div>
+      <div class="photo-grid" id="photoGrid">
+        <div class="no-data-msg" style="grid-column:1/-1">Sin fotos todavía</div>
+      </div>
+    </div>
+
+    <!-- TAB: DOCUMENTOS -->
+    <div class="dpanel" id="dpanel-docs">
+      <div class="upload-area" id="docUploadArea"
+        onclick="document.getElementById('docInput').click()"
+        ondragover="event.preventDefault();this.classList.add('dragover')"
+        ondragleave="this.classList.remove('dragover')"
+        ondrop="dropDocs(event)">
+        <div style="font-size:2rem">📎</div>
+        <p>Pulsa o arrastra documentos aquí<br><span style="font-size:0.75rem">PDF, Word, Excel, imágenes — máx. 20 MB</span></p>
+      </div>
+      <input type="file" id="docInput" class="upload-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.png,.jpg,.jpeg" onchange="subirDocs(this.files)">
+      <div class="upload-progress" id="docProgress" style="display:none">
+        <div class="progress-bar"><div class="progress-fill" id="docPFill" style="width:0%"></div></div>
+        <div class="progress-label" id="docPLabel">Subiendo...</div>
+      </div>
+      <div class="doc-list" id="docList">
+        <div class="no-data-msg">Sin documentos todavía</div>
+      </div>
+    </div>
+
+    <!-- TAB: HISTORIAL -->
+    <div class="dpanel" id="dpanel-hist">
+      <div class="hist-section">
+        <div class="hist-title">🔧 Averías registradas</div>
+        <div id="histAverias"><div class="no-data-msg">Cargando...</div></div>
+      </div>
+    </div>
+
+  </div><!-- /detail-content -->
+</div><!-- /detail-panel -->
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// FIREBASE
+// ══════════════════════════════════════════
+const FB_CFG = {
+  apiKey:            "AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU",
+  authDomain:        "panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:       "https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:         "panalcor-mantenimiento",
+  storageBucket:     "panalcor-mantenimiento.firebasestorage.app",
+  messagingSenderId: "67593058609",
+  appId:             "1:67593058609:web:c33fa1fa4fce2932485810"
+};
+if (!firebase.apps.length) firebase.initializeApp(FB_CFG);
+const DB      = firebase.database();
+const STORAGE = firebase.storage();
+
+// ══════════════════════════════════════════
+// CATÁLOGO DE MÁQUINAS
+// ══════════════════════════════════════════
+const MAQUINAS = [
+  {id:'MAQ-001',n:'PABAT 1',t:'AMASADORA',a:'OBRADOR'},
+  {id:'MAQ-002',n:'PABAT 2',t:'AMASADORA',a:'OBRADOR'},
+  {id:'MAQ-003',n:'PABAT 3',t:'AMASADORA',a:'OBRADOR'},
+  {id:'MAQ-004',n:'PABAT 4',t:'AMASADORA',a:'OBRADOR'},
+  {id:'MAQ-005',n:'PABAT 5',t:'AMASADORA',a:'OBRADOR'},
+  {id:'MAQ-006',n:'PABAT 6',t:'AMASADORA',a:'OBRADOR'},
+  {id:'MAQ-007',n:'PABAT 7',t:'AMASADORA',a:'OBRADOR'},
+  {id:'MAQ-008',n:'PABAT 8',t:'AMASADORA',a:'OBRADOR'},
+  {id:'MAQ-009',n:'AMASADORA CANDEAL',t:'AMASADORA',a:'OBRADOR'},
+  {id:'MAQ-010',n:'LINEA 1',t:'FORMADORA',a:'OBRADOR'},
+  {id:'MAQ-011',n:'LINEA 2',t:'FORMADORA',a:'OBRADOR'},
+  {id:'MAQ-012',n:'LINEA 3',t:'FORMADORA',a:'OBRADOR'},
+  {id:'MAQ-013',n:'LINEA 4',t:'FORMADORA',a:'OBRADOR'},
+  {id:'MAQ-014',n:'LINEA 5',t:'FORMADORA',a:'OBRADOR'},
+  {id:'MAQ-015',n:'LINEA 6',t:'FORMADORA',a:'OBRADOR'},
+  {id:'MAQ-016',n:'LINEA 7',t:'FORMADORA',a:'OBRADOR'},
+  {id:'MAQ-017',n:'CARRUSEL 1',t:'CARRUSEL',a:'OBRADOR'},
+  {id:'MAQ-018',n:'CARRUSEL 2',t:'CARRUSEL',a:'OBRADOR'},
+  {id:'MAQ-019',n:'CARRUSEL 3',t:'CARRUSEL',a:'OBRADOR'},
+  {id:'MAQ-020',n:'CARRUSEL 4',t:'CARRUSEL',a:'OBRADOR'},
+  {id:'MAQ-021',n:'CARRUSEL 5',t:'CARRUSEL',a:'OBRADOR'},
+  {id:'MAQ-022',n:'CARRUSEL 6',t:'CARRUSEL',a:'OBRADOR'},
+  {id:'MAQ-023',n:'DIVISORA 1',t:'DIVISORA',a:'OBRADOR'},
+  {id:'MAQ-024',n:'DIVISORA 2',t:'DIVISORA',a:'OBRADOR'},
+  {id:'MAQ-025',n:'DIVISORA 3',t:'DIVISORA',a:'OBRADOR'},
+  {id:'MAQ-026',n:'REPARTIDOR 1',t:'REPARTIDOR',a:'OBRADOR'},
+  {id:'MAQ-027',n:'REPARTIDOR 2',t:'REPARTIDOR',a:'OBRADOR'},
+  {id:'MAQ-028',n:'TALLADORA RELAMPAGO',t:'TALLADORA',a:'OBRADOR'},
+  {id:'MAQ-029',n:'HORNO 1',t:'HORNO',a:'HORNOS'},
+  {id:'MAQ-030',n:'HORNO 2',t:'HORNO',a:'HORNOS'},
+  {id:'MAQ-031',n:'HORNO 3',t:'HORNO',a:'HORNOS'},
+  {id:'MAQ-032',n:'HORNO 4',t:'HORNO',a:'HORNOS'},
+  {id:'MAQ-033',n:'HORNO 5',t:'HORNO',a:'HORNOS'},
+  {id:'MAQ-034',n:'HORNO 6',t:'HORNO',a:'HORNOS'},
+  {id:'MAQ-035',n:'FERMENTADORA RELAMPAGO',t:'FERMENTADORA',a:'OBRADOR'},
+  {id:'MAQ-036',n:'TUNEL PREFRIO',t:'TUNEL',a:'OBRADOR'},
+  {id:'MAQ-037',n:'TUNEL CONGELACION 1',t:'TUNEL',a:'TUNELES'},
+  {id:'MAQ-038',n:'TUNEL CONGELACION 2',t:'TUNEL',a:'TUNELES'},
+  {id:'MAQ-039',n:'TUNEL CONGELACION 3',t:'TUNEL',a:'TUNELES'},
+  {id:'MAQ-040',n:'DESMOLDEADORA',t:'DESMOLDEO',a:'TUNELES'},
+  {id:'MAQ-041',n:'CONTADORA',t:'CONTADORA',a:'EXPEDICION'},
+  {id:'MAQ-042',n:'M CAJAS',t:'MAQUINA CAJAS',a:'EXPEDICION'},
+  {id:'MAQ-043',n:'M BOLSAS',t:'MAQUINA BOLSAS',a:'EXPEDICION'},
+  {id:'MAQ-044',n:'BASCULA-PRECINTADORA',t:'BASCULA',a:'EXPEDICION'},
+  {id:'MAQ-045',n:'CENTRADOR ENTABLADO',t:'CENTRADOR',a:'OBRADOR'},
+  {id:'MAQ-046',n:'COMPRESOR 1',t:'COMPRESOR',a:'SALA COMPRESORES'},
+  {id:'MAQ-047',n:'COMPRESOR 2',t:'COMPRESOR',a:'SALA COMPRESORES'},
+  {id:'MAQ-048',n:'COMPRESOR 3',t:'COMPRESOR',a:'SALA COMPRESORES'},
+  {id:'MAQ-049',n:'COMPRESOR 4',t:'COMPRESOR',a:'SALA COMPRESORES'},
+  {id:'MAQ-050',n:'TRUENO',t:'TRUENO',a:'OBRADOR'}
+];
+
+// ══════════════════════════════════════════
+// ESTADO
+// ══════════════════════════════════════════
+let fichasData   = {};   // {maqId: {modelo,fabricante,...}}
+let areaActual   = 'TODOS';
+let maqActual    = null; // objeto MAQUINAS actual
+
+// ══════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════
+function getPwd(){ return localStorage.getItem('adminPwd') || 'admin'; }
+
+function login(){
+  var val = document.getElementById('pwInput').value;
+  if(val === getPwd()){
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initApp();
+  } else {
+    var err = document.getElementById('loginErr');
+    err.style.display = 'block';
+    err.textContent = 'Contraseña incorrecta';
+  }
+}
+
+function logout(){
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('pwInput').value = '';
+}
+
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape') closeDetail();
+});
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+function initApp(){
+  // Cargar fichas de Firebase
+  DB.ref('maquinas').on('value', function(snap){
+    fichasData = snap.val() || {};
+    renderGrid();
+  });
+}
+
+// ══════════════════════════════════════════
+// GRID
+// ══════════════════════════════════════════
+function filtrar(){
+  renderGrid();
+}
+
+function setArea(btn){
+  areaActual = btn.dataset.area;
+  document.querySelectorAll('.area-chip').forEach(function(c){ c.classList.remove('active'); });
+  btn.classList.add('active');
+  renderGrid();
+}
+
+function renderGrid(){
+  var q     = (document.getElementById('searchBox').value || '').toLowerCase().trim();
+  var lista = MAQUINAS.filter(function(m){
+    var areaOk = areaActual === 'TODOS' || m.a === areaActual;
+    var searchOk = !q || m.n.toLowerCase().includes(q) || m.id.toLowerCase().includes(q) || m.t.toLowerCase().includes(q);
+    return areaOk && searchOk;
+  });
+
+  document.getElementById('maqCount').textContent = lista.length + ' máquinas';
+
+  var grid = document.getElementById('maqGrid');
+  if(!lista.length){
+    grid.innerHTML = '<div class="empty-grid">Sin resultados</div>';
+    return;
+  }
+
+  grid.innerHTML = lista.map(function(m){
+    var tiene = fichasData[m.id] && (fichasData[m.id].modelo || fichasData[m.id].fabricante || fichasData[m.id].serie);
+    return '<div class="maq-card ' + (tiene ? 'has-data' : 'no-data') + '" onclick="abrirFicha(\'' + m.id + '\')">' +
+      '<div class="' + (tiene ? 'maq-dot' : 'maq-dot empty') + '" title="' + (tiene ? 'Con ficha' : 'Sin ficha') + '"></div>' +
+      '<div class="maq-id">' + m.id + '</div>' +
+      '<div class="maq-name">' + m.n + '</div>' +
+      '<div class="maq-type">' + m.t + '</div>' +
+      '<span class="maq-area-tag">' + m.a + '</span>' +
+    '</div>';
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+// DETAIL PANEL
+// ══════════════════════════════════════════
+function abrirFicha(maqId){
+  var maq = MAQUINAS.find(function(m){ return m.id === maqId; });
+  if(!maq) return;
+  maqActual = maq;
+
+  document.getElementById('dId').textContent   = maq.id;
+  document.getElementById('dName').textContent = maq.n;
+  document.getElementById('dTags').innerHTML   =
+    '<span class="tag tipo">' + maq.t + '</span>' +
+    '<span class="tag area">' + maq.a + '</span>';
+
+  // Reset to Info tab
+  switchTabById('info');
+
+  // Load info
+  cargarInfo();
+
+  document.getElementById('detailOverlay').style.display = 'block';
+  document.getElementById('detailPanel').classList.add('open');
+}
+
+function closeDetail(){
+  document.getElementById('detailPanel').classList.remove('open');
+  document.getElementById('detailOverlay').style.display = 'none';
+  maqActual = null;
+}
+
+function switchTab(el){
+  document.querySelectorAll('.dtab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.dpanel').forEach(function(p){ p.classList.remove('active'); });
+  el.classList.add('active');
+  document.getElementById('dpanel-' + el.dataset.tab).classList.add('active');
+
+  var tab = el.dataset.tab;
+  if(tab === 'fotos') cargarFotos();
+  if(tab === 'docs')  cargarDocs();
+  if(tab === 'hist')  cargarHistorial();
+}
+
+function switchTabById(id){
+  document.querySelectorAll('.dtab').forEach(function(t){
+    t.classList.toggle('active', t.dataset.tab === id);
+  });
+  document.querySelectorAll('.dpanel').forEach(function(p){
+    p.classList.toggle('active', p.id === 'dpanel-' + id);
+  });
+}
+
+// ══════════════════════════════════════════
+// TAB INFO
+// ══════════════════════════════════════════
+function cargarInfo(){
+  var d = fichasData[maqActual.id] || {};
+  document.getElementById('fModelo').value     = d.modelo     || '';
+  document.getElementById('fFabricante').value = d.fabricante || '';
+  document.getElementById('fSerie').value      = d.serie      || '';
+  document.getElementById('fFechaInst').value  = d.fechaInst  || '';
+  document.getElementById('fUbicacion').value  = d.ubicacion  || '';
+  document.getElementById('fNotas').value      = d.notas      || '';
+  document.getElementById('saveMsg').className = 'save-msg';
+  document.getElementById('saveMsg').textContent = '';
+}
+
+function guardarInfo(){
+  if(!maqActual) return;
+  var datos = {
+    modelo    : document.getElementById('fModelo').value.trim(),
+    fabricante: document.getElementById('fFabricante').value.trim(),
+    serie     : document.getElementById('fSerie').value.trim(),
+    fechaInst : document.getElementById('fFechaInst').value,
+    ubicacion : document.getElementById('fUbicacion').value.trim(),
+    notas     : document.getElementById('fNotas').value.trim(),
+    updatedAt : new Date().toISOString()
+  };
+
+  DB.ref('maquinas/' + maqActual.id).update(datos).then(function(){
+    var msg = document.getElementById('saveMsg');
+    msg.textContent = '✓ Guardado';
+    msg.className = 'save-msg ok';
+    setTimeout(function(){ msg.className = 'save-msg'; }, 2500);
+  }).catch(function(e){
+    var msg = document.getElementById('saveMsg');
+    msg.textContent = '✗ Error al guardar';
+    msg.className = 'save-msg err';
+  });
+}
+
+// ══════════════════════════════════════════
+// TAB FOTOS — Firebase Storage
+// ══════════════════════════════════════════
+function dropFotos(e){
+  e.preventDefault();
+  document.getElementById('fotoUploadArea').classList.remove('dragover');
+  subirFotos(e.dataTransfer.files);
+}
+
+function subirFotos(files){
+  if(!maqActual || !files.length) return;
+  var list = Array.from(files).filter(function(f){ return f.type.startsWith('image/'); });
+  if(!list.length) return;
+
+  var prog = document.getElementById('fotoProgress');
+  var fill = document.getElementById('fotoPFill');
+  var label = document.getElementById('fotoPLabel');
+  prog.style.display = 'block';
+
+  var done = 0;
+  list.forEach(function(file){
+    var fname = Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    var ref = STORAGE.ref('maquinas/' + maqActual.id + '/fotos/' + fname);
+    var task = ref.put(file);
+    task.on('state_changed',
+      function(snap){
+        var pct = Math.round(snap.bytesTransferred / snap.totalBytes * 100);
+        fill.style.width = pct + '%';
+        label.textContent = 'Subiendo ' + file.name + '... ' + pct + '%';
+      },
+      function(err){
+        if(err.code === 'storage/unauthorized'){
+          document.getElementById('storageNotice').style.display = 'block';
+        }
+        label.textContent = 'Error: ' + err.message;
+        done++;
+        if(done === list.length){ setTimeout(function(){ prog.style.display='none'; }, 2000); }
+      },
+      function(){
+        done++;
+        label.textContent = 'Subida completa (' + done + '/' + list.length + ')';
+        if(done === list.length){
+          setTimeout(function(){ prog.style.display='none'; fill.style.width='0%'; }, 1000);
+          cargarFotos();
+        }
+      }
+    );
+  });
+}
+
+function cargarFotos(){
+  if(!maqActual) return;
+  var grid = document.getElementById('photoGrid');
+  grid.innerHTML = '<div class="no-data-msg" style="grid-column:1/-1">Cargando...</div>';
+
+  STORAGE.ref('maquinas/' + maqActual.id + '/fotos').listAll().then(function(res){
+    if(!res.items.length){
+      grid.innerHTML = '<div class="no-data-msg" style="grid-column:1/-1">Sin fotos todavía</div>';
+      return;
+    }
+    var promises = res.items.map(function(item){
+      return item.getDownloadURL().then(function(url){
+        return {url: url, name: item.name, ref: item};
+      });
+    });
+    Promise.all(promises).then(function(fotos){
+      grid.innerHTML = fotos.map(function(f, i){
+        return '<div class="photo-item" id="ph_' + i + '">' +
+          '<img src="' + f.url + '" alt="' + f.name + '" onclick="abrirLightbox(\'' + f.url + '\')">' +
+          '<button class="photo-del" onclick="borrarFoto(\'' + f.name + '\',\'ph_' + i + '\')" title="Eliminar">🗑️</button>' +
+          '<div class="photo-name">' + f.name.replace(/^\d+_/,'') + '</div>' +
+        '</div>';
+      }).join('');
+    });
+  }).catch(function(err){
+    if(err.code === 'storage/unauthorized'){
+      document.getElementById('storageNotice').style.display = 'block';
+      grid.innerHTML = '<div class="no-data-msg" style="grid-column:1/-1">⚠️ Sin acceso a Storage. Ver aviso arriba.</div>';
+    } else {
+      grid.innerHTML = '<div class="no-data-msg" style="grid-column:1/-1">Sin fotos todavía</div>';
+    }
+  });
+}
+
+function borrarFoto(name, elemId){
+  if(!confirm('¿Eliminar esta foto?')) return;
+  var ref = STORAGE.ref('maquinas/' + maqActual.id + '/fotos/' + name);
+  ref.delete().then(function(){
+    var el = document.getElementById(elemId);
+    if(el) el.remove();
+  }).catch(function(e){ alert('Error: ' + e.message); });
+}
+
+// ══════════════════════════════════════════
+// TAB DOCUMENTOS — Firebase Storage
+// ══════════════════════════════════════════
+function dropDocs(e){
+  e.preventDefault();
+  document.getElementById('docUploadArea').classList.remove('dragover');
+  subirDocs(e.dataTransfer.files);
+}
+
+function subirDocs(files){
+  if(!maqActual || !files.length) return;
+  var list = Array.from(files);
+
+  var prog  = document.getElementById('docProgress');
+  var fill  = document.getElementById('docPFill');
+  var label = document.getElementById('docPLabel');
+  prog.style.display = 'block';
+
+  var done = 0;
+  list.forEach(function(file){
+    var fname = Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    var ref  = STORAGE.ref('maquinas/' + maqActual.id + '/docs/' + fname);
+    var task = ref.put(file, {contentDisposition: 'attachment; filename="' + file.name + '"'});
+    task.on('state_changed',
+      function(snap){
+        var pct = Math.round(snap.bytesTransferred / snap.totalBytes * 100);
+        fill.style.width = pct + '%';
+        label.textContent = 'Subiendo ' + file.name + '... ' + pct + '%';
+      },
+      function(err){
+        if(err.code === 'storage/unauthorized'){
+          document.getElementById('storageNotice').style.display = 'block';
+        }
+        done++;
+        if(done === list.length){ setTimeout(function(){ prog.style.display='none'; }, 2000); }
+      },
+      function(){
+        done++;
+        if(done === list.length){
+          setTimeout(function(){ prog.style.display='none'; fill.style.width='0%'; }, 1000);
+          cargarDocs();
+        }
+      }
+    );
+  });
+}
+
+function cargarDocs(){
+  if(!maqActual) return;
+  var lista = document.getElementById('docList');
+  lista.innerHTML = '<div class="no-data-msg">Cargando...</div>';
+
+  STORAGE.ref('maquinas/' + maqActual.id + '/docs').listAll().then(function(res){
+    if(!res.items.length){
+      lista.innerHTML = '<div class="no-data-msg">Sin documentos todavía</div>';
+      return;
+    }
+    var promises = res.items.map(function(item){
+      return item.getDownloadURL().then(function(url){
+        return item.getMetadata().then(function(meta){
+          return {url: url, name: item.name, size: meta.size, updated: meta.updated, ref: item};
+        });
+      });
+    });
+    Promise.all(promises).then(function(docs){
+      lista.innerHTML = docs.map(function(d){
+        var displayName = d.name.replace(/^\d+_/,'');
+        var ext   = displayName.split('.').pop().toUpperCase();
+        var icon  = ext === 'PDF' ? '📕' : ext === 'XLS' || ext === 'XLSX' ? '📗' :
+                    ext === 'DOC' || ext === 'DOCX' ? '📘' : '📎';
+        var size  = d.size > 1048576 ? (d.size/1048576).toFixed(1)+' MB' : Math.round(d.size/1024)+' KB';
+        var fecha = new Date(d.updated).toLocaleDateString('es-ES');
+        return '<div class="doc-item">' +
+          '<div class="doc-icon">' + icon + '</div>' +
+          '<div class="doc-info">' +
+            '<div class="doc-name">' + displayName + '</div>' +
+            '<div class="doc-meta">' + size + ' · ' + fecha + '</div>' +
+          '</div>' +
+          '<div class="doc-actions">' +
+            '<a class="doc-btn" href="' + d.url + '" target="_blank">⬇️ Abrir</a>' +
+            '<button class="doc-btn del" onclick="borrarDoc(\'' + d.name + '\',this)">🗑️</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    });
+  }).catch(function(err){
+    if(err.code === 'storage/unauthorized'){
+      document.getElementById('storageNotice').style.display = 'block';
+      lista.innerHTML = '<div class="no-data-msg">⚠️ Sin acceso a Storage. Ver aviso arriba.</div>';
+    } else {
+      lista.innerHTML = '<div class="no-data-msg">Sin documentos todavía</div>';
+    }
+  });
+}
+
+function borrarDoc(name, btn){
+  if(!confirm('¿Eliminar "' + name.replace(/^\d+_/,'') + '"?')) return;
+  var ref = STORAGE.ref('maquinas/' + maqActual.id + '/docs/' + name);
+  ref.delete().then(function(){
+    var item = btn.closest('.doc-item');
+    if(item) item.remove();
+  }).catch(function(e){ alert('Error: ' + e.message); });
+}
+
+// ══════════════════════════════════════════
+// TAB HISTORIAL
+// ══════════════════════════════════════════
+function cargarHistorial(){
+  if(!maqActual) return;
+  var el = document.getElementById('histAverias');
+  el.innerHTML = '<div class="no-data-msg">Cargando...</div>';
+
+  DB.ref('averias').once('value').then(function(snap){
+    var val = snap.val();
+    if(!val){ el.innerHTML = '<div class="no-data-msg">Sin averías registradas</div>'; return; }
+
+    var todas = Object.values(val);
+    var mis   = todas.filter(function(a){ return a.maqId === maqActual.id; });
+    mis.sort(function(a,b){ return (b.ts||0) - (a.ts||0); });
+
+    if(!mis.length){
+      el.innerHTML = '<div class="no-data-msg">Sin averías registradas para esta máquina</div>';
+      return;
+    }
+
+    el.innerHTML = '<table class="hist-table"><thead><tr>' +
+      '<th>Fecha</th><th>Descripción</th><th>Gravedad</th><th>Estado</th><th>Tiempo</th><th>Mecánico</th>' +
+      '</tr></thead><tbody>' +
+      mis.map(function(a){
+        var grav  = (a.gravedad||'').toUpperCase();
+        var gravClass = grav.includes('CRÍT') ? 'critica' : grav === 'GRAVE' ? 'grave' : 'leve';
+        var estClass  = a.estado === 'RESUELTA' ? 'resuelta' : 'pendiente';
+        var tiempo    = a.tiempoMin ? Math.floor(a.tiempoMin/60)+'h '+(a.tiempoMin%60)+'min' : '—';
+        var mec       = Array.isArray(a.mecanicos) ? a.mecanicos.join(', ') : (a.mecanico||'—');
+        var desc      = (a.descripcion||'').substring(0,60) + (a.descripcion && a.descripcion.length>60?'…':'');
+        return '<tr>' +
+          '<td style="white-space:nowrap">' + (a.fecha||'—') + '</td>' +
+          '<td>' + desc + '</td>' +
+          '<td><span class="badge ' + gravClass + '">' + (a.gravedad||'—') + '</span></td>' +
+          '<td><span class="badge ' + estClass + '">' + (a.estado||'—') + '</span></td>' +
+          '<td>' + tiempo + '</td>' +
+          '<td>' + mec + '</td>' +
+        '</tr>';
+      }).join('') +
+      '</tbody></table>';
+  }).catch(function(){
+    el.innerHTML = '<div class="no-data-msg">Error al cargar historial</div>';
+  });
+}
+
+// ══════════════════════════════════════════
+// LIGHTBOX
+// ══════════════════════════════════════════
+function abrirLightbox(url){
+  document.getElementById('lightboxImg').src = url;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox(){
+  document.getElementById('lightbox').classList.remove('open');
+}
+
+</script>
+</body>
+</html>
