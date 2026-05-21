@@ -207,6 +207,24 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
     </div>
   </div>
 
+  <!-- ══ PROGRESO PLAN PREVENTIVO ══ -->
+  <div class="card" id="progPreventivoDash" style="padding:14px 18px;margin-bottom:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:0.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:700">📊 Plan preventivo — <span id="ppMesLabel"></span></div>
+      <a href="plan_preventivo.html" style="font-size:0.72rem;color:rgba(255,255,255,0.35);text-decoration:none">Ver →</a>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="font-size:2.2rem;font-weight:900;line-height:1;color:var(--green);min-width:58px" id="ppPct">—</div>
+      <div style="flex:1;min-width:160px">
+        <div style="background:rgba(255,255,255,0.1);border-radius:20px;height:10px;overflow:hidden;margin-bottom:6px">
+          <div id="ppBar" style="height:100%;border-radius:20px;background:linear-gradient(90deg,var(--green),#27ae60);width:0%;transition:width .6s"></div>
+        </div>
+        <div style="font-size:0.82rem;color:rgba(255,255,255,0.5)" id="ppSub">Cargando...</div>
+      </div>
+      <div id="ppMecanicos" style="font-size:0.78rem;color:rgba(255,255,255,0.45);line-height:1.7"></div>
+    </div>
+  </div>
+
 <div class="chart-grid">
     <div class="chart-wrap">
       <div class="chart-title">Averías por mes (último año)</div>
@@ -651,8 +669,8 @@ DB.ref('averias').on('value', snap => {
     if (document.getElementById('app') &&
         document.getElementById('app').style.display !== 'none') {
       renderDashboard();
-  cargarAlarmasPreventivo();;
-  cargarAlarmasPreventivo();;
+  cargarAlarmasPreventivo();
+  cargarProgresoPreventivo();
       renderEstadoDatos();
     }
   }
@@ -1848,6 +1866,64 @@ function guardarFechaRealizacion(id, fecha){
   }).catch(function(e){ showToast('❌ Error: '+e.message); });
 }
 
+
+// ══════════════════════════════════════════════════
+// PROGRESO PLAN PREVENTIVO MENSUAL
+// ══════════════════════════════════════════════════
+function cargarProgresoPreventivo(){
+  var hoy = new Date();
+  var mes = hoy.toISOString().substring(0,7); // YYYY-MM
+  var meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  var label = meses[hoy.getMonth()] + ' ' + hoy.getFullYear();
+  var el = document.getElementById('ppMesLabel');
+  if(el) el.textContent = label;
+
+  DB.ref('asignaciones/' + mes).once('value').then(function(snap){
+    var val = snap.val();
+    if(!val){
+      document.getElementById('ppPct').textContent = '0%';
+      document.getElementById('ppPct').style.color = 'rgba(255,255,255,0.3)';
+      document.getElementById('ppSub').textContent = 'Sin tareas asignadas este mes';
+      document.getElementById('ppBar').style.width = '0%';
+      document.getElementById('ppMecanicos').textContent = '';
+      return;
+    }
+    var items = Object.values(val);
+    var total = items.length;
+    var hechas = items.filter(function(i){ return i.hecho; }).length;
+    var pct = total > 0 ? Math.round(hechas / total * 100) : 0;
+
+    // Color segun porcentaje
+    var color = pct >= 80 ? 'var(--green)' : pct >= 50 ? 'var(--yellow)' : 'var(--red)';
+
+    document.getElementById('ppPct').textContent = pct + '%';
+    document.getElementById('ppPct').style.color = color;
+    document.getElementById('ppBar').style.width = pct + '%';
+    document.getElementById('ppBar').style.background = pct >= 80
+      ? 'linear-gradient(90deg,var(--green),#27ae60)'
+      : pct >= 50
+        ? 'linear-gradient(90deg,var(--yellow),#e67e22)'
+        : 'linear-gradient(90deg,var(--red),#c0392b)';
+    document.getElementById('ppSub').textContent = hechas + ' de ' + total + ' tareas completadas';
+
+    // Per-mechanic breakdown
+    var mecCnt = {};
+    items.forEach(function(i){
+      var m = i.mecanico || '—';
+      if(!mecCnt[m]) mecCnt[m] = {total:0, hechas:0};
+      mecCnt[m].total++;
+      if(i.hecho) mecCnt[m].hechas++;
+    });
+    var mecHtml = Object.keys(mecCnt).sort().map(function(m){
+      var d = mecCnt[m];
+      var p = Math.round(d.hechas/d.total*100);
+      return '<span style="margin-right:14px"><b style="color:var(--white)">' + m + '</b> ' + d.hechas + '/' + d.total + ' (' + p + '%)</span>';
+    }).join('');
+    document.getElementById('ppMecanicos').innerHTML = mecHtml;
+  }).catch(function(){
+    document.getElementById('ppSub').textContent = 'Error al cargar datos';
+  });
+}
 </script>
 
 <!-- MODAL TAREA DIARIA -->
