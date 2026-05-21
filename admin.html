@@ -463,7 +463,7 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
     <div style="overflow-x:auto">
       <table class="data-table" id="tRepuestos">
         <thead><tr>
-          <th>Descripción</th><th>Referencia</th><th>Veces usado</th><th>Unidades totales</th>
+          <th>Descripción</th><th>Referencia</th><th>Veces usado</th><th>Unidades totales</th><th style="width:100px">📄 Doc.</th>
         </tr></thead>
         <tbody id="bRepuestos"></tbody>
       </table>
@@ -1280,13 +1280,80 @@ function renderResumenMensual(){
 }
 
 function renderRepuestosUsados(){
-  const av=getAverias();
-  const repMap={};
-  av.forEach(a=>{ (a.materiales||[]).forEach(m=>{ if(!repMap[m.desc]) repMap[m.desc]={desc:m.desc,ref:m.ref,cnt:0,qty:0}; repMap[m.desc].cnt++; repMap[m.desc].qty+=(m.qty||1); }); });
-  const sorted=Object.values(repMap).sort((a,b)=>b.cnt-a.cnt).slice(0,20);
-  const tbody=document.getElementById('bRepuestos');
-  if(!sorted.length){tbody.innerHTML='<tr><td colspan="4" class="no-data">No hay materiales registrados</td></tr>';return;}
-  tbody.innerHTML=sorted.map(r=>`<tr><td>${r.desc}</td><td><code>${r.ref}</code></td><td>${r.cnt}</td><td>${r.qty}</td></tr>`).join('');
+  var av = getAverias();
+  var repMap = {};
+  av.forEach(function(a){
+    (a.materiales||[]).forEach(function(m){
+      if(!repMap[m.desc]) repMap[m.desc]={desc:m.desc,ref:m.ref||'',cnt:0,qty:0};
+      repMap[m.desc].cnt++;
+      repMap[m.desc].qty+=(m.qty||1);
+    });
+  });
+  var sorted = Object.values(repMap).sort(function(a,b){return b.cnt-a.cnt;}).slice(0,20);
+  var tbody = document.getElementById('bRepuestos');
+  if(!sorted.length){
+    tbody.innerHTML='<tr><td colspan="5" class="no-data">No hay materiales registrados</td></tr>';
+    return;
+  }
+
+  // Cargar URLs de datasheets desde Firebase
+  DB.ref('repuestos_docs').once('value').then(function(snap){
+    var docs = snap.val() || {};
+    tbody.innerHTML = sorted.map(function(r){
+      var key = (r.ref || r.desc).replace(/[^a-zA-Z0-9_-]/g,'_').substring(0,60);
+      var url = docs[key] || '';
+      var docCell;
+      if(url){
+        docCell = '<a href="' + url + '" target="_blank" title="Abrir datasheet"'
+          + ' style="font-size:1.2rem;text-decoration:none;margin-right:6px">\u{1F4C4}</a>'
+          + '<button onclick="editarDocRepuesto(\'' + key + '\',\'' + url.replace(/\'/g,"\\'") + '\')"'
+          + ' style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);'
+          + 'color:rgba(255,255,255,0.5);border-radius:4px;padding:2px 7px;cursor:pointer;font-size:0.75rem"'
+          + ' title="Editar enlace">\u270f\ufe0f</button>';
+      } else {
+        docCell = '<button onclick="editarDocRepuesto(\'' + key + '\',\''  + '\')"'
+          + ' style="background:rgba(201,162,39,0.1);border:1px solid rgba(201,162,39,0.3);'
+          + 'color:var(--gold);border-radius:4px;padding:3px 10px;cursor:pointer;font-size:0.78rem">'
+          + '+ A\u00f1adir</button>';
+      }
+      return '<tr>'
+        + '<td>' + r.desc + '</td>'
+        + '<td><code style="color:var(--gold);font-size:0.8rem">' + (r.ref||'—') + '</code></td>'
+        + '<td style="text-align:center">' + r.cnt + '</td>'
+        + '<td style="text-align:center">' + r.qty + '</td>'
+        + '<td style="text-align:center">' + docCell + '</td>'
+        + '</tr>';
+    }).join('');
+  }).catch(function(){
+    // Fallback sin URLs
+    tbody.innerHTML = sorted.map(function(r){
+      return '<tr><td>'+r.desc+'</td><td><code>'+r.ref+'</code></td>'
+           + '<td>'+r.cnt+'</td><td>'+r.qty+'</td><td>—</td></tr>';
+    }).join('');
+  });
+}
+
+function editarDocRepuesto(key, urlActual){
+  var nueva = prompt(
+    '\u{1F4C4} URL del datasheet o documento para "' + key + '":\n'
+    + '(Pega el enlace directo al PDF o web. Deja en blanco para eliminar.)',
+    urlActual || ''
+  );
+  if(nueva === null) return;  // cancelado
+  nueva = nueva.trim();
+  if(nueva === ''){
+    DB.ref('repuestos_docs/' + key).remove().then(function(){
+      renderRepuestosUsados();
+      showToast('\u{1F5D1}\ufe0f Enlace eliminado');
+    });
+  } else {
+    // Añadir https:// si no tiene protocolo
+    if(nueva && !nueva.startsWith('http')) nueva = 'https://' + nueva;
+    DB.ref('repuestos_docs/' + key).set(nueva).then(function(){
+      renderRepuestosUsados();
+      showToast('\u2705 Enlace guardado');
+    });
+  }
 }
 
 function exportarAverias(){
