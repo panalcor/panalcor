@@ -2665,8 +2665,8 @@ function renderCatalogoRepuestos() {
       + '<td style="text-align:center">' + docCell + '</td>'
       + '<td style="font-size:0.78rem;color:rgba(255,255,255,0.4);max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (r.notas || '') + '</td>'
       + '<td style="white-space:nowrap">'
-        + '<button onclick="cargarRepuestoEnForm('' + r._key + '')" style="background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.3);color:var(--gold);border-radius:5px;padding:3px 9px;cursor:pointer;font-size:0.78rem;margin-right:4px">✏️ Editar</button>'
-        + '<button onclick="borrarRepuestoCatalogo('' + r._key + '')" style="background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.3);color:var(--red);border-radius:5px;padding:3px 9px;cursor:pointer;font-size:0.78rem">🗑️</button>'
+        + '<button onclick="cargarRepuestoEnForm(\'' + r._key + '\')" style="background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.3);color:var(--gold);border-radius:5px;padding:3px 9px;cursor:pointer;font-size:0.78rem;margin-right:4px">✏️ Editar</button>'
+        + '<button onclick="borrarRepuestoCatalogo(\'' + r._key + '\')" style="background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.3);color:var(--red);border-radius:5px;padding:3px 9px;cursor:pointer;font-size:0.78rem">🗑️</button>'
       + '</td>'
       + '</tr>';
   }).join('');
