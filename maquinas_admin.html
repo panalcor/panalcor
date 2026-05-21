@@ -444,10 +444,21 @@ document.addEventListener('keydown', function(e){
 // INIT
 // ══════════════════════════════════════════
 function initApp(){
-  // Cargar fichas de Firebase
-  DB.ref('maquinas').on('value', function(snap){
-    fichasData = snap.val() || {};
-    renderGrid();
+  // Cargar máquinas extra primero, luego fichas
+  DB.ref('maquinas_extra').once('value').then(function(snap){
+    var val = snap.val();
+    if(val){
+      Object.values(val).forEach(function(m){
+        if(!MAQUINAS.find(function(x){ return x.id === m.id; })){
+          MAQUINAS.push({id: m.id, n: m.n, t: m.t||'', a: m.a||''});
+        }
+      });
+    }
+  }).catch(function(){}).finally(function(){
+    DB.ref('maquinas').on('value', function(snap){
+      fichasData = snap.val() || {};
+      renderGrid();
+    });
   });
 }
 

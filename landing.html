@@ -300,6 +300,26 @@ var maqActual    = null;   // objeto máquina o null
   }
 })();
 
+// Cargar máquinas extra de Firebase (para máquinas añadidas desde admin)
+DB.ref('maquinas_extra').once('value').then(function(snap){
+  var val = snap.val();
+  if(!val) return;
+  Object.values(val).forEach(function(m){
+    if(!MAQUINAS.find(function(x){ return x.id === m.id; })){
+      MAQUINAS.push({id: m.id, n: m.n, t: m.t||'', a: m.a||''});
+    }
+  });
+  // Si maqActual era fallback (nombre = id), actualizar con datos reales
+  if(maqActual && maqActual.n === maqActual.id){
+    var encontrada = MAQUINAS.find(function(m){ return m.id === maqActual.id; });
+    if(encontrada){
+      maqActual = encontrada;
+      mostrarBanner('maqBanner',  'maqId',  'maqName', null);
+      mostrarBanner('maqBanner2', 'maqId2', 'maqName2', null);
+    }
+  }
+}).catch(function(){});
+
 function mostrarBanner(bannerId, idEl, nameEl, subEl){
   if(!maqActual) return;
   var b = document.getElementById(bannerId);
