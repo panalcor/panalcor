@@ -163,6 +163,12 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
     <input type="password" id="pwInput" placeholder="Contraseña" onkeydown="if(event.key==='Enter')login()">
     <button class="login-btn" onclick="login()">ENTRAR</button>
     <div class="login-err" id="loginErr">❌ Contraseña incorrecta</div>
+    <div style="margin-top:18px">
+      <a href="#" onclick="recuperarAcceso();return false;"
+         style="font-size:0.72rem;color:rgba(255,255,255,0.25);text-decoration:none;letter-spacing:0.06em"
+         onmouseover="this.style.color='rgba(201,162,39,0.6)'"
+         onmouseout="this.style.color='rgba(255,255,255,0.25)'">¿Olvidaste la contraseña?</a>
+    </div>
   </div>
 </div>
 
@@ -825,6 +831,20 @@ function logout(){
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('pwInput').value = '';
   document.getElementById('loginErr').style.display = 'none';
+}
+
+function recuperarAcceso(){
+  var codigo = prompt('Introduce el código de recuperación:');
+  if(codigo === null) return;
+  if(codigo.trim().toUpperCase() === 'PANALCOR'){
+    localStorage.removeItem(PW_KEY);
+    document.getElementById('loginErr').style.display = 'none';
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
+    alert('✅ Contraseña restablecida a: admin\n\nEntra con "admin" y cámbiala desde Configuración.');
+  } else {
+    alert('❌ Código incorrecto.');
+  }
 }
 
 // ══════════════════════════════════════════════════
