@@ -114,6 +114,23 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:'Bar
   font-family:'Barlow',sans-serif;font-size:.85rem;cursor:pointer;
 }
 .btn-back:active{background:rgba(255,255,255,0.05)}
+
+.btn-docs{
+  background:linear-gradient(135deg,rgba(52,152,219,0.2),rgba(41,128,185,0.12));
+  border:2px solid rgba(52,152,219,0.45);color:var(--white);
+  box-shadow:0 4px 20px rgba(52,152,219,0.12);
+}
+.btn-docs:hover{box-shadow:0 6px 28px rgba(52,152,219,0.25)}
+
+.doc-card{
+  background:var(--navy-mid);border:1px solid rgba(255,255,255,0.12);
+  border-radius:12px;padding:14px 16px;
+  display:flex;align-items:center;gap:12px;
+  text-decoration:none;color:var(--white);
+  transition:border-color .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.doc-card:active{background:rgba(201,162,39,0.1);border-color:var(--gold)}
 </style>
 </head>
 <body>
@@ -170,7 +187,31 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:'Bar
       </div>
     </button>
 
+    <button class="choice-btn btn-docs" onclick="irA('docs')">
+      <div class="ch-ico">📄</div>
+      <div class="ch-body">
+        <div class="ch-title">Documentos</div>
+        <div class="ch-sub">Manuales, esquemas y fichas técnicas</div>
+      </div>
+    </button>
+
     <button class="btn-back" onclick="volverAMec()">← Cambiar mecánico</button>
+  </div>
+</div>
+
+
+<!-- ══ PANTALLA 4: DOCUMENTOS ══ -->
+<div class="screen hidden" id="screenDocs">
+  <div style="width:100%;max-width:360px">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:2.4rem;margin-bottom:8px">📄</div>
+      <div style="font-size:1.15rem;font-weight:900;color:var(--gold-light)" id="docsTitle">Documentos</div>
+      <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);margin-top:4px" id="docsSubtitle"></div>
+    </div>
+    <div id="docsList" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;max-height:55vh;overflow-y:auto">
+      <div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3)">Cargando...</div>
+    </div>
+    <button class="btn-back" onclick="volverAChoice()">← Volver</button>
   </div>
 </div>
 
@@ -270,7 +311,7 @@ function mostrarBanner(bannerId, idEl, nameEl, subEl){
 
 /* ── PANTALLAS ── */
 function mostrar(id){
-  ['screenLogin','screenMec','screenChoice'].forEach(function(s){
+  ['screenLogin','screenMec','screenChoice','screenDocs'].forEach(function(s){
     var el = document.getElementById(s);
     if(s === id){
       el.classList.remove('hidden');
@@ -338,21 +379,86 @@ function volverAMec(){
 
 /* ── DESTINO ── */
 function irA(destino){
+  if(destino === 'docs'){
+    verDocs();
+    return;
+  }
+
   if(!mecActual) return;
 
   if(destino === 'averia'){
-    /* averias.html usa sessionStorage['mecAuth']='1' */
     sessionStorage.setItem('mecAuth', '1');
     var url = 'averias.html';
     if(maqActual) url += '?maq=' + encodeURIComponent(maqActual.id);
     window.location.href = url;
 
   } else {
-    /* mis_tareas.html usa sessionStorage['mecAuth_prev']='1' + mecSeleccionado */
     sessionStorage.setItem('mecAuth_prev', '1');
     sessionStorage.setItem('mecSeleccionado', mecActual);
     window.location.href = 'mis_tareas.html';
   }
+}
+
+function volverAChoice(){
+  mostrar('screenChoice');
+}
+
+function verDocs(){
+  var screens = ['screenLogin','screenMec','screenChoice','screenDocs'];
+
+  function mostrarConDocs(id){
+    screens.forEach(function(s){
+      var el = document.getElementById(s);
+      if(el) el.classList.toggle('hidden', s !== id);
+    });
+  }
+
+  var title    = document.getElementById('docsTitle');
+  var subtitle = document.getElementById('docsSubtitle');
+  var lista    = document.getElementById('docsList');
+
+  if(!maqActual){
+    if(title) title.textContent = 'Documentos';
+    if(subtitle) subtitle.textContent = 'Sin máquina seleccionada';
+    if(lista) lista.innerHTML = '<div style="text-align:center;padding:30px;color:rgba(255,255,255,0.35)">⚠️ Escanea el QR de una máquina para ver sus documentos.</div>';
+    mostrarConDocs('screenDocs');
+    return;
+  }
+
+  if(title) title.textContent = maqActual.n;
+  if(subtitle) subtitle.textContent = maqActual.id + ' · ' + maqActual.t;
+  if(lista) lista.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3)">Cargando...</div>';
+
+  mostrarConDocs('screenDocs');
+
+  DB.ref('maquinas/' + maqActual.id + '/docs').once('value').then(function(snap){
+    var val = snap.val();
+    if(!val || !Object.keys(val).length){
+      lista.innerHTML = '<div style="text-align:center;padding:30px;color:rgba(255,255,255,0.3)">Sin documentos disponibles para esta máquina.</div>';
+      return;
+    }
+
+    var docs = Object.values(val).sort(function(a,b){
+      return (b.fecha||'') > (a.fecha||'') ? 1 : -1;
+    });
+
+    lista.innerHTML = docs.map(function(d){
+      var ext  = (d.nombre||'').split('.').pop().toUpperCase();
+      var icon = ext==='PDF' ? '📕' : ext==='XLS'||ext==='XLSX' ? '📗' :
+                 ext==='DOC'||ext==='DOCX' ? '📘' : '📎';
+      var size = d.size>1048576 ? (d.size/1048576).toFixed(1)+' MB' : Math.round((d.size||0)/1024)+' KB';
+      return '<a class="doc-card" href="' + d.url + '" target="_blank">' +
+        '<span style="font-size:2rem;flex-shrink:0">' + icon + '</span>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-size:0.95rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (d.nombre||'') + '</div>' +
+          '<div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:3px">' + size + ' · ' + (d.fecha||'') + '</div>' +
+        '</div>' +
+        '<span style="font-size:1.3rem;color:var(--gold-light)">›</span>' +
+      '</a>';
+    }).join('');
+  }).catch(function(){
+    lista.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3)">Error al cargar documentos.</div>';
+  });
 }
 </script>
 </body>
