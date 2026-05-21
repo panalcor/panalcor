@@ -60,9 +60,9 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 .kpi-sub{font-size:0.75rem;color:rgba(255,255,255,0.3);margin-top:2px}
 
 /* ── CHARTS ── */
-.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
-.chart-wrap{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:18px}
-.chart-title{font-size:0.78rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.chart-wrap{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 14px}
+.chart-title{font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
 
 /* ── TABLAS ── */
 .data-table{width:100%;border-collapse:collapse;font-size:0.9rem}
@@ -189,19 +189,19 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
   <div class="chart-grid">
     <div class="chart-wrap">
       <div class="chart-title">Averías por mes (último año)</div>
-      <canvas id="cTendencia" height="180"></canvas>
+      <canvas id="cTendencia" height="90"></canvas>
     </div>
     <div class="chart-wrap">
       <div class="chart-title">Averías por tipo</div>
-      <canvas id="cTipos" height="180"></canvas>
+      <canvas id="cTipos" height="90"></canvas>
     </div>
     <div class="chart-wrap">
       <div class="chart-title">Top 10 máquinas</div>
-      <canvas id="cMaquinas" height="200"></canvas>
+      <canvas id="cMaquinas" height="100"></canvas>
     </div>
     <div class="chart-wrap">
       <div class="chart-title">Averías por turno</div>
-      <canvas id="cTurnos" height="200"></canvas>
+      <canvas id="cTurnos" height="100"></canvas>
     </div>
   </div>
   <div class="card">
@@ -236,7 +236,7 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
   <div class="mec-cards" id="mecCards"></div>
   <div class="chart-wrap" style="margin-top:0">
     <div class="chart-title">Intervenciones por mecánico</div>
-    <canvas id="cMecanicos" height="140"></canvas>
+    <canvas id="cMecanicos" height="70"></canvas>
   </div>
 
   <!-- ── GESTIÓN DE PERSONAL ── -->
