@@ -360,6 +360,22 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 
 <!-- ═══ INFORMES ═══ -->
 <div class="panel" id="panel-inf">
+  <!-- ═══ INFORME SEMANAL ═══ -->
+  <div class="card" id="cardInformeSemanal" style="margin-bottom:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+      <div class="sec-title" style="margin-bottom:0">📋 Informe semanal</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button onclick="setSemana(-1)" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:var(--white);padding:6px 12px;border-radius:6px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.82rem">◀ Semana anterior</button>
+        <span id="infSemanaLabel" style="font-size:0.85rem;color:var(--gold);font-weight:700;min-width:200px;text-align:center"></span>
+        <button onclick="setSemana(+1)" id="btnSigSemana" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:var(--white);padding:6px 12px;border-radius:6px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.82rem">Semana siguiente ▶</button>
+        <button onclick="imprimirInforme()" style="background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.82rem;font-weight:700">🖨️ Imprimir / PDF</button>
+      </div>
+    </div>
+    <div id="infSemanaBody">
+      <div style="text-align:center;padding:30px;color:rgba(255,255,255,0.3)">Cargando informe...</div>
+    </div>
+  </div>
+
   <div class="card">
     <div class="sec-title">📥 Exportar averías a Excel</div>
     <div class="report-filters">
@@ -1462,6 +1478,9 @@ function eliminarMaquina(id){
 // TABS
 // ══════════════════════════════════════════════════
 function switchTab(name){
+  if(name==='inf' && typeof generarInformeSemanal==='function'){
+    setTimeout(generarInformeSemanal, 50);
+  }
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('panel-'+name).classList.add('active');
@@ -1923,6 +1942,152 @@ function cargarProgresoPreventivo(){
   }).catch(function(){
     document.getElementById('ppSub').textContent = 'Error al cargar datos';
   });
+}
+
+// ══════════════════════════════════════════════════
+// INFORME SEMANAL
+// ══════════════════════════════════════════════════
+var _infSemanaOffset = 0;
+
+function getLunesDomingo(offset) {
+  var hoy = new Date();
+  var dow = hoy.getDay();
+  var lun = new Date(hoy);
+  lun.setDate(hoy.getDate() - ((dow + 6) % 7) + offset * 7);
+  lun.setHours(0,0,0,0);
+  var dom = new Date(lun);
+  dom.setDate(lun.getDate() + 6);
+  dom.setHours(23,59,59,999);
+  return {lun: lun, dom: dom};
+}
+
+function isoDate(d) {
+  return d.toISOString().substring(0, 10);
+}
+
+function fmtDate(iso) {
+  var p = iso.split('-');
+  return p[2] + '/' + p[1] + '/' + p[0];
+}
+
+function setSemana(delta) {
+  _infSemanaOffset += delta;
+  var btn = document.getElementById('btnSigSemana');
+  if (btn) btn.disabled = _infSemanaOffset >= 0;
+  generarInformeSemanal();
+}
+
+function generarInformeSemanal() {
+  var rng    = getLunesDomingo(_infSemanaOffset);
+  var iniISO = isoDate(rng.lun);
+  var finISO = isoDate(rng.dom);
+  var mesISO = finISO.substring(0, 7);
+
+  var label = document.getElementById('infSemanaLabel');
+  if (label) label.textContent = fmtDate(iniISO) + ' \u2014 ' + fmtDate(finISO);
+
+  var body = document.getElementById('infSemanaBody');
+  if (!body) return;
+  body.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3)">Cargando...</div>';
+
+  DB.ref('averias').once('value').then(function(snapAv) {
+    var avVal  = snapAv.val() || {};
+    var todas  = Object.values(avVal);
+    var semana = todas.filter(function(a) {
+      return (a.fecha || '') >= iniISO && (a.fecha || '') <= finISO;
+    }).sort(function(a, b) { return (b.ts || 0) - (a.ts || 0); });
+
+    DB.ref('asignaciones/' + mesISO).once('value').then(function(snapPrev) {
+      var prevVal    = snapPrev.val() || {};
+      var prevItems  = Object.values(prevVal);
+      var totalPrev  = prevItems.length;
+      var hechasPrev = prevItems.filter(function(i) { return i.hecho; }).length;
+      var pctPrev    = totalPrev ? Math.round(hechasPrev / totalPrev * 100) : null;
+
+      body.innerHTML = renderInformeSemanal(semana, totalPrev, hechasPrev, pctPrev, iniISO, finISO, mesISO);
+
+      var btn = document.getElementById('btnSigSemana');
+      if (btn) btn.disabled = _infSemanaOffset >= 0;
+    });
+  });
+}
+
+function renderInformeSemanal(averias, totalPrev, hechasPrev, pctPrev, iniISO, finISO, mesISO) {
+  var criticas   = averias.filter(function(a) { return (a.gravedad||'').toUpperCase().indexOf('RITI') >= 0; }).length;
+  var graves     = averias.filter(function(a) { return a.gravedad === 'GRAVE'; }).length;
+  var pendientes = averias.filter(function(a) { return a.estado !== 'RESUELTA'; }).length;
+  var tiempoMin  = averias.reduce(function(s, a) { return s + (a.tiempoMin || 0); }, 0);
+  var tiempoH    = Math.floor(tiempoMin / 60);
+  var tiempoM    = tiempoMin % 60;
+  var colorPct   = pctPrev === null ? '#888' : pctPrev >= 80 ? '#2ecc71' : pctPrev >= 50 ? '#f39c12' : '#e74c3c';
+
+  function kpi(val, lbl, color) {
+    return '<div style="background:var(--navy-deep);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px;text-align:center">' +
+      '<div style="font-size:1.8rem;font-weight:900;color:' + color + ';line-height:1">' + val + '</div>' +
+      '<div style="font-size:0.68rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-top:5px">' + lbl + '</div>' +
+      '</div>';
+  }
+
+  function badge(txt, color) {
+    return '<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:700;background:' + color + '22;color:' + color + ';border:1px solid ' + color + '44">' + txt + '</span>';
+  }
+
+  var kpis = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-bottom:18px">' +
+    kpi(averias.length, 'Averías', '#3498db') +
+    kpi(criticas,   'Críticas',    criticas   ? '#e74c3c' : '#2ecc71') +
+    kpi(graves,     'Graves',      graves     ? '#f39c12' : '#2ecc71') +
+    kpi(pendientes, 'Sin resolver', pendientes ? '#e74c3c' : '#2ecc71') +
+    kpi(tiempoH + 'h ' + tiempoM + 'm', 'Parada', '#9b59b6') +
+    kpi(pctPrev !== null ? pctPrev + '%' : '\u2014', 'Prev. ' + mesISO, colorPct) +
+    '</div>';
+
+  var tablaAv;
+  if (!averias.length) {
+    tablaAv = '<p style="color:rgba(255,255,255,0.3);padding:12px 0;font-size:0.9rem">Sin averias registradas esta semana.</p>';
+  } else {
+    var filas = averias.map(function(a) {
+      var grav = a.gravedad || '\u2014';
+      var est  = a.estado   || '\u2014';
+      var gc   = (grav.toUpperCase().indexOf('RITI') >= 0) ? '#e74c3c' : grav === 'GRAVE' ? '#f39c12' : '#2ecc71';
+      var ec   = est === 'RESUELTA' ? '#2ecc71' : '#e74c3c';
+      var t    = a.tiempoMin ? Math.floor(a.tiempoMin/60) + 'h ' + (a.tiempoMin%60) + 'min' : '\u2014';
+      var mec  = Array.isArray(a.mecanicos) ? a.mecanicos.join(', ') : (a.mecanico || '\u2014');
+      var desc = (a.descripcion || '\u2014').substring(0, 70);
+      return '<tr>' +
+        '<td style="padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.06);white-space:nowrap;font-size:0.82rem">' + (a.fecha||'\u2014') + '</td>' +
+        '<td style="padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.06);font-size:0.82rem;font-weight:600">' + (a.maqNombre||'\u2014') + '</td>' +
+        '<td style="padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.06);font-size:0.82rem">' + desc + '</td>' +
+        '<td style="padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.06)">' + badge(grav, gc) + '</td>' +
+        '<td style="padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.06)">' + badge(est, ec) + '</td>' +
+        '<td style="padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.06);font-size:0.82rem">' + t + '</td>' +
+        '<td style="padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.06);font-size:0.82rem">' + mec + '</td>' +
+      '</tr>';
+    }).join('');
+    tablaAv = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">' +
+      '<thead><tr style="border-bottom:1px solid rgba(201,162,39,0.3)">' +
+      ['Fecha','Maquina','Descripcion','Gravedad','Estado','Tiempo','Mecanico'].map(function(h){
+        return '<th style="padding:7px 10px;text-align:left;font-size:0.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)">' + h + '</th>';
+      }).join('') + '</tr></thead><tbody>' + filas + '</tbody></table></div>';
+  }
+
+  var barPrev = '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:6px">' +
+    '<div style="font-size:2.5rem;font-weight:900;color:' + colorPct + ';min-width:60px">' + (pctPrev !== null ? pctPrev + '%' : '\u2014') + '</div>' +
+    '<div style="flex:1;min-width:150px">' +
+      '<div style="background:rgba(255,255,255,0.1);border-radius:20px;height:10px;overflow:hidden;margin-bottom:6px">' +
+        '<div style="height:100%;width:' + (pctPrev||0) + '%;background:' + colorPct + ';border-radius:20px"></div>' +
+      '</div>' +
+      '<div style="font-size:0.82rem;color:rgba(255,255,255,0.5)">' + hechasPrev + ' de ' + totalPrev + ' tareas completadas en ' + mesISO + '</div>' +
+    '</div></div>';
+
+  return kpis +
+    '<div style="font-size:0.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid rgba(201,162,39,0.2)">Averias de la semana (' + averias.length + ')</div>' +
+    tablaAv +
+    '<div style="font-size:0.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid rgba(201,162,39,0.2)">Plan preventivo del mes</div>' +
+    barPrev;
+}
+
+function imprimirInforme() {
+  window.print();
 }
 </script>
 
