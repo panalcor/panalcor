@@ -199,12 +199,15 @@ body {
   </div>
 </div>
 
-<div class="no-server-warn" id="noServerWarn">
-  ⚠️ <b>Servidor no detectado.</b> Los QR deben apuntar a una URL de red para funcionar desde el móvil.
-  Arranca <b>arrancar.bat</b> en el PC y abre esta página desde el servidor: <code id="serverUrl">http://IP:8080/qr_maquinas.html</code>
-</div>
+<div class="no-server-warn" id="noServerWarn" style="display:none"></div>
 
 <div class="controls">
+  <div style="flex:1 1 320px">
+    <span style="font-size:0.68rem;letter-spacing:0.14em;color:var(--text-dim);text-transform:uppercase;display:block;margin-bottom:4px">🔗 URL base de los QR</span>
+    <input id="baseUrlInput" type="text" oninput="renderQR()"
+      style="width:100%;background:var(--navy-mid);border:1px solid rgba(201,162,39,0.4);border-radius:6px;padding:7px 12px;color:#f0c040;font-family:'Barlow',sans-serif;font-size:0.82rem"
+      placeholder="https://panalcor.github.io/panalcor">
+  </div>
   <div>
     <span style="font-size:0.68rem;letter-spacing:0.14em;color:var(--text-dim);text-transform:uppercase;display:block;margin-bottom:4px">Área</span>
     <select class="ctrl-sel" id="filtroArea" onchange="renderQR()">
@@ -359,10 +362,18 @@ let MAQUINAS = [
 ];
 
 /* ══ Estado y base URL ══ */
-// Detectar base automáticamente — funciona en GitHub Pages, servidor local y file://
-const serverBase = (window.location.protocol === 'file:')
-  ? (() => { document.getElementById('noServerWarn').style.display = 'block'; return 'http://TU_IP:8080'; })()
-  : window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
+// URL base para los QR
+const GITHUB_PAGES_BASE = 'https://panalcor.github.io/panalcor';
+let serverBase;
+if (window.location.protocol === 'file:') {
+  // Abierto desde el PC en local → apuntar siempre a GitHub Pages
+  serverBase = GITHUB_PAGES_BASE;
+} else {
+  // Abierto desde un servidor (GitHub Pages, red local…) → detectar
+  serverBase = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
+}
+document.getElementById('baseUrlInput').value = serverBase;
+function getBase(){ return (document.getElementById('baseUrlInput').value || serverBase).replace(/\/$/, ''); }
 
 // Poblar filtros
 const areas = [...new Set(MAQUINAS.map(m => m.a))].sort();
@@ -392,7 +403,7 @@ function renderQR() {
   rendered = [];
 
   filtered.forEach(maq => {
-    const url = `${serverBase}/landing.html?maq=${encodeURIComponent(maq.id)}`;
+    const url = `${getBase()}/landing.html?maq=${encodeURIComponent(maq.id)}`;
 
     // Crear card
     const card = document.createElement('div');
