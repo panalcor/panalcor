@@ -713,7 +713,7 @@ function renderChartTendencia(av){
   charts.cTendencia=new Chart(document.getElementById('cTendencia'),{
     type:'line',
     data:{labels:keys,datasets:[{data:keys.map(k=>meses[k]),borderColor:'rgba(201,162,39,0.9)',backgroundColor:'rgba(201,162,39,0.12)',fill:true,tension:0.3,pointRadius:4,pointBackgroundColor:'var(--gold)'}]},
-    options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#888',font:{size:10}}},y:{ticks:{color:'#888'},grid:{color:'rgba(255,255,255,0.06)'}}}}
+    options:{aspectRatio:4,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#888',font:{size:10}}},y:{ticks:{color:'#888'},grid:{color:'rgba(255,255,255,0.06)'}}}}
   });
 }
 
@@ -725,7 +725,7 @@ function renderChartTipos(av){
   charts.cTipos=new Chart(document.getElementById('cTipos'),{
     type:'doughnut',
     data:{labels:Object.keys(tipos),datasets:[{data:Object.values(tipos),backgroundColor:['#3498db','#f1c40f','#1abc9c','#9b59b6','#e67e22','#95a5a6']}]},
-    options:{plugins:{legend:{labels:{color:'#ccc',font:{size:10}}}}}
+    options:{aspectRatio:2,plugins:{legend:{labels:{color:'#ccc',font:{size:10}}}}}
   });
 }
 
@@ -738,7 +738,7 @@ function renderChartMaquinas(av){
   charts.cMaquinas=new Chart(document.getElementById('cMaquinas'),{
     type:'bar',
     data:{labels:top.map(e=>e[0]),datasets:[{data:top.map(e=>e[1]),backgroundColor:'rgba(231,76,60,0.65)',borderColor:'rgba(231,76,60,1)',borderWidth:1}]},
-    options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#888'},grid:{color:'rgba(255,255,255,0.06)'}},y:{ticks:{color:'#ccc',font:{size:10}}}}}
+    options:{aspectRatio:3,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#888'},grid:{color:'rgba(255,255,255,0.06)'}},y:{ticks:{color:'#ccc',font:{size:10}}}}}
   });
 }
 
@@ -749,7 +749,7 @@ function renderChartTurnos(av){
   charts.cTurnos=new Chart(document.getElementById('cTurnos'),{
     type:'pie',
     data:{labels:['Mañana','Tarde','Noche'],datasets:[{data:[t.MAÑANA,t.TARDE,t.NOCHE],backgroundColor:['#f1c40f','#e67e22','#3498db']}]},
-    options:{plugins:{legend:{labels:{color:'#ccc'}}}}
+    options:{aspectRatio:2,plugins:{legend:{labels:{color:'#ccc'}}}}
   });
 }
 
@@ -821,7 +821,7 @@ function renderMecanicos(){
         {label:'Turnos',data:entries.map(e=>e[1].turnosTotales),backgroundColor:'rgba(52,152,219,0.5)'}
       ]
     },
-    options:{plugins:{legend:{labels:{color:'#ccc'}}},scales:{x:{ticks:{color:'#ccc'}},y:{ticks:{color:'#888'},grid:{color:'rgba(255,255,255,0.06)'}}}}
+    options:{aspectRatio:4,plugins:{legend:{labels:{color:'#ccc'}}},scales:{x:{ticks:{color:'#ccc'}},y:{ticks:{color:'#888'},grid:{color:'rgba(255,255,255,0.06)'}}}}
   });
 }
 
