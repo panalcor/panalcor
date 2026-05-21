@@ -1941,7 +1941,7 @@ function cargarProgresoPreventivo(){
 // ══════════════════════════════════════════════════
 
 // Actualizar botón del topbar según el estado del permiso
-function actualizarBotонNotif(){
+function actualizarBotonNotif(){
   var btn   = document.getElementById('notifBtn');
   var label = document.getElementById('notifLabel');
   if(!btn || !('Notification' in window)) return;
@@ -1977,7 +1977,7 @@ Pulsa el icono del candado en la barra de dirección y cambia el permiso a Permi
     return;
   }
   Notification.requestPermission().then(function(result){
-    actualizarBotонNotif();
+    actualizarBotonNotif();
     if(result === 'granted'){
       // Notificación de prueba
       new Notification('✅ Notificaciones activadas', {
@@ -2059,7 +2059,7 @@ Mecánico: ' + a.mecanicos.join(', ') : '');
 
 // Llamar al actualizar el estado del botón cuando carga la app
 function initNotificaciones(){
-  actualizarBotонNotif();
+  actualizarBotonNotif();
 }
 </script>
 
