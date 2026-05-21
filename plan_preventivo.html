@@ -97,6 +97,7 @@ tbody td{padding:9px 12px;vertical-align:middle}
   <div class="tab" onclick="switchTab('seguimiento')" id="tab-seguimiento">📊 Seguimiento</div>
   <div class="tab" onclick="switchTab('historial')" id="tab-historial">🗂 Historial</div>
   <div class="tab" onclick="switchTab('imprimir')" id="tab-imprimir">🖨️ Imprimir</div>
+  <div class="tab" onclick="switchTab('alarmas')">🔔 Alarmas</div>
   <div class="tab" onclick="switchTab('catalogo')" id="tab-catalogo">⚙️ Catálogo</div>
 </div>
 
@@ -185,6 +186,32 @@ tbody td{padding:9px 12px;vertical-align:middle}
       <button class="btn btn-gold no-print" onclick="window.print()">🖨️ Imprimir / PDF</button>
     </div>
   </div>
+
+<div id="panel-alarmas" style="display:none;padding:16px">
+
+  <!-- Badges resumen -->
+  <div id="alResumen" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px"></div>
+
+  <!-- Próximos 15 días / vencidas -->
+  <div style="background:var(--navy-mid,#1a2d42);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:16px;margin-bottom:14px">
+    <div style="font-size:0.72rem;letter-spacing:.14em;text-transform:uppercase;color:#f0c040;font-weight:700;margin-bottom:12px">⚠️ Urgentes — vencidas y próximos 15 días</div>
+    <div id="alUrgentes" style="font-size:0.85rem;color:rgba(255,255,255,0.35)">Cargando...</div>
+  </div>
+
+  <!-- Calendario próximo mes -->
+  <div style="background:var(--navy-mid,#1a2d42);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:16px;margin-bottom:14px">
+    <div id="alCalTitle" style="font-size:0.72rem;letter-spacing:.14em;text-transform:uppercase;color:#f0c040;font-weight:700;margin-bottom:12px">📅 Próximo mes</div>
+    <div id="alCalendar" style="font-size:0.85rem;color:rgba(255,255,255,0.35)">Cargando...</div>
+  </div>
+
+  <!-- Todas las periódicas -->
+  <div style="background:var(--navy-mid,#1a2d42);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:16px">
+    <div style="font-size:0.72rem;letter-spacing:.14em;text-transform:uppercase;color:#f0c040;font-weight:700;margin-bottom:12px">🗓 Todas las periódicas</div>
+    <div id="alTodas" style="font-size:0.85rem"></div>
+  </div>
+
+</div>
+
   <div id="impPreview" style="display:none">
     <div class="imp-header" style="margin-bottom:16px">
       <h2 id="impTitulo" style="font-size:1.15rem;font-weight:900;color:var(--gold-light)"></h2>
@@ -822,6 +849,151 @@ function escH(s){
 }
 
 arrancarApp();
+
+
+// ══════════════════════════════════════════════
+// ALARMAS TAB
+// ══════════════════════════════════════════════
+var AL_PERIODIC = [{"id": "CAT-0007", "parte": "000", "maquina": "LEVADURA", "subtipo": "CUADRO LEVADURA (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "tarea": "CUADRO GENERAL LIMPIEZA", "frecuencia": "TRIMESTRAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0008", "parte": "000", "maquina": "LEVADURA", "subtipo": "CUADRO LEVADURA (LUCES, BOTONERA MARCADA, LIMPIEZA ETC)", "tarea": "CUADRO TANQUE 1 LIMPIEZA", "frecuencia": "TRIMESTRAL", "instancias": ["LEVADURA"]}, {"id": "CAT-0104", "parte": "004", "maquina": "CARRUSEL", "subtipo": "PABAT", "tarea": "CONTACTORES (REVISAR Y CAMBIAR)", "frecuencia": "SEMESTRAL", "instancias": ["CARRUSEL 1", "CARRUSEL 2", "CARRUSEL 3", "CARRUSEL 4", "CARRUSEL 5", "CARRUSEL 6"]}, {"id": "CAT-0111", "parte": "005", "maquina": "TOLVAS-AGUA", "subtipo": "TOLVA", "tarea": "ESTADO DE LA REJILLA DEL FILTRO", "frecuencia": "SEMESTRAL", "instancias": ["TOLVA L1", "TOLVA L2", "TOLVA L3", "TOLVA L4", "TOLVA L5", "TOLVA L6"]}, {"id": "CAT-0112", "parte": "005", "maquina": "TOLVAS-AGUA", "subtipo": "TOLVA", "tarea": "ESTADO DE LA MARIPOSA", "frecuencia": "SEMESTRAL", "instancias": ["TOLVA L1", "TOLVA L2", "TOLVA L3", "TOLVA L4", "TOLVA L5", "TOLVA L6"]}, {"id": "CAT-0141", "parte": "006", "maquina": "DIVISORAS", "subtipo": "CAMARAS DE BOLAS", "tarea": "RELES", "frecuencia": "SEMESTRAL", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0142", "parte": "006", "maquina": "DIVISORAS", "subtipo": "CAMARAS DE BOLAS", "tarea": "CONTACTORES", "frecuencia": "SEMESTRAL", "instancias": ["DIVISORA 1", "DIVISORA 2", "DIVISORA 3", "DIVISORA 4", "DIVISORA 5", "DIVISORA 6"]}, {"id": "CAT-0190", "parte": "008", "maquina": "TALLADORA RELAMPAGO", "subtipo": "OTROS", "tarea": "SOPLADO DRIVER SERVOS (SEGUIR PROCEDIMIENTO OJO)", "frecuencia": "SEMESTRAL", "instancias": ["TALLADORA RELAMPAGO"]}, {"id": "CAT-0230", "parte": "010", "maquina": "FERMENTADORA RELAMPAGO", "subtipo": "LIMPIEZA EQUIPOS FERMENTADORA", "tarea": "CONDENSADORES (ABRIL Y OCTUBRE)", "frecuencia": "SEMESTRAL", "instancias": ["FERMENTADORA RELAMPAGO"]}, {"id": "CAT-0231", "parte": "011", "maquina": "TUNEL PREFRIO", "subtipo": "TUNEL PREFRIO", "tarea": "RELES Y CONTACTORES", "frecuencia": "SEMESTRAL", "instancias": ["TUNEL PREFRIO"]}, {"id": "CAT-0234", "parte": "011", "maquina": "TUNEL PREFRIO", "subtipo": "TUNEL PREFRIO", "tarea": "PAJARITOS", "frecuencia": "ANUAL", "instancias": ["TUNEL PREFRIO"]}, {"id": "CAT-0249", "parte": "012", "maquina": "TUNELES", "subtipo": "TUNEL Nº", "tarea": "RELES-CONTACTORES (RELES V.E. CADA 6 MESES)", "frecuencia": "SEMESTRAL", "instancias": ["TUNEL 1", "TUNEL 2", "TUNEL 3", "TUNEL 4", "TUNEL 5"]}, {"id": "CAT-0260", "parte": "012", "maquina": "TUNELES", "subtipo": "TUNEL Nº", "tarea": "DIFERENCIALES", "frecuencia": "SEMESTRAL", "instancias": ["TUNEL 1", "TUNEL 2", "TUNEL 3", "TUNEL 4", "TUNEL 5"]}, {"id": "CAT-0319", "parte": "015", "maquina": "M CAJAS", "subtipo": "ENCOLADOR", "tarea": "FILTROS PISTOLAS", "frecuencia": "SEMESTRAL", "instancias": ["M CAJAS"]}, {"id": "CAT-0320", "parte": "015", "maquina": "M CAJAS", "subtipo": "ENCOLADOR", "tarea": "FILTRO ENCOLADOR", "frecuencia": "ANUAL", "instancias": ["M CAJAS"]}, {"id": "CAT-0321", "parte": "015", "maquina": "M CAJAS", "subtipo": "ENCOLADOR", "tarea": "LIMPIEZA ENCOLADOR (ANUAL)", "frecuencia": "ANUAL", "instancias": ["M CAJAS"]}, {"id": "CAT-0322", "parte": "015", "maquina": "M CAJAS", "subtipo": "ENCOLADOR", "tarea": "FILTRO ASPIRACION", "frecuencia": "SEMESTRAL", "instancias": ["M CAJAS"]}, {"id": "CAT-0394", "parte": "019", "maquina": "TRUENO", "subtipo": "HARINA-AGUA-SILOS", "tarea": "RELES, CONTACTORES (TOPES Y CANJILONES) 6 MESES", "frecuencia": "SEMESTRAL", "instancias": ["TRUENO"]}];
+var AL_FREQ_MESES = {TRIMESTRAL:3, SEMESTRAL:6, ANUAL:12};
+var MESES_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+function alProximaFecha(ultimaISO, frecuencia){
+  var m = AL_FREQ_MESES[frecuencia]; if(!m||!ultimaISO) return null;
+  var d = new Date(ultimaISO); d.setMonth(d.getMonth()+m); return d;
+}
+function alEstado(proxima){
+  if(!proxima) return {tipo:'SIN_FECHA',dias:null};
+  var hoy = new Date(); hoy.setHours(0,0,0,0);
+  var dias = Math.round((proxima-hoy)/86400000);
+  if(dias<0)  return {tipo:'VENCIDA', dias:Math.abs(dias)};
+  if(dias<=15) return {tipo:'PROXIMA',dias:dias};
+  return {tipo:'OK',dias:dias};
+}
+
+function cargarTabAlarmas(){
+  if(!DB) return;
+  DB.ref('config/ultima_realizacion').once('value').then(function(snap){
+    var ur = snap.val()||{};
+    var data = AL_PERIODIC.map(function(t){
+      var rec=ur[t.id]||{};
+      var proxima=alProximaFecha(rec.fecha||null,t.frecuencia);
+      var estado=alEstado(proxima);
+      return {task:t,ultima:rec.fecha||null,proxima:proxima,estado:estado};
+    });
+    renderTabAlarmas(data);
+  }).catch(function(){ renderTabAlarmas([]); });
+}
+
+function renderTabAlarmas(data){
+  var vencidas=data.filter(function(a){return a.estado.tipo==='VENCIDA';});
+  var proximas=data.filter(function(a){return a.estado.tipo==='PROXIMA';});
+  var sinFecha=data.filter(function(a){return a.estado.tipo==='SIN_FECHA';});
+  var ok=data.filter(function(a){return a.estado.tipo==='OK';});
+
+  // Badges
+  var b='';
+  function bEl(n,lbl,col,bg){
+    return '<div style="display:flex;align-items:center;gap:6px;padding:6px 14px;background:'+bg+';border:1px solid '+col+'55;border-radius:8px">'
+      +'<span style="font-size:1.1rem;font-weight:900;color:'+col+'">'+n+'</span>'
+      +'<span style="font-size:0.7rem;font-weight:700;color:'+col+';letter-spacing:.08em">'+lbl+'</span>'
+      +'</div>';
+  }
+  b+=bEl(vencidas.length,'VENCIDAS','#e74c3c','rgba(231,76,60,0.15)');
+  b+=bEl(proximas.length,'≤15 DÍAS','#f39c12','rgba(243,156,18,0.15)');
+  b+=bEl(sinFecha.length,'SIN FECHA','#888','rgba(255,255,255,0.07)');
+  b+=bEl(ok.length,'AL DÍA','#2ecc71','rgba(46,204,113,0.1)');
+  document.getElementById('alResumen').innerHTML=b;
+
+  // Urgentes
+  var urgentes=vencidas.concat(proximas).sort(function(a,b){
+    var pa=a.estado.tipo==='VENCIDA'?-a.estado.dias:a.estado.dias;
+    var pb=b.estado.tipo==='VENCIDA'?-b.estado.dias:b.estado.dias;
+    return pa-pb;
+  });
+  if(urgentes.length){
+    var u='<div style="display:flex;flex-direction:column;gap:8px">';
+    urgentes.forEach(function(a){
+      var col=a.estado.tipo==='VENCIDA'?'#e74c3c':'#f39c12';
+      var txt=a.estado.tipo==='VENCIDA'?'Vencida hace '+a.estado.dias+' días':'Vence en '+a.estado.dias+' días';
+      var prxStr=a.proxima?a.proxima.toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'}):'—';
+      u+='<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,0.04);border-radius:9px;border-left:3px solid '+col+'">'
+        +'<div style="flex:1">'
+        +'<div style="font-weight:700;color:#fff;font-size:0.9rem">'+escAl(a.task.maquina)+' — '+escAl(a.task.tarea)+'</div>'
+        +'<div style="font-size:0.75rem;color:rgba(255,255,255,0.4);margin-top:2px">Fecha prevista: '+prxStr+' · '+a.task.frecuencia+'</div>'
+        +'</div>'
+        +'<span style="font-size:0.78rem;font-weight:700;color:'+col+';white-space:nowrap;background:'+col+'22;padding:4px 10px;border-radius:6px">'+txt+'</span>'
+        +'</div>';
+    });
+    u+='</div>';
+    document.getElementById('alUrgentes').innerHTML=u;
+  } else {
+    document.getElementById('alUrgentes').innerHTML='<span style="color:#2ecc71">✅ Ningún mantenimiento vencido ni próximo en 15 días.</span>';
+  }
+
+  // Calendario próximo mes
+  var hoy=new Date();
+  var proxMes=new Date(hoy.getFullYear(),hoy.getMonth()+1,1);
+  var proxMesFin=new Date(hoy.getFullYear(),hoy.getMonth()+2,0);
+  document.getElementById('alCalTitle').textContent='📅 '+MESES_ES[proxMes.getMonth()]+' '+proxMes.getFullYear()+' — Mantenimientos previstos';
+  var enProxMes=data.filter(function(a){
+    return a.proxima && a.proxima>=proxMes && a.proxima<=proxMesFin;
+  });
+  // También tareas MENSUAL/QUINCENAL/SEMANAL son siempre en próximo mes — mostrar recuento
+  var siempre=CATALOGO ? CATALOGO.filter(function(t){return ['MENSUAL','QUINCENAL','SEMANAL'].indexOf(t.frecuencia)>=0;}) : [];
+  var calHtml='';
+  if(siempre.length){
+    calHtml+='<div style="margin-bottom:10px;padding:10px 14px;background:rgba(52,152,219,0.1);border:1px solid rgba(52,152,219,0.3);border-radius:8px;font-size:0.82rem">'
+      +'<span style="color:rgba(255,255,255,0.7)">📋 Tareas recurrentes siempre activas: </span>'
+      +'<b style="color:#3498db">'+siempre.length+' tareas</b>'
+      +' <span style="color:rgba(255,255,255,0.4);font-size:0.75rem">(mensual, quincenal, semanal)</span>'
+      +'</div>';
+  }
+  if(enProxMes.length){
+    calHtml+='<div style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:.1em;margin-bottom:8px;text-transform:uppercase">Periódicas con vencimiento en '+MESES_ES[proxMes.getMonth()]+'</div>';
+    calHtml+='<div style="display:flex;flex-direction:column;gap:6px">';
+    enProxMes.forEach(function(a){
+      var prxStr=a.proxima.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'});
+      calHtml+='<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(255,255,255,0.04);border-radius:8px">'
+        +'<span style="font-size:1rem">📌</span>'
+        +'<div style="flex:1"><span style="font-weight:700;color:#fff">'+escAl(a.task.maquina)+'</span>'
+        +' <span style="color:rgba(255,255,255,0.55);font-size:0.82rem">'+escAl(a.task.tarea)+'</span></div>'
+        +'<span style="font-size:0.78rem;color:#f0c040;font-weight:700;white-space:nowrap">'+prxStr+'</span>'
+        +'<span style="font-size:0.7rem;color:rgba(255,255,255,0.35);background:rgba(155,89,182,0.2);border-radius:6px;padding:2px 8px">'+a.task.frecuencia+'</span>'
+        +'</div>';
+    });
+    calHtml+='</div>';
+  } else {
+    calHtml+='<div style="color:rgba(255,255,255,0.3);font-size:0.82rem">No hay tareas periódicas con vencimiento en '+MESES_ES[proxMes.getMonth()]+'.</div>';
+  }
+  document.getElementById('alCalendar').innerHTML=calHtml;
+
+  // Tabla todas las periódicas
+  var freqCol={TRIMESTRAL:'#3498db',SEMESTRAL:'#9b59b6',ANUAL:'#e74c3c'};
+  var stCol={VENCIDA:'#e74c3c',PROXIMA:'#f39c12',OK:'#2ecc71',SIN_FECHA:'rgba(255,255,255,0.3)'};
+  var stTxt={VENCIDA:'⚠️ Vencida','PROXIMA':'🔔 Próxima',OK:'✅ Al día',SIN_FECHA:'— Sin fecha'};
+  var rows=data.map(function(a){
+    var prxStr=a.proxima?a.proxima.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'}):'—';
+    var ulStr=a.ultima?new Date(a.ultima).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'}):'No registrada';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid rgba(255,255,255,0.05)">'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-weight:700;color:#fff;font-size:0.88rem">'+escAl(a.task.maquina)+'</div>'
+      +'<div style="color:rgba(255,255,255,0.5);font-size:0.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escAl(a.task.tarea)+'</div>'
+      +'</div>'
+      +'<span style="font-size:0.68rem;font-weight:700;color:'+freqCol[a.task.frecuencia]+';background:'+freqCol[a.task.frecuencia]+'22;border-radius:5px;padding:2px 7px;white-space:nowrap">'+a.task.frecuencia+'</span>'
+      +'<div style="text-align:right;min-width:80px">'
+      +'<div style="font-size:0.72rem;color:rgba(255,255,255,0.35)">Última: '+ulStr+'</div>'
+      +'<div style="font-size:0.72rem;color:rgba(255,255,255,0.5)">Próxima: '+prxStr+'</div>'
+      +'</div>'
+      +'<span style="font-size:0.72rem;font-weight:700;color:'+stCol[a.estado.tipo]+';white-space:nowrap">'+stTxt[a.estado.tipo]+'</span>'
+      +'</div>';
+  }).join('');
+  document.getElementById('alTodas').innerHTML=rows||'<span style="color:rgba(255,255,255,0.3)">Sin datos</span>';
+}
+
+function escAl(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+
 </script>
 </body>
 </html>
