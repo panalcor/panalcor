@@ -184,6 +184,7 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
   <div class="tab" onclick="switchTab('ia')"   id="tab-ia">🤖 Análisis IA</div>
   <div class="tab" onclick="switchTab('inf')"  id="tab-inf">📋 Informes</div>
   <div class="tab" onclick="switchTab('maq')"  id="tab-maq">🏭 Máquinas</div>
+  <div class="tab" onclick="switchTab('rep')"  id="tab-rep">🔧 Repuestos</div>
   <div class="tab" onclick="switchTab('cfg')"  id="tab-cfg">⚙️ Configuración</div>
 </div>
 
@@ -523,6 +524,82 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
       </table>
     </div>
   </div>
+</div>
+
+<!-- ═══ REPUESTOS ═══ -->
+<div class="panel" id="panel-rep">
+
+  <!-- Formulario añadir -->
+  <div class="card config-section" style="max-width:100%">
+    <div class="sec-title">➕ Añadir / actualizar repuesto</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:14px">
+      <div class="field" style="margin:0">
+        <label>Descripción *</label>
+        <input type="text" id="repDesc" placeholder="Ej: Rodamiento 6205" style="text-transform:uppercase">
+      </div>
+      <div class="field" style="margin:0">
+        <label>Referencia</label>
+        <input type="text" id="repRef" placeholder="Ej: 6205-2RS">
+      </div>
+      <div class="field" style="margin:0">
+        <label>Fabricante</label>
+        <input type="text" id="repFab" placeholder="Ej: SKF" style="text-transform:uppercase">
+      </div>
+      <div class="field" style="margin:0">
+        <label>Proveedor</label>
+        <input type="text" id="repProv" placeholder="Ej: RS Components" style="text-transform:uppercase">
+      </div>
+      <div class="field" style="margin:0">
+        <label>Precio/ud (€)</label>
+        <input type="number" id="repPrecio" min="0" step="0.01" placeholder="0.00">
+      </div>
+    </div>
+    <div class="field" style="margin:0 0 12px 0">
+      <label>🔗 URL Datasheet / Documento</label>
+      <input type="url" id="repUrl" placeholder="https://..." style="width:100%">
+    </div>
+    <div class="field" style="margin:0 0 14px 0">
+      <label>Notas</label>
+      <input type="text" id="repNotas" placeholder="Observaciones opcionales" style="width:100%">
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button class="btn-export btn-gold" onclick="guardarRepuesto()">💾 Guardar repuesto</button>
+      <button class="btn-export" onclick="importarRepuestosDeAverias()"
+        style="background:rgba(52,152,219,0.15);border:1px solid rgba(52,152,219,0.4);color:#3498db">
+        ⬇️ Importar de averías
+      </button>
+      <span id="repMsg" style="font-size:0.82rem;color:var(--green)"></span>
+    </div>
+  </div>
+
+  <!-- Búsqueda -->
+  <div style="margin:12px 0 8px">
+    <input type="text" id="repBuscar" placeholder="🔍 Buscar por descripción o referencia..."
+      oninput="filtrarRepuestos()"
+      style="width:100%;max-width:400px;background:var(--navy-mid);border:1px solid rgba(255,255,255,0.15);
+             border-radius:8px;padding:9px 14px;color:#fff;font-family:'Barlow',sans-serif;font-size:0.9rem">
+  </div>
+
+  <!-- Tabla catálogo -->
+  <div class="card" style="padding:0;overflow-x:auto">
+    <table class="data-table" id="tCatalogoRep">
+      <thead><tr>
+        <th>Descripción</th>
+        <th>Referencia</th>
+        <th>Fabricante</th>
+        <th>Proveedor</th>
+        <th>Precio/ud</th>
+        <th title="Veces usado en averías">Usos</th>
+        <th>📄 Datasheet</th>
+        <th>Notas</th>
+        <th></th>
+      </tr></thead>
+      <tbody id="bCatalogoRep">
+        <tr><td colspan="9" class="no-data">Cargando catálogo...</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div style="font-size:0.72rem;color:rgba(255,255,255,0.3);margin-top:6px" id="repCount"></div>
 </div>
 
 <!-- ═══ CONFIGURACIÓN ═══ -->
@@ -1621,6 +1698,7 @@ function switchTab(name){
   if(name==='mec') { renderMecanicos(); loadPersonal(renderPersonal); }
   if(name==='inf') renderInformes();
   if(name==='maq') { loadMaquinasExtra(renderMaquinas); }
+  if(name==='rep') { cargarCatalogoRepuestos(); }
   if(name==='cfg') cargarTareasDiariasAdmin();
   if(name==='cfg') cargarFechasRealizacion();
   if(name==='cfg') cargarFechasRealizacion();
@@ -2444,6 +2522,179 @@ function cerrarAvModal() {
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') cerrarAvModal();
 });
+
+// ══════════════════════════════════════════════════
+// CATÁLOGO DE REPUESTOS
+// ══════════════════════════════════════════════════
+var _repCatalogo = {};   // key → objeto repuesto
+var _repEditKey  = null; // clave en edición
+
+function _repKey(desc, ref) {
+  return ((ref && ref.trim()) ? ref.trim() : desc.trim())
+    .replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 60).toUpperCase();
+}
+
+function cargarCatalogoRepuestos() {
+  DB.ref('repuestos_catalogo').once('value').then(function(snap) {
+    _repCatalogo = snap.val() || {};
+    renderCatalogoRepuestos();
+  }).catch(function() {
+    document.getElementById('bCatalogoRep').innerHTML =
+      '<tr><td colspan="9" class="no-data">Error al cargar</td></tr>';
+  });
+}
+
+function filtrarRepuestos() {
+  renderCatalogoRepuestos();
+}
+
+function renderCatalogoRepuestos() {
+  var q = (document.getElementById('repBuscar').value || '').toLowerCase();
+  var av = getAverias();
+
+  // Contar usos por clave
+  var usos = {};
+  av.forEach(function(a) {
+    (a.materiales || []).forEach(function(m) {
+      var k = _repKey(m.desc || '', m.ref || '');
+      usos[k] = (usos[k] || 0) + 1;
+    });
+  });
+
+  var lista = Object.values(_repCatalogo).filter(function(r) {
+    if (!q) return true;
+    return (r.desc || '').toLowerCase().includes(q) ||
+           (r.ref  || '').toLowerCase().includes(q);
+  }).sort(function(a, b) {
+    var ua = usos[a._key] || 0;
+    var ub = usos[b._key] || 0;
+    return ub - ua || (a.desc || '').localeCompare(b.desc || '');
+  });
+
+  var tbody = document.getElementById('bCatalogoRep');
+  var count = document.getElementById('repCount');
+  if (count) count.textContent = lista.length + ' repuesto' + (lista.length !== 1 ? 's' : '');
+
+  if (!lista.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="no-data">'
+      + (q ? 'Sin resultados para "' + q + '"' : 'Catálogo vacío — añade repuestos o importa de averías')
+      + '</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = lista.map(function(r) {
+    var u = usos[r._key] || 0;
+    var precio = r.precio ? r.precio.toFixed(2) + ' €' : '—';
+    var docCell = r.url
+      ? '<a href="' + r.url + '" target="_blank" title="Abrir datasheet"'
+        + ' style="font-size:1.3rem;text-decoration:none">📄</a>'
+      : '<span style="color:rgba(255,255,255,0.2);font-size:0.78rem">Sin enlace</span>';
+    return '<tr>'
+      + '<td style="font-weight:600">' + (r.desc || '') + '</td>'
+      + '<td><code style="color:var(--gold);font-size:0.8rem">' + (r.ref || '—') + '</code></td>'
+      + '<td style="color:rgba(255,255,255,0.6)">' + (r.fab || '—') + '</td>'
+      + '<td style="color:rgba(255,255,255,0.6)">' + (r.prov || '—') + '</td>'
+      + '<td style="text-align:center">' + precio + '</td>'
+      + '<td style="text-align:center"><span style="font-weight:700;color:' + (u > 0 ? 'var(--gold)' : 'rgba(255,255,255,0.3)') + '">' + u + '</span></td>'
+      + '<td style="text-align:center">' + docCell + '</td>'
+      + '<td style="font-size:0.78rem;color:rgba(255,255,255,0.4);max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (r.notas || '') + '</td>'
+      + '<td style="white-space:nowrap">'
+        + '<button onclick="cargarRepuestoEnForm('' + r._key + '')" style="background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.3);color:var(--gold);border-radius:5px;padding:3px 9px;cursor:pointer;font-size:0.78rem;margin-right:4px">✏️ Editar</button>'
+        + '<button onclick="borrarRepuestoCatalogo('' + r._key + '')" style="background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.3);color:var(--red);border-radius:5px;padding:3px 9px;cursor:pointer;font-size:0.78rem">🗑️</button>'
+      + '</td>'
+      + '</tr>';
+  }).join('');
+}
+
+function guardarRepuesto() {
+  var desc = (document.getElementById('repDesc').value || '').trim().toUpperCase();
+  var ref  = (document.getElementById('repRef').value  || '').trim();
+  var fab  = (document.getElementById('repFab').value  || '').trim().toUpperCase();
+  var prov = (document.getElementById('repProv').value || '').trim().toUpperCase();
+  var url  = (document.getElementById('repUrl').value  || '').trim();
+  var precio = parseFloat(document.getElementById('repPrecio').value || '0') || 0;
+  var notas  = (document.getElementById('repNotas').value || '').trim();
+
+  if (!desc) { showToast('⚠️ La descripción es obligatoria'); return; }
+  if (url && !url.startsWith('http')) url = 'https://' + url;
+
+  var key = _repEditKey || _repKey(desc, ref);
+  var obj = { _key: key, desc: desc, ref: ref, fab: fab, prov: prov,
+              url: url, precio: precio, notas: notas,
+              fechaAlta: new Date().toISOString().substring(0, 10) };
+
+  DB.ref('repuestos_catalogo/' + key).set(obj).then(function() {
+    _repCatalogo[key] = obj;
+    renderCatalogoRepuestos();
+    limpiarFormRepuesto();
+    // Actualizar también repuestos_docs para compatibilidad con tabla Informes
+    if (url) DB.ref('repuestos_docs/' + key).set(url);
+    var msg = document.getElementById('repMsg');
+    msg.textContent = '✓ Guardado';
+    setTimeout(function() { msg.textContent = ''; }, 2000);
+  }).catch(function() { showToast('❌ Error al guardar'); });
+}
+
+function cargarRepuestoEnForm(key) {
+  var r = _repCatalogo[key];
+  if (!r) return;
+  _repEditKey = key;
+  document.getElementById('repDesc').value   = r.desc   || '';
+  document.getElementById('repRef').value    = r.ref    || '';
+  document.getElementById('repFab').value    = r.fab    || '';
+  document.getElementById('repProv').value   = r.prov   || '';
+  document.getElementById('repUrl').value    = r.url    || '';
+  document.getElementById('repPrecio').value = r.precio || '';
+  document.getElementById('repNotas').value  = r.notas  || '';
+  document.getElementById('repDesc').focus();
+  document.getElementById('repDesc').scrollIntoView({ behavior: 'smooth' });
+  var msg = document.getElementById('repMsg');
+  msg.textContent = 'Editando: ' + r.desc;
+  msg.style.color = 'var(--gold)';
+}
+
+function limpiarFormRepuesto() {
+  _repEditKey = null;
+  ['repDesc','repRef','repFab','repProv','repUrl','repPrecio','repNotas'].forEach(function(id) {
+    document.getElementById(id).value = '';
+  });
+  var msg = document.getElementById('repMsg');
+  msg.textContent = '';
+  msg.style.color = 'var(--green)';
+}
+
+function borrarRepuestoCatalogo(key) {
+  var r = _repCatalogo[key];
+  if (!r || !confirm('¿Eliminar "' + r.desc + '" del catálogo?')) return;
+  DB.ref('repuestos_catalogo/' + key).remove().then(function() {
+    delete _repCatalogo[key];
+    renderCatalogoRepuestos();
+    showToast('🗑️ Repuesto eliminado');
+  });
+}
+
+function importarRepuestosDeAverias() {
+  var av = getAverias();
+  var importados = 0;
+  var promesas = [];
+  av.forEach(function(a) {
+    (a.materiales || []).forEach(function(m) {
+      if (!m.desc) return;
+      var key = _repKey(m.desc, m.ref || '');
+      if (_repCatalogo[key]) return;  // ya existe
+      var obj = { _key: key, desc: m.desc.toUpperCase(), ref: m.ref || '',
+                  fab: '', prov: '', url: '', precio: 0, notas: '',
+                  fechaAlta: new Date().toISOString().substring(0, 10) };
+      _repCatalogo[key] = obj;
+      promesas.push(DB.ref('repuestos_catalogo/' + key).set(obj));
+      importados++;
+    });
+  });
+  Promise.all(promesas).then(function() {
+    renderCatalogoRepuestos();
+    showToast('✅ ' + importados + ' repuesto' + (importados !== 1 ? 's' : '') + ' importado' + (importados !== 1 ? 's' : ''));
+  });
+}
 </script>
 
 <!-- MODAL TAREA DIARIA -->
