@@ -197,6 +197,13 @@ a{color:inherit;text-decoration:none}
   .kpi-row{grid-template-columns:1fr 1fr}
   .topbar h1{font-size:1.1rem}
 }
+
+.firma-wrap{margin-top:14px;display:none}
+.firma-wrap.visible{display:block}
+.firma-canvas{border:2px dashed rgba(255,255,255,0.3);border-radius:10px;
+  background:rgba(255,255,255,0.05);touch-action:none;cursor:crosshair;
+  display:block;width:100%;max-width:500px;height:130px}
+.firma-canvas.firmado{border-color:var(--green,#2ecc71);border-style:solid}
 </style>
 </head>
 <body>
@@ -418,7 +425,33 @@ a{color:inherit;text-decoration:none}
       </div>
     </div>
 
-    <div class="actions-row">
+    
+      <!-- FIRMA DIGITAL -->
+      <div class="firma-wrap" id="firmaWrap">
+        <div style="font-size:0.78rem;letter-spacing:.1em;text-transform:uppercase;color:#2ecc71;margin-bottom:6px;font-weight:700">
+          ✍️ Firma del mecánico <span style="color:rgba(255,255,255,0.4);font-size:0.7rem">(requerida al marcar RESUELTA)</span>
+        </div>
+        <canvas id="firmaCanvas" class="firma-canvas" width="500" height="130"></canvas>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button type="button" onclick="borrarFirma()"
+            style="background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);color:#e74c3c;
+                   padding:5px 14px;border-radius:6px;font-family:Barlow,sans-serif;font-size:0.8rem;cursor:pointer">
+            🗑️ Borrar
+          </button>
+          <span id="firmaStatus" style="font-size:0.78rem;color:rgba(255,255,255,0.4);align-self:center"></span>
+        </div>
+      </div>
+      <!-- COSTE MATERIALES -->
+      <div style="margin-top:14px">
+        <label style="font-size:0.75rem;letter-spacing:.1em;text-transform:uppercase;color:#c9a227;display:block;margin-bottom:5px">
+          💶 Coste materiales (€) <span style="color:rgba(255,255,255,0.3);text-transform:none;letter-spacing:0">(opcional)</span>
+        </label>
+        <input type="number" id="fCosteMat" min="0" step="0.01" placeholder="0.00"
+          style="width:160px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.2);
+                 border-radius:8px;padding:9px 12px;color:#fff;font-family:Barlow,sans-serif;font-size:0.95rem">
+      </div>
+
+<div class="actions-row">
       <button type="button" class="btn btn-gold" onclick="guardarAveria()">💾 GUARDAR AVERÍA</button>
       <button type="button" class="btn btn-outline" onclick="limpiarForm()">✕ Limpiar</button>
     </div>
@@ -1002,7 +1035,13 @@ function guardarAveria(){
   if(!tipo){showToast('⚠️ Selecciona el tipo de avería');return;}
   if(!grav){showToast('⚠️ Selecciona la gravedad');return;}
   if(!desc){showToast('⚠️ Escribe una descripción');return;}
-  if(!estado){showToast('⚠️ Indica el estado final');return;}
+  if(!estado){showToast('\u26a0\ufe0f Indica el estado final');return;}
+  if(estado === 'RESUELTA' && !_firmaData){
+    showToast('\u270d\ufe0f Firma requerida para marcar como RESUELTA');
+    document.getElementById('firmaWrap').classList.add('visible');
+    document.getElementById('firmaCanvas').scrollIntoView({behavior:'smooth'});
+    return;
+  }
   if(!turnoHoraOk()){
     const h = parseInt(document.getElementById('fHoraInicio').value.split(':')[0]);
     const correcto = turnoDeHora(h);
@@ -1044,6 +1083,8 @@ function guardarAveria(){
     accion: document.getElementById('fAccion').value.trim(),
     observaciones: document.getElementById('fObs').value.trim(),
     materiales: [...materialesForm],
+    costeMateriales: parseFloat(document.getElementById('fCosteMat').value||'0')||0,
+    firma: _firmaData || null,
     estado,
   };
 
@@ -1395,6 +1436,83 @@ function mecLogin(){
     document.getElementById('appAverias').style.display = 'block';
   }
 })();
+
+// ══ FIRMA DIGITAL ══════════════════════════════════
+var _firmaData = null;
+
+(function initFirmaCanvas() {
+  var canvas, ctx, drawing = false, lastX, lastY;
+
+  function setup() {
+    canvas = document.getElementById('firmaCanvas');
+    if (!canvas) return;
+    ctx = canvas.getContext('2d');
+    ctx.strokeStyle = '#f0c040';
+    ctx.lineWidth   = 2.5;
+    ctx.lineCap     = 'round';
+    ctx.lineJoin    = 'round';
+
+    function pos(e) {
+      var r = canvas.getBoundingClientRect();
+      var scaleX = canvas.width  / r.width;
+      var scaleY = canvas.height / r.height;
+      var src = e.touches ? e.touches[0] : e;
+      return { x: (src.clientX - r.left) * scaleX, y: (src.clientY - r.top) * scaleY };
+    }
+    function start(e) { e.preventDefault(); drawing = true; var p = pos(e); lastX = p.x; lastY = p.y; }
+    function move(e)  {
+      e.preventDefault();
+      if (!drawing) return;
+      var p = pos(e);
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      lastX = p.x; lastY = p.y;
+      _firmaData = canvas.toDataURL('image/png');
+      canvas.classList.add('firmado');
+      var st = document.getElementById('firmaStatus');
+      if (st) st.textContent = 'Firma registrada';
+    }
+    function end(e)   { e.preventDefault(); drawing = false; }
+
+    canvas.addEventListener('mousedown',  start);
+    canvas.addEventListener('mousemove',  move);
+    canvas.addEventListener('mouseup',    end);
+    canvas.addEventListener('touchstart', start, {passive:false});
+    canvas.addEventListener('touchmove',  move,  {passive:false});
+    canvas.addEventListener('touchend',   end,   {passive:false});
+  }
+
+  // Setup on DOMContentLoaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setup);
+  } else {
+    setup();
+  }
+})();
+
+function borrarFirma() {
+  var canvas = document.getElementById('firmaCanvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  canvas.classList.remove('firmado');
+  _firmaData = null;
+  var st = document.getElementById('firmaStatus');
+  if (st) st.textContent = '';
+}
+
+// Mostrar/ocultar firma cuando cambia estado
+document.addEventListener('DOMContentLoaded', function() {
+  var selEstado = document.getElementById('fEstado');
+  if (selEstado) {
+    selEstado.addEventListener('change', function() {
+      var wrap = document.getElementById('firmaWrap');
+      if (wrap) wrap.classList.toggle('visible', this.value === 'RESUELTA');
+    });
+  }
+});
 </script>
 </body>
 </html>

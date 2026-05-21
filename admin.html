@@ -146,6 +146,10 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
   .kpi-row{grid-template-columns:1fr 1fr}
   .mec-cards{grid-template-columns:1fr}
 }
+
+.kpi-period-btn{padding:5px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:transparent;color:rgba(255,255,255,0.5);font-family:'Barlow',sans-serif;font-size:0.78rem;cursor:pointer;transition:all .15s}
+.kpi-period-btn:hover{border-color:var(--gold);color:var(--gold)}
+.kpi-period-btn.active{background:var(--gold);border-color:var(--gold);color:#0d1b2a;font-weight:700}
 </style>
 </head>
 <body>
@@ -255,6 +259,42 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
       </table>
     </div>
   </div>
+
+  <!-- ═══ KPIs FIABILIDAD ═══ -->
+  <div class="card" style="margin-top:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+      <div class="sec-title" style="margin-bottom:0">📈 Fiabilidad de máquinas</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="kpi-period-btn active" data-days="30"  onclick="setKpiPeriod(this)">30 días</button>
+        <button class="kpi-period-btn"        data-days="90"  onclick="setKpiPeriod(this)">90 días</button>
+        <button class="kpi-period-btn"        data-days="180" onclick="setKpiPeriod(this)">6 meses</button>
+        <button class="kpi-period-btn"        data-days="365" onclick="setKpiPeriod(this)">1 año</button>
+      </div>
+    </div>
+    <!-- KPI totales -->
+    <div id="kpiFiabRow" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px"></div>
+    <!-- Tabla por máquina -->
+    <div style="overflow-x:auto">
+      <table class="data-table" id="tFiabilidad">
+        <thead><tr>
+          <th>Máquina</th>
+          <th title="Número de averías en el período">Averías</th>
+          <th title="Tiempo Medio Entre Averías — cuántos días pasan de media entre una avería y la siguiente">MTBF</th>
+          <th title="Tiempo Medio de Reparación — cuánto tarda de media en resolverse">MTTR</th>
+          <th title="% del tiempo que la máquina ha estado operativa">Disponibilidad</th>
+          <th>Última avería</th>
+        </tr></thead>
+        <tbody id="bFiabilidad">
+          <tr><td colspan="6" class="no-data">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="font-size:0.72rem;color:rgba(255,255,255,0.25);margin-top:8px">
+      MTBF = días de media entre averías &nbsp;·&nbsp; MTTR = tiempo medio de reparación &nbsp;·&nbsp;
+      Disponibilidad = tiempo operativo sobre el período seleccionado
+    </div>
+  </div>
+
 </div>
 
 <!-- ═══ MECÁNICOS ═══ -->
@@ -485,6 +525,27 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 <!-- ═══ CONFIGURACIÓN ═══ -->
 <div class="panel" id="panel-cfg">
   <div class="card config-section">
+    <div class="sec-title">💶 Coste de mantenimiento</div>
+    <p style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:14px;line-height:1.6">
+      Define el coste por hora de mano de obra para calcular el coste de cada avería automáticamente.
+    </p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+      <div>
+        <label style="font-size:0.72rem;color:var(--gold);display:block;margin-bottom:5px;letter-spacing:.1em;text-transform:uppercase">€ / hora mecánico</label>
+        <input type="number" id="cfgCostoHora" min="0" step="0.5" placeholder="15.00"
+          style="width:130px;background:var(--navy-deep);border:1px solid rgba(255,255,255,0.2);
+                 border-radius:8px;padding:9px 12px;color:#fff;font-family:Barlow,sans-serif;font-size:1rem">
+      </div>
+      <button onclick="guardarCostoHora()"
+        style="background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a;border:none;
+               padding:10px 20px;border-radius:8px;font-family:Barlow,sans-serif;font-weight:700;cursor:pointer">
+        Guardar
+      </button>
+      <span id="costoHoraMsg" style="font-size:0.82rem;color:var(--green)"></span>
+    </div>
+  </div>
+
+  <div class="card config-section">
     <div class="sec-title">🔧 Contraseña de mecánicos</div>
     <p style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:16px;line-height:1.6">
       Esta es la contraseña que pide el formulario de averías cuando un mecánico escanea un QR. Compártela solo con tu equipo.
@@ -713,6 +774,7 @@ function getTurnos(){
 let charts = {};
 
 function initApp(){
+  initCostoHoraField();
   renderDashboard();
   // fechas por defecto para mecánicos e informes (último mes)
   const hoy = new Date();
@@ -759,6 +821,7 @@ function renderDashboard(){
 
   // Alertas
   renderAlertasDash(av);
+  renderKpiFiabilidad();
 
   // Últimas averías
   const tbody = document.getElementById('bUltimas');
@@ -766,7 +829,7 @@ function renderDashboard(){
   tbody.innerHTML = av.slice(0,10).map(a=>{
     const t = a.tiempoMin ? Math.floor(a.tiempoMin/60)+'h'+(a.tiempoMin%60?''+a.tiempoMin%60+'m':'') : '—';
     const est = a.estado==='RESUELTA'?'badge-green':a.estado==='EN CURSO'?'badge-red':'badge-yellow';
-    return `<tr>
+    return `<tr style='cursor:pointer' onclick='abrirAvModal(${JSON.stringify(a).replace(/"/g,"&quot;")})'>
       <td>${a.fecha||'—'}</td>
       <td><b>${a.maqNombre||'—'}</b></td>
       <td>${a.parte||'—'}</td>
@@ -2089,6 +2152,228 @@ function renderInformeSemanal(averias, totalPrev, hechasPrev, pctPrev, iniISO, f
 function imprimirInforme() {
   window.print();
 }
+
+// ══════════════════════════════════════════════════
+// KPIs FIABILIDAD
+// ══════════════════════════════════════════════════
+var _kpiDias = 30;
+
+function setKpiPeriod(btn) {
+  document.querySelectorAll('.kpi-period-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  _kpiDias = parseInt(btn.dataset.days);
+  renderKpiFiabilidad();
+}
+
+function renderKpiFiabilidad() {
+  var av = getAverias();
+  if (!av.length) {
+    document.getElementById('bFiabilidad').innerHTML = '<tr><td colspan="6" class="no-data">Sin averías registradas</td></tr>';
+    return;
+  }
+
+  var ahora  = new Date();
+  var desde  = new Date(ahora - _kpiDias * 86400000);
+  var desdeISO = desde.toISOString().substring(0,10);
+  var periodMin = _kpiDias * 24 * 60;
+
+  var filtradas = av.filter(function(a){ return (a.fecha||'') >= desdeISO; });
+
+  // Agrupar por máquina
+  var porMaq = {};
+  filtradas.forEach(function(a) {
+    var id = a.maqId || a.maqNombre || '?';
+    if (!porMaq[id]) porMaq[id] = { nombre: a.maqNombre || id, averias: [], tiempoTotal: 0 };
+    porMaq[id].averias.push(a);
+    porMaq[id].tiempoTotal += (a.tiempoMin || 0);
+  });
+
+  // KPIs globales del período
+  var totalAv    = filtradas.length;
+  var totalMin   = filtradas.reduce(function(s,a){ return s+(a.tiempoMin||0); }, 0);
+  var pendientes = filtradas.filter(function(a){ return a.estado !== 'RESUELTA'; }).length;
+  var maqAfect   = Object.keys(porMaq).length;
+
+  var rowEl = document.getElementById('kpiFiabRow');
+  if (rowEl) {
+    function kpiFiab(val, lbl, color) {
+      return '<div style="background:var(--navy-deep);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px;text-align:center">' +
+        '<div style="font-size:1.7rem;font-weight:900;color:' + color + ';line-height:1">' + val + '</div>' +
+        '<div style="font-size:0.68rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-top:4px">' + lbl + '</div>' +
+        '</div>';
+    }
+    var avgMttr = totalAv ? Math.round(totalMin / totalAv) : 0;
+    var avgMttrStr = avgMttr >= 60 ? Math.floor(avgMttr/60)+'h '+avgMttr%60+'m' : avgMttr+'min';
+    rowEl.innerHTML =
+      kpiFiab(totalAv,   'Averías período', '#3498db') +
+      kpiFiab(maqAfect,  'Máquinas afect.', '#f39c12') +
+      kpiFiab(pendientes,'Sin resolver',    pendientes ? '#e74c3c' : '#2ecc71') +
+      kpiFiab(avgMttrStr,'MTTR medio',      '#9b59b6') +
+      kpiFiab(Math.round((periodMin-totalMin)/periodMin*100)+'%','Disponibilidad media','#2ecc71');
+  }
+
+  // Tabla por máquina — ordenar por más averías
+  var lista = Object.values(porMaq).sort(function(a,b){ return b.averias.length - a.averias.length; });
+
+  var tbody = document.getElementById('bFiabilidad');
+  if (!lista.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="no-data">Sin averías en este período</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = lista.map(function(m) {
+    var cnt    = m.averias.length;
+    var mttr   = cnt ? Math.round(m.tiempoTotal / cnt) : 0;
+    var mttrStr= mttr >= 60 ? Math.floor(mttr/60)+'h '+mttr%60+'m' : mttr+'min';
+
+    // MTBF: días entre primera y última avería / (n-1)
+    var fechas = m.averias.map(function(a){ return a.fecha||''; }).filter(Boolean).sort();
+    var mtbfStr = '—';
+    if (fechas.length >= 2) {
+      var dias = (new Date(fechas[fechas.length-1]) - new Date(fechas[0])) / 86400000;
+      var mtbf = Math.round(dias / (fechas.length - 1));
+      mtbfStr = mtbf + ' días';
+    } else if (cnt === 1) {
+      mtbfStr = '>'+_kpiDias+'d';
+    }
+
+    // Disponibilidad
+    var disp = Math.max(0, Math.round((periodMin - m.tiempoTotal) / periodMin * 100));
+    var dispColor = disp >= 98 ? '#2ecc71' : disp >= 95 ? '#f39c12' : '#e74c3c';
+
+    var ultima = fechas.length ? fechas[fechas.length-1] : '—';
+
+    // Color según número de averías
+    var cntColor = cnt >= 5 ? '#e74c3c' : cnt >= 3 ? '#f39c12' : '#2ecc71';
+
+    return '<tr>' +
+      '<td style="font-weight:600">' + m.nombre + '</td>' +
+      '<td><span style="font-weight:900;color:'+cntColor+'">' + cnt + '</span></td>' +
+      '<td>' + mtbfStr + '</td>' +
+      '<td>' + mttrStr + '</td>' +
+      '<td><span style="font-weight:700;color:'+dispColor+'">' + disp + '%</span></td>' +
+      '<td style="font-size:0.82rem;color:rgba(255,255,255,0.5)">' + ultima + '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+// ══ COSTE MANTENIMIENTO + FIRMA ════════════════════════
+function getCostoHora() {
+  return parseFloat(localStorage.getItem('costoHora') || '0') || 0;
+}
+function guardarCostoHora() {
+  var val = parseFloat(document.getElementById('cfgCostoHora').value || '0') || 0;
+  localStorage.setItem('costoHora', val);
+  var msg = document.getElementById('costoHoraMsg');
+  if (msg) { msg.textContent = '\u2713 Guardado (' + val + ' \u20ac/h)'; setTimeout(function(){ msg.textContent=''; }, 2000); }
+}
+function initCostoHoraField() {
+  var el = document.getElementById('cfgCostoHora');
+  if (el) el.value = getCostoHora() || '';
+}
+
+// Mostrar coste y firma dentro del detalle de avería en panel-ia
+function renderCosteFirma(av) {
+  var costoHora  = getCostoHora();
+  var costeMO    = costoHora > 0 ? ((av.tiempoMin || 0) / 60 * costoHora) : null;
+  var costeMat   = av.costeMateriales || 0;
+  var costeTotal = costeMO !== null ? (costeMO + costeMat) : null;
+
+  var html = '<div style="margin-top:14px;padding:12px 14px;background:rgba(201,162,39,0.07);border:1px solid rgba(201,162,39,0.2);border-radius:8px">';
+  html += '<div style="font-size:0.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;font-weight:700">\u20ac Coste estimado</div>';
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;font-size:0.85rem">';
+  if (costeMO !== null) {
+    html += '<div><span style="color:rgba(255,255,255,0.4)">Mano de obra</span><br><b>' + costeMO.toFixed(2) + ' \u20ac</b></div>';
+  } else {
+    html += '<div><span style="color:rgba(255,255,255,0.3);font-size:0.78rem">Configura \u20ac/h en Configuraci\u00f3n</span></div>';
+  }
+  html += '<div><span style="color:rgba(255,255,255,0.4)">Materiales</span><br><b>' + costeMat.toFixed(2) + ' \u20ac</b></div>';
+  if (costeTotal !== null) {
+    html += '<div style="border-left:2px solid var(--gold);padding-left:10px"><span style="color:var(--gold)">TOTAL</span><br><b style="font-size:1.1rem;color:var(--gold-light)">' + costeTotal.toFixed(2) + ' \u20ac</b></div>';
+  }
+  html += '</div></div>';
+
+  if (av.firma) {
+    html += '<div style="margin-top:12px"><div style="font-size:0.7rem;letter-spacing:.12em;text-transform:uppercase;color:#2ecc71;margin-bottom:6px;font-weight:700">\u270d\ufe0f Firma del mec\u00e1nico</div>';
+    html += '<img src="' + av.firma + '" style="max-width:300px;border:1px solid rgba(255,255,255,0.15);border-radius:8px;background:rgba(255,255,255,0.03)">';
+    html += '</div>';
+  }
+
+  return html;
+}
+
+// ══ MODAL DETALLE AVERÍA ═══════════════════════════════
+function abrirAvModal(av) {
+  var m = document.getElementById('avModal');
+  var b = document.getElementById('avModalBody');
+  if (!m || !b) return;
+
+  var costoHora = getCostoHora();
+  var costeMO   = costoHora > 0 && av.tiempoMin ? (av.tiempoMin / 60 * costoHora) : null;
+  var costeMat  = av.costeMateriales || 0;
+  var total     = costeMO !== null ? costeMO + costeMat : null;
+
+  function fila(lbl, val) {
+    return val ? '<div style="margin-bottom:8px"><span style="font-size:0.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)">' + lbl + '</span><br><span style="font-size:0.9rem">' + val + '</span></div>' : '';
+  }
+
+  var gravColor = (av.gravedad||'').indexOf('RITI') >= 0 ? 'var(--red)' : av.gravedad === 'GRAVE' ? 'var(--yellow)' : 'var(--green)';
+  var estColor  = av.estado === 'RESUELTA' ? 'var(--green)' : 'var(--red)';
+  var tiempo    = av.tiempoMin ? Math.floor(av.tiempoMin/60) + 'h ' + (av.tiempoMin%60) + 'min' : '—';
+  var mecs      = Array.isArray(av.mecanicos) ? av.mecanicos.join(', ') : (av.mecanico || '—');
+  var mats      = (av.materiales||[]).map(function(m){ return m.qty+'x '+m.desc+(m.ref?' ('+m.ref+')':''); }).join(', ') || '—';
+
+  var costeHtml = '';
+  if (costeMO !== null || costeMat > 0) {
+    costeHtml = '<div style="background:rgba(201,162,39,0.07);border:1px solid rgba(201,162,39,0.2);border-radius:8px;padding:12px;margin:14px 0">' +
+      '<div style="font-size:0.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">€ Coste estimado</div>' +
+      '<div style="display:flex;gap:20px;flex-wrap:wrap;font-size:0.88rem">';
+    if (costeMO !== null) costeHtml += '<div>Mano de obra<br><b>' + costeMO.toFixed(2) + ' €</b></div>';
+    costeHtml += '<div>Materiales<br><b>' + costeMat.toFixed(2) + ' €</b></div>';
+    if (total !== null) costeHtml += '<div style="border-left:2px solid var(--gold);padding-left:14px">TOTAL<br><b style="font-size:1.1rem;color:var(--gold-light)">' + total.toFixed(2) + ' €</b></div>';
+    costeHtml += '</div></div>';
+  } else if (!costoHora) {
+    costeHtml = '<div style="font-size:0.78rem;color:rgba(255,255,255,0.3);margin:10px 0">Configura €/hora en Configuración para ver el coste estimado.</div>';
+  }
+
+  var firmaHtml = '';
+  if (av.firma) {
+    firmaHtml = '<div style="margin-top:14px"><div style="font-size:0.7rem;letter-spacing:.12em;text-transform:uppercase;color:#2ecc71;margin-bottom:6px">✍️ Firma del mecánico</div>' +
+      '<img src="' + av.firma + '" style="max-width:280px;border:1px solid rgba(255,255,255,0.15);border-radius:8px;background:rgba(255,255,255,0.04)">' +
+      '</div>';
+  }
+
+  b.innerHTML =
+    '<div style="font-size:0.7rem;color:var(--gold);letter-spacing:.1em;margin-bottom:4px">' + (av.id||'') + '</div>' +
+    '<div style="font-size:1.3rem;font-weight:900;margin-bottom:14px">' + (av.maqNombre||'—') + '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px">' +
+      fila('Fecha', av.fecha) +
+      fila('Estado', '<span style="color:'+estColor+';font-weight:700">' + (av.estado||'—') + '</span>') +
+      fila('Gravedad', '<span style="color:'+gravColor+';font-weight:700">' + (av.gravedad||'—') + '</span>') +
+      fila('Tipo', av.tipo) +
+      fila('Parte', av.parte) +
+      fila('Turno', av.turno) +
+      fila('Mecánicos', mecs) +
+      fila('Tiempo parada', tiempo) +
+    '</div>' +
+    fila('Descripción', av.descripcion) +
+    fila('Causa', av.causa) +
+    fila('Acción tomada', av.accion) +
+    fila('Observaciones', av.observaciones) +
+    fila('Materiales', mats) +
+    costeHtml + firmaHtml;
+
+  m.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function cerrarAvModal() {
+  document.getElementById('avModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') cerrarAvModal();
+});
 </script>
 
 <!-- MODAL TAREA DIARIA -->
@@ -2140,6 +2425,16 @@ function imprimirInforme() {
       <button onclick="guardarTareaDiaria()" style="flex:1;padding:12px;background:linear-gradient(135deg,#c9a227,#a07d1a);color:#0d1b2a;border:none;border-radius:8px;font-family:inherit;font-size:0.9rem;font-weight:900;cursor:pointer">💾 Guardar</button>
       <button onclick="cerrarModalTarea()" style="padding:12px 18px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);border-radius:8px;font-family:inherit;font-size:0.9rem;font-weight:700;cursor:pointer">Cancelar</button>
     </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL DETALLE AVERÍA ═══ -->
+<div id="avModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:300;overflow-y:auto;padding:20px">
+  <div style="max-width:680px;margin:auto;background:var(--navy-mid);border:1px solid rgba(201,162,39,0.3);border-radius:14px;padding:24px;position:relative">
+    <button onclick="cerrarAvModal()"
+      style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.1);border:none;
+             color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem">✕</button>
+    <div id="avModalBody"></div>
   </div>
 </div>
 </body>
