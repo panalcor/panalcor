@@ -154,6 +154,9 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 </head>
 <body>
 
+<!-- Banner de error JS (solo visible si hay error) -->
+<div id="jsErrorBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#c0392b;color:#fff;padding:10px 16px;font-family:monospace;font-size:0.8rem;white-space:pre-wrap"></div>
+
 <!-- ══ LOGIN ══ -->
 <div class="login-screen" id="loginScreen">
   <div class="login-box">
@@ -807,6 +810,15 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 <div class="toast" id="toast"></div>
 
 <script>
+// Captura errores globales durante la carga
+window.onerror = function(msg, src, line, col, err) {
+  var info = 'Error JS: ' + msg + '\nLínea ' + line + ' (' + (src||'').split('/').pop() + ')';
+  var div = document.getElementById('jsErrorBanner');
+  if (div) { div.textContent = info; div.style.display = 'block'; }
+  console.error(info, err);
+  return false;
+};
+
 // ══════════════════════════════════════════════════
 // AUTENTICACIÓN
 // ══════════════════════════════════════════════════
@@ -814,15 +826,22 @@ const PW_KEY = 'adminPwd';
 function getPwd(){ return localStorage.getItem(PW_KEY) || 'admin'; }
 
 function login(){
-  const val = document.getElementById('pwInput').value;
-  if(val === getPwd()){
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    initApp();
-  } else {
-    document.getElementById('loginErr').style.display = 'block';
-    document.getElementById('pwInput').value = '';
-    document.getElementById('pwInput').focus();
+  try {
+    const val = document.getElementById('pwInput').value;
+    if(val === getPwd()){
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      try { initApp(); } catch(e2) {
+        console.error('initApp error:', e2);
+        // Mostrar de todas formas el panel aunque falle algo
+      }
+    } else {
+      document.getElementById('loginErr').style.display = 'block';
+      document.getElementById('pwInput').value = '';
+      document.getElementById('pwInput').focus();
+    }
+  } catch(e) {
+    alert('Error en login: ' + e.message + '\n\nRevisa la consola del navegador (F12).');
   }
 }
 
