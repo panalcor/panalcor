@@ -63,8 +63,8 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 .kpi-sub{font-size:0.75rem;color:rgba(255,255,255,0.3);margin-top:2px}
 
 /* ── CHARTS ── */
-.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-.chart-wrap{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 14px}
+.chart-grid{display:grid;grid-template-columns:repeat(2,minmax(200px,360px));gap:12px;margin-bottom:12px}
+.chart-wrap{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 14px;min-width:0}
 .chart-wrap canvas{display:block;max-height:160px}
 .chart-wrap.chart-tall canvas{max-height:100px}
 .chart-title{font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
@@ -239,7 +239,7 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
     </div>
   </div>
   <div class="mec-cards" id="mecCards"></div>
-  <div class="chart-wrap" style="margin-top:0">
+  <div class="chart-wrap" style="margin-top:0;max-width:732px">
     <div class="chart-title">Intervenciones por mecánico</div>
     <canvas id="cMecanicos" height="70"></canvas>
   </div>
