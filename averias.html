@@ -909,40 +909,63 @@ function turnoHoraOk(){
 
 function cargarRepuestos(){
   const tip = document.getElementById('repTip');
-  // Fusionar catálogo admin (repuestos_v1) con caché xlsx (repuestosCache)
-  var mapa = {};
 
-  // 1. Base: catálogo del admin (repuestos_v1 → objeto {key: {...}})
-  try {
-    var cat = JSON.parse(localStorage.getItem('repuestos_v1') || 'null');
-    if (cat) {
-      Object.values(cat).forEach(function(r) {
-        var k = (r.ref || r.desc || '').toUpperCase();
-        mapa[k] = { desc: r.desc || '', ref: r.ref || '', ubicacion: r.prov || r.fab || '' };
-      });
+  // Mostrar inmediatamente lo que haya en caché local
+  var mapa = _mergeRepuestos(null);
+  if (Object.keys(mapa).length > 0) {
+    repuestosData = Object.values(mapa);
+    tip.textContent = '⏳ ' + repuestosData.length + ' repuestos en caché, actualizando...';
+    tip.style.color = 'rgba(255,255,255,0.5)';
+  }
+
+  // Leer catálogo desde Firebase y fusionar
+  DB.ref('repuestos_catalogo').once('value').then(function(snap) {
+    var fbData = snap.val() || null;
+    var merged = _mergeRepuestos(fbData);
+    repuestosData = Object.values(merged);
+
+    // Guardar en localStorage para próximas cargas offline
+    if (fbData) localStorage.setItem('repuestos_v1', JSON.stringify(fbData));
+    localStorage.setItem('repuestosCache', JSON.stringify(repuestosData));
+
+    if (repuestosData.length > 0) {
+      tip.textContent = '✅ ' + repuestosData.length + ' repuestos disponibles';
+      tip.style.color = 'var(--green)';
+    } else {
+      tip.textContent = '⚠️ Sin repuestos — añádelos desde Admin → Repuestos';
+      tip.style.color = 'rgba(243,156,18,0.9)';
     }
-  } catch(e) {}
+  }).catch(function() {
+    // Sin conexión: usar lo que haya en localStorage
+    var mapa2 = _mergeRepuestos(null);
+    repuestosData = Object.values(mapa2);
+    tip.textContent = repuestosData.length > 0
+      ? '✅ ' + repuestosData.length + ' repuestos (sin conexión)'
+      : '⚠️ Sin conexión y sin caché de repuestos';
+    tip.style.color = repuestosData.length > 0 ? 'var(--green)' : 'rgba(243,156,18,0.9)';
+  });
+}
 
-  // 2. Merge: añadir los del xlsx que no estén ya en el catálogo
+// Fusiona catálogo Firebase + caché xlsx en un mapa {key → repuesto}
+function _mergeRepuestos(fbData) {
+  var mapa = {};
+  // 1. Base: caché del catálogo admin (repuestos_v1)
+  try {
+    var cat = fbData || JSON.parse(localStorage.getItem('repuestos_v1') || 'null');
+    if (cat) Object.values(cat).forEach(function(r) {
+      var k = (r.ref || r.desc || '').toUpperCase();
+      mapa[k] = { desc: r.desc || '', ref: r.ref || '', ubicacion: r.prov || r.fab || '' };
+    });
+  } catch(e) {}
+  // 2. Añadir los del xlsx que no estén en el catálogo
   try {
     var xlsx = JSON.parse(localStorage.getItem('repuestosCache') || 'null');
-    if (xlsx) {
-      xlsx.forEach(function(r) {
-        var k = (r.ref || r.desc || '').toUpperCase();
-        if (!mapa[k]) mapa[k] = r;
-      });
-    }
+    if (Array.isArray(xlsx)) xlsx.forEach(function(r) {
+      var k = (r.ref || r.desc || '').toUpperCase();
+      if (!mapa[k]) mapa[k] = r;
+    });
   } catch(e) {}
-
-  repuestosData = Object.values(mapa);
-
-  if (repuestosData.length > 0) {
-    tip.textContent = '✅ ' + repuestosData.length + ' repuestos disponibles';
-    tip.style.color = 'var(--green)';
-  } else {
-    tip.textContent = '⚠️ Sin repuestos — añádelos desde Admin → Repuestos';
-    tip.style.color = 'rgba(243,156,18,0.9)';
-  }
+  return mapa;
 }
 
 // ══════════════════════════════════════════════
