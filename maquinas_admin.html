@@ -237,6 +237,7 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 
   <div class="detail-tabs">
     <div class="dtab active" data-tab="info" onclick="switchTab(this)">📋 Info</div>
+    <div class="dtab" data-tab="inst" onclick="switchTab(this)">📝 Instrucciones</div>
     <div class="dtab" data-tab="fotos" onclick="switchTab(this)">📷 Fotos</div>
     <div class="dtab" data-tab="docs" onclick="switchTab(this)">📄 Documentos</div>
     <div class="dtab" data-tab="hist" onclick="switchTab(this)">📊 Historial</div>
@@ -278,6 +279,56 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
         <button class="save-btn" onclick="guardarInfo()">💾 Guardar</button>
         <span class="save-msg" id="saveMsg"></span>
       </div>
+    </div>
+
+    <!-- TAB: INSTRUCCIONES -->
+    <div class="dpanel" id="dpanel-inst">
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+        <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);line-height:1.5">
+          Escribe aquí los procedimientos, advertencias y consejos que los mecánicos deben conocer sobre esta máquina.<br>
+          Se guarda en la nube y se ve en tiempo real.
+        </div>
+        <span id="instSaveMsg" style="font-size:0.8rem;color:var(--green)"></span>
+      </div>
+
+      <!-- Instrucciones de uso -->
+      <div class="form-row">
+        <label style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:1rem">⚙️</span> Instrucciones de operación
+        </label>
+        <textarea id="fInstUso" placeholder="Ej: Antes de arrancar comprobar nivel de aceite. Velocidad máxima 60 Hz. No superar 200 kg de carga..." style="min-height:110px"></textarea>
+      </div>
+
+      <!-- Mantenimiento básico -->
+      <div class="form-row">
+        <label style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:1rem">🔧</span> Mantenimiento y puntos de revisión
+        </label>
+        <textarea id="fInstMant" placeholder="Ej: Engrasar rodamientos cada 500h. Revisar tensión correas mensualmente. Cambiar filtro de aceite cada 6 meses..." style="min-height:110px"></textarea>
+      </div>
+
+      <!-- Repuestos habituales -->
+      <div class="form-row">
+        <label style="display:flex;align-items:center;gap=6px">
+          <span style="font-size:1rem">📦</span> Repuestos habituales
+        </label>
+        <textarea id="fInstRep" placeholder="Ej: Rodamiento 6205-2RS (SKF) · Correa B-1250 · Retén 35x52x7..." style="min-height:80px"></textarea>
+      </div>
+
+      <!-- Advertencias -->
+      <div class="form-row">
+        <label style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:1rem">⚠️</span> Advertencias y puntos críticos
+        </label>
+        <textarea id="fInstAdvert" placeholder="Ej: NO tocar el variador con la máquina en marcha. Cortar corriente antes de abrir la carcasa del motor..." style="min-height:80px"></textarea>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;margin-top:4px">
+        <button class="save-btn" onclick="guardarInstrucciones()">💾 Guardar instrucciones</button>
+        <span id="instSaveMsgBtn" style="font-size:0.82rem;color:var(--green)"></span>
+      </div>
+
     </div>
 
     <!-- TAB: FOTOS -->
@@ -635,6 +686,7 @@ function switchTab(el){
   document.getElementById('dpanel-' + el.dataset.tab).classList.add('active');
 
   var tab = el.dataset.tab;
+  if(tab === 'inst')  cargarInstrucciones();
   if(tab === 'fotos') cargarFotos();
   if(tab === 'docs')  { initGhTokenField(); cargarDocs(); }
   if(tab === 'hist')  cargarHistorial();
@@ -685,6 +737,44 @@ function guardarInfo(){
     var msg = document.getElementById('saveMsg');
     msg.textContent = '✗ Error al guardar';
     msg.className = 'save-msg err';
+  });
+}
+
+// ══════════════════════════════════════════
+// TAB INSTRUCCIONES
+// ══════════════════════════════════════════
+function cargarInstrucciones(){
+  if(!maqActual) return;
+  DB.ref('maquinas/' + maqActual.id + '/instrucciones').once('value').then(function(snap){
+    var d = snap.val() || {};
+    document.getElementById('fInstUso').value    = d.uso    || '';
+    document.getElementById('fInstMant').value   = d.mant   || '';
+    document.getElementById('fInstRep').value    = d.rep    || '';
+    document.getElementById('fInstAdvert').value = d.advert || '';
+    document.getElementById('instSaveMsg').textContent = '';
+  }).catch(function(){});
+}
+
+function guardarInstrucciones(){
+  if(!maqActual) return;
+  var datos = {
+    uso    : document.getElementById('fInstUso').value.trim(),
+    mant   : document.getElementById('fInstMant').value.trim(),
+    rep    : document.getElementById('fInstRep').value.trim(),
+    advert : document.getElementById('fInstAdvert').value.trim(),
+    updatedAt: new Date().toISOString()
+  };
+  var btn = document.querySelector('#dpanel-inst .save-btn');
+  if(btn) btn.disabled = true;
+  DB.ref('maquinas/' + maqActual.id + '/instrucciones').set(datos).then(function(){
+    var msg = document.getElementById('instSaveMsgBtn');
+    msg.textContent = '✓ Guardado';
+    setTimeout(function(){ msg.textContent = ''; }, 2500);
+    if(btn) btn.disabled = false;
+  }).catch(function(){
+    var msg = document.getElementById('instSaveMsgBtn');
+    msg.textContent = '✗ Error al guardar';
+    if(btn) btn.disabled = false;
   });
 }
 
