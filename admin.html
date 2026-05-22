@@ -556,6 +556,32 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
   </div>
 
   <div class="card">
+    <div class="sec-title">✏️ Renombrar máquina en historial</div>
+    <p style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:14px;line-height:1.6">
+      Cambia el nombre de una máquina en <b>todas las averías registradas</b>. Útil si un equipo ha cambiado de nombre o hay un error tipográfico en el historial.<br>
+      <span style="color:rgba(243,156,18,0.8)">⚠️ Afecta solo al historial — el formulario de nueva avería seguirá mostrando el nombre original hasta que se actualice el código.</span>
+    </p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+      <div>
+        <label style="font-size:0.72rem;color:var(--gold);display:block;margin-bottom:5px;letter-spacing:.1em;text-transform:uppercase">Máquina a renombrar</label>
+        <select id="renombraMaqSel" onclick="poblarSelectorRenombrar()"
+          style="background:var(--navy-deep);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 14px;color:#fff;font-family:'Barlow',sans-serif;font-size:0.9rem;min-width:240px">
+          <option value="">— Selecciona máquina —</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:0.72rem;color:var(--gold);display:block;margin-bottom:5px;letter-spacing:.1em;text-transform:uppercase">Nuevo nombre</label>
+        <input type="text" id="renombraNuevoNombre" placeholder="Ej: PABAT 10 BIS"
+          style="background:var(--navy-deep);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 14px;color:#fff;font-family:'Barlow',sans-serif;font-size:0.9rem;width:220px;text-transform:uppercase">
+      </div>
+      <button id="btnRenombrar" onclick="ejecutarRenombradoHistorial()"
+        style="background:rgba(52,152,219,0.2);border:1px solid rgba(52,152,219,0.5);color:var(--blue);border-radius:8px;padding:10px 20px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.95rem;font-weight:700">
+        ✏️ Renombrar en historial
+      </button>
+    </div>
+  </div>
+
+  <div class="card">
     <div class="sec-title" style="display:flex;justify-content:space-between;align-items:center">
       <span>🏭 Máquinas personalizadas</span>
       <span id="maqExtraCount" style="font-size:0.8rem;color:rgba(255,255,255,0.4)"></span>
@@ -1773,7 +1799,10 @@ function renderMaquinas(){
     <td style="color:rgba(255,255,255,0.6)">${m.f||'—'}</td>
     <td>${m.a}</td>
     <td><span class="badge ${m.c==='A'?'badge-red':m.c==='B'?'badge-yellow':'badge-blue'}">${m.c||'—'}</span></td>
-    <td><button onclick="eliminarMaquina('${m.id}')" style="background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);color:var(--red);border-radius:5px;padding:4px 10px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.8rem;transition:all .2s" onmouseover="this.style.background='rgba(231,76,60,0.3)'" onmouseout="this.style.background='rgba(231,76,60,0.15)'">🗑 Eliminar</button></td>
+    <td style="display:flex;gap:6px;flex-wrap:wrap">
+      <button onclick="renombrarMaquinaExtra('${m.id}')" style="background:rgba(52,152,219,0.15);border:1px solid rgba(52,152,219,0.4);color:var(--blue);border-radius:5px;padding:4px 10px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.8rem">✏️ Renombrar</button>
+      <button onclick="eliminarMaquina('${m.id}')" style="background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);color:var(--red);border-radius:5px;padding:4px 10px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.8rem">🗑 Eliminar</button>
+    </td>
   </tr>`).join('');
 }
 
@@ -1810,6 +1839,133 @@ function eliminarMaquina(id){
   saveMaquinasExtra();
   renderMaquinas();
   showToast(`🗑 ${maq.n} eliminada`);
+}
+
+function renombrarMaquinaExtra(id){
+  const maq = maquinasExtra.find(m=>m.id===id);
+  if(!maq) return;
+  const nuevo = prompt(`Nuevo nombre para "${maq.n}" (${id}):`, maq.n);
+  if(!nuevo || nuevo.trim()==='' || nuevo.trim()===maq.n) return;
+  const nuevoN = nuevo.trim().toUpperCase();
+  const viejo  = maq.n;
+  maq.n = nuevoN;
+  saveMaquinasExtra();
+  renderMaquinas();
+  sweepNombreMaquina(id, nuevoN, function(cnt){
+    showToast(`✅ "${viejo}" → "${nuevoN}" · ${cnt} avería${cnt!==1?'s':''} actualizadas`);
+  });
+}
+
+// Barre todas las averías en Firebase y localStorage actualizando maqNombre donde maqId coincida
+function sweepNombreMaquina(maqId, nuevoNombre, callback){
+  DB.ref('averias').once('value').then(function(snap){
+    var val = snap.val();
+    if(!val){ if(callback) callback(0); return; }
+    var updates = {};
+    var count = 0;
+    Object.keys(val).forEach(function(key){
+      if(val[key].maqId === maqId){
+        updates['averias/' + key + '/maqNombre'] = nuevoNombre;
+        count++;
+      }
+    });
+    if(!count){ if(callback) callback(0); return; }
+    DB.ref().update(updates).then(function(){
+      // Actualizar también localStorage
+      var av = JSON.parse(localStorage.getItem('averias_v1')||'[]');
+      av.forEach(function(a){ if(a.maqId===maqId) a.maqNombre=nuevoNombre; });
+      localStorage.setItem('averias_v1', JSON.stringify(av));
+      if(callback) callback(count);
+    }).catch(function(){ if(callback) callback(count); });
+  }).catch(function(){ if(callback) callback(0); });
+}
+
+// Lista de las 129 máquinas base para el selector de renombrado
+var MAQUINAS_BASE_ADMIN = [
+  {id:'MAQ-001',n:'PABAT 1'},{id:'MAQ-002',n:'PABAT 2'},{id:'MAQ-003',n:'PABAT 3'},
+  {id:'MAQ-004',n:'PABAT 4'},{id:'MAQ-005',n:'PABAT 5'},{id:'MAQ-006',n:'PABAT 6'},
+  {id:'MAQ-007',n:'PABAT 7'},{id:'MAQ-008',n:'PABAT 8'},{id:'MAQ-009',n:'AMASADORA CANDEAL'},
+  {id:'MAQ-010',n:'LINEA 1'},{id:'MAQ-011',n:'LINEA 2'},{id:'MAQ-012',n:'LINEA 3'},
+  {id:'MAQ-013',n:'LINEA 4'},{id:'MAQ-014',n:'LINEA 5'},{id:'MAQ-015',n:'LINEA 6'},
+  {id:'MAQ-016',n:'LINEA 7'},{id:'MAQ-017',n:'CARRUSEL 1'},{id:'MAQ-018',n:'CARRUSEL 2'},
+  {id:'MAQ-019',n:'CARRUSEL 3'},{id:'MAQ-020',n:'CARRUSEL 4'},{id:'MAQ-021',n:'CARRUSEL 5'},
+  {id:'MAQ-022',n:'CARRUSEL 6'},{id:'MAQ-023',n:'VOLCADOR 1'},{id:'MAQ-024',n:'VOLCADOR 2'},
+  {id:'MAQ-025',n:'VOLCADOR 3'},{id:'MAQ-026',n:'VOLCADOR 4'},{id:'MAQ-027',n:'VOLCADOR 5'},
+  {id:'MAQ-028',n:'VOLCADOR 6'},{id:'MAQ-029',n:'VOLCADOR 7'},{id:'MAQ-030',n:'REPARTIDOR 1'},
+  {id:'MAQ-031',n:'REPARTIDOR 2'},{id:'MAQ-032',n:'REPARTIDOR 3'},{id:'MAQ-033',n:'DIVISORA N1'},
+  {id:'MAQ-034',n:'DIVISORA N2'},{id:'MAQ-035',n:'DIVISORA N3'},{id:'MAQ-036',n:'DIVISORA N4'},
+  {id:'MAQ-037',n:'DIVISORA N5'},{id:'MAQ-038',n:'DIVISORA N6'},{id:'MAQ-039',n:'DIVISORA N7'},
+  {id:'MAQ-040',n:'DIVISORA N8'},{id:'MAQ-041',n:'DIVISORA N9'},{id:'MAQ-042',n:'CAMARA DE BOLAS N1'},
+  {id:'MAQ-043',n:'CAMARA DE BOLAS N2'},{id:'MAQ-044',n:'CAMARA DE BOLAS N3'},{id:'MAQ-045',n:'CAMARA DE BOLAS N4'},
+  {id:'MAQ-046',n:'CAMARA DE BOLAS N5'},{id:'MAQ-047',n:'CAMARA DE BOLAS N6'},{id:'MAQ-048',n:'CAMARA DE BOLAS N7'},
+  {id:'MAQ-049',n:'EMBOLADORA N1'},{id:'MAQ-050',n:'EMBOLADORA N2'},{id:'MAQ-051',n:'EMBOLADORA N3'},
+  {id:'MAQ-052',n:'EMBOLADORA N4'},{id:'MAQ-053',n:'EMBOLADORA N5'},{id:'MAQ-054',n:'EMBOLADORA N6'},
+  {id:'MAQ-055',n:'EMBOLADORA N7'},{id:'MAQ-056',n:'EMBOLADORA N8'},{id:'MAQ-057',n:'EMBOLADORA N9'},
+  {id:'MAQ-058',n:'FERMENTADORA RELAMPAGO'},{id:'MAQ-059',n:'FERMENTADORA TRUENO'},
+  {id:'MAQ-060',n:'HORNO 1'},{id:'MAQ-061',n:'HORNO 2'},{id:'MAQ-062',n:'HORNO 3'},
+  {id:'MAQ-063',n:'HORNO 4'},{id:'MAQ-064',n:'HORNO 5'},{id:'MAQ-065',n:'HORNO 6'},
+  {id:'MAQ-066',n:'HORNO 7'},{id:'MAQ-067',n:'HORNO 8'},{id:'MAQ-068',n:'HORNO 9'},
+  {id:'MAQ-069',n:'HORNO 10'},{id:'MAQ-070',n:'HORNO 11'},{id:'MAQ-071',n:'HORNO 12'},
+  {id:'MAQ-072',n:'HORNO 13'},{id:'MAQ-073',n:'HORNO 14'},{id:'MAQ-074',n:'HORNO 15'},
+  {id:'MAQ-075',n:'HORNO 16 (1TRUENO)'},{id:'MAQ-076',n:'HORNO 17 (2TRUENO)'},
+  {id:'MAQ-077',n:'HORNO 18 (3TRUENO)'},{id:'MAQ-078',n:'HORNO 19 (4TRUENO)'},
+  {id:'MAQ-079',n:'TALLADORA RELAMPAGO'},{id:'MAQ-080',n:'TALLADORA TRUENO'},
+  {id:'MAQ-081',n:'TUNEL PREFRIO'},{id:'MAQ-082',n:'TUNEL 1'},{id:'MAQ-083',n:'TUNEL 2'},
+  {id:'MAQ-084',n:'TUNEL 3'},{id:'MAQ-085',n:'TUNEL 4'},{id:'MAQ-086',n:'TUNEL 5'},
+  {id:'MAQ-087',n:'TUNEL 6'},{id:'MAQ-088',n:'TUNEL 7'},{id:'MAQ-089',n:'TUNEL 8'},
+  {id:'MAQ-090',n:'TUNEL 9 (1 TRUENO)'},{id:'MAQ-091',n:'TUNEL 10 (2 TRUENO)'},
+  {id:'MAQ-092',n:'MAQUINA DE CAJAS'},{id:'MAQ-093',n:'FORMADORA-EMBOLSADORA'},
+  {id:'MAQ-094',n:'MAQUINA DE BOLSAS'},{id:'MAQ-095',n:'DESCARGADOR 1'},{id:'MAQ-096',n:'DESCARGADOR 2'},
+  {id:'MAQ-097',n:'CARGADOR 1'},{id:'MAQ-098',n:'CARGADOR 2'},
+  {id:'MAQ-099',n:'DESMOLDEO 1'},{id:'MAQ-100',n:'DESMOLDEO 2'},
+  {id:'MAQ-101',n:'CONTADORA 1'},{id:'MAQ-102',n:'CONTADORA 2'},
+  {id:'MAQ-103',n:'CAMINO DE RODILLOS'},{id:'MAQ-104',n:'IMPRESORA RELAMPAGO'},
+  {id:'MAQ-105',n:'IMPRESORA TRUENO'},{id:'MAQ-106',n:'PRECINTADORA'},
+  {id:'MAQ-107',n:'M. PEGATINAS'},{id:'MAQ-108',n:'ROBOT'},
+  {id:'MAQ-109',n:'ENFARDADORA RELAMPAGO'},{id:'MAQ-110',n:'ENFARDADORA TRUENO'},
+  {id:'MAQ-111',n:'LAVADORA'},{id:'MAQ-112',n:'SILOS'},{id:'MAQ-113',n:'TURBINAS'},
+  {id:'MAQ-114',n:'CUADRO SILOS'},{id:'MAQ-115',n:'CUADRO HARINA'},
+  {id:'MAQ-116',n:'ADITIVOS'},{id:'MAQ-117',n:'CUADRO ADITIVOS'},{id:'MAQ-118',n:'REVOLVER'},
+  {id:'MAQ-119',n:'TOLVA 1'},{id:'MAQ-120',n:'TOLVA 2'},{id:'MAQ-121',n:'TOLVA 3'},
+  {id:'MAQ-122',n:'TOLVA 4'},{id:'MAQ-123',n:'TOLVA 5'},{id:'MAQ-124',n:'TOLVA 6'},
+  {id:'MAQ-125',n:'TOLVA 7'},{id:'MAQ-126',n:'LEVADURA TANQUE 1'},{id:'MAQ-127',n:'LEVADURA TANQUE 2'},
+  {id:'MAQ-128',n:'LEVADURA CUADRO GENERAL Y BOMBAS'},{id:'MAQ-129',n:'LEVADURA CUADRO GLICOL'}
+];
+
+function poblarSelectorRenombrar(){
+  var sel = document.getElementById('renombraMaqSel');
+  if(!sel || sel.options.length > 1) return;
+  var todas = MAQUINAS_BASE_ADMIN.concat(maquinasExtra).sort(function(a,b){ return a.n.localeCompare(b.n); });
+  todas.forEach(function(m){
+    var o = document.createElement('option');
+    o.value = m.id;
+    o.textContent = m.n + ' (' + m.id + ')';
+    sel.appendChild(o);
+  });
+}
+
+function ejecutarRenombradoHistorial(){
+  var sel   = document.getElementById('renombraMaqSel');
+  var input = document.getElementById('renombraNuevoNombre');
+  var maqId = sel.value;
+  var nuevoN = input.value.trim().toUpperCase();
+  if(!maqId){ showToast('⚠️ Selecciona una máquina'); return; }
+  if(!nuevoN){ showToast('⚠️ Escribe el nuevo nombre'); return; }
+  var nombreActual = sel.options[sel.selectedIndex].textContent;
+  if(!confirm('¿Cambiar el nombre en TODO el historial de averías?\n\n' + nombreActual + '  →  ' + nuevoN + '\n\nEsta acción actualizará Firebase y no se puede deshacer.')) return;
+  var btn = document.getElementById('btnRenombrar');
+  btn.disabled = true;
+  btn.textContent = 'Actualizando...';
+  // Si es una máquina extra, también actualizar el array
+  var extra = maquinasExtra.find(function(m){ return m.id===maqId; });
+  if(extra){ extra.n = nuevoN; saveMaquinasExtra(); renderMaquinas(); }
+  sweepNombreMaquina(maqId, nuevoN, function(cnt){
+    btn.disabled = false;
+    btn.textContent = '✏️ Renombrar en historial';
+    input.value = '';
+    sel.value = '';
+    showToast('✅ ' + cnt + ' avería' + (cnt!==1?'s':'') + ' actualizadas a "' + nuevoN + '"');
+  });
 }
 
 // ══════════════════════════════════════════════════
