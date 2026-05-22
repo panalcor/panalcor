@@ -818,7 +818,27 @@ function guardarChecks(){
     tareas: tareasActivas.map(t=>({ id:t.id, tarea:t.tarea, ok:!!checks[t.id], info:getSavedInfo(t.id) }))
   };
 
-  localStorage.setItem('turno_'+fecha+'_'+Date.now(), JSON.stringify(registro));
+  const tsNow = Date.now();
+  localStorage.setItem('turno_'+fecha+'_'+tsNow, JSON.stringify(registro));
+
+  // Sync to Firebase so admin can generate reports from any device
+  try {
+    var DB2 = firebase.database();
+    var fbKey = fecha+'_'+turno.replace(/[^A-Z0-9]/g,'_')+'_'+mec.replace(/[^A-Za-z0-9]/g,'_')+'_'+tsNow;
+    // If admin edit: remove previous Firebase record for same fecha+turno first
+    if(adminUnlocked){
+      DB2.ref('registros_turno').orderByChild('fecha_turno').equalTo(fecha+'|'+turno)
+        .once('value').then(function(snap){
+          var updates = {};
+          snap.forEach(function(ch){ updates[ch.key] = null; });
+          updates[fbKey] = Object.assign({}, registro, { fecha_turno: fecha+'|'+turno });
+          DB2.ref('registros_turno').update(updates);
+        });
+    } else {
+      DB2.ref('registros_turno/'+fbKey).set(Object.assign({}, registro, { fecha_turno: fecha+'|'+turno }));
+    }
+  } catch(e){ /* Firebase sync optional — localStorage is primary */ }
+
   showAlert(adminUnlocked ? '✏️ Turno modificado por admin: '+done+'/'+total : '✅ Turno guardado: '+done+'/'+total+' tareas');
   adminUnlocked = false;
   document.getElementById('unlockBadge').style.display='none';

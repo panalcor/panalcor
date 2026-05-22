@@ -1809,26 +1809,52 @@ function exportarInformeMensual(){
   var parts = mes.split('-');
   var anio  = parts[0]; var mm = parts[1];
   var mesLabel = _MESES_ES[parseInt(mm)-1] + ' ' + anio;
-
-  var allTurnos = getTurnos().filter(function(r){ return r.fecha && r.fecha.startsWith(mes); });
   var info = document.getElementById('expMesInfo');
-  if(!allTurnos.length){
-    if(info) info.textContent = 'Sin registros para ' + mesLabel;
-    showToast('Sin registros de mantenimiento para ese mes');
-    return;
-  }
-  if(info) info.textContent = 'Cargando datos de Firebase...';
+  if(info) info.textContent = 'Buscando registros en Firebase...';
 
-  DB.ref('tareas_diarias').once('value').then(function(snap){
+  // Load from Firebase (all devices) + localStorage (this device) merged
+  Promise.all([
+    DB.ref('registros_turno').once('value'),
+    DB.ref('tareas_diarias').once('value')
+  ]).then(function(snaps){
+    var fbTurnos = snaps[0].val() || {};
     var tareasMap = {};
-    var val = snap.val() || {};
-    Object.values(val).forEach(function(t){ tareasMap[t.id] = t; });
+    Object.values(snaps[1].val() || {}).forEach(function(t){ tareasMap[t.id] = t; });
+
+    // Collect Firebase records for this month
+    var seenKeys = {};
+    var allTurnos = Object.values(fbTurnos).filter(function(r){
+      if(!r.fecha || !r.fecha.startsWith(mes)) return false;
+      // Deduplicate by fecha+turno+mecanico (keep latest)
+      var k = r.fecha+'|'+(r.turno||'')+'|'+(r.mecanico||'');
+      if(seenKeys[k] && seenKeys[k].ts >= (r.ts||0)) return false;
+      seenKeys[k] = r;
+      return true;
+    });
+
+    // Merge localStorage records not yet in Firebase (offline case)
+    getTurnos().filter(function(r){ return r.fecha && r.fecha.startsWith(mes); }).forEach(function(r){
+      var k = r.fecha+'|'+(r.turno||'')+'|'+(r.mecanico||'');
+      if(!seenKeys[k]){ allTurnos.push(r); seenKeys[k] = r; }
+    });
+
+    if(!allTurnos.length){
+      if(info) info.textContent = 'Sin registros para ' + mesLabel;
+      showToast('Sin registros de mantenimiento para ese mes');
+      return;
+    }
     _generarExcelMensual(mes, mesLabel, allTurnos, tareasMap);
     if(info) info.textContent = allTurnos.length + ' turnos encontrados en ' + mesLabel;
   }).catch(function(){
-    // Fallback: generate without machine cross-reference
+    // Full fallback: localStorage only
+    var allTurnos = getTurnos().filter(function(r){ return r.fecha && r.fecha.startsWith(mes); });
+    if(!allTurnos.length){
+      if(info) info.textContent = 'Sin registros para ' + mesLabel;
+      showToast('Sin registros de mantenimiento para ese mes');
+      return;
+    }
     _generarExcelMensual(mes, mesLabel, allTurnos, {});
-    if(info) info.textContent = allTurnos.length + ' turnos (sin datos de máquina)';
+    if(info) info.textContent = allTurnos.length + ' turnos (solo dispositivo local)';
   });
 }
 
