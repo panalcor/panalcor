@@ -1292,10 +1292,8 @@ function renderHistorial(){
         ${a.accion?`<div style="margin-top:10px"><div class="di-label">Acción correctiva</div><div style="margin-top:4px;font-size:0.95rem">${a.accion}</div></div>`:''}
         ${a.observaciones?`<div style="margin-top:10px"><div class="di-label">Observaciones</div><div style="margin-top:4px;font-size:0.95rem">${a.observaciones}</div></div>`:''}
         ${a.materiales&&a.materiales.length?`<div style="margin-top:10px"><div class="di-label">Material utilizado</div><div style="margin-top:4px;font-size:0.9rem">${a.materiales.map(m=>`${m.desc} (${m.ref}) × ${m.qty}`).join(' | ')}</div></div>`:''}
-        <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
-          ${a.estado!=='RESUELTA'?`<button class="btn btn-gold" style="font-size:0.8rem;padding:7px 14px" onclick="retomarAveria('${a.id}')">🔄 Retomar avería</button>`:''}
-          <button class="btn btn-red" style="font-size:0.8rem;padding:7px 14px" onclick="borrarAveria('${a.id}')">🗑 Eliminar</button>
-        </div>
+        ${a.estado!=='RESUELTA'?`<div style="margin-top:14px"><button class="btn btn-gold" style="font-size:0.8rem;padding:7px 14px" onclick="retomarAveria('${a.id}')">🔄 Retomar avería</button></div>`:''}
+
       </div>
     </div>`;
   }).join('');
