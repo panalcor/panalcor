@@ -2625,6 +2625,7 @@ function cargarCatalogoRepuestos() {
     _repCatalogo = data;
     localStorage.setItem(REP_LS, JSON.stringify(_repCatalogo));
     renderCatalogoRepuestos();
+    _sincRepuestosCache(); // sincronizar con averias.html
   }, function() {
     // Sin conexión: usar caché localStorage
     try { _repCatalogo = JSON.parse(localStorage.getItem(REP_LS) || '{}'); } catch(e) { _repCatalogo = {}; }
@@ -2756,6 +2757,26 @@ function limpiarFormRepuesto() {
   var msg = document.getElementById('repMsg');
   msg.textContent = '';
   msg.style.color = 'var(--green)';
+}
+
+// Sincroniza el catálogo con repuestosCache para que averias.html lo vea
+function _sincRepuestosCache() {
+  try {
+    // Merge: catálogo admin + lo que ya hubiera en repuestosCache (xlsx)
+    var mapa = {};
+    Object.values(_repCatalogo).forEach(function(r) {
+      var k = (r.ref || r.desc || '').toUpperCase();
+      mapa[k] = { desc: r.desc || '', ref: r.ref || '', ubicacion: r.prov || r.fab || '' };
+    });
+    try {
+      var xlsx = JSON.parse(localStorage.getItem('repuestosCache') || '[]');
+      xlsx.forEach(function(r) {
+        var k = (r.ref || r.desc || '').toUpperCase();
+        if (!mapa[k]) mapa[k] = r;
+      });
+    } catch(e) {}
+    localStorage.setItem('repuestosCache', JSON.stringify(Object.values(mapa)));
+  } catch(e) {}
 }
 
 // Importa desde averías los repuestos que NO estén ya en el catálogo

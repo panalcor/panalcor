@@ -909,18 +909,38 @@ function turnoHoraOk(){
 
 function cargarRepuestos(){
   const tip = document.getElementById('repTip');
-  const cached = localStorage.getItem('repuestosCache');
-  if(cached){
-    try{
-      repuestosData = JSON.parse(cached);
-      tip.textContent = '✅ '+repuestosData.length+' repuestos disponibles';
-      tip.style.color = 'var(--green)';
-    }catch(e){
-      tip.textContent = '⚠️ Abre primero Mecánicos para cargar los repuestos.';
-      tip.style.color = 'rgba(243,156,18,0.9)';
+  // Fusionar catálogo admin (repuestos_v1) con caché xlsx (repuestosCache)
+  var mapa = {};
+
+  // 1. Base: catálogo del admin (repuestos_v1 → objeto {key: {...}})
+  try {
+    var cat = JSON.parse(localStorage.getItem('repuestos_v1') || 'null');
+    if (cat) {
+      Object.values(cat).forEach(function(r) {
+        var k = (r.ref || r.desc || '').toUpperCase();
+        mapa[k] = { desc: r.desc || '', ref: r.ref || '', ubicacion: r.prov || r.fab || '' };
+      });
     }
+  } catch(e) {}
+
+  // 2. Merge: añadir los del xlsx que no estén ya en el catálogo
+  try {
+    var xlsx = JSON.parse(localStorage.getItem('repuestosCache') || 'null');
+    if (xlsx) {
+      xlsx.forEach(function(r) {
+        var k = (r.ref || r.desc || '').toUpperCase();
+        if (!mapa[k]) mapa[k] = r;
+      });
+    }
+  } catch(e) {}
+
+  repuestosData = Object.values(mapa);
+
+  if (repuestosData.length > 0) {
+    tip.textContent = '✅ ' + repuestosData.length + ' repuestos disponibles';
+    tip.style.color = 'var(--green)';
   } else {
-    tip.textContent = '⚠️ Abre primero la página de Mecánicos para que los repuestos queden disponibles aquí.';
+    tip.textContent = '⚠️ Sin repuestos — añádelos desde Admin → Repuestos';
     tip.style.color = 'rgba(243,156,18,0.9)';
   }
 }
