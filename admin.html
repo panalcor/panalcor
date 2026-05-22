@@ -628,9 +628,15 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
         <input type="number" id="repPrecio" min="0" step="0.01" placeholder="0.00">
       </div>
     </div>
-    <div class="field" style="margin:0 0 12px 0">
-      <label>🔗 URL Datasheet / Documento</label>
-      <input type="url" id="repUrl" placeholder="https://..." style="width:100%">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div class="field" style="margin:0">
+        <label>🔗 URL Datasheet / Ficha técnica</label>
+        <input type="url" id="repUrl" placeholder="https://...">
+      </div>
+      <div class="field" style="margin:0">
+        <label>📝 URL Instrucciones de uso (PDF)</label>
+        <input type="url" id="repInstUrl" placeholder="https://...">
+      </div>
     </div>
     <div class="field" style="margin:0 0 14px 0">
       <label>Notas</label>
@@ -3030,9 +3036,15 @@ function renderCatalogoRepuestos() {
     var k  = _repKey(r.desc || '', String(r.ref || ''));
     var ex = _repExtra[k] || {};
     var u  = usos[k] || 0;
-    var docCell = ex.url
-      ? '<a href="' + ex.url + '" target="_blank" title="Abrir datasheet"'
-        + ' style="font-size:1.2rem;text-decoration:none">📄</a>'
+    var docCell = (ex.url || ex.instrUrl)
+      ? (ex.url
+          ? '<a href="' + ex.url + '" target="_blank" title="Abrir datasheet"'
+            + ' style="font-size:1.2rem;text-decoration:none;margin-right:4px">📄</a>'
+          : '')
+        + (ex.instrUrl
+          ? '<a href="' + ex.instrUrl + '" target="_blank" title="Abrir instrucciones"'
+            + ' style="font-size:1.2rem;text-decoration:none">📝</a>'
+          : '')
       : '<span style="color:rgba(255,255,255,0.2);font-size:0.75rem">—</span>';
     var stockVal = (r.stock !== undefined && r.stock !== null) ? r.stock : '—';
     var stockColor = (typeof r.stock === 'number' && r.stockMin !== undefined && r.stock <= r.stockMin)
@@ -3063,12 +3075,14 @@ function guardarRepuesto() {
   var ref    = (document.getElementById('repRef').value    || '').trim();
   var fab    = (document.getElementById('repFab').value    || '').trim().toUpperCase();
   var prov   = (document.getElementById('repProv').value   || '').trim().toUpperCase();
-  var url    = (document.getElementById('repUrl').value    || '').trim();
+  var url     = (document.getElementById('repUrl').value     || '').trim();
+  var instrUrl= (document.getElementById('repInstUrl').value || '').trim();
   var precio = parseFloat(document.getElementById('repPrecio').value || '0') || 0;
   var notas  = (document.getElementById('repNotas').value  || '').trim();
 
   if (!desc && !ref) { showToast('⚠️ Rellena al menos descripción o referencia'); return; }
   if (url && !url.startsWith('http')) url = 'https://' + url;
+  if (instrUrl && !instrUrl.startsWith('http')) instrUrl = 'https://' + instrUrl;
 
   var key = _repEditKey || _repKey(desc, ref);
   var fechaAlta = (_repExtra[key] && _repExtra[key].fechaAlta)
@@ -3076,7 +3090,7 @@ function guardarRepuesto() {
     : new Date().toISOString().substring(0, 10);
 
   var obj = { _key: key, desc: desc, ref: ref, fab: fab, prov: prov,
-              url: url, precio: precio, notas: notas, fechaAlta: fechaAlta };
+              url: url, instrUrl: instrUrl, precio: precio, notas: notas, fechaAlta: fechaAlta };
 
   DB.ref('repuestos_catalogo/' + key).set(obj).then(function() {
     if (url) DB.ref('repuestos_docs/' + key).set(url); // compat. Informes
@@ -3105,8 +3119,9 @@ function cargarRepuestoEnForm(key) {
   document.getElementById('repRef').value    = ex.ref    || (base && String(base.ref || '')) || '';
   document.getElementById('repFab').value    = ex.fab    || '';
   document.getElementById('repProv').value   = ex.prov   || '';
-  document.getElementById('repUrl').value    = ex.url    || '';
-  document.getElementById('repPrecio').value = ex.precio || '';
+  document.getElementById('repUrl').value     = ex.url     || '';
+  document.getElementById('repInstUrl').value = ex.instrUrl || '';
+  document.getElementById('repPrecio').value  = ex.precio  || '';
   document.getElementById('repNotas').value  = ex.notas  || '';
   var msg = document.getElementById('repMsg');
   msg.textContent = 'Editando: ' + (ex.desc || (base && base.desc) || key);
@@ -3117,7 +3132,7 @@ function cargarRepuestoEnForm(key) {
 
 function limpiarFormRepuesto() {
   _repEditKey = null;
-  ['repDesc','repRef','repFab','repProv','repUrl','repPrecio','repNotas'].forEach(function(id) {
+  ['repDesc','repRef','repFab','repProv','repUrl','repInstUrl','repPrecio','repNotas'].forEach(function(id) {
     document.getElementById(id).value = '';
   });
   var msg = document.getElementById('repMsg');

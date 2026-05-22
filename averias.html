@@ -997,7 +997,7 @@ function _mergeRepuestos(fbData) {
     var cat = fbData || JSON.parse(localStorage.getItem('repuestos_v1') || 'null');
     if (cat) Object.values(cat).forEach(function(r) {
       var k = (r.ref || r.desc || '').replace(/\s+/g,'_').toUpperCase();
-      if (k) mapa[k] = { desc: r.desc || '', ref: r.ref || '', ubicacion: r.prov || r.fab || '' };
+      if (k) mapa[k] = { desc: r.desc || '', ref: r.ref || '', ubicacion: r.prov || r.fab || '', instrUrl: r.instrUrl || '' };
     });
   } catch(e) {}
 
@@ -1116,18 +1116,20 @@ function buscarMaterial(){
     <div class="mat-option" style="display:flex;align-items:center;gap:10px;justify-content:space-between">
       <div style="flex:1;min-width:0">
         <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.desc}</div>
-        <div class="ref">${r.ref}${r.ubicacion?' · 📍 '+r.ubicacion:''}</div>
+        <div class="ref">${r.ref}${r.ubicacion?' · 📍 '+r.ubicacion:''}${r.instrUrl?' · <a href="'+r.instrUrl+'" target="_blank" onclick="event.stopPropagation()" style="color:var(--gold);text-decoration:none" title="Ver instrucciones">📝 Instrucciones</a>':''}</div>
       </div>
       <button type="button" style="background:rgba(46,204,113,0.25);border:1px solid rgba(46,204,113,0.5);color:#2ecc71;border-radius:6px;padding:5px 12px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.85rem;font-weight:700;white-space:nowrap" data-idx="${i}">+ Añadir</button>
     </div>`).join('');
   dd.style.display='block';
 }
 
-function addMaterial(ref, desc){
+function addMaterial(ref, desc, instrUrl){
   document.getElementById('matSearch').value='';
   document.getElementById('matDropdown').style.display='none';
   if(materialesForm.find(m=>m.ref===ref&&m.desc===desc)) return;
-  materialesForm.push({ref,desc,qty:1});
+  var mat = {ref:ref, desc:desc, qty:1};
+  if(instrUrl) mat.instrUrl = instrUrl;
+  materialesForm.push(mat);
   renderMatList();
 }
 
@@ -1135,7 +1137,7 @@ function renderMatList(){
   const el = document.getElementById('matList');
   el.innerHTML = materialesForm.map((m,i)=>`
     <div class="mat-item">
-      <span class="mat-desc"><b>${m.ref}</b> — ${m.desc}</span>
+      <span class="mat-desc"><b>${m.ref}</b> — ${m.desc}${m.instrUrl?' <a href="'+m.instrUrl+'" target="_blank" style="color:var(--gold);text-decoration:none;font-size:0.9rem" title="Ver instrucciones">📝</a>':''}</span>
       <input class="mat-qty" type="number" min="1" value="${m.qty}" onchange="materialesForm[${i}].qty=+this.value" title="Cantidad">
       <button class="mat-del" onclick="quitarMaterial(${i})">✕</button>
     </div>`).join('');
@@ -1571,7 +1573,7 @@ document.addEventListener('click',e=>{
   if(btn && btn.closest('#matDropdown')){
     const i = parseInt(btn.dataset.idx);
     const r = _matResultados[i];
-    if(r) addMaterial(r.ref, r.desc);
+    if(r) addMaterial(r.ref, r.desc, r.instrUrl || '');
     return;
   }
   if(!e.target.closest('.mat-search-wrap'))
