@@ -621,12 +621,12 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
     <table class="data-table" id="tCatalogoRep">
       <thead><tr>
         <th>Descripción</th>
-        <th>Referencia</th>
-        <th>Fabricante</th>
-        <th>Proveedor</th>
-        <th>Precio/ud</th>
-        <th title="Veces usado en averías">Usos</th>
-        <th>📄 Datasheet</th>
+        <th>Ref</th>
+        <th>Ubicación</th>
+        <th>Familia</th>
+        <th style="text-align:center">Stock</th>
+        <th style="text-align:center" title="Veces usado en averías">Usos</th>
+        <th style="text-align:center">📄 Doc</th>
         <th>Notas</th>
         <th></th>
       </tr></thead>
@@ -2606,98 +2606,50 @@ document.addEventListener('keydown', function(e) {
 // ══════════════════════════════════════════════════
 // CATÁLOGO DE REPUESTOS
 // ══════════════════════════════════════════════════
-var _repCatalogo    = {};    // key → objeto repuesto (caché en memoria)
-var _repEditKey     = null;  // clave del repuesto en edición
-var _repListenerOn  = false; // evitar listeners duplicados
-var _repPagina      = 0;     // página actual
-var _repPorPagina   = 50;    // repuestos por página
+var _repBase       = [];     // array completo desde repuestosCache (igual que mecanicos)
+var _repExtra      = {};     // {key → enriquecimiento} desde Firebase repuestos_catalogo
+var _repEditKey    = null;   // key del repuesto en edición
+var _repListenerOn = false;  // evitar listeners duplicados
+var _repPagina     = 0;      // página actual
+var _repPorPagina  = 50;     // repuestos por página
+var REP_LS         = 'repuestos_v1'; // clave localStorage enriquecimientos
 
-const REP_LS = 'repuestos_v1'; // clave localStorage
-
+// Genera clave Firebase: usa ref si la tiene, si no hash de desc
 function _repKey(desc, ref) {
-  var r = ref && ref.trim();
-  var d = desc && desc.trim();
-  if (r) {
-    // Con referencia: usar referencia sanitizada (suele ser única y corta)
-    return r.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 120).toUpperCase();
-  }
-  // Sin referencia: descripción completa + hash para garantizar unicidad
-  var s = (d || '').toUpperCase();
+  var r = (ref || '').trim();
+  var d = (desc || '').trim().toUpperCase();
+  if (r) return ('REP_' + r).replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 120).toUpperCase();
   var h = 0;
-  for (var i = 0; i < s.length; i++) { h = (Math.imul(31, h) + s.charCodeAt(i)) | 0; }
-  var hash = (h >>> 0).toString(36).toUpperCase(); // 7 chars hex-like
-  var prefix = s.replace(/[^A-Z0-9]/g, '_').replace(/_+/g,'_').replace(/^_|_$/g,'').substring(0, 80);
-  return prefix + '_' + hash;
+  for (var i = 0; i < d.length; i++) { h = (Math.imul(31, h) + d.charCodeAt(i)) | 0; }
+  var hash = (h >>> 0).toString(36).toUpperCase();
+  var prefix = d.replace(/[^A-Z0-9]/g, '_').replace(/_+/g,'_').replace(/^_|_$/g,'').substring(0, 60);
+  return 'REP_' + prefix + '_' + hash;
 }
 
-// Carga inmediata desde localStorage + listener Firebase en tiempo real
 function cargarCatalogoRepuestos() {
-  // 1. Mostrar inmediatamente todo lo disponible en local
-  _repCatalogo = _mergeRepLocal();
+  // 1. Cargar base local igual que mecanicos.html (renderiza inmediatamente)
+  try {
+    var cached = JSON.parse(localStorage.getItem('repuestosCache') || 'null');
+    if (Array.isArray(cached) && cached.length) {
+      _repBase = cached;
+    }
+  } catch(e) {}
+  // Fallback cache enriquecimientos
+  try { _repExtra = JSON.parse(localStorage.getItem(REP_LS) || '{}'); } catch(e) {}
   renderCatalogoRepuestos();
 
-  // 2. Suscripción en tiempo real (igual que averías)
+  // 2. Firebase: enriquecimientos manuales (sólo los editados manualmente)
   if (_repListenerOn) return;
   _repListenerOn = true;
-
   DB.ref('repuestos_catalogo').on('value', function(snap) {
-    var fbData = snap.val() || {};
-    if (Object.keys(fbData).length === 0) {
-      // Firebase vacío: importar desde todas las fuentes locales
-      _importarDeAverias(false);
-    } else {
-      _repCatalogo = fbData;
-      localStorage.setItem(REP_LS, JSON.stringify(_repCatalogo));
-      renderCatalogoRepuestos();
-      _sincRepuestosCache();
-    }
-  }, function() {
-    // Sin conexión: usar fusión local
-    _repCatalogo = _mergeRepLocal();
+    _repExtra = snap.val() || {};
+    localStorage.setItem(REP_LS, JSON.stringify(_repExtra));
     renderCatalogoRepuestos();
-  });
-}
-
-// Fusiona todas las fuentes locales en un objeto {key → repuesto}
-function _mergeRepLocal() {
-  var mapa = {};
-
-  // a) Catálogo guardado (repuestos_v1)
-  try {
-    var cat = JSON.parse(localStorage.getItem(REP_LS) || 'null');
-    if (cat) Object.values(cat).forEach(function(r) {
-      if (r._key) mapa[r._key] = r;
-    });
-  } catch(e) {}
-
-  // b) Materiales de averías registradas
-  try {
-    getAverias().forEach(function(a) {
-      (a.materiales || []).forEach(function(m) {
-        if (!m.desc) return;
-        var k = _repKey(m.desc, m.ref || '');
-        if (!mapa[k]) mapa[k] = { _key: k, desc: m.desc.toUpperCase(),
-          ref: m.ref || '', fab: '', prov: '', url: '', precio: 0, notas: '', fechaAlta: '' };
-      });
-    });
-  } catch(e) {}
-
-  // c) Excel / repuestosCache (array [{desc,ref,...}])
-  try {
-    var xlsx = JSON.parse(localStorage.getItem('repuestosCache') || 'null');
-    if (Array.isArray(xlsx)) xlsx.forEach(function(r) {
-      if (!r.desc) return;
-      var k = _repKey(r.desc, r.ref || '');
-      if (!mapa[k]) mapa[k] = { _key: k, desc: (r.desc||'').toUpperCase(),
-        ref: r.ref || '', fab: r.fab || '', prov: r.ubicacion || '', url: '', precio: 0, notas: '', fechaAlta: '' };
-    });
-  } catch(e) {}
-
-  return mapa;
+  }, function() { /* sin red — ya cargamos del localStorage */ });
 }
 
 function filtrarRepuestos() {
-  _repPagina = 0; // al buscar volver a la primera página
+  _repPagina = 0;
   renderCatalogoRepuestos();
 }
 
@@ -2708,32 +2660,29 @@ function repPaginar(delta) {
 
 function renderCatalogoRepuestos() {
   var q = (document.getElementById('repBuscar').value || '').toLowerCase();
-  var av = getAverias();
 
-  // Contar usos por clave
+  // Usos por clave (ref normalizada) desde averías guardadas
   var usos = {};
-  av.forEach(function(a) {
+  getAverias().forEach(function(a) {
     (a.materiales || []).forEach(function(m) {
       var k = _repKey(m.desc || '', m.ref || '');
       usos[k] = (usos[k] || 0) + 1;
     });
   });
 
-  var lista = Object.values(_repCatalogo).filter(function(r) {
+  var lista = _repBase.filter(function(r) {
     if (!q) return true;
-    return (r.desc || '').toLowerCase().includes(q) ||
-           (r.ref  || '').toLowerCase().includes(q) ||
-           (r.fab  || '').toLowerCase().includes(q) ||
-           (r.prov || '').toLowerCase().includes(q);
-  }).sort(function(a, b) {
-    return (a.desc || '').localeCompare(b.desc || '');
+    return (r.desc      || '').toLowerCase().includes(q) ||
+           String(r.ref || '').toLowerCase().includes(q) ||
+           (r.ubicacion || '').toLowerCase().includes(q) ||
+           (r.familia   || '').toLowerCase().includes(q);
   });
 
-  var total = lista.length;
+  var total     = lista.length;
   var totalPags = Math.max(1, Math.ceil(total / _repPorPagina));
-  _repPagina = Math.max(0, Math.min(_repPagina, totalPags - 1));
-  var inicio = _repPagina * _repPorPagina;
-  var pagina = lista.slice(inicio, inicio + _repPorPagina);
+  _repPagina    = Math.max(0, Math.min(_repPagina, totalPags - 1));
+  var inicio    = _repPagina * _repPorPagina;
+  var pagina    = lista.slice(inicio, inicio + _repPorPagina);
 
   var count = document.getElementById('repCount');
   if (count) count.textContent = total + ' repuesto' + (total !== 1 ? 's' : '')
@@ -2742,9 +2691,9 @@ function renderCatalogoRepuestos() {
   var tbody = document.getElementById('bCatalogoRep');
 
   if (!total) {
-    tbody.innerHTML = '<tr><td colspan="9" class="no-data">'
-      + (q ? 'Sin resultados para "' + q + '"' : 'Catálogo vacío — añade el primer repuesto con el formulario de arriba')
-      + '</td></tr>';
+    var msg0 = q ? 'Sin resultados para "' + q + '"'
+                 : 'Sin catálogo — abre mecanicos.html una vez para generar el caché';
+    tbody.innerHTML = '<tr><td colspan="9" class="no-data">' + msg0 + '</td></tr>';
     document.getElementById('repPaginacion').style.display = 'none';
     return;
   }
@@ -2753,8 +2702,8 @@ function renderCatalogoRepuestos() {
   var pag = document.getElementById('repPaginacion');
   if (totalPags > 1) {
     pag.style.display = 'flex';
-    document.getElementById('repBtnPrev').disabled = _repPagina === 0;
-    document.getElementById('repBtnNext').disabled = _repPagina >= totalPags - 1;
+    document.getElementById('repBtnPrev').disabled = (_repPagina === 0);
+    document.getElementById('repBtnNext').disabled = (_repPagina >= totalPags - 1);
     document.getElementById('repPagInfo').textContent =
       'Mostrando ' + (inicio + 1) + '–' + Math.min(inicio + _repPorPagina, total) + ' de ' + total;
   } else {
@@ -2762,28 +2711,32 @@ function renderCatalogoRepuestos() {
   }
 
   tbody.innerHTML = pagina.map(function(r) {
-    var u = usos[r._key] || 0;
-    var precio = (r.precio && r.precio > 0) ? parseFloat(r.precio).toFixed(2) + ' €' : '—';
-    var docCell = r.url
-      ? '<a href="' + r.url + '" target="_blank" title="Abrir datasheet"'
-        + ' style="font-size:1.3rem;text-decoration:none">📄</a>'
-      : '<span style="color:rgba(255,255,255,0.2);font-size:0.78rem">—</span>';
+    var k  = _repKey(r.desc || '', String(r.ref || ''));
+    var ex = _repExtra[k] || {};
+    var u  = usos[k] || 0;
+    var docCell = ex.url
+      ? '<a href="' + ex.url + '" target="_blank" title="Abrir datasheet"'
+        + ' style="font-size:1.2rem;text-decoration:none">📄</a>'
+      : '<span style="color:rgba(255,255,255,0.2);font-size:0.75rem">—</span>';
+    var stockVal = (r.stock !== undefined && r.stock !== null) ? r.stock : '—';
+    var stockColor = (typeof r.stock === 'number' && r.stockMin !== undefined && r.stock <= r.stockMin)
+      ? 'var(--red)' : 'inherit';
     return '<tr>'
-      + '<td style="font-weight:600">' + (r.desc || '') + '</td>'
-      + '<td><code style="color:var(--gold);font-size:0.8rem">' + (r.ref || '—') + '</code></td>'
-      + '<td style="color:rgba(255,255,255,0.6)">' + (r.fab  || '—') + '</td>'
-      + '<td style="color:rgba(255,255,255,0.6)">' + (r.prov || '—') + '</td>'
-      + '<td style="text-align:center">' + precio + '</td>'
+      + '<td style="font-weight:600">'    + (r.desc || '') + '</td>'
+      + '<td><code style="color:var(--gold);font-size:0.8rem">' + (r.ref !== undefined ? r.ref : '—') + '</code></td>'
+      + '<td style="color:rgba(255,255,255,0.55);font-size:0.82rem">' + (r.ubicacion || '—') + '</td>'
+      + '<td style="color:rgba(255,255,255,0.55);font-size:0.82rem">' + (r.familia   || '—') + '</td>'
+      + '<td style="text-align:center;color:' + stockColor + '">' + stockVal + '</td>'
       + '<td style="text-align:center"><span style="font-weight:700;color:'
         + (u > 0 ? 'var(--gold)' : 'rgba(255,255,255,0.25)') + '">' + u + '</span></td>'
       + '<td style="text-align:center">' + docCell + '</td>'
-      + '<td style="font-size:0.78rem;color:rgba(255,255,255,0.4);max-width:150px;'
-        + 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (r.notas || '') + '</td>'
+      + '<td style="font-size:0.78rem;color:rgba(255,255,255,0.4);max-width:130px;'
+        + 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (ex.notas || '') + '</td>'
       + '<td style="white-space:nowrap">'
-        + '<button onclick="cargarRepuestoEnForm(\'' + r._key + '\')"'
+        + '<button onclick="cargarRepuestoEnForm(\'' + k + '\')"'
           + ' style="background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.3);'
           + 'color:var(--gold);border-radius:5px;padding:4px 10px;cursor:pointer;font-size:0.78rem">'
-          + '✏️ Editar</button>'
+          + '✏️</button>'
       + '</td>'
       + '</tr>';
   }).join('');
@@ -2798,13 +2751,12 @@ function guardarRepuesto() {
   var precio = parseFloat(document.getElementById('repPrecio').value || '0') || 0;
   var notas  = (document.getElementById('repNotas').value  || '').trim();
 
-  if (!desc) { showToast('⚠️ La descripción es obligatoria'); return; }
+  if (!desc && !ref) { showToast('⚠️ Rellena al menos descripción o referencia'); return; }
   if (url && !url.startsWith('http')) url = 'https://' + url;
 
   var key = _repEditKey || _repKey(desc, ref);
-  // Conservar fechaAlta original si es edición
-  var fechaAlta = (_repEditKey && _repCatalogo[key] && _repCatalogo[key].fechaAlta)
-    ? _repCatalogo[key].fechaAlta
+  var fechaAlta = (_repExtra[key] && _repExtra[key].fechaAlta)
+    ? _repExtra[key].fechaAlta
     : new Date().toISOString().substring(0, 10);
 
   var obj = { _key: key, desc: desc, ref: ref, fab: fab, prov: prov,
@@ -2812,28 +2764,36 @@ function guardarRepuesto() {
 
   DB.ref('repuestos_catalogo/' + key).set(obj).then(function() {
     if (url) DB.ref('repuestos_docs/' + key).set(url); // compat. Informes
+    _repExtra[key] = obj;
+    localStorage.setItem(REP_LS, JSON.stringify(_repExtra));
+    renderCatalogoRepuestos();
     limpiarFormRepuesto();
     var msg = document.getElementById('repMsg');
     msg.textContent = '✓ Guardado';
     msg.style.color = 'var(--green)';
     setTimeout(function() { msg.textContent = ''; }, 2500);
   }).catch(function() { showToast('❌ Error al guardar'); });
-  // El listener .on() actualizará la tabla automáticamente
 }
 
 function cargarRepuestoEnForm(key) {
-  var r = _repCatalogo[key];
-  if (!r) return;
+  // Buscar en la base (repuestosCache) por clave coincidente
+  var base = null;
+  for (var i = 0; i < _repBase.length; i++) {
+    if (_repKey(_repBase[i].desc || '', String(_repBase[i].ref || '')) === key) {
+      base = _repBase[i]; break;
+    }
+  }
+  var ex = _repExtra[key] || {};
   _repEditKey = key;
-  document.getElementById('repDesc').value   = r.desc   || '';
-  document.getElementById('repRef').value    = r.ref    || '';
-  document.getElementById('repFab').value    = r.fab    || '';
-  document.getElementById('repProv').value   = r.prov   || '';
-  document.getElementById('repUrl').value    = r.url    || '';
-  document.getElementById('repPrecio').value = r.precio || '';
-  document.getElementById('repNotas').value  = r.notas  || '';
+  document.getElementById('repDesc').value   = ex.desc   || (base && base.desc)   || '';
+  document.getElementById('repRef').value    = ex.ref    || (base && String(base.ref || '')) || '';
+  document.getElementById('repFab').value    = ex.fab    || '';
+  document.getElementById('repProv').value   = ex.prov   || '';
+  document.getElementById('repUrl').value    = ex.url    || '';
+  document.getElementById('repPrecio').value = ex.precio || '';
+  document.getElementById('repNotas').value  = ex.notas  || '';
   var msg = document.getElementById('repMsg');
-  msg.textContent = 'Editando: ' + r.desc;
+  msg.textContent = 'Editando: ' + (ex.desc || (base && base.desc) || key);
   msg.style.color = 'var(--gold)';
   document.getElementById('repDesc').focus();
   document.getElementById('repDesc').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -2849,53 +2809,9 @@ function limpiarFormRepuesto() {
   msg.style.color = 'var(--green)';
 }
 
-// Sincroniza el catálogo con repuestosCache para que averias.html lo vea
-function _sincRepuestosCache() {
-  try {
-    // Merge: catálogo admin + lo que ya hubiera en repuestosCache (xlsx)
-    var mapa = {};
-    Object.values(_repCatalogo).forEach(function(r) {
-      var k = (r.ref || r.desc || '').toUpperCase();
-      mapa[k] = { desc: r.desc || '', ref: r.ref || '', ubicacion: r.prov || r.fab || '' };
-    });
-    try {
-      var xlsx = JSON.parse(localStorage.getItem('repuestosCache') || '[]');
-      xlsx.forEach(function(r) {
-        var k = (r.ref || r.desc || '').toUpperCase();
-        if (!mapa[k]) mapa[k] = r;
-      });
-    } catch(e) {}
-    localStorage.setItem('repuestosCache', JSON.stringify(Object.values(mapa)));
-  } catch(e) {}
-}
-
-// Importa desde averías los repuestos que NO estén ya en el catálogo
-function importarRepuestosDeAverias() { _importarDeAverias(true); }
-
-function _importarDeAverias(conToast) {
-  var fuentes = _mergeRepLocal();
-  var nuevos = {};
-  var hoy = new Date().toISOString().substring(0, 10);
-  Object.values(fuentes).forEach(function(obj) {
-    if (_repCatalogo[obj._key]) return; // ya existe en catálogo
-    obj.fechaAlta = obj.fechaAlta || hoy;
-    nuevos[obj._key] = obj;
-  });
-  var importados = Object.keys(nuevos).length;
-  if (importados === 0) {
-    if (conToast) showToast('Todo al día — no hay repuestos nuevos');
-    renderCatalogoRepuestos();
-    return;
-  }
-  // Fusionar con catálogo existente y escribir todo de una vez
-  Object.assign(_repCatalogo, nuevos);
-  renderCatalogoRepuestos(); // mostrar inmediatamente
-  DB.ref('repuestos_catalogo').set(_repCatalogo).then(function() {
-    localStorage.setItem(REP_LS, JSON.stringify(_repCatalogo));
-    if (conToast) showToast('✅ ' + importados + ' repuesto' + (importados !== 1 ? 's' : '') + ' importado' + (importados !== 1 ? 's' : ''));
-  }).catch(function() {
-    if (conToast) showToast('⚠️ Guardado solo en local — sin conexión Firebase');
-  });
+// Botón "Importar de averías" — ya no necesario (cargamos repuestosCache directamente)
+function importarRepuestosDeAverias() {
+  showToast('ℹ️ El catálogo se carga automáticamente desde el caché de mecanicos.html');
 }
 </script>
 
