@@ -2603,10 +2603,54 @@ function _repKey(desc, ref) {
 function cargarCatalogoRepuestos() {
   DB.ref('repuestos_catalogo').once('value').then(function(snap) {
     _repCatalogo = snap.val() || {};
-    renderCatalogoRepuestos();
+    // Si el catálogo está vacío, poblar automáticamente desde averías
+    if (Object.keys(_repCatalogo).length === 0) {
+      _autoImportarRepuestos();
+    } else {
+      renderCatalogoRepuestos();
+    }
   }).catch(function() {
-    document.getElementById('bCatalogoRep').innerHTML =
-      '<tr><td colspan="9" class="no-data">Error al cargar</td></tr>';
+    // Fallback: mostrar al menos los repuestos de averías aunque falle Firebase
+    _repCatalogo = _repuestosDeAverias();
+    renderCatalogoRepuestos();
+  });
+}
+
+// Construye un catálogo temporal a partir de las averías (sin escribir en Firebase)
+function _repuestosDeAverias() {
+  var cat = {};
+  getAverias().forEach(function(a) {
+    (a.materiales || []).forEach(function(m) {
+      if (!m.desc) return;
+      var key = _repKey(m.desc, m.ref || '');
+      if (!cat[key]) {
+        cat[key] = { _key: key, desc: (m.desc || '').toUpperCase(),
+          ref: m.ref || '', fab: '', prov: '', url: '', precio: 0, notas: '',
+          fechaAlta: '' };
+      }
+    });
+  });
+  return cat;
+}
+
+// Importa automáticamente desde averías y guarda en Firebase
+function _autoImportarRepuestos() {
+  var cat = _repuestosDeAverias();
+  if (Object.keys(cat).length === 0) {
+    renderCatalogoRepuestos();
+    return;
+  }
+  var promesas = Object.values(cat).map(function(obj) {
+    return DB.ref('repuestos_catalogo/' + obj._key).set(obj);
+  });
+  Promise.all(promesas).then(function() {
+    _repCatalogo = cat;
+    renderCatalogoRepuestos();
+    showToast('✅ ' + Object.keys(cat).length + ' repuestos importados de averías automáticamente');
+  }).catch(function() {
+    // Sin Firebase: mostrar igual desde memoria
+    _repCatalogo = cat;
+    renderCatalogoRepuestos();
   });
 }
 
