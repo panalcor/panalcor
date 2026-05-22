@@ -2615,8 +2615,19 @@ var _repPorPagina   = 50;    // repuestos por página
 const REP_LS = 'repuestos_v1'; // clave localStorage
 
 function _repKey(desc, ref) {
-  return ((ref && ref.trim()) ? ref.trim() : desc.trim())
-    .replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 60).toUpperCase();
+  var r = ref && ref.trim();
+  var d = desc && desc.trim();
+  if (r) {
+    // Con referencia: usar referencia sanitizada (suele ser única y corta)
+    return r.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 120).toUpperCase();
+  }
+  // Sin referencia: descripción completa + hash para garantizar unicidad
+  var s = (d || '').toUpperCase();
+  var h = 0;
+  for (var i = 0; i < s.length; i++) { h = (Math.imul(31, h) + s.charCodeAt(i)) | 0; }
+  var hash = (h >>> 0).toString(36).toUpperCase(); // 7 chars hex-like
+  var prefix = s.replace(/[^A-Z0-9]/g, '_').replace(/_+/g,'_').replace(/^_|_$/g,'').substring(0, 80);
+  return prefix + '_' + hash;
 }
 
 // Carga inmediata desde localStorage + listener Firebase en tiempo real
@@ -2863,25 +2874,27 @@ function importarRepuestosDeAverias() { _importarDeAverias(true); }
 
 function _importarDeAverias(conToast) {
   var fuentes = _mergeRepLocal();
-  var importados = 0;
-  var promesas = [];
+  var nuevos = {};
+  var hoy = new Date().toISOString().substring(0, 10);
   Object.values(fuentes).forEach(function(obj) {
-    if (_repCatalogo[obj._key]) return; // ya existe
-    obj.fechaAlta = obj.fechaAlta || new Date().toISOString().substring(0, 10);
-    _repCatalogo[obj._key] = obj;
-    promesas.push(DB.ref('repuestos_catalogo/' + obj._key).set(obj));
-    importados++;
+    if (_repCatalogo[obj._key]) return; // ya existe en catálogo
+    obj.fechaAlta = obj.fechaAlta || hoy;
+    nuevos[obj._key] = obj;
   });
-  if (promesas.length === 0) {
+  var importados = Object.keys(nuevos).length;
+  if (importados === 0) {
     if (conToast) showToast('Todo al día — no hay repuestos nuevos');
     renderCatalogoRepuestos();
     return;
   }
-  Promise.all(promesas).then(function() {
-    renderCatalogoRepuestos();
+  // Fusionar con catálogo existente y escribir todo de una vez
+  Object.assign(_repCatalogo, nuevos);
+  renderCatalogoRepuestos(); // mostrar inmediatamente
+  DB.ref('repuestos_catalogo').set(_repCatalogo).then(function() {
+    localStorage.setItem(REP_LS, JSON.stringify(_repCatalogo));
     if (conToast) showToast('✅ ' + importados + ' repuesto' + (importados !== 1 ? 's' : '') + ' importado' + (importados !== 1 ? 's' : ''));
   }).catch(function() {
-    renderCatalogoRepuestos(); // mostrar aunque falle Firebase
+    if (conToast) showToast('⚠️ Guardado solo en local — sin conexión Firebase');
   });
 }
 </script>
