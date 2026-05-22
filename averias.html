@@ -478,6 +478,21 @@ a{color:inherit;text-decoration:none}
                  border-radius:8px;padding:9px 12px;color:#fff;font-family:Barlow,sans-serif;font-size:0.95rem">
       </div>
 
+<!-- Banner retomando (visible solo al reanudar una avería) -->
+<div id="retomandoBanner" style="display:none;align-items:center;gap:12px;
+  background:rgba(201,162,39,0.1);border:1px solid rgba(201,162,39,0.4);
+  border-radius:10px;padding:12px 16px;margin-bottom:14px">
+  <span style="font-size:1.3rem">📋</span>
+  <div style="flex:1;min-width:0">
+    <div style="font-size:0.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:700">Retomando avería</div>
+    <div id="retomandoInfo" style="font-size:0.82rem;color:rgba(255,255,255,0.65);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+  </div>
+  <button type="button" onclick="limpiarForm()"
+    style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);
+    color:rgba(255,255,255,0.55);border-radius:6px;padding:5px 12px;cursor:pointer;
+    font-family:Barlow,sans-serif;font-size:0.78rem;white-space:nowrap">✕ Cancelar</button>
+</div>
+
 <div class="actions-row">
       <button type="button" class="btn btn-gold" onclick="guardarAveria()">💾 GUARDAR AVERÍA</button>
       <button type="button" class="btn btn-outline" onclick="limpiarForm()">✕ Limpiar</button>
@@ -767,6 +782,7 @@ function fbCargarAverias(callback) {
 let averias = JSON.parse(localStorage.getItem('averias_v1') || '[]');
 let repuestosData = [];
 let materialesForm = [];
+let _editandoId    = null; // null = nueva avería | string = retomando existente
 let charts = {};
 
 // ══════════════════════════════════════════════
@@ -801,8 +817,14 @@ function init(){
     }
   });
 
-  // ── Pre-seleccionar máquina desde QR (?maq=MAQ-001) ──
+  // ── Parámetros URL ──
   const params = new URLSearchParams(window.location.search);
+
+  // ?retomar=AVR-xxx  → retomar avería pendiente (desde mis_tareas)
+  const retId = params.get('retomar');
+  if(retId){ setTimeout(function(){ retomarAveria(retId); }, 300); }
+
+  // ?maq=MAQ-001  → pre-seleccionar máquina desde QR
   const maqQR  = params.get('maq');
   if(maqQR){
     const sel = document.getElementById('fMaquina');
@@ -1146,9 +1168,11 @@ function guardarAveria(){
 
   const mecsSelec = [...document.querySelectorAll('.mec-check:checked')].map(c=>c.value);
 
+  const avOriginal = _editandoId ? averias.find(function(x){return x.id===_editandoId;}) : null;
+
   const av = {
-    id: 'AVR-'+Date.now(),
-    ts: Date.now(),
+    id:  _editandoId || ('AVR-'+Date.now()),
+    ts:  avOriginal ? avOriginal.ts : Date.now(),
     fecha, horaInicio:horaIni, horaFin,
     tiempoMin,
     maqId, maqNombre:maq?maq.n:maqId,
@@ -1167,11 +1191,18 @@ function guardarAveria(){
     observaciones: document.getElementById('fObs').value.trim(),
     materiales: [...materialesForm],
     costeMateriales: parseFloat(document.getElementById('fCosteMat').value||'0')||0,
-    firma: _firmaData || null,
+    firma: _firmaData || (avOriginal ? avOriginal.firma : null),
     estado,
   };
+  if (_editandoId) av.tsActualizado = Date.now();
 
-  averias.unshift(av);
+  if (_editandoId) {
+    const editIdx = averias.findIndex(function(a){return a.id===_editandoId;});
+    if (editIdx !== -1) averias[editIdx] = av; else averias.unshift(av);
+    _editandoId = null;
+  } else {
+    averias.unshift(av);
+  }
   localStorage.setItem('averias_v1', JSON.stringify(averias));
 
   // ── Guardar en Firebase (funciona desde cualquier red) ──
@@ -1185,6 +1216,9 @@ function guardarAveria(){
 }
 
 function limpiarForm(){
+  _editandoId = null;
+  var banner = document.getElementById('retomandoBanner');
+  if (banner) banner.style.display = 'none';
   document.getElementById('fMaquina').value='';
   document.getElementById('fParteWrap').style.display='none';
   document.getElementById('fDesc').value='';
@@ -1258,7 +1292,8 @@ function renderHistorial(){
         ${a.accion?`<div style="margin-top:10px"><div class="di-label">Acción correctiva</div><div style="margin-top:4px;font-size:0.95rem">${a.accion}</div></div>`:''}
         ${a.observaciones?`<div style="margin-top:10px"><div class="di-label">Observaciones</div><div style="margin-top:4px;font-size:0.95rem">${a.observaciones}</div></div>`:''}
         ${a.materiales&&a.materiales.length?`<div style="margin-top:10px"><div class="di-label">Material utilizado</div><div style="margin-top:4px;font-size:0.9rem">${a.materiales.map(m=>`${m.desc} (${m.ref}) × ${m.qty}`).join(' | ')}</div></div>`:''}
-        <div style="margin-top:14px;display:flex;gap:8px">
+        <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+          ${a.estado!=='RESUELTA'?`<button class="btn btn-gold" style="font-size:0.8rem;padding:7px 14px" onclick="retomarAveria('${a.id}')">🔄 Retomar avería</button>`:''}
           <button class="btn btn-red" style="font-size:0.8rem;padding:7px 14px" onclick="borrarAveria('${a.id}')">🗑 Eliminar</button>
         </div>
       </div>
@@ -1269,6 +1304,49 @@ function renderHistorial(){
 function toggleAv(id){
   const el = document.getElementById(id);
   el.classList.toggle('open');
+}
+
+function retomarAveria(id){
+  var av = averias.find(function(a){return a.id===id;});
+  if(!av){showToast('❌ Avería no encontrada');return;}
+  _editandoId = id;
+
+  // Rellenar todos los campos del formulario
+  document.getElementById('fMaquina').value = av.maqId || '';
+  onMaquinaChange();
+  setTimeout(function(){
+    if(av.parte) document.getElementById('fParte').value = av.parte;
+  }, 60);
+  document.getElementById('fFecha').value       = av.fecha       || '';
+  document.getElementById('fHoraInicio').value  = av.horaInicio  || '';
+  document.getElementById('fHoraFin').value     = av.horaFin     || '';
+  document.getElementById('fDesc').value        = av.descripcion || '';
+  document.getElementById('fAccion').value      = av.accion      || '';
+  document.getElementById('fObs').value         = av.observaciones|| '';
+  document.getElementById('fCausa').value       = av.causa       || '';
+  document.getElementById('fTurno').value       = av.turno       || '';
+  document.getElementById('fEstado').value      = av.estado      || '';
+  document.getElementById('fCosteMat').value    = av.costeMateriales || '';
+
+  document.querySelectorAll('input[name=tipo]').forEach(function(r){r.checked=(r.value===av.tipo);});
+  document.querySelectorAll('input[name=grav]').forEach(function(r){r.checked=(r.value===av.gravedad);});
+  document.querySelectorAll('.mec-check').forEach(function(c){c.checked=!!(av.mecanicos&&av.mecanicos.includes(c.value));});
+
+  materialesForm = av.materiales ? av.materiales.map(function(m){return Object.assign({},m);}) : [];
+  renderMatList();
+  if(av.horaInicio && av.horaFin) calcTiempo();
+
+  // Mostrar banner
+  var banner = document.getElementById('retomandoBanner');
+  if(banner){
+    banner.style.display = 'flex';
+    document.getElementById('retomandoInfo').textContent =
+      id + ' · ' + (av.maqNombre||'') + ' · ' + (av.estado||'');
+  }
+
+  switchTab('nueva');
+  showToast('📋 Avería cargada — complétala y guarda');
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 
 function borrarAveria(id){

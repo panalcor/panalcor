@@ -269,6 +269,17 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
     </div>
   </div>
 
+  <!-- ══ AVERÍAS PENDIENTES ══ -->
+  <div class="card" id="cardPendientes" style="padding:14px 18px;margin-bottom:16px;max-width:732px;display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:0.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--red);font-weight:700">
+        🚨 Averías sin resolver — <span id="pendientesCount"></span>
+      </div>
+      <a href="averias.html" style="font-size:0.72rem;color:rgba(255,255,255,0.35);text-decoration:none">Ver historial →</a>
+    </div>
+    <div id="pendientesList"></div>
+  </div>
+
 <div class="chart-grid">
     <div class="chart-wrap">
       <div class="chart-title">Averías por mes (último año)</div>
@@ -910,6 +921,7 @@ DB.ref('averias').on('value', snap => {
       renderDashboard();
   cargarAlarmasPreventivo();
   cargarProgresoPreventivo();
+  renderPendientesDash();
       renderEstadoDatos();
     }
   }
@@ -2077,6 +2089,43 @@ function estadoAlarma(proxima){
   if(dias < 0)  return {tipo:'VENCIDA',  dias: Math.abs(dias)};
   if(dias <= 15) return {tipo:'PROXIMA',  dias: dias};
   return {tipo:'OK', dias: dias};
+}
+
+// ══════════════════════════════════════════════════
+// AVERÍAS PENDIENTES (dashboard)
+// ══════════════════════════════════════════════════
+function renderPendientesDash(){
+  var av = getAverias();
+  var pendientes = av.filter(function(a){
+    return a.estado === 'EN CURSO' || a.estado === 'PENDIENTE REPUESTO';
+  });
+  var card = document.getElementById('cardPendientes');
+  if(!card) return;
+  if(!pendientes.length){ card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  document.getElementById('pendientesCount').textContent =
+    pendientes.length + ' avería' + (pendientes.length !== 1 ? 's' : '');
+
+  var hoy = Date.now();
+  document.getElementById('pendientesList').innerHTML = pendientes.map(function(a){
+    var dias = Math.floor((hoy - (a.ts || hoy)) / 86400000);
+    var diasColor = dias >= 3 ? 'var(--red)' : dias >= 1 ? 'var(--yellow)' : 'rgba(255,255,255,0.4)';
+    var diasTxt   = dias === 0 ? 'hoy' : dias === 1 ? 'hace 1 día' : 'hace ' + dias + ' días';
+    var badgeColor = a.estado === 'EN CURSO' ? '#e74c3c' : '#f39c12';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'
+      + '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + badgeColor + ';flex-shrink:0"></span>'
+      + '<div style="flex:1;min-width:0">'
+        + '<div style="font-size:0.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'
+          + (a.maqNombre || '') + '<span style="font-weight:400;color:rgba(255,255,255,0.45)"> · ' + (a.descripcion || '').substring(0,60) + '</span>'
+        + '</div>'
+        + '<div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:2px">'
+          + (a.mecanicos && a.mecanicos.length ? a.mecanicos.join(', ') : '—')
+          + ' · ' + (a.estado || '')
+        + '</div>'
+      + '</div>'
+      + '<span style="font-size:0.75rem;color:' + diasColor + ';white-space:nowrap;font-weight:700">' + diasTxt + '</span>'
+      + '</div>';
+  }).join('');
 }
 
 function cargarAlarmasPreventivo(){

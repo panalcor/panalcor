@@ -511,7 +511,7 @@
     </a>
 
     <!-- Averías -->
-    <a class="btn btn-averia" href="averias.html">
+    <a class="btn btn-averia" href="averias.html" style="position:relative">
       <div class="btn-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
@@ -523,6 +523,10 @@
         <div class="btn-label">Averías</div>
         <div class="btn-sublabel">Registro de incidencias</div>
       </div>
+      <span id="badgeAverias" style="display:none;position:absolute;top:8px;right:8px;
+        background:#e74c3c;color:#fff;border-radius:50%;width:22px;height:22px;
+        font-size:0.72rem;font-weight:900;line-height:22px;text-align:center;
+        font-family:'Barlow',sans-serif"></span>
     </a>
 
   </div>
@@ -589,6 +593,20 @@ function procesarRepuestos(buf){
     mostrarEstado('❌ Error al leer el archivo. Comprueba que es el repuestos.xlsx correcto.', '#e74c3c', true);
   }
 }
+
+// Badge averías pendientes
+(function(){
+  try {
+    var av = JSON.parse(localStorage.getItem('averias_v1') || '[]');
+    var n  = av.filter(function(a){
+      return a.estado === 'EN CURSO' || a.estado === 'PENDIENTE REPUESTO';
+    }).length;
+    if(n > 0){
+      var b = document.getElementById('badgeAverias');
+      if(b){ b.style.display = 'block'; b.textContent = n > 9 ? '9+' : n; }
+    }
+  } catch(e){}
+})();
 </script>
 </body>
 </html>

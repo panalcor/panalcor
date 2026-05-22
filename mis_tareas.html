@@ -184,6 +184,9 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
   </div>
 
   <div class="content">
+    <!-- Averías pendientes del mecánico -->
+    <div id="avPendWrap"></div>
+
     <div class="banner-done" id="bannerDone">
       <h3>🎉 ¡Todo completado!</h3>
       <p>Has terminado todas tus tareas de este período.</p>
@@ -352,6 +355,56 @@ function arrancarApp(){
   });
 
   cargarMes(mesActual);
+  renderAvPendientes();
+}
+
+/* ══ AVERÍAS PENDIENTES del mecánico ══ */
+function renderAvPendientes(){
+  var wrap = document.getElementById('avPendWrap');
+  if(!wrap) return;
+  try {
+    var av = JSON.parse(localStorage.getItem('averias_v1') || '[]');
+    var mias = av.filter(function(a){
+      return (a.estado === 'EN CURSO' || a.estado === 'PENDIENTE REPUESTO')
+          && a.mecanicos && a.mecanicos.indexOf(mecActual) !== -1;
+    });
+    if(!mias.length){ wrap.innerHTML = ''; return; }
+
+    var hoy = Date.now();
+    var items = mias.map(function(a){
+      var dias      = Math.floor((hoy - (a.ts || hoy)) / 86400000);
+      var diasTxt   = dias === 0 ? 'hoy' : dias === 1 ? 'hace 1 día' : 'hace ' + dias + ' días';
+      var diasColor = dias >= 3 ? '#e74c3c' : dias >= 1 ? '#f39c12' : 'rgba(255,255,255,0.4)';
+      var dotColor  = a.estado === 'EN CURSO' ? '#e74c3c' : '#f39c12';
+      return '<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;'
+        + 'border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;transition:background .15s"'
+        + ' onclick="window.location=\'averias.html?retomar=' + a.id + '\'"'
+        + ' onmouseover="this.style.background=\'rgba(255,255,255,0.04)\'"'
+        + ' onmouseout="this.style.background=\'\'">'
+        + '<span style="width:9px;height:9px;border-radius:50%;background:' + dotColor + ';flex-shrink:0;display:inline-block"></span>'
+        + '<div style="flex:1;min-width:0">'
+          + '<div style="font-size:0.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'
+            + (a.maqNombre||'') + '</div>'
+          + '<div style="font-size:0.75rem;color:rgba(255,255,255,0.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'
+            + (a.descripcion||'').substring(0,60) + ' · ' + (a.estado||'')
+          + '</div>'
+        + '</div>'
+        + '<div style="text-align:right;flex-shrink:0">'
+          + '<div style="font-size:0.72rem;color:' + diasColor + ';font-weight:700">' + diasTxt + '</div>'
+          + '<div style="font-size:0.7rem;color:rgba(255,255,255,0.35);margin-top:2px">Retomar →</div>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+
+    wrap.innerHTML = '<div style="background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.3);'
+      + 'border-radius:12px;margin-bottom:14px;overflow:hidden">'
+      + '<div style="padding:10px 14px;border-bottom:1px solid rgba(231,76,60,0.2);'
+        + 'font-size:0.7rem;letter-spacing:.12em;text-transform:uppercase;color:#e74c3c;font-weight:700">'
+        + '🚨 Averías pendientes (' + mias.length + ')'
+      + '</div>'
+      + items
+      + '</div>';
+  } catch(e){ wrap.innerHTML = ''; }
 }
 
 function cambiarMes(){
