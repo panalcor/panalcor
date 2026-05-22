@@ -265,6 +265,9 @@ tbody td{padding:9px 8px;vertical-align:middle}
   <div class="tab" onclick="switchTab('historial')">
     <span class="tab-icon">📋</span>Historial
   </div>
+  <div class="tab" onclick="switchTab('formacion')">
+    <span class="tab-icon">🎓</span>Formación
+  </div>
 </div>
 
 <!-- ══════════ PANEL REPUESTOS ══════════ -->
@@ -353,6 +356,14 @@ tbody td{padding:9px 8px;vertical-align:middle}
   <div id="historialContent"></div>
 </div>
 
+<!-- ══════════ PANEL FORMACIÓN ══════════ -->
+<div class="panel" id="panel-formacion">
+  <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:16px">🎓 Formación</div>
+  <div id="formacionContent">
+    <div style="text-align:center;color:rgba(255,255,255,0.3);padding:40px 0;font-size:0.85rem">⏳ Cargando...</div>
+  </div>
+</div>
+
 <!-- ALERT -->
 <div class="alert" id="alertBox"></div>
 
@@ -401,12 +412,13 @@ setInterval(updateClock, 30000);
 // ══════════════════════════════════════
 function switchTab(t){
   document.querySelectorAll('.tab').forEach((el,i)=>{
-    const tabs = ['repuestos','mantenimiento','historial'];
+    const tabs = ['repuestos','mantenimiento','historial','formacion'];
     el.classList.toggle('active', tabs[i]===t);
   });
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('panel-'+t).classList.add('active');
   if(t==='historial') renderHistorial();
+  if(t==='formacion') cargarFormacion();
 }
 
 // ══════════════════════════════════════
@@ -888,6 +900,82 @@ const _MEC_FALLBACK = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','
     })
     .catch(()=>poblar(_MEC_FALLBACK));
 })();
+
+// ══════════════════════════════════════
+// FORMACIÓN — cursos
+// ══════════════════════════════════════
+var _formacionCargada = false;
+
+function cargarFormacion() {
+  if (_formacionCargada) return;
+  _formacionCargada = true;
+  var wrap = document.getElementById('formacionContent');
+  _DB_MEC.ref('cursos').once('value').then(function(snap) {
+    var data = snap.val() || {};
+    var lista = Object.values(data).sort(function(a, b) {
+      return ((a.cat||'').localeCompare(b.cat||'')) || ((a.orden||0)-(b.orden||0));
+    });
+    if (!lista.length) {
+      wrap.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.3);padding:40px 0;font-size:0.85rem">Sin cursos disponibles por el momento.</div>';
+      return;
+    }
+    // Agrupar por categoría
+    var cats = {};
+    lista.forEach(function(c) {
+      var k = c.cat || 'General';
+      if (!cats[k]) cats[k] = [];
+      cats[k].push(c);
+    });
+    var html = '';
+    Object.keys(cats).sort().forEach(function(cat) {
+      html += '<div style="margin-bottom:28px">'
+            + '<div style="font-size:0.7rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;'
+            + 'color:var(--gold);margin-bottom:12px">' + escF(cat) + '</div>'
+            + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">';
+      cats[cat].forEach(function(c) {
+        var ytId = _ytIdMec(c.url || '');
+        var cardTop;
+        if (ytId) {
+          cardTop = '<a href="'+escF(c.url)+'" target="_blank" rel="noopener" style="text-decoration:none;display:block;position:relative;border-radius:10px 10px 0 0;overflow:hidden;aspect-ratio:16/9;background:#000">'
+            + '<img src="https://img.youtube.com/vi/'+ytId+'/hqdefault.jpg" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy">'
+            + '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.25)">'
+            + '<div style="width:52px;height:52px;background:rgba(255,0,0,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;box-shadow:0 2px 12px rgba(0,0,0,0.5)">▶</div>'
+            + '</div></a>';
+        } else {
+          var icon = c.tipo === 'manual' ? '📄' : '🌐';
+          cardTop = (c.url ? '<a href="'+escF(c.url)+'" target="_blank" rel="noopener" style="text-decoration:none">' : '')
+            + '<div style="border-radius:10px 10px 0 0;background:rgba(255,255,255,0.05);height:72px;display:flex;align-items:center;justify-content:center;font-size:2.2rem">'
+            + icon + '</div>'
+            + (c.url ? '</a>' : '');
+        }
+        html += '<div style="background:var(--navy-mid);border:1px solid rgba(255,255,255,0.08);border-radius:10px;overflow:hidden">'
+              + cardTop
+              + '<div style="padding:12px 14px">'
+              + '<div style="font-size:0.9rem;font-weight:700;color:#fff;line-height:1.3;margin-bottom:4px">'
+              + (c.url ? '<a href="'+escF(c.url)+'" target="_blank" rel="noopener" style="color:#fff;text-decoration:none">' : '')
+              + escF(c.titulo||'Sin título')
+              + (c.url ? '</a>' : '')
+              + '</div>'
+              + (c.desc ? '<div style="font-size:0.75rem;color:rgba(255,255,255,0.45);line-height:1.4;margin-bottom:8px">'+escF(c.desc)+'</div>' : '')
+              + (c.url ? '<a href="'+escF(c.url)+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.3);color:var(--gold);border-radius:6px;padding:6px 14px;font-size:0.78rem;font-weight:700;text-decoration:none">Abrir ↗</a>' : '')
+              + '</div></div>';
+      });
+      html += '</div></div>';
+    });
+    wrap.innerHTML = html;
+  }).catch(function() {
+    wrap.innerHTML = '<div style="color:rgba(255,255,255,0.3);padding:20px;text-align:center">Error al cargar los cursos.</div>';
+  });
+}
+
+function _ytIdMec(url) {
+  if (!url) return null;
+  var m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+function escF(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 </script>
 </body>
 </html>

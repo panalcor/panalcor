@@ -224,6 +224,7 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
   <div class="tab" onclick="switchTab('cfg')"  id="tab-cfg">⚙️ Configuración</div>
   <div class="tab" onclick="switchTab('enc')"  id="tab-enc">📢 Encargados</div>
   <div class="tab" onclick="switchTab('int')"  id="tab-int">🔩 Integrales</div>
+  <div class="tab" onclick="switchTab('cur')"  id="tab-cur">📚 Cursos</div>
 </div>
 
 <!-- ═══ DASHBOARD ═══ -->
@@ -2000,6 +2001,7 @@ function switchTab(name){
   if(name==='cfg') renderEstadoDatos();
   if(name==='enc') cargarAvisosEncargados();
   if(name==='int') initIntegrales();
+  if(name==='cur') initCursos();
 }
 
 // ══════════════════════════════════════════════════
@@ -3276,6 +3278,69 @@ function importarExcelRepuestos(input) {
   </div>
 </div>
 
+<!-- ═══ CURSOS ═══ -->
+<div class="panel" id="panel-cur">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px">
+    <div>
+      <h2 style="font-size:1.15rem;font-weight:800;color:var(--gold)">📚 Formación — Cursos y manuales</h2>
+      <p style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin-top:3px">Visibles para todos los mecánicos en su página</p>
+    </div>
+    <button onclick="mostrarFormCurso()"
+      style="background:linear-gradient(135deg,var(--gold),#b8860b);color:#0a1520;font-weight:800;
+             border:none;border-radius:9px;padding:10px 20px;cursor:pointer;font-size:0.9rem">
+      + Añadir curso
+    </button>
+  </div>
+
+  <!-- Formulario (oculto por defecto) -->
+  <div id="formCursoWrap" style="display:none;background:rgba(201,162,39,0.07);border:1px solid rgba(201,162,39,0.25);border-radius:12px;padding:20px;margin-bottom:22px">
+    <h3 id="formCursoTitulo" style="font-size:0.95rem;font-weight:700;color:var(--gold);margin-bottom:14px">➕ Nuevo curso</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div class="field" style="margin:0;grid-column:1/-1">
+        <label>📝 Título del curso *</label>
+        <input type="text" id="curTitulo" placeholder="ej. Mantenimiento de rodamientos">
+      </div>
+      <div class="field" style="margin:0;grid-column:1/-1">
+        <label>🔗 URL (YouTube, PDF, web...)</label>
+        <input type="url" id="curUrl" placeholder="https://www.youtube.com/watch?v=...">
+      </div>
+      <div class="field" style="margin:0">
+        <label>🏷️ Categoría</label>
+        <input type="text" id="curCat" placeholder="ej. Mecánica, Eléctrico, Seguridad...">
+      </div>
+      <div class="field" style="margin:0">
+        <label>📌 Tipo</label>
+        <select id="curTipo" style="width:100%">
+          <option value="video">🎬 Vídeo (YouTube)</option>
+          <option value="manual">📄 Manual / PDF</option>
+          <option value="web">🌐 Web / Enlace</option>
+        </select>
+      </div>
+      <div class="field" style="margin:0;grid-column:1/-1">
+        <label>📋 Descripción breve (opcional)</label>
+        <textarea id="curDesc" rows="2" placeholder="De qué trata este curso..."></textarea>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button onclick="guardarCurso()"
+        style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:9px 22px;cursor:pointer;font-weight:700">
+        💾 Guardar
+      </button>
+      <button onclick="cancelarFormCurso()"
+        style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:9px 18px;cursor:pointer">
+        Cancelar
+      </button>
+      <span id="curMsg" style="font-size:0.82rem;margin-left:6px"></span>
+    </div>
+  </div>
+
+  <!-- Lista de cursos -->
+  <div id="curListWrap">
+    <div style="text-align:center;color:rgba(255,255,255,0.3);padding:40px 0;font-size:0.85rem">⏳ Cargando cursos...</div>
+  </div>
+</div>
+
 <!-- ═══ INTEGRALES ═══ -->
 <div class="panel" id="panel-int">
 
@@ -3752,6 +3817,142 @@ function imprimirIntegral(id) {
     + '<div style="text-align:center;margin-top:12px"><button onclick="window.print()" style="padding:8px 24px;font-size:13px;cursor:pointer">🖨️ Imprimir</button></div>'
     + '</body></html>');
   win.document.close();
+}
+
+// ══════════════════════════════════════════════════════════════
+// CURSOS — formación para mecánicos
+// ══════════════════════════════════════════════════════════════
+var _cursosData      = {};
+var _cursosListener  = false;
+var _curEditId       = null;
+
+function initCursos() {
+  if (_cursosListener) { renderCursos(); return; }
+  _cursosListener = true;
+  DB.ref('cursos').on('value', function(snap) {
+    _cursosData = snap.val() || {};
+    renderCursos();
+  });
+}
+
+function _ytId(url) {
+  if (!url) return null;
+  var m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
+function _tipoIcon(tipo) {
+  return tipo === 'video' ? '🎬' : tipo === 'manual' ? '📄' : '🌐';
+}
+
+function renderCursos() {
+  var wrap = document.getElementById('curListWrap');
+  var lista = Object.values(_cursosData).sort(function(a, b) {
+    return ((a.cat||'').localeCompare(b.cat||'')) || ((a.orden||0) - (b.orden||0));
+  });
+  if (!lista.length) {
+    wrap.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.3);padding:50px 0;font-size:0.85rem">📭 No hay cursos. Pulsa "Añadir curso" para empezar.</div>';
+    return;
+  }
+  // Agrupar por categoría
+  var cats = {};
+  lista.forEach(function(c) {
+    var k = c.cat || 'Sin categoría';
+    if (!cats[k]) cats[k] = [];
+    cats[k].push(c);
+  });
+  var html = '';
+  Object.keys(cats).sort().forEach(function(cat) {
+    html += '<div style="margin-bottom:28px">'
+          + '<div style="font-size:0.7rem;font-weight:700;letter-spacing:0.12em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;padding-left:2px">'
+          + cat + ' <span style="color:rgba(255,255,255,0.3);font-weight:400">(' + cats[cat].length + ')</span></div>'
+          + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px">';
+    cats[cat].forEach(function(c) {
+      var ytId = _ytId(c.url || '');
+      var thumb = ytId
+        ? '<div style="position:relative;border-radius:8px 8px 0 0;overflow:hidden;aspect-ratio:16/9;background:#000">'
+          + '<img src="https://img.youtube.com/vi/'+ytId+'/hqdefault.jpg" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy">'
+          + '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3)">'
+          + '<div style="width:48px;height:48px;background:rgba(255,0,0,0.85);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem">▶</div>'
+          + '</div></div>'
+        : '<div style="border-radius:8px 8px 0 0;background:rgba(255,255,255,0.04);height:70px;display:flex;align-items:center;justify-content:center;font-size:2rem">'
+          + _tipoIcon(c.tipo) + '</div>';
+      html += '<div style="background:var(--navy-dark);border:1px solid rgba(255,255,255,0.08);border-radius:10px;overflow:hidden">'
+            + (c.url ? '<a href="'+escHtml(c.url)+'" target="_blank" style="text-decoration:none;display:block">'+thumb+'</a>' : thumb)
+            + '<div style="padding:12px 14px">'
+            + '<div style="font-size:0.88rem;font-weight:700;color:#fff;margin-bottom:4px;line-height:1.3">' + escHtml(c.titulo||'Sin título') + '</div>'
+            + (c.desc ? '<div style="font-size:0.75rem;color:rgba(255,255,255,0.45);margin-bottom:8px;line-height:1.4">' + escHtml(c.desc) + '</div>' : '')
+            + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
+            + '<span style="font-size:0.68rem;background:rgba(255,255,255,0.07);border-radius:5px;padding:2px 8px;color:rgba(255,255,255,0.4)">'
+            + _tipoIcon(c.tipo) + ' ' + (c.tipo||'enlace') + '</span>'
+            + '<div style="margin-left:auto;display:flex;gap:6px">'
+            + '<button onclick="editarCurso(\''+c.id+'\')" style="background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.3);color:var(--gold);border-radius:6px;padding:4px 12px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.75rem;font-weight:700">✏️ Editar</button>'
+            + '<button onclick="if(confirm(\'¿Eliminar este curso?\')) eliminarCurso(\''+c.id+'\')" style="background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.3);color:#e74c3c;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:0.75rem;font-family:Barlow,sans-serif">🗑</button>'
+            + '</div></div>'
+            + '</div></div>';
+    });
+    html += '</div></div>';
+  });
+  wrap.innerHTML = html;
+}
+
+function mostrarFormCurso() {
+  _curEditId = null;
+  document.getElementById('formCursoTitulo').textContent = '➕ Nuevo curso';
+  document.getElementById('curTitulo').value = '';
+  document.getElementById('curUrl').value    = '';
+  document.getElementById('curCat').value    = '';
+  document.getElementById('curTipo').value   = 'video';
+  document.getElementById('curDesc').value   = '';
+  document.getElementById('curMsg').textContent = '';
+  document.getElementById('formCursoWrap').style.display = 'block';
+  document.getElementById('curTitulo').focus();
+  document.getElementById('formCursoWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function editarCurso(id) {
+  var c = _cursosData[id];
+  if (!c) return;
+  _curEditId = id;
+  document.getElementById('formCursoTitulo').textContent = '✏️ Editar curso';
+  document.getElementById('curTitulo').value = c.titulo || '';
+  document.getElementById('curUrl').value    = c.url    || '';
+  document.getElementById('curCat').value    = c.cat    || '';
+  document.getElementById('curTipo').value   = c.tipo   || 'video';
+  document.getElementById('curDesc').value   = c.desc   || '';
+  document.getElementById('curMsg').textContent = '';
+  document.getElementById('formCursoWrap').style.display = 'block';
+  document.getElementById('formCursoWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cancelarFormCurso() {
+  document.getElementById('formCursoWrap').style.display = 'none';
+  _curEditId = null;
+}
+
+function guardarCurso() {
+  var titulo = (document.getElementById('curTitulo').value || '').trim();
+  var url    = (document.getElementById('curUrl').value    || '').trim();
+  var cat    = (document.getElementById('curCat').value    || '').trim();
+  var tipo   = document.getElementById('curTipo').value;
+  var desc   = (document.getElementById('curDesc').value   || '').trim();
+  if (!titulo) { showToast('⚠️ El título es obligatorio'); return; }
+  if (url && !url.startsWith('http')) url = 'https://' + url;
+  var id  = _curEditId || ('CUR-' + Date.now());
+  var obj = { id: id, titulo: titulo, url: url, cat: cat, tipo: tipo,
+              desc: desc, orden: Date.now(), createdAt: _curEditId
+                ? (_cursosData[_curEditId] && _cursosData[_curEditId].createdAt || new Date().toISOString().substring(0,10))
+                : new Date().toISOString().substring(0,10) };
+  DB.ref('cursos/' + id).set(obj).then(function() {
+    cancelarFormCurso();
+    showToast(_curEditId ? '✅ Curso actualizado' : '✅ Curso añadido');
+  }).catch(function() { showToast('❌ Error al guardar'); });
+}
+
+function eliminarCurso(id) {
+  DB.ref('cursos/' + id).remove().then(function() {
+    showToast('🗑 Curso eliminado');
+  }).catch(function() { showToast('❌ Error'); });
 }
 </script>
 
