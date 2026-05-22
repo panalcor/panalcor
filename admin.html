@@ -635,6 +635,20 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
       </tbody>
     </table>
   </div>
+  <!-- Paginación -->
+  <div id="repPaginacion" style="display:none;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap">
+    <button id="repBtnPrev" onclick="repPaginar(-1)"
+      style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:#fff;
+             border-radius:7px;padding:7px 16px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.85rem">
+      ← Anterior
+    </button>
+    <span id="repPagInfo" style="font-size:0.82rem;color:rgba(255,255,255,0.5)"></span>
+    <button id="repBtnNext" onclick="repPaginar(1)"
+      style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:#fff;
+             border-radius:7px;padding:7px 16px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.85rem">
+      Siguiente →
+    </button>
+  </div>
   <div style="font-size:0.72rem;color:rgba(255,255,255,0.3);margin-top:6px" id="repCount"></div>
 </div>
 
@@ -2595,6 +2609,8 @@ document.addEventListener('keydown', function(e) {
 var _repCatalogo    = {};    // key → objeto repuesto (caché en memoria)
 var _repEditKey     = null;  // clave del repuesto en edición
 var _repListenerOn  = false; // evitar listeners duplicados
+var _repPagina      = 0;     // página actual
+var _repPorPagina   = 50;    // repuestos por página
 
 const REP_LS = 'repuestos_v1'; // clave localStorage
 
@@ -2662,7 +2678,7 @@ function _mergeRepLocal() {
       if (!r.desc) return;
       var k = _repKey(r.desc, r.ref || '');
       if (!mapa[k]) mapa[k] = { _key: k, desc: (r.desc||'').toUpperCase(),
-        ref: r.ref || '', fab: r.ubicacion || '', prov: '', url: '', precio: 0, notas: '', fechaAlta: '' };
+        ref: r.ref || '', fab: r.fab || '', prov: r.ubicacion || '', url: '', precio: 0, notas: '', fechaAlta: '' };
     });
   } catch(e) {}
 
@@ -2670,6 +2686,12 @@ function _mergeRepLocal() {
 }
 
 function filtrarRepuestos() {
+  _repPagina = 0; // al buscar volver a la primera página
+  renderCatalogoRepuestos();
+}
+
+function repPaginar(delta) {
+  _repPagina += delta;
   renderCatalogoRepuestos();
 }
 
@@ -2696,18 +2718,39 @@ function renderCatalogoRepuestos() {
     return (a.desc || '').localeCompare(b.desc || '');
   });
 
-  var tbody = document.getElementById('bCatalogoRep');
-  var count = document.getElementById('repCount');
-  if (count) count.textContent = lista.length + ' repuesto' + (lista.length !== 1 ? 's' : '');
+  var total = lista.length;
+  var totalPags = Math.max(1, Math.ceil(total / _repPorPagina));
+  _repPagina = Math.max(0, Math.min(_repPagina, totalPags - 1));
+  var inicio = _repPagina * _repPorPagina;
+  var pagina = lista.slice(inicio, inicio + _repPorPagina);
 
-  if (!lista.length) {
+  var count = document.getElementById('repCount');
+  if (count) count.textContent = total + ' repuesto' + (total !== 1 ? 's' : '')
+    + (totalPags > 1 ? ' · página ' + (_repPagina + 1) + ' de ' + totalPags : '');
+
+  var tbody = document.getElementById('bCatalogoRep');
+
+  if (!total) {
     tbody.innerHTML = '<tr><td colspan="9" class="no-data">'
       + (q ? 'Sin resultados para "' + q + '"' : 'Catálogo vacío — añade el primer repuesto con el formulario de arriba')
       + '</td></tr>';
+    document.getElementById('repPaginacion').style.display = 'none';
     return;
   }
 
-  tbody.innerHTML = lista.map(function(r) {
+  // Barra de paginación
+  var pag = document.getElementById('repPaginacion');
+  if (totalPags > 1) {
+    pag.style.display = 'flex';
+    document.getElementById('repBtnPrev').disabled = _repPagina === 0;
+    document.getElementById('repBtnNext').disabled = _repPagina >= totalPags - 1;
+    document.getElementById('repPagInfo').textContent =
+      'Mostrando ' + (inicio + 1) + '–' + Math.min(inicio + _repPorPagina, total) + ' de ' + total;
+  } else {
+    pag.style.display = 'none';
+  }
+
+  tbody.innerHTML = pagina.map(function(r) {
     var u = usos[r._key] || 0;
     var precio = (r.precio && r.precio > 0) ? parseFloat(r.precio).toFixed(2) + ' €' : '—';
     var docCell = r.url
