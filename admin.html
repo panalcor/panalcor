@@ -870,8 +870,8 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 <div class="panel" id="panel-enc">
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
     <div>
-      <div class="sec-title" style="margin-bottom:2px">📢 Avisos de encargados</div>
-      <div style="font-size:0.8rem;color:rgba(255,255,255,0.4)">Notificaciones enviadas por los encargados de producción desde su página.</div>
+      <div class="sec-title" style="margin-bottom:2px">📋 Registros de averías — Encargados</div>
+      <div style="font-size:0.8rem;color:rgba(255,255,255,0.4)">Averías registradas por los encargados de producción. Coteja con las averías de los mecánicos.</div>
     </div>
     <button onclick="cargarAvisosEncargados()" style="background:rgba(155,89,182,0.15);border:1px solid rgba(155,89,182,0.4);color:#c39bd3;padding:8px 16px;border-radius:8px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.85rem;font-weight:700">🔄 Actualizar</button>
   </div>
@@ -879,20 +879,24 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
   <!-- Contadores -->
   <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px" id="encKpis"></div>
 
-  <!-- Tabla de avisos -->
+  <!-- Tabla -->
   <div class="card" style="padding:0;overflow-x:auto">
     <table class="data-table" id="tAvisosEnc">
       <thead><tr>
         <th>Encargado</th>
         <th>Máquina</th>
         <th>Descripción</th>
-        <th>Fecha / Hora</th>
-        <th>Parada</th>
-        <th>Recibido</th>
+        <th style="white-space:nowrap">Fecha</th>
+        <th style="text-align:center;white-space:nowrap">⚠️ Avería</th>
+        <th style="text-align:center;white-space:nowrap">📞 Aviso</th>
+        <th style="text-align:center;white-space:nowrap">🏃 Llegada</th>
+        <th style="text-align:center;white-space:nowrap">✅ Solución</th>
+        <th style="white-space:nowrap">Mecánico</th>
+        <th style="text-align:center">Parada</th>
         <th></th>
       </tr></thead>
       <tbody id="bAvisosEnc">
-        <tr><td colspan="7" class="no-data">Cargando avisos...</td></tr>
+        <tr><td colspan="11" class="no-data">Cargando...</td></tr>
       </tbody>
     </table>
   </div>
@@ -2301,14 +2305,14 @@ function estadoAlarma(proxima){
 function cargarAvisosEncargados(){
   var tbody = document.getElementById('bAvisosEnc');
   if(!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="7" class="no-data" style="color:rgba(155,89,182,0.6)">Cargando...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="11" class="no-data" style="color:rgba(155,89,182,0.6)">Cargando...</td></tr>';
 
   DB.ref('avisos_encargados').once('value').then(function(snap){
     var val = snap.val();
     if(!val){
-      tbody.innerHTML = '<tr><td colspan="7" class="no-data">No hay avisos pendientes</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="11" class="no-data">No hay registros</td></tr>';
       document.getElementById('encKpis').innerHTML = '';
-      document.getElementById('encCount').textContent = '0 avisos';
+      document.getElementById('encCount').textContent = '0 registros';
       return;
     }
     var lista = Object.values(val).sort(function(a,b){ return (b.ts||0) - (a.ts||0); });
@@ -2316,34 +2320,39 @@ function cargarAvisosEncargados(){
     // KPIs
     var total = lista.length;
     var conParada = lista.filter(function(a){ return a.parada; }).length;
-    var encSet = {};
-    lista.forEach(function(a){ encSet[a.encargado] = (encSet[a.encargado]||0)+1; });
-    var topEnc = Object.entries(encSet).sort(function(a,b){return b[1]-a[1];})[0];
+    var conSolucion = lista.filter(function(a){ return !!a.horaSolucion; }).length;
     document.getElementById('encKpis').innerHTML =
-      kpiChip(total, 'Total avisos', '#c39bd3') +
+      kpiChip(total, 'Total registros', '#c39bd3') +
       kpiChip(conParada, 'Con parada', '#e74c3c') +
-      (topEnc ? kpiChip(topEnc[1], 'Más activo: ' + topEnc[0], '#f39c12') : '');
-    document.getElementById('encCount').textContent = total + ' aviso' + (total!==1?'s':'');
+      kpiChip(conSolucion, 'Solucionadas', '#2ecc71');
+    document.getElementById('encCount').textContent = total + ' registro' + (total!==1?'s':'');
 
     // Tabla
     tbody.innerHTML = lista.map(function(a){
-      var tsDate = a.ts ? new Date(a.ts) : null;
-      var recibido = tsDate ? tsDate.toLocaleDateString('es-ES') + ' ' + tsDate.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}) : '—';
       var paradaTxt = a.parada
-        ? '<span style="color:#e74c3c;font-weight:700">SÍ' + (a.tiempoMin ? ' (' + a.tiempoMin + ' min)' : '') + '</span>'
+        ? '<span style="color:#e74c3c;font-weight:700">SÍ' + (a.tiempoMin ? '<br><span style="font-size:0.75rem;font-weight:400">(' + a.tiempoMin + ' min)</span>' : '') + '</span>'
         : '<span style="color:rgba(255,255,255,0.3)">No</span>';
+      var tipoIcon = a.tipoAviso === 'telefono' ? '📞' : a.tipoAviso === 'verbal' ? '🗣️' : '';
+      var mecTxt = a.mecAvisado
+        ? '<b>' + escHtml(a.mecAvisado) + '</b><br><span style="font-size:0.72rem;color:rgba(255,255,255,0.4)">' + tipoIcon + ' ' + escHtml(a.tipoAviso||'') + '</span>'
+        : '<span style="color:rgba(255,255,255,0.25)">—</span>';
+      function horaCel(h){ return h ? ('<span style="font-weight:700;font-size:0.9rem">'+escHtml(h)+'</span>') : '<span style="color:rgba(255,255,255,0.2)">—</span>'; }
       return '<tr>'
-        + '<td><span style="background:rgba(155,89,182,0.2);border:1px solid rgba(155,89,182,0.4);border-radius:6px;padding:3px 10px;font-weight:700;color:#c39bd3;font-size:0.82rem">' + escHtml(a.encargado||'') + '</span></td>'
-        + '<td><b>' + escHtml(a.maquina||'—') + '</b></td>'
-        + '<td style="max-width:260px;white-space:normal;line-height:1.4">' + escHtml(a.descripcion||'—') + '</td>'
-        + '<td style="white-space:nowrap">' + escHtml(a.fecha||'—') + '<br><span style="font-size:0.8rem;color:rgba(255,255,255,0.5)">' + escHtml(a.hora||'') + '</span></td>'
-        + '<td>' + paradaTxt + '</td>'
-        + '<td style="white-space:nowrap;font-size:0.8rem;color:rgba(255,255,255,0.45)">' + recibido + '</td>'
-        + '<td><button onclick="borrarAvisoEnc(\'' + a.id + '\')" style="background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.35);color:var(--red);border-radius:6px;padding:5px 12px;cursor:pointer;font-family:\'Barlow\',sans-serif;font-size:0.8rem;font-weight:700" title="Marcar como procesado y eliminar">🗑 Hecho</button></td>'
+        + '<td><span style="background:rgba(155,89,182,0.2);border:1px solid rgba(155,89,182,0.4);border-radius:6px;padding:3px 9px;font-weight:700;color:#c39bd3;font-size:0.8rem">' + escHtml(a.encargado||'') + '</span></td>'
+        + '<td><b style="font-size:0.88rem">' + escHtml(a.maquina||'—') + '</b></td>'
+        + '<td style="max-width:220px;white-space:normal;line-height:1.4;font-size:0.85rem">' + escHtml(a.descripcion||'—') + '</td>'
+        + '<td style="white-space:nowrap;font-size:0.82rem">' + escHtml(a.fecha||'—') + '</td>'
+        + '<td style="text-align:center">' + horaCel(a.horaAveria) + '</td>'
+        + '<td style="text-align:center">' + horaCel(a.horaAviso) + '</td>'
+        + '<td style="text-align:center">' + horaCel(a.horaLlegada) + '</td>'
+        + '<td style="text-align:center">' + horaCel(a.horaSolucion) + '</td>'
+        + '<td style="white-space:nowrap;font-size:0.82rem">' + mecTxt + '</td>'
+        + '<td style="text-align:center">' + paradaTxt + '</td>'
+        + '<td><button onclick="borrarAvisoEnc(\'' + a.id + '\')" style="background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.35);color:var(--red);border-radius:6px;padding:5px 10px;cursor:pointer;font-family:\'Barlow\',sans-serif;font-size:0.78rem;font-weight:700" title="Eliminar registro">🗑</button></td>'
         + '</tr>';
     }).join('');
   }).catch(function(){
-    if(tbody) tbody.innerHTML = '<tr><td colspan="7" class="no-data" style="color:var(--red)">Error al cargar avisos</td></tr>';
+    if(tbody) tbody.innerHTML = '<tr><td colspan="11" class="no-data" style="color:var(--red)">Error al cargar</td></tr>';
   });
 }
 
