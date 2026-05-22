@@ -190,6 +190,20 @@ a{color:inherit;text-decoration:none}
 .toast{position:fixed;bottom:24px;right:24px;background:var(--navy-mid);border:1px solid rgba(201,162,39,0.5);border-radius:10px;padding:14px 22px;font-size:0.95rem;font-weight:600;z-index:9999;opacity:0;transform:translateY(20px);transition:all .3s;pointer-events:none;max-width:320px}
 .toast.show{opacity:1;transform:translateY(0)}
 
+/* ── MODAL INSTRUCCIONES ── */
+.inst-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:8000;display:none;align-items:flex-end;justify-content:center}
+.inst-overlay.open{display:flex}
+.inst-modal{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.12);border-radius:18px 18px 0 0;width:100%;max-width:600px;max-height:85vh;display:flex;flex-direction:column;animation:slideUp .25s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.inst-modal-header{padding:16px 20px 12px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.inst-modal-header h3{flex:1;font-size:1rem;font-weight:900;color:var(--gold-light)}
+.inst-modal-close{background:rgba(255,255,255,0.1);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center}
+.inst-modal-body{overflow-y:auto;padding:16px 20px 24px;flex:1}
+.inst-section{margin-bottom:18px}
+.inst-section-title{font-size:0.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid rgba(201,162,39,0.2)}
+.inst-text{font-size:0.9rem;line-height:1.65;color:rgba(255,255,255,0.85);white-space:pre-wrap}
+.inst-empty{color:rgba(255,255,255,0.25);font-size:0.85rem;font-style:italic}
+
 /* ── RESPONSIVE ── */
 @media(max-width:600px){
   .row2,.row3{grid-template-columns:1fr}
@@ -284,6 +298,14 @@ a{color:inherit;text-decoration:none}
         <select id="fMaquina" onchange="onMaquinaChange()" required>
           <option value="">— Selecciona la máquina —</option>
         </select>
+      </div>
+      <div id="instBtnWrap" style="display:none;margin-top:4px">
+        <button type="button" onclick="verInstrucciones()"
+          style="background:rgba(52,152,219,0.12);border:1px solid rgba(52,152,219,0.35);color:#5dade2;
+                 border-radius:8px;padding:8px 16px;font-family:'Barlow',sans-serif;font-size:0.85rem;
+                 font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px">
+          📝 Ver instrucciones de esta máquina
+        </button>
       </div>
       <div class="field" id="fParteWrap" style="display:none">
         <label>Parte / Componente afectado</label>
@@ -1012,6 +1034,7 @@ function onMaquinaChange(){
   const wrap = document.getElementById('fParteWrap');
   const sel = document.getElementById('fParte');
   sel.innerHTML = '<option value="">— Selecciona la parte —</option>';
+  document.getElementById('instBtnWrap').style.display = id ? 'block' : 'none';
   if(!maq){wrap.style.display='none';return;}
   wrap.style.display='block';
   const partes = PARTES[maq.t]||['AJUSTE','MECANICA','ELECTRICA','OTROS'];
@@ -1672,6 +1695,60 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
+// ══════════════════════════════════════════════
+// INSTRUCCIONES DE MÁQUINA
+// ══════════════════════════════════════════════
+function onMaquinaChangeInst(){
+  var id = document.getElementById('fMaquina').value;
+  document.getElementById('instBtnWrap').style.display = id ? 'block' : 'none';
+}
+
+function verInstrucciones(){
+  var id  = document.getElementById('fMaquina').value;
+  var maq = MAQUINAS.find(function(m){ return m.id === id; });
+  if(!id || !maq) return;
+
+  var overlay = document.getElementById('instOverlay');
+  document.getElementById('instModalTitle').textContent = '📝 ' + maq.n;
+  document.getElementById('instModalBody').innerHTML = '<div style="text-align:center;padding:30px;color:rgba(255,255,255,0.3)">Cargando...</div>';
+  overlay.classList.add('open');
+
+  DB.ref('maquinas/' + id + '/instrucciones').once('value').then(function(snap){
+    var d = snap.val() || {};
+    var html = '';
+    if(d.uso)    html += secInst('⚙️ Instrucciones de operación', d.uso);
+    if(d.mant)   html += secInst('🔧 Mantenimiento y revisión',  d.mant);
+    if(d.rep)    html += secInst('📦 Repuestos habituales',       d.rep);
+    if(d.advert) html += secInst('⚠️ Advertencias',              d.advert);
+    if(!html) html = '<div class="inst-empty">No hay instrucciones registradas para esta máquina todavía.<br>El administrador puede añadirlas desde Fichas de Máquinas → 📝 Instrucciones.</div>';
+    document.getElementById('instModalBody').innerHTML = html;
+  }).catch(function(){
+    document.getElementById('instModalBody').innerHTML = '<div class="inst-empty">Error al cargar instrucciones.</div>';
+  });
+}
+
+function secInst(titulo, texto){
+  return '<div class="inst-section">'
+    + '<div class="inst-section-title">' + titulo + '</div>'
+    + '<div class="inst-text">' + texto.replace(/</g,'&lt;') + '</div>'
+    + '</div>';
+}
+
+function cerrarInstrucciones(){
+  document.getElementById('instOverlay').classList.remove('open');
+}
 </script>
+
+<!-- MODAL INSTRUCCIONES -->
+<div class="inst-overlay" id="instOverlay" onclick="if(event.target===this)cerrarInstrucciones()">
+  <div class="inst-modal">
+    <div class="inst-modal-header">
+      <h3 id="instModalTitle"></h3>
+      <button class="inst-modal-close" onclick="cerrarInstrucciones()">✕</button>
+    </div>
+    <div class="inst-modal-body" id="instModalBody"></div>
+  </div>
+</div>
+
 </body>
 </html>
