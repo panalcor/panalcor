@@ -190,28 +190,119 @@ const DB = firebase.database();
 var encActual = null;
 var paradaOn  = false;
 
-// ── Cargar máquinas ────────────────────────────────
-var MAQUINAS_ENC = [];
+// ── Lista base de máquinas (igual que averias.html) ────────────
+var MAQUINAS_BASE = [
+  {id:'MAQ-001',n:'PABAT 1',a:'OBRADOR'},{id:'MAQ-002',n:'PABAT 2',a:'OBRADOR'},
+  {id:'MAQ-003',n:'PABAT 3',a:'OBRADOR'},{id:'MAQ-004',n:'PABAT 4',a:'OBRADOR'},
+  {id:'MAQ-005',n:'PABAT 5',a:'OBRADOR'},{id:'MAQ-006',n:'PABAT 6',a:'OBRADOR'},
+  {id:'MAQ-007',n:'PABAT 7',a:'OBRADOR'},{id:'MAQ-008',n:'PABAT 8',a:'OBRADOR'},
+  {id:'MAQ-009',n:'AMASADORA CANDEAL',a:'OBRADOR'},
+  {id:'MAQ-010',n:'LINEA 1',a:'OBRADOR'},{id:'MAQ-011',n:'LINEA 2',a:'OBRADOR'},
+  {id:'MAQ-012',n:'LINEA 3',a:'OBRADOR'},{id:'MAQ-013',n:'LINEA 4',a:'OBRADOR'},
+  {id:'MAQ-014',n:'LINEA 5',a:'OBRADOR'},{id:'MAQ-015',n:'LINEA 6',a:'OBRADOR'},
+  {id:'MAQ-016',n:'LINEA 7',a:'OBRADOR'},
+  {id:'MAQ-017',n:'CARRUSEL 1',a:'OBRADOR'},{id:'MAQ-018',n:'CARRUSEL 2',a:'OBRADOR'},
+  {id:'MAQ-019',n:'CARRUSEL 3',a:'OBRADOR'},{id:'MAQ-020',n:'CARRUSEL 4',a:'OBRADOR'},
+  {id:'MAQ-021',n:'CARRUSEL 5',a:'OBRADOR'},{id:'MAQ-022',n:'CARRUSEL 6',a:'OBRADOR'},
+  {id:'MAQ-023',n:'VOLCADOR 1',a:'OBRADOR'},{id:'MAQ-024',n:'VOLCADOR 2',a:'OBRADOR'},
+  {id:'MAQ-025',n:'VOLCADOR 3',a:'OBRADOR'},{id:'MAQ-026',n:'VOLCADOR 4',a:'OBRADOR'},
+  {id:'MAQ-027',n:'VOLCADOR 5',a:'OBRADOR'},{id:'MAQ-028',n:'VOLCADOR 6',a:'OBRADOR'},
+  {id:'MAQ-029',n:'VOLCADOR 7',a:'OBRADOR'},
+  {id:'MAQ-030',n:'REPARTIDOR 1',a:'OBRADOR'},{id:'MAQ-031',n:'REPARTIDOR 2',a:'OBRADOR'},
+  {id:'MAQ-032',n:'REPARTIDOR 3',a:'OBRADOR'},
+  {id:'MAQ-033',n:'DIVISORA N1',a:'OBRADOR'},{id:'MAQ-034',n:'DIVISORA N2',a:'OBRADOR'},
+  {id:'MAQ-035',n:'DIVISORA N3',a:'OBRADOR'},{id:'MAQ-036',n:'DIVISORA N4',a:'OBRADOR'},
+  {id:'MAQ-037',n:'DIVISORA N5',a:'OBRADOR'},{id:'MAQ-038',n:'DIVISORA N6',a:'OBRADOR'},
+  {id:'MAQ-039',n:'DIVISORA N7',a:'OBRADOR'},{id:'MAQ-040',n:'DIVISORA N8',a:'OBRADOR'},
+  {id:'MAQ-041',n:'DIVISORA N9',a:'OBRADOR'},
+  {id:'MAQ-042',n:'CAMARA DE BOLAS N1',a:'OBRADOR'},{id:'MAQ-043',n:'CAMARA DE BOLAS N2',a:'OBRADOR'},
+  {id:'MAQ-044',n:'CAMARA DE BOLAS N3',a:'OBRADOR'},{id:'MAQ-045',n:'CAMARA DE BOLAS N4',a:'OBRADOR'},
+  {id:'MAQ-046',n:'CAMARA DE BOLAS N5',a:'OBRADOR'},{id:'MAQ-047',n:'CAMARA DE BOLAS N6',a:'OBRADOR'},
+  {id:'MAQ-048',n:'CAMARA DE BOLAS N7',a:'OBRADOR'},
+  {id:'MAQ-049',n:'EMBOLADORA N1',a:'OBRADOR'},{id:'MAQ-050',n:'EMBOLADORA N2',a:'OBRADOR'},
+  {id:'MAQ-051',n:'EMBOLADORA N3',a:'OBRADOR'},{id:'MAQ-052',n:'EMBOLADORA N4',a:'OBRADOR'},
+  {id:'MAQ-053',n:'EMBOLADORA N5',a:'OBRADOR'},{id:'MAQ-054',n:'EMBOLADORA N6',a:'OBRADOR'},
+  {id:'MAQ-055',n:'EMBOLADORA N7',a:'OBRADOR'},{id:'MAQ-056',n:'EMBOLADORA N8',a:'OBRADOR'},
+  {id:'MAQ-057',n:'EMBOLADORA N9',a:'OBRADOR'},
+  {id:'MAQ-058',n:'FERMENTADORA RELAMPAGO',a:'FERMENTADORA'},
+  {id:'MAQ-059',n:'FERMENTADORA TRUENO',a:'TRUENO-FERMENTADORA'},
+  {id:'MAQ-060',n:'HORNO 1',a:'HORNOS'},{id:'MAQ-061',n:'HORNO 2',a:'HORNOS'},
+  {id:'MAQ-062',n:'HORNO 3',a:'HORNOS'},{id:'MAQ-063',n:'HORNO 4',a:'HORNOS'},
+  {id:'MAQ-064',n:'HORNO 5',a:'HORNOS'},{id:'MAQ-065',n:'HORNO 6',a:'HORNOS'},
+  {id:'MAQ-066',n:'HORNO 7',a:'HORNOS'},{id:'MAQ-067',n:'HORNO 8',a:'HORNOS'},
+  {id:'MAQ-068',n:'HORNO 9',a:'HORNOS'},{id:'MAQ-069',n:'HORNO 10',a:'HORNOS'},
+  {id:'MAQ-070',n:'HORNO 11',a:'HORNOS'},{id:'MAQ-071',n:'HORNO 12',a:'HORNOS'},
+  {id:'MAQ-072',n:'HORNO 13',a:'HORNOS'},{id:'MAQ-073',n:'HORNO 14',a:'HORNOS'},
+  {id:'MAQ-074',n:'HORNO 15',a:'HORNOS'},{id:'MAQ-075',n:'HORNO 16 (1TRUENO)',a:'HORNOS'},
+  {id:'MAQ-076',n:'HORNO 17 (2TRUENO)',a:'HORNOS'},{id:'MAQ-077',n:'HORNO 18 (3TRUENO)',a:'HORNOS'},
+  {id:'MAQ-078',n:'HORNO 19 (4TRUENO)',a:'HORNOS'},
+  {id:'MAQ-079',n:'TALLADORA RELAMPAGO',a:'HORNOS'},{id:'MAQ-080',n:'TALLADORA TRUENO',a:'HORNOS'},
+  {id:'MAQ-081',n:'TUNEL PREFRIO',a:'TUNELES'},
+  {id:'MAQ-082',n:'TUNEL 1',a:'TUNELES'},{id:'MAQ-083',n:'TUNEL 2',a:'TUNELES'},
+  {id:'MAQ-084',n:'TUNEL 3',a:'TUNELES'},{id:'MAQ-085',n:'TUNEL 4',a:'TUNELES'},
+  {id:'MAQ-086',n:'TUNEL 5',a:'TUNELES'},{id:'MAQ-087',n:'TUNEL 6',a:'TUNELES'},
+  {id:'MAQ-088',n:'TUNEL 7',a:'TUNELES'},{id:'MAQ-089',n:'TUNEL 8',a:'TUNELES'},
+  {id:'MAQ-090',n:'TUNEL 9 (1 TRUENO)',a:'TUNELES'},{id:'MAQ-091',n:'TUNEL 10 (2 TRUENO)',a:'TUNELES'},
+  {id:'MAQ-092',n:'MAQUINA DE CAJAS',a:'ENVASADO'},
+  {id:'MAQ-093',n:'FORMADORA-EMBOLSADORA',a:'ENVASADO'},
+  {id:'MAQ-094',n:'MAQUINA DE BOLSAS',a:'ENVASADO'},
+  {id:'MAQ-095',n:'DESCARGADOR 1',a:'ENVASADO'},{id:'MAQ-096',n:'DESCARGADOR 2',a:'ENVASADO'},
+  {id:'MAQ-097',n:'CARGADOR 1',a:'ENVASADO'},{id:'MAQ-098',n:'CARGADOR 2',a:'ENVASADO'},
+  {id:'MAQ-099',n:'DESMOLDEO 1',a:'ENVASADO'},{id:'MAQ-100',n:'DESMOLDEO 2',a:'ENVASADO'},
+  {id:'MAQ-101',n:'CONTADORA 1',a:'ENVASADO'},{id:'MAQ-102',n:'CONTADORA 2',a:'ENVASADO'},
+  {id:'MAQ-103',n:'CAMINO DE RODILLOS',a:'ENVASADO'},
+  {id:'MAQ-104',n:'IMPRESORA RELAMPAGO',a:'ENVASADO'},{id:'MAQ-105',n:'IMPRESORA TRUENO',a:'ENVASADO'},
+  {id:'MAQ-106',n:'PRECINTADORA',a:'ENVASADO'},{id:'MAQ-107',n:'M. PEGATINAS',a:'ENVASADO'},
+  {id:'MAQ-108',n:'ROBOT',a:'ENVASADO'},
+  {id:'MAQ-109',n:'ENFARDADORA RELAMPAGO',a:'ENVASADO'},{id:'MAQ-110',n:'ENFARDADORA TRUENO',a:'ENVASADO'},
+  {id:'MAQ-111',n:'LAVADORA',a:'OBRADOR'},
+  {id:'MAQ-112',n:'SILOS',a:'SILOS'},{id:'MAQ-113',n:'TURBINAS',a:'SILOS'},
+  {id:'MAQ-114',n:'CUADRO SILOS',a:'SILOS'},{id:'MAQ-115',n:'CUADRO HARINA',a:'SILOS'},
+  {id:'MAQ-116',n:'ADITIVOS',a:'OBRADOR'},{id:'MAQ-117',n:'CUADRO ADITIVOS',a:'OBRADOR'},
+  {id:'MAQ-118',n:'REVOLVER',a:'OBRADOR'},
+  {id:'MAQ-119',n:'TOLVA 1',a:'OBRADOR'},{id:'MAQ-120',n:'TOLVA 2',a:'OBRADOR'},
+  {id:'MAQ-121',n:'TOLVA 3',a:'OBRADOR'},{id:'MAQ-122',n:'TOLVA 4',a:'OBRADOR'},
+  {id:'MAQ-123',n:'TOLVA 5',a:'OBRADOR'},{id:'MAQ-124',n:'TOLVA 6',a:'OBRADOR'},
+  {id:'MAQ-125',n:'TOLVA 7',a:'OBRADOR'},
+  {id:'MAQ-126',n:'LEVADURA TANQUE 1',a:'OBRADOR'},{id:'MAQ-127',n:'LEVADURA TANQUE 2',a:'OBRADOR'},
+  {id:'MAQ-128',n:'LEVADURA CUADRO GENERAL Y BOMBAS',a:'OBRADOR'},
+  {id:'MAQ-129',n:'LEVADURA CUADRO GLICOL',a:'OBRADOR'}
+];
+
+// ── Cargar máquinas extra del admin y combinar ─────────────────
+var MAQUINAS_ENC = MAQUINAS_BASE.slice(); // empieza con la lista base
 DB.ref('maquinas_extra').once('value').then(function(snap){
   var extra = snap.val();
-  if(extra) MAQUINAS_ENC = Object.values(extra).sort(function(a,b){return (a.n||'').localeCompare(b.n||'');});
+  if(extra){
+    var ids = MAQUINAS_ENC.map(function(m){ return m.id; });
+    Object.values(extra).forEach(function(m){
+      if(ids.indexOf(m.id) === -1) MAQUINAS_ENC.push(m);
+    });
+  }
   poblarMaquinas();
 }).catch(function(){ poblarMaquinas(); });
 
 function poblarMaquinas(){
   var sel = document.getElementById('fMaq');
-  sel.innerHTML = '<option value="">— Selecciona —</option>';
-  // Fallback: lista de máquinas hardcodeada si Firebase no responde
-  var lista = MAQUINAS_ENC.length ? MAQUINAS_ENC : [];
-  lista.forEach(function(m){
-    var o = document.createElement('option');
-    o.value = m.n || m.id;
-    o.textContent = m.n || m.id;
-    sel.appendChild(o);
+  // Agrupar por área
+  var areas = {};
+  MAQUINAS_ENC.forEach(function(m){
+    var a = m.a || 'OTRAS';
+    if(!areas[a]) areas[a] = [];
+    areas[a].push(m);
   });
-  if(!lista.length){
-    sel.innerHTML += '<option disabled>Sin máquinas cargadas</option>';
-  }
+  sel.innerHTML = '<option value="">— Selecciona —</option>';
+  Object.keys(areas).sort().forEach(function(area){
+    var grp = document.createElement('optgroup');
+    grp.label = area;
+    areas[area].sort(function(a,b){ return (a.n||'').localeCompare(b.n||''); }).forEach(function(m){
+      var o = document.createElement('option');
+      o.value = m.n || m.id;
+      o.textContent = m.n || m.id;
+      grp.appendChild(o);
+    });
+    sel.appendChild(grp);
+  });
 }
 
 // ── Seleccionar encargado ──────────────────────────
