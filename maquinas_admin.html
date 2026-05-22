@@ -21,15 +21,6 @@
 body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-serif;min-height:100vh}
 
 /* LOGIN */
-.login-screen{position:fixed;inset:0;background:var(--navy-deep);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:20px}
-.login-box{background:var(--navy-mid);border:1px solid rgba(201,162,39,0.3);border-radius:16px;padding:40px;width:340px;text-align:center}
-.login-box h2{font-size:1.5rem;font-weight:900;color:var(--gold-light);letter-spacing:0.08em;margin-bottom:6px}
-.login-box .sub{font-size:0.78rem;color:rgba(255,255,255,0.4);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:28px}
-.login-box input{width:100%;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:13px 16px;font-family:'Barlow',sans-serif;font-size:1.1rem;text-align:center;letter-spacing:0.2em;margin-bottom:14px}
-.login-box input:focus{outline:none;border-color:var(--gold)}
-.login-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a;border:none;border-radius:8px;font-family:'Barlow',sans-serif;font-size:1rem;font-weight:900;letter-spacing:0.1em;cursor:pointer}
-.login-btn:hover{filter:brightness(1.1)}
-.login-err{color:var(--red);font-size:0.85rem;margin-top:8px;display:none}
 
 /* TOPBAR */
 .topbar{background:linear-gradient(135deg,#0a1520,var(--navy-mid));border-bottom:2px solid var(--gold);padding:14px 20px;display:flex;align-items:center;gap:12px}
@@ -161,20 +152,8 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 </head>
 <body>
 
-<!-- ═══ LOGIN ═══ -->
-<div class="login-screen" id="loginScreen">
-  <div class="login-box">
-    <h2>🏭 FICHAS</h2>
-    <div class="sub">Panel de Administrador</div>
-    <input type="password" id="pwInput" placeholder="Contraseña" autocomplete="current-password"
-      onkeydown="if(event.key==='Enter')login()">
-    <button class="login-btn" onclick="login()">ENTRAR</button>
-    <div class="login-err" id="loginErr">Contraseña incorrecta</div>
-  </div>
-</div>
-
 <!-- ═══ APP ═══ -->
-<div id="app" style="display:none">
+<div id="app">
 
   <!-- TOPBAR -->
   <div class="topbar">
@@ -210,7 +189,7 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
       <div class="topbar h1" style="font-size:1.2rem;font-weight:900;letter-spacing:.06em;color:var(--gold-light)">🏭 Fichas de Máquinas</div>
       <div class="topbar sub" style="font-size:0.75rem;color:rgba(255,255,255,0.4)">PANALCOR S.L.</div>
     </div>
-    <button class="logout-btn" onclick="logout()">Salir</button>
+    <a href="admin.html" class="logout-btn" style="text-decoration:none">← Admin</a>
   </div>
 
   <!-- FILTROS -->
@@ -521,26 +500,7 @@ let maqActual    = null; // objeto MAQUINAS actual
 // ══════════════════════════════════════════
 // AUTH
 // ══════════════════════════════════════════
-function getPwd(){ return localStorage.getItem('adminPwd') || 'admin'; }
-
-function login(){
-  var val = document.getElementById('pwInput').value;
-  if(val === getPwd()){
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    initApp();
-  } else {
-    var err = document.getElementById('loginErr');
-    err.style.display = 'block';
-    err.textContent = 'Contraseña incorrecta';
-  }
-}
-
-function logout(){
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('pwInput').value = '';
-}
+// Sin login — acceso directo (protegido por admin.html)
 
 document.addEventListener('keydown', function(e){
   if(e.key === 'Escape') closeDetail();
@@ -1023,6 +983,8 @@ function closeLightbox(){
   document.getElementById('lightbox').classList.remove('open');
 }
 
+// Arrancar directamente sin login
+document.addEventListener('DOMContentLoaded', initApp);
 </script>
 </body>
 </html>
