@@ -136,6 +136,18 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 .badge.pendiente{background:rgba(231,76,60,0.15);color:var(--red)}
 .no-data-msg{text-align:center;padding:30px;color:rgba(255,255,255,0.3);font-size:0.9rem}
 
+/* KPI CARDS */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-bottom:20px}
+.kpi-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 14px}
+.kpi-val{font-size:1.6rem;font-weight:900;line-height:1;color:var(--gold-light)}
+.kpi-lbl{font-size:0.65rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-top:4px}
+/* MINI BARS */
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.bar-label{font-size:0.78rem;color:rgba(255,255,255,0.6);width:110px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;background:rgba(255,255,255,0.07);border-radius:4px;height:8px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--gold),#a07d1a);transition:width .5s}
+.bar-count{font-size:0.72rem;color:rgba(255,255,255,0.45);width:24px;text-align:right;flex-shrink:0}
+
 /* LIGHTBOX */
 .lightbox{position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:500;display:none;align-items:center;justify-content:center}
 .lightbox.open{display:flex}
@@ -323,8 +335,24 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 
     <!-- TAB: HISTORIAL -->
     <div class="dpanel" id="dpanel-hist">
+      <!-- KPIs -->
       <div class="hist-section">
-        <div class="hist-title">🔧 Averías registradas</div>
+        <div class="hist-title">📊 Indicadores</div>
+        <div class="kpi-grid" id="histKpis"></div>
+      </div>
+      <!-- Partes más problemáticas -->
+      <div class="hist-section" id="histPartesWrap" style="display:none">
+        <div class="hist-title">⚠️ Partes que más fallan</div>
+        <div id="histPartes"></div>
+      </div>
+      <!-- Tendencia mensual -->
+      <div class="hist-section" id="histTendWrap" style="display:none">
+        <div class="hist-title">📅 Averías por mes (últimos 6 meses)</div>
+        <div id="histTend"></div>
+      </div>
+      <!-- Tabla -->
+      <div class="hist-section">
+        <div class="hist-title">🔧 Historial completo</div>
         <div id="histAverias"><div class="no-data-msg">Cargando...</div></div>
       </div>
     </div>
@@ -927,48 +955,106 @@ function borrarDoc(key, ghPath, nombre){
 }
 
 // ══════════════════════════════════════════
-// TAB HISTORIAL
+// TAB HISTORIAL — Ficha analítica
 // ══════════════════════════════════════════
 function cargarHistorial(){
   if(!maqActual) return;
   var el = document.getElementById('histAverias');
   el.innerHTML = '<div class="no-data-msg">Cargando...</div>';
+  document.getElementById('histKpis').innerHTML = '';
 
   DB.ref('averias').once('value').then(function(snap){
-    var val = snap.val();
-    if(!val){ el.innerHTML = '<div class="no-data-msg">Sin averías registradas</div>'; return; }
-
-    var todas = Object.values(val);
+    var val   = snap.val();
+    var todas = val ? Object.values(val) : [];
     var mis   = todas.filter(function(a){ return a.maqId === maqActual.id; });
-    mis.sort(function(a,b){ return (b.ts||0) - (a.ts||0); });
+    mis.sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+
+    // ── KPIs ──────────────────────────────────────────────
+    var totalAv    = mis.length;
+    var pendientes = mis.filter(function(a){ return a.estado !== 'RESUELTA'; }).length;
+    var tiempoTotal= mis.reduce(function(s,a){ return s+(a.tiempoMin||0); },0);
+    var costeTotal = mis.reduce(function(s,a){ return s+(a.costeMateriales||0); },0);
+    var conTiempo  = mis.filter(function(a){ return a.tiempoMin>0; });
+    var mttr       = conTiempo.length ? Math.round(conTiempo.reduce(function(s,a){return s+(a.tiempoMin||0);},0)/conTiempo.length) : 0;
+
+    document.getElementById('histKpis').innerHTML = [
+      { v: totalAv,                                                          l: 'Total averías'       },
+      { v: pendientes>0 ? '<span style="color:var(--red)">'+pendientes+'</span>' : '0', l: 'Sin resolver' },
+      { v: Math.floor(tiempoTotal/60)+'h '+(tiempoTotal%60)+'min',          l: 'Tiempo parado'       },
+      { v: mttr ? Math.floor(mttr/60)+'h '+(mttr%60)+'min' : '—',          l: 'Tiempo medio rep.'   },
+      { v: costeTotal>0 ? costeTotal.toFixed(0)+' €' : '—',                 l: 'Coste materiales'    },
+    ].map(function(k){
+      return '<div class="kpi-card"><div class="kpi-val">'+k.v+'</div><div class="kpi-lbl">'+k.l+'</div></div>';
+    }).join('');
 
     if(!mis.length){
       el.innerHTML = '<div class="no-data-msg">Sin averías registradas para esta máquina</div>';
+      document.getElementById('histPartesWrap').style.display = 'none';
+      document.getElementById('histTendWrap').style.display   = 'none';
       return;
     }
 
-    el.innerHTML = '<table class="hist-table"><thead><tr>' +
-      '<th>Fecha</th><th>Descripción</th><th>Gravedad</th><th>Estado</th><th>Tiempo</th><th>Mecánico</th>' +
-      '</tr></thead><tbody>' +
-      mis.map(function(a){
-        var grav  = (a.gravedad||'').toUpperCase();
-        var gravClass = grav.includes('CRÍT') ? 'critica' : grav === 'GRAVE' ? 'grave' : 'leve';
-        var estClass  = a.estado === 'RESUELTA' ? 'resuelta' : 'pendiente';
-        var tiempo    = a.tiempoMin ? Math.floor(a.tiempoMin/60)+'h '+(a.tiempoMin%60)+'min' : '—';
-        var mec       = Array.isArray(a.mecanicos) ? a.mecanicos.join(', ') : (a.mecanico||'—');
-        var desc      = (a.descripcion||'').substring(0,60) + (a.descripcion && a.descripcion.length>60?'…':'');
-        return '<tr>' +
-          '<td style="white-space:nowrap">' + (a.fecha||'—') + '</td>' +
-          '<td>' + desc + '</td>' +
-          '<td><span class="badge ' + gravClass + '">' + (a.gravedad||'—') + '</span></td>' +
-          '<td><span class="badge ' + estClass + '">' + (a.estado||'—') + '</span></td>' +
-          '<td>' + tiempo + '</td>' +
-          '<td>' + mec + '</td>' +
-        '</tr>';
-      }).join('') +
-      '</tbody></table>';
+    // ── Partes más problemáticas ───────────────────────────
+    var parteCnt = {};
+    mis.forEach(function(a){ var p=(a.parte||'SIN PARTE').toUpperCase(); parteCnt[p]=(parteCnt[p]||0)+1; });
+    var partes = Object.entries(parteCnt).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+    var maxP   = partes[0][1];
+    document.getElementById('histPartesWrap').style.display = 'block';
+    document.getElementById('histPartes').innerHTML = partes.map(function(p){
+      return '<div class="bar-row">'
+        +'<div class="bar-label" title="'+p[0]+'">'+p[0]+'</div>'
+        +'<div class="bar-track"><div class="bar-fill" style="width:'+Math.round(p[1]/maxP*100)+'%"></div></div>'
+        +'<div class="bar-count">'+p[1]+'</div></div>';
+    }).join('');
+
+    // ── Tendencia últimos 6 meses ──────────────────────────
+    var hoy   = new Date();
+    var meses = [];
+    for(var i=5;i>=0;i--){
+      var d=new Date(hoy.getFullYear(),hoy.getMonth()-i,1);
+      meses.push(d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0'));
+    }
+    var mesCnt={};
+    meses.forEach(function(m){mesCnt[m]=0;});
+    mis.forEach(function(a){ var m=(a.fecha||'').substring(0,7); if(mesCnt[m]!==undefined) mesCnt[m]++; });
+    var maxM=Math.max.apply(null,Object.values(mesCnt))||1;
+    document.getElementById('histTendWrap').style.display='block';
+    document.getElementById('histTend').innerHTML=meses.map(function(m){
+      var lbl=m.substring(5)+'/'+m.substring(2,4);
+      return '<div class="bar-row">'
+        +'<div class="bar-label">'+lbl+'</div>'
+        +'<div class="bar-track"><div class="bar-fill" style="width:'+Math.round(mesCnt[m]/maxM*100)+'%;background:linear-gradient(90deg,#3498db,#1a6fa8)"></div></div>'
+        +'<div class="bar-count">'+mesCnt[m]+'</div></div>';
+    }).join('');
+
+    // ── Tabla completa ─────────────────────────────────────
+    el.innerHTML = '<div style="overflow-x:auto"><table class="hist-table"><thead><tr>'
+      +'<th>Fecha</th><th>Parte</th><th>Descripción</th><th>Gravedad</th><th>Estado</th><th>Tiempo</th><th>Coste</th><th>Mecánico</th>'
+      +'</tr></thead><tbody>'
+      +mis.map(function(a){
+        var grav    = (a.gravedad||'').toUpperCase();
+        var gravCls = grav.includes('CRÍT')?'critica':grav==='GRAVE'?'grave':'leve';
+        var estCls  = a.estado==='RESUELTA'?'resuelta':'pendiente';
+        var tiempo  = a.tiempoMin ? Math.floor(a.tiempoMin/60)+'h '+(a.tiempoMin%60)+'min':'—';
+        var coste   = a.costeMateriales>0 ? a.costeMateriales.toFixed(0)+' €':'—';
+        var mec     = Array.isArray(a.mecanicos)?a.mecanicos.join(', '):(a.mecanico||'—');
+        var desc    = (a.descripcion||'').substring(0,55)+((a.descripcion||'').length>55?'…':'');
+        var fila    = a.estado!=='RESUELTA' ? ' style="background:rgba(231,76,60,0.05)"':'';
+        return '<tr'+fila+'>'
+          +'<td style="white-space:nowrap;color:rgba(255,255,255,0.5)">'+(a.fecha||'—')+'</td>'
+          +'<td style="font-size:0.75rem;white-space:nowrap">'+(a.parte||'—')+'</td>'
+          +'<td>'+desc+'</td>'
+          +'<td><span class="badge '+gravCls+'">'+(a.gravedad||'—')+'</span></td>'
+          +'<td><span class="badge '+estCls+'">'+(a.estado||'—')+'</span></td>'
+          +'<td style="white-space:nowrap">'+tiempo+'</td>'
+          +'<td style="white-space:nowrap">'+coste+'</td>'
+          +'<td style="font-size:0.75rem">'+mec+'</td>'
+          +'</tr>';
+      }).join('')
+      +'</tbody></table></div>';
+
   }).catch(function(){
-    el.innerHTML = '<div class="no-data-msg">Error al cargar historial</div>';
+    document.getElementById('histAverias').innerHTML='<div class="no-data-msg">Error al cargar historial</div>';
   });
 }
 
