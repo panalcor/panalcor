@@ -921,11 +921,9 @@ function cargarRepuestos(){
   // Leer catálogo desde Firebase y fusionar
   DB.ref('repuestos_catalogo').once('value').then(function(snap) {
     var fbData = snap.val() || null;
+    if (fbData) localStorage.setItem('repuestos_v1', JSON.stringify(fbData));
     var merged = _mergeRepuestos(fbData);
     repuestosData = Object.values(merged);
-
-    // Guardar en localStorage para próximas cargas offline
-    if (fbData) localStorage.setItem('repuestos_v1', JSON.stringify(fbData));
     localStorage.setItem('repuestosCache', JSON.stringify(repuestosData));
 
     if (repuestosData.length > 0) {
@@ -946,25 +944,40 @@ function cargarRepuestos(){
   });
 }
 
-// Fusiona catálogo Firebase + caché xlsx en un mapa {key → repuesto}
+// Fusiona todas las fuentes en un mapa {key → repuesto}
 function _mergeRepuestos(fbData) {
   var mapa = {};
-  // 1. Base: caché del catálogo admin (repuestos_v1)
+
+  // 1. Catálogo admin desde Firebase (o su caché local repuestos_v1)
   try {
     var cat = fbData || JSON.parse(localStorage.getItem('repuestos_v1') || 'null');
     if (cat) Object.values(cat).forEach(function(r) {
-      var k = (r.ref || r.desc || '').toUpperCase();
-      mapa[k] = { desc: r.desc || '', ref: r.ref || '', ubicacion: r.prov || r.fab || '' };
+      var k = (r.ref || r.desc || '').replace(/\s+/g,'_').toUpperCase();
+      if (k) mapa[k] = { desc: r.desc || '', ref: r.ref || '', ubicacion: r.prov || r.fab || '' };
     });
   } catch(e) {}
-  // 2. Añadir los del xlsx que no estén en el catálogo
+
+  // 2. Materiales extraídos de las averías cacheadas (averias_v1)
+  try {
+    var avs = JSON.parse(localStorage.getItem('averias_v1') || '[]');
+    avs.forEach(function(a) {
+      (a.materiales || []).forEach(function(m) {
+        if (!m.desc) return;
+        var k = (m.ref || m.desc).replace(/\s+/g,'_').toUpperCase();
+        if (k && !mapa[k]) mapa[k] = { desc: m.desc, ref: m.ref || '', ubicacion: '' };
+      });
+    });
+  } catch(e) {}
+
+  // 3. Caché xlsx (repuestosCache) — si existe
   try {
     var xlsx = JSON.parse(localStorage.getItem('repuestosCache') || 'null');
     if (Array.isArray(xlsx)) xlsx.forEach(function(r) {
-      var k = (r.ref || r.desc || '').toUpperCase();
-      if (!mapa[k]) mapa[k] = r;
+      var k = (r.ref || r.desc || '').replace(/\s+/g,'_').toUpperCase();
+      if (k && !mapa[k]) mapa[k] = r;
     });
   } catch(e) {}
+
   return mapa;
 }
 
