@@ -600,9 +600,11 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
     </div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
       <button class="btn-export btn-gold" onclick="guardarRepuesto()">💾 Guardar repuesto</button>
-      <button class="btn-export" onclick="importarRepuestosDeAverias()"
-        style="background:rgba(52,152,219,0.15);border:1px solid rgba(52,152,219,0.4);color:#3498db">
-        ⬇️ Importar de averías
+      <input type="file" id="repXlsxInput" accept=".xlsx,.xls" style="display:none"
+        onchange="importarExcelRepuestos(this)">
+      <button class="btn-export" onclick="document.getElementById('repXlsxInput').click()"
+        style="background:rgba(46,204,113,0.12);border:1px solid rgba(46,204,113,0.35);color:var(--green)">
+        📥 Cargar Excel
       </button>
       <span id="repMsg" style="font-size:0.82rem;color:var(--green)"></span>
     </div>
@@ -2809,9 +2811,76 @@ function limpiarFormRepuesto() {
   msg.style.color = 'var(--green)';
 }
 
-// Botón "Importar de averías" — ya no necesario (cargamos repuestosCache directamente)
+// Botón "Importar de averías" — ya no necesario
 function importarRepuestosDeAverias() {
-  showToast('ℹ️ El catálogo se carga automáticamente desde el caché de mecanicos.html');
+  showToast('ℹ️ Usa el botón "Cargar Excel" para actualizar el catálogo');
+}
+
+// ── Importar Excel → Firebase repuestos_base ─────────────────────────────
+function importarExcelRepuestos(input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  var msg = document.getElementById('repMsg');
+  msg.style.color = 'var(--gold)';
+  msg.textContent = 'Leyendo Excel...';
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var wb   = XLSX.read(e.target.result, { type: 'array' });
+      var ws   = wb.Sheets[wb.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+      if (!rows.length) { showToast('❌ Excel vacío o sin datos'); msg.textContent = ''; return; }
+
+      // Normalizar nombres de columna (acepta variantes en mayúsculas/minúsculas/con tildes)
+      function col(row) {
+        var k = Object.keys(row).reduce(function(m, c) { m[c.toLowerCase().replace(/[áàä]/g,'a').replace(/[éèë]/g,'e').replace(/[íìï]/g,'i').replace(/[óòö]/g,'o').replace(/[úùü]/g,'u')] = c; return m; }, {});
+        return {
+          ref:      String(row[k.ref]       || row[k.referencia]  || '').trim(),
+          desc:     String(row[k.desc]      || row[k.descripcion] || row[k.nombre] || '').trim().toUpperCase(),
+          ubicacion:String(row[k.ubicacion] || row[k.ubi]         || row[k.ubicacion] || '').trim(),
+          familia:  String(row[k.familia]   || row[k.categoria]   || '').trim(),
+          stock:    parseFloat(row[k.stock]    || 0) || 0,
+          stockMin: parseFloat(row[k.stockmin] || row[k.stock_min] || row[k.minimo] || 0) || 0
+        };
+      }
+
+      var base = {};
+      rows.forEach(function(row, i) {
+        var r = col(row);
+        if (!r.desc && !r.ref) return;
+        var key = r.ref || String(i + 1);
+        base[key] = { ref: key, desc: r.desc, ubicacion: r.ubicacion,
+                      familia: r.familia, stock: r.stock, stockMin: r.stockMin };
+      });
+
+      var total = Object.keys(base).length;
+      msg.textContent = 'Subiendo ' + total + ' repuestos a Firebase...';
+
+      var ts = Date.now();
+      DB.ref('repuestos_base').set(base).then(function() {
+        return DB.ref('repuestos_base_ts').set(ts);
+      }).then(function() {
+        // Actualizar caché local del admin
+        _repBase = Object.values(base);
+        localStorage.setItem('repuestosCache', JSON.stringify(_repBase));
+        localStorage.setItem('repuestos_base_ts', String(ts));
+        _repPagina = 0;
+        renderCatalogoRepuestos();
+        msg.style.color = 'var(--green)';
+        msg.textContent = '✅ ' + total + ' repuestos importados';
+        setTimeout(function() { msg.textContent = ''; }, 3500);
+        input.value = '';
+      }).catch(function(err) {
+        showToast('❌ Error Firebase: ' + (err.message || err));
+        msg.textContent = '';
+      });
+    } catch(ex) {
+      showToast('❌ Error leyendo Excel: ' + (ex.message || ex));
+      msg.textContent = '';
+    }
+  };
+  reader.readAsArrayBuffer(file);
 }
 </script>
 

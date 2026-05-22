@@ -484,65 +484,84 @@ function buscar(){
 })();
 
 // ══════════════════════════════════════
-// ENRIQUECER con Firebase repuestos_catalogo
-// (datos añadidos/editados desde panel admin)
+// ACTUALIZAR desde Firebase:
+//   1) repuestos_base     → si admin subió Excel nuevo (compara timestamp)
+//   2) repuestos_catalogo → enriquecimientos manuales (fab, prov, url…)
 // ══════════════════════════════════════
-(function enriquecerRepuestos(){
-  // Esperar a que Firebase esté listo
-  function doEnrich(){
-    _DB_MEC.ref('repuestos_catalogo').once('value').then(function(snap){
-      var extra = snap.val();
-      if (!extra) return;
-      var keys = Object.keys(extra);
-      if (!keys.length) return;
+(function actualizarRepuestosFirebase(){
+  function run(){
+    var localTs = localStorage.getItem('repuestos_base_ts') || '0';
 
-      // Índice rápido: ref (string) → posición en repuestosData
-      var idx = {};
-      repuestosData.forEach(function(r, i){ idx[String(r.ref)] = i; });
-
-      var cambiado = false;
-      keys.forEach(function(k){
-        var ex = extra[k];
-        var ref = String(ex.ref || '');
-        if (ref && idx[ref] !== undefined) {
-          // Repuesto existente: overlay de campos de enriquecimiento
-          var r = repuestosData[idx[ref]];
-          if (ex.fab   !== undefined && ex.fab)   { r.fab   = ex.fab;    cambiado = true; }
-          if (ex.prov  !== undefined && ex.prov)  { r.prov  = ex.prov;   cambiado = true; }
-          if (ex.url   !== undefined && ex.url)   { r.url   = ex.url;    cambiado = true; }
-          if (ex.precio !== undefined && ex.precio){ r.precio= ex.precio; cambiado = true; }
-          if (ex.notas !== undefined && ex.notas) { r.notas = ex.notas;  cambiado = true; }
-          if (ex.desc  !== undefined && ex.desc)  { r.desc  = ex.desc;   cambiado = true; }
-        } else if (ex.desc) {
-          // Repuesto nuevo (creado en admin, no está en la base)
-          repuestosData.push({
-            ref: ex.ref || k, desc: ex.desc, ubicacion: ex.prov || '',
-            familia: '', stock: 0, stockMin: 0,
-            fab: ex.fab || '', prov: ex.prov || '',
-            url: ex.url || '', precio: ex.precio || 0, notas: ex.notas || ''
-          });
-          idx[String(ex.ref || k)] = repuestosData.length - 1;
-          cambiado = true;
+    function aplicarEnriquecimientos(){
+      _DB_MEC.ref('repuestos_catalogo').once('value').then(function(snap){
+        var extra = snap.val();
+        if (!extra) return;
+        var idx = {};
+        repuestosData.forEach(function(r, i){ idx[String(r.ref)] = i; });
+        var cambiado = false;
+        Object.keys(extra).forEach(function(k){
+          var ex = extra[k];
+          var ref = String(ex.ref || '');
+          if (ref && idx[ref] !== undefined) {
+            var r = repuestosData[idx[ref]];
+            ['fab','prov','url','notas','desc'].forEach(function(f){
+              if (ex[f]) { r[f] = ex[f]; cambiado = true; }
+            });
+            if (ex.precio) { r.precio = ex.precio; cambiado = true; }
+          } else if (ex.desc) {
+            repuestosData.push({ ref: ex.ref||k, desc: ex.desc, ubicacion: ex.prov||'',
+              familia:'', stock:0, stockMin:0, fab:ex.fab||'', prov:ex.prov||'',
+              url:ex.url||'', precio:ex.precio||0, notas:ex.notas||'' });
+            cambiado = true;
+          }
+        });
+        if (cambiado) {
+          localStorage.setItem('repuestosCache', JSON.stringify(repuestosData));
+          var q = document.getElementById('searchInput').value.trim();
+          if (q) buscar();
+          else {
+            renderTabla(repuestosData, 50);
+            document.getElementById('searchCount').textContent =
+              'Mostrando primeros 50 de '+repuestosData.length+' repuestos — escribe para filtrar';
+          }
+          document.getElementById('reloadTip').innerHTML =
+            '✅ <b>'+repuestosData.length+'</b> repuestos cargados';
         }
-      });
+      }).catch(function(){});
+    }
 
-      if (cambiado) {
-        localStorage.setItem('repuestosCache', JSON.stringify(repuestosData));
-        // Re-renderizar respetando búsqueda activa
-        var q = document.getElementById('searchInput').value.trim();
-        if (q) buscar(); else {
-          renderTabla(repuestosData, 50);
-          document.getElementById('searchCount').textContent =
-            'Mostrando primeros 50 de ' + repuestosData.length + ' repuestos — escribe para filtrar';
-        }
-        document.getElementById('reloadTip').innerHTML =
-          '✅ <b>' + repuestosData.length + '</b> repuestos cargados';
+    // Leer timestamp de Firebase (lectura mínima)
+    _DB_MEC.ref('repuestos_base_ts').once('value').then(function(tsSnap){
+      var fbTs = String(tsSnap.val() || '0');
+      if (fbTs !== '0' && fbTs !== localTs) {
+        // Hay Excel nuevo → descargar base completa
+        document.getElementById('reloadTip').innerHTML = '🔄 Actualizando catálogo...';
+        _DB_MEC.ref('repuestos_base').once('value').then(function(baseSnap){
+          var base = baseSnap.val();
+          if (base && typeof base === 'object') {
+            repuestosData = Object.values(base);
+            localStorage.setItem('repuestosCache', JSON.stringify(repuestosData));
+            localStorage.setItem('repuestos_base_ts', fbTs);
+            var q = document.getElementById('searchInput').value.trim();
+            if (q) buscar();
+            else {
+              renderTabla(repuestosData, 50);
+              document.getElementById('searchCount').textContent =
+                'Mostrando primeros 50 de '+repuestosData.length+' repuestos — escribe para filtrar';
+            }
+            document.getElementById('reloadTip').innerHTML =
+              '✅ <b>'+repuestosData.length+'</b> repuestos actualizados';
+          }
+          aplicarEnriquecimientos();
+        }).catch(aplicarEnriquecimientos);
+      } else {
+        aplicarEnriquecimientos();
       }
-    }).catch(function(){ /* sin red — ignorar */ });
+    }).catch(function(){ /* sin red */ });
   }
-  // Si _DB_MEC ya existe ejecutar ahora, si no esperar un tick
-  if (typeof _DB_MEC !== 'undefined') { doEnrich(); }
-  else { setTimeout(doEnrich, 500); }
+
+  if (typeof _DB_MEC !== 'undefined') run();
+  else setTimeout(run, 500);
 })();
 
 // ══════════════════════════════════════
