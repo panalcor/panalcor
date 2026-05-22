@@ -636,6 +636,10 @@ function toggleTask(id){
   const mec = document.getElementById('mecSelect').value;
   const turno = document.getElementById('turnoSelect').value;
   if(!mec || !turno){ showAlert('⚠️ Selecciona mecánico y turno','#e67e22'); return; }
+  const tarea = tareasActivas.find(function(t){ return t.id===id; });
+  if(tarea && tarea.turno && tarea.turno!=='TODOS' && tarea.turno!==turno){
+    showAlert('⏰ Esta tarea es del turno '+tarea.turno+' — no disponible en turno '+turno,'#e67e22'); return;
+  }
   const fecha = getSelectedDate();
   if(turnoYaGuardado(fecha, turno) && !adminUnlocked){
     showAlert('🔒 Turno bloqueado — introduce la contraseña admin','#c0392b'); return;
@@ -668,8 +672,11 @@ function renderTasks(){
     if(isDone) done++;
     const info = getSavedInfo(t.id);
     const badgeP = t.prioridad==='ALTA'?'badge-alta':t.prioridad==='MEDIA'?'badge-media':'badge-baja';
-    return `<div class="task-card ${isDone?'done':''}" onclick="toggleTask('${t.id}')" style="${bloqueado?'opacity:0.6;cursor:not-allowed':''}">
-      <div class="task-check">${isDone?'✓':bloqueado?'🔒':''}</div>
+    // Tarea bloqueada por turno: tiene turno específico y no coincide con el seleccionado
+    const turnoMismatch = t.turno && t.turno!=='TODOS' && turno && t.turno!==turno;
+    const cardBloqueada = bloqueado || turnoMismatch;
+    return `<div class="task-card ${isDone?'done':''}" onclick="toggleTask('${t.id}')" style="${cardBloqueada?'opacity:'+(turnoMismatch?'0.35':'0.6')+';cursor:not-allowed':''}">
+      <div class="task-check">${isDone?'✓':bloqueado?'🔒':turnoMismatch?'⏰':''}</div>
       <div class="task-body">
         <div class="task-title">${t.tarea}</div>
         <div class="task-meta">
