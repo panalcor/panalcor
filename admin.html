@@ -1447,12 +1447,159 @@ function analizarDatos(){
     }
   }
 
+  // ── DÍA DE SEMANA ──
+  const diasNom=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const diaMap={0:0,1:0,2:0,3:0,4:0,5:0,6:0};
+  const diaMin2={0:0,1:0,2:0,3:0,4:0,5:0,6:0};
+  av.forEach(a=>{
+    if(a.fecha){
+      const d=new Date(a.fecha+'T12:00:00').getDay();
+      diaMap[d]++; diaMin2[d]+=(a.tiempoMin||0);
+    }
+  });
+  if(av.filter(a=>a.fecha).length>0){
+    r+=`📅 PATRÓN POR DÍA DE SEMANA\n${sep}\n`;
+    const maxDia=Math.max(...Object.values(diaMap))||1;
+    [1,2,3,4,5,6,0].forEach(d=>{
+      const cnt=diaMap[d];
+      const bars='█'.repeat(Math.min(Math.round(cnt/maxDia*16),16)).padEnd(16,' ');
+      const avgM=cnt>0?Math.round(diaMin2[d]/cnt):0;
+      r+=`${diasNom[d].padEnd(11)}: ${bars} ${String(cnt).padStart(3)} avería${cnt!==1?'s':' '} · med ${Math.floor(avgM/60)}h${String(avgM%60).padStart(2,'0')}min\n`;
+    });
+    const ordenDias=[1,2,3,4,5,6,0];
+    const peorDia=ordenDias.reduce((a,b)=>diaMap[a]>=diaMap[b]?a:b);
+    const activos=ordenDias.filter(d=>diaMap[d]>0);
+    const mejorDia=activos.length?activos.reduce((a,b)=>diaMap[a]<=diaMap[b]?a:b):null;
+    r+=`\n→ Más averías: ${diasNom[peorDia]} (${diaMap[peorDia]})`;
+    if(mejorDia!==null&&mejorDia!==peorDia) r+=`  ·  Menos averías: ${diasNom[mejorDia]} (${diaMap[mejorDia]})`;
+    r+='\n';
+    if(diaMap[1]>0&&diaMap[1]===diaMap[peorDia]) r+=`→ Pico el lunes — posible acumulación del fin de semana\n`;
+    r+='\n';
+  }
+
+  // ── HORA DEL DÍA ──
+  const franjas=[
+    {lbl:'Madrugada  00–06',min:0, max:6, cnt:0,tot:0},
+    {lbl:'Mañana     06–14',min:6, max:14,cnt:0,tot:0},
+    {lbl:'Tarde      14–22',min:14,max:22,cnt:0,tot:0},
+    {lbl:'Noche      22–24',min:22,max:24,cnt:0,tot:0},
+  ];
+  av.forEach(a=>{
+    if(a.horaInicio){
+      const h=parseInt(a.horaInicio.split(':')[0]);
+      const f=franjas.find(f=>h>=f.min&&h<f.max);
+      if(f){f.cnt++;f.tot+=(a.tiempoMin||0);}
+    }
+  });
+  const totalConHora=franjas.reduce((s,f)=>s+f.cnt,0);
+  if(totalConHora>0){
+    r+=`🕐 PATRÓN POR HORA DEL DÍA\n${sep}\n`;
+    const maxF=Math.max(...franjas.map(f=>f.cnt))||1;
+    franjas.forEach(f=>{
+      const bars='█'.repeat(Math.min(Math.round(f.cnt/maxF*16),16)).padEnd(16,' ');
+      const avg=f.cnt>0?Math.round(f.tot/f.cnt):0;
+      r+=`${f.lbl}: ${bars} ${String(f.cnt).padStart(3)} (${String(Math.round(f.cnt/totalConHora*100)).padStart(2)}%) · med ${Math.floor(avg/60)}h${String(avg%60).padStart(2,'0')}min\n`;
+    });
+    const peorF=franjas.reduce((a,b)=>a.cnt>=b.cnt?a:b);
+    r+=`\n→ Franja más activa: ${peorF.lbl.trim()} (${Math.round(peorF.cnt/totalConHora*100)}% de las averías)\n\n`;
+  }
+
+  // ── TIEMPO DE RESPUESTA ──
+  const tResp=[];
+  av.forEach(a=>{
+    if(a.ts&&a.fecha&&a.horaInicio){
+      const inicio=new Date(a.fecha+'T'+a.horaInicio+':00').getTime();
+      const diff=Math.round((inicio-a.ts)/60000);
+      if(diff>=0&&diff<=480) tResp.push({maq:a.maqNombre,mecanicos:a.mecanicos||[],min:diff});
+    }
+  });
+  if(tResp.length>=3){
+    r+=`⏱ TIEMPO DE RESPUESTA (registro → inicio reparación)\n${sep}\n`;
+    const avgR=Math.round(tResp.reduce((s,t)=>s+t.min,0)/tResp.length);
+    const minR=Math.min(...tResp.map(t=>t.min));
+    const maxR=Math.max(...tResp.map(t=>t.min));
+    const bajo15=tResp.filter(t=>t.min<=15).length;
+    const bajo30=tResp.filter(t=>t.min<=30).length;
+    r+=`Media:             ${avgR} min\n`;
+    r+=`Mínimo:            ${minR} min\n`;
+    r+=`Máximo:            ${maxR} min\n`;
+    r+=`En ≤ 15 min:       ${bajo15}/${tResp.length} (${Math.round(bajo15/tResp.length*100)}%)\n`;
+    r+=`En ≤ 30 min:       ${bajo30}/${tResp.length} (${Math.round(bajo30/tResp.length*100)}%)\n`;
+    const mecR={};
+    tResp.forEach(t=>{
+      (t.mecanicos||[]).forEach(m=>{
+        if(!mecR[m]){mecR[m]={tot:0,cnt:0};}
+        mecR[m].tot+=t.min; mecR[m].cnt++;
+      });
+    });
+    const mecRS=Object.entries(mecR).filter(([,v])=>v.cnt>=2).sort((a,b)=>(a[1].tot/a[1].cnt)-(b[1].tot/b[1].cnt));
+    if(mecRS.length){
+      r+=`\nPor mecánico (mín. 2 registros):\n`;
+      mecRS.forEach(([m,v],i)=>{
+        const avg2=Math.round(v.tot/v.cnt);
+        r+=`${i===0?'⭐':'  '} ${m}: media ${avg2} min (${v.cnt} casos)\n`;
+      });
+    }
+    r+='\n';
+  }
+
+  // ── COMPARATIVA MECÁNICOS POR TIPO ──
+  const mecTipo={};
+  av.forEach(a=>{
+    if(!a.tipo) return;
+    (a.mecanicos||[]).forEach(m=>{
+      if(!mecTipo[m]) mecTipo[m]={};
+      if(!mecTipo[m][a.tipo]) mecTipo[m][a.tipo]={cnt:0,tot:0};
+      mecTipo[m][a.tipo].cnt++; mecTipo[m][a.tipo].tot+=(a.tiempoMin||0);
+    });
+  });
+  const mecNombres=Object.keys(mecTipo);
+  if(mecNombres.length>=2){
+    const tipos2=[...new Set(av.filter(a=>a.tipo).map(a=>a.tipo))].sort();
+    let hayComparativa=false;
+    let bloqueComp=`🏆 COMPARATIVA DE MECÁNICOS POR TIPO DE AVERÍA\n${sep}\n`;
+    tipos2.forEach(tipo=>{
+      const filas=mecNombres
+        .filter(m=>mecTipo[m][tipo]&&mecTipo[m][tipo].cnt>=2)
+        .map(m=>({mec:m,cnt:mecTipo[m][tipo].cnt,avg:Math.round(mecTipo[m][tipo].tot/mecTipo[m][tipo].cnt)}))
+        .sort((a,b)=>a.avg-b.avg);
+      if(filas.length>=2){
+        hayComparativa=true;
+        bloqueComp+=`\n${tipo}:\n`;
+        filas.forEach((d,i)=>{
+          const avg=d.avg;
+          bloqueComp+=`  ${i===0?'⭐':'  '} ${d.mec}: ${d.cnt} casos · media ${Math.floor(avg/60)}h${String(avg%60).padStart(2,'0')}min\n`;
+        });
+      }
+    });
+    // Ranking global: quién resuelve más rápido en general
+    const rankGlobal=mecNombres.map(m=>{
+      const tots=Object.values(mecTipo[m]);
+      const totCnt=tots.reduce((s,v)=>s+v.cnt,0);
+      const totMin=tots.reduce((s,v)=>s+v.tot,0);
+      return {mec:m,cnt:totCnt,avg:totCnt>0?Math.round(totMin/totCnt):9999};
+    }).filter(x=>x.cnt>=3).sort((a,b)=>a.avg-b.avg);
+    if(rankGlobal.length>=2){
+      hayComparativa=true;
+      bloqueComp+=`\nRanking global (mín. 3 intervenciones):\n`;
+      rankGlobal.forEach((d,i)=>{
+        bloqueComp+=`  ${i===0?'🥇':i===1?'🥈':i===2?'🥉':'  '} ${d.mec}: ${d.cnt} intervenciones · media ${Math.floor(d.avg/60)}h${String(d.avg%60).padStart(2,'0')}min\n`;
+      });
+    }
+    if(hayComparativa){ r+=bloqueComp+'\n'; }
+  }
+
   // ── RECOMENDACIONES ──
   const recomend=[];
   if(recs.length) recomend.push(`Plan de mantenimiento preventivo para: ${recs.slice(0,3).map(r=>r.maq+' ('+r.parte+')').join(', ')}`);
   if(pendientes.length>3) recomend.push(`Resolver urgentemente las ${pendientes.length} averías abiertas`);
   if(topRep.length) recomend.push(`Asegurar stock de los repuestos más usados: ${topRep.slice(0,2).map(r=>r.desc).join(', ')}`);
   if(avMes.length>5) recomend.push(`Alta actividad este mes (${avMes.length} averías). Revisar plan de mantenimiento general`);
+  const peorFranja2=franjas.reduce((a,b)=>a.cnt>=b.cnt?a:b);
+  if(peorFranja2.cnt>0) recomend.push(`Mayor concentración de averías en la franja ${peorFranja2.lbl.trim()} — refuerza cobertura en ese horario`);
+  const peorDia2=[1,2,3,4,5,6,0].reduce((a,b)=>diaMap[a]>=diaMap[b]?a:b);
+  if(diaMap[peorDia2]>0) recomend.push(`El ${diasNom[peorDia2]} es el día con más averías — revisar si hay causa sistémica`);
+  if(tResp.length>=3){const avgR2=Math.round(tResp.reduce((s,t)=>s+t.min,0)/tResp.length);if(avgR2>45) recomend.push(`Tiempo de respuesta medio alto (${avgR2} min) — revisar disponibilidad de mecánicos`);}
   if(!recomend.length && av.length>0) recomend.push('El sistema está bajo control. Continuar con el plan de mantenimiento actual');
   if(!recomend.length) recomend.push('Registra más datos para obtener recomendaciones personalizadas');
 
