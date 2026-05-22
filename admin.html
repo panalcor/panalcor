@@ -496,6 +496,26 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
     </div>
   </div>
 
+  <div class="card" style="margin-top:12px;border:1px solid rgba(201,162,39,0.25)">
+    <div class="sec-title">📊 Informe Mensual de Mantenimiento Preventivo</div>
+    <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+      <div>
+        <label style="font-size:0.75rem;color:var(--gold);display:block;margin-bottom:4px;letter-spacing:0.1em">MES</label>
+        <input type="month" id="expMes" style="background:var(--navy-mid);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:8px 12px;font-family:'Barlow',sans-serif;font-size:0.95rem">
+      </div>
+      <button class="btn-export btn-gold" onclick="exportarInformeMensual()" style="padding:9px 20px;font-size:0.9rem">
+        📊 Generar Informe Excel
+      </button>
+      <span id="expMesInfo" style="font-size:0.8rem;color:rgba(255,255,255,0.45);font-style:italic;align-self:center"></span>
+    </div>
+    <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);line-height:1.7">
+      Genera un <b style="color:rgba(255,255,255,0.55)">.xlsx</b> con 3 hojas:
+      <b style="color:var(--gold)">Por Máquina</b> — tareas agrupadas con fechas de realización ·
+      <b style="color:var(--gold)">Resumen Turnos</b> — cumplimiento por día/turno ·
+      <b style="color:var(--gold)">Registro Completo</b> — tabla plana con filtros Excel
+    </div>
+  </div>
+
   <div class="card">
     <div class="sec-title">📊 Resumen mensual</div>
     <div style="overflow-x:auto">
@@ -1028,6 +1048,9 @@ function initApp(){
   const fmt = d => d.toISOString().split('T')[0];
   ['mecDesde','infDesde'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=fmt(hace30); });
   ['mecHasta','infHasta'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=fmt(hoy); });
+  // Pre-fill mes actual en informe mensual
+  const expMesEl = document.getElementById('expMes');
+  if(expMesEl) expMesEl.value = hoy.toISOString().substring(0,7);
   renderEstadoDatos();
 }
 
@@ -1773,6 +1796,146 @@ function exportarCompleto(){
   if(t.length) XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(t.map(r=>({Fecha:r.fecha,Turno:r.turno,Mecánico:r.mecanico,Hechas:r.done,Total:r.total}))),'Mantenimientos');
   XLSX.writeFile(wb,`backup_panalcor_${new Date().toISOString().split('T')[0]}.xlsx`);
   showToast('📦 Exportación completa descargada');
+}
+
+// ══════════════════════════════════════════════════
+// INFORME MENSUAL MANTENIMIENTO PREVENTIVO
+// ══════════════════════════════════════════════════
+var _MESES_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+function exportarInformeMensual(){
+  var mes = document.getElementById('expMes').value; // "2026-05"
+  if(!mes){ showToast('⚠️ Selecciona un mes'); return; }
+  var parts = mes.split('-');
+  var anio  = parts[0]; var mm = parts[1];
+  var mesLabel = _MESES_ES[parseInt(mm)-1] + ' ' + anio;
+
+  var allTurnos = getTurnos().filter(function(r){ return r.fecha && r.fecha.startsWith(mes); });
+  var info = document.getElementById('expMesInfo');
+  if(!allTurnos.length){
+    if(info) info.textContent = 'Sin registros para ' + mesLabel;
+    showToast('Sin registros de mantenimiento para ese mes');
+    return;
+  }
+  if(info) info.textContent = 'Cargando datos de Firebase...';
+
+  DB.ref('tareas_diarias').once('value').then(function(snap){
+    var tareasMap = {};
+    var val = snap.val() || {};
+    Object.values(val).forEach(function(t){ tareasMap[t.id] = t; });
+    _generarExcelMensual(mes, mesLabel, allTurnos, tareasMap);
+    if(info) info.textContent = allTurnos.length + ' turnos encontrados en ' + mesLabel;
+  }).catch(function(){
+    // Fallback: generate without machine cross-reference
+    _generarExcelMensual(mes, mesLabel, allTurnos, {});
+    if(info) info.textContent = allTurnos.length + ' turnos (sin datos de máquina)';
+  });
+}
+
+function _generarExcelMensual(mes, mesLabel, turnos, tareasMap){
+  var wb = XLSX.utils.book_new();
+
+  // ── HOJA 1: POR MÁQUINA ──────────────────────────────────
+  // maqMap: { maquina: { taskId: { meta, completions[] } } }
+  var maqMap = {};
+
+  // Seed from tareasMap so we include tasks even if never completed that month
+  Object.values(tareasMap).forEach(function(t){
+    var maq = (t.maquina || 'SIN MAQUINA').toUpperCase();
+    if(!maqMap[maq]) maqMap[maq] = {};
+    maqMap[maq][t.id] = { tarea: t.tarea, maquina: maq, area: t.area||'', turnoConfig: t.turno||'TODOS', prioridad: t.prioridad||'', completions: [] };
+  });
+
+  // Fill completions from turno records
+  turnos.forEach(function(r){
+    if(!r.tareas) return;
+    r.tareas.forEach(function(t){
+      if(!t.ok) return;
+      var def = tareasMap[t.id];
+      var maq = def ? (def.maquina||'SIN MAQUINA').toUpperCase() : 'SIN MAQUINA';
+      if(!maqMap[maq]) maqMap[maq] = {};
+      if(!maqMap[maq][t.id]){
+        maqMap[maq][t.id] = { tarea: t.tarea||t.id, maquina: maq, area: def?def.area||'':'', turnoConfig: def?def.turno||'TODOS':'TODOS', prioridad: def?def.prioridad||'':'', completions: [] };
+      }
+      maqMap[maq][t.id].completions.push({ fecha: r.fecha, turno: r.turno, mecanico: r.mecanico, hora: (t.info&&t.info.time)?t.info.time:r.hora||'' });
+    });
+  });
+
+  var rows1 = [['INFORME MANTENIMIENTO PREVENTIVO — ' + mesLabel.toUpperCase(),'','','','','','','','']];
+  rows1.push(['GENERADO: ' + new Date().toLocaleDateString('es-ES'),'','','','','','','','']);
+  rows1.push([]);
+  rows1.push(['MÁQUINA','TAREA','ÁREA','TURNO ASIG.','PRIORIDAD','FECHA','TURNO REAL','MECÁNICO','HORA']);
+
+  Object.keys(maqMap).sort().forEach(function(maq){
+    rows1.push([]);
+    rows1.push(['══ ' + maq + ' ══','','','','','','','','']);
+    var tareas = Object.values(maqMap[maq]).sort(function(a,b){ return a.tarea.localeCompare(b.tarea); });
+    tareas.forEach(function(task){
+      if(task.completions.length === 0){
+        rows1.push(['', task.tarea, task.area, task.turnoConfig, task.prioridad, '—', '—', '—', 'PENDIENTE']);
+      } else {
+        task.completions.sort(function(a,b){ return a.fecha.localeCompare(b.fecha); }).forEach(function(c, i){
+          rows1.push(['', i===0?task.tarea:'', i===0?task.area:'', i===0?task.turnoConfig:'', i===0?task.prioridad:'', c.fecha, c.turno, c.mecanico, c.hora]);
+        });
+      }
+    });
+  });
+
+  var ws1 = XLSX.utils.aoa_to_sheet(rows1);
+  ws1['!cols'] = [{wch:28},{wch:40},{wch:14},{wch:12},{wch:10},{wch:12},{wch:12},{wch:14},{wch:8}];
+  XLSX.utils.book_append_sheet(wb, ws1, 'Por Maquina');
+
+  // ── HOJA 2: RESUMEN POR TURNO ────────────────────────────
+  var rows2 = [['RESUMEN DIARIO DE TURNOS — ' + mesLabel.toUpperCase()]];
+  rows2.push(['FECHA','DÍA SEMANA','TURNO','MECÁNICO','HORA CIERRE','REALIZADAS','TOTAL','% CUMPLIM.','EDITADO ADMIN']);
+  var diasSem = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  turnos.slice().sort(function(a,b){ return (a.fecha+(a.turno||'')).localeCompare(b.fecha+(b.turno||'')); }).forEach(function(r){
+    var d = r.fecha ? new Date(r.fecha+'T12:00:00') : null;
+    var diaSem = d ? diasSem[d.getDay()] : '';
+    var pct = r.total ? Math.round(r.done/r.total*100)+'%' : '—';
+    rows2.push([r.fecha||'', diaSem, r.turno||'', r.mecanico||'', r.hora||'', r.done||0, r.total||0, pct, r.editadoPorAdmin?'Sí':'No']);
+  });
+  // Totals row
+  var totalDone = turnos.reduce(function(s,r){ return s+(r.done||0); },0);
+  var totalTot  = turnos.reduce(function(s,r){ return s+(r.total||0); },0);
+  rows2.push([]);
+  rows2.push(['TOTAL MES','','','','', totalDone, totalTot, totalTot?Math.round(totalDone/totalTot*100)+'%':'—','']);
+
+  var ws2 = XLSX.utils.aoa_to_sheet(rows2);
+  ws2['!cols'] = [{wch:12},{wch:8},{wch:10},{wch:14},{wch:12},{wch:10},{wch:8},{wch:10},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, ws2, 'Resumen Turnos');
+
+  // ── HOJA 3: REGISTRO COMPLETO (FILTRABLE) ───────────────
+  var rows3 = [];
+  turnos.slice().sort(function(a,b){ return a.fecha.localeCompare(b.fecha); }).forEach(function(r){
+    if(!r.tareas) return;
+    r.tareas.forEach(function(t){
+      var def = tareasMap[t.id];
+      rows3.push({
+        'FECHA'      : r.fecha||'',
+        'TURNO'      : r.turno||'',
+        'MECÁNICO'   : r.mecanico||'',
+        'ID TAREA'   : t.id||'',
+        'TAREA'      : t.tarea||'',
+        'MÁQUINA'    : def?def.maquina||'—':'—',
+        'ÁREA'       : def?def.area||'—':'—',
+        'PRIORIDAD'  : def?def.prioridad||'—':'—',
+        'REALIZADA'  : t.ok?'SÍ':'NO',
+        'HORA'       : (t.info&&t.info.time)?t.info.time:'—'
+      });
+    });
+  });
+
+  if(rows3.length){
+    var ws3 = XLSX.utils.json_to_sheet(rows3);
+    var maxR = rows3.length;
+    ws3['!autofilter'] = { ref: 'A1:J'+(maxR+1) };
+    ws3['!cols'] = [{wch:12},{wch:10},{wch:14},{wch:14},{wch:40},{wch:20},{wch:14},{wch:10},{wch:10},{wch:8}];
+    XLSX.utils.book_append_sheet(wb, ws3, 'Registro Completo');
+  }
+
+  XLSX.writeFile(wb, 'informe_mantenimiento_' + mes + '.xlsx');
+  showToast('📊 Informe ' + mesLabel + ' generado correctamente');
 }
 
 // ══════════════════════════════════════════════════
