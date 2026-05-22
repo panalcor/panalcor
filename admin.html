@@ -2605,32 +2605,68 @@ function _repKey(desc, ref) {
 
 // Carga inmediata desde localStorage + listener Firebase en tiempo real
 function cargarCatalogoRepuestos() {
-  // 1. Mostrar inmediatamente lo que haya en caché
-  try {
-    var cached = JSON.parse(localStorage.getItem(REP_LS) || 'null');
-    if (cached) { _repCatalogo = cached; renderCatalogoRepuestos(); }
-  } catch(e) {}
+  // 1. Mostrar inmediatamente todo lo disponible en local
+  _repCatalogo = _mergeRepLocal();
+  renderCatalogoRepuestos();
 
   // 2. Suscripción en tiempo real (igual que averías)
   if (_repListenerOn) return;
   _repListenerOn = true;
 
   DB.ref('repuestos_catalogo').on('value', function(snap) {
-    var data = snap.val() || {};
-    // Merge: si Firebase está vacío pero hay datos de averías, importar
-    if (Object.keys(data).length === 0) {
-      _importarDeAverias(false); // silencioso, solo si no hay nada
-      return;
+    var fbData = snap.val() || {};
+    if (Object.keys(fbData).length === 0) {
+      // Firebase vacío: importar desde todas las fuentes locales
+      _importarDeAverias(false);
+    } else {
+      _repCatalogo = fbData;
+      localStorage.setItem(REP_LS, JSON.stringify(_repCatalogo));
+      renderCatalogoRepuestos();
+      _sincRepuestosCache();
     }
-    _repCatalogo = data;
-    localStorage.setItem(REP_LS, JSON.stringify(_repCatalogo));
-    renderCatalogoRepuestos();
-    _sincRepuestosCache(); // sincronizar con averias.html
   }, function() {
-    // Sin conexión: usar caché localStorage
-    try { _repCatalogo = JSON.parse(localStorage.getItem(REP_LS) || '{}'); } catch(e) { _repCatalogo = {}; }
+    // Sin conexión: usar fusión local
+    _repCatalogo = _mergeRepLocal();
     renderCatalogoRepuestos();
   });
+}
+
+// Fusiona todas las fuentes locales en un objeto {key → repuesto}
+function _mergeRepLocal() {
+  var mapa = {};
+
+  // a) Catálogo guardado (repuestos_v1)
+  try {
+    var cat = JSON.parse(localStorage.getItem(REP_LS) || 'null');
+    if (cat) Object.values(cat).forEach(function(r) {
+      if (r._key) mapa[r._key] = r;
+    });
+  } catch(e) {}
+
+  // b) Materiales de averías registradas
+  try {
+    getAverias().forEach(function(a) {
+      (a.materiales || []).forEach(function(m) {
+        if (!m.desc) return;
+        var k = _repKey(m.desc, m.ref || '');
+        if (!mapa[k]) mapa[k] = { _key: k, desc: m.desc.toUpperCase(),
+          ref: m.ref || '', fab: '', prov: '', url: '', precio: 0, notas: '', fechaAlta: '' };
+      });
+    });
+  } catch(e) {}
+
+  // c) Excel / repuestosCache (array [{desc,ref,...}])
+  try {
+    var xlsx = JSON.parse(localStorage.getItem('repuestosCache') || 'null');
+    if (Array.isArray(xlsx)) xlsx.forEach(function(r) {
+      if (!r.desc) return;
+      var k = _repKey(r.desc, r.ref || '');
+      if (!mapa[k]) mapa[k] = { _key: k, desc: (r.desc||'').toUpperCase(),
+        ref: r.ref || '', fab: r.ubicacion || '', prov: '', url: '', precio: 0, notas: '', fechaAlta: '' };
+    });
+  } catch(e) {}
+
+  return mapa;
 }
 
 function filtrarRepuestos() {
@@ -2783,28 +2819,26 @@ function _sincRepuestosCache() {
 function importarRepuestosDeAverias() { _importarDeAverias(true); }
 
 function _importarDeAverias(conToast) {
+  var fuentes = _mergeRepLocal();
   var importados = 0;
-  var promesas   = [];
-  getAverias().forEach(function(a) {
-    (a.materiales || []).forEach(function(m) {
-      if (!m.desc) return;
-      var key = _repKey(m.desc, m.ref || '');
-      if (_repCatalogo[key]) return;
-      var obj = { _key: key, desc: m.desc.toUpperCase(), ref: m.ref || '',
-                  fab: '', prov: '', url: '', precio: 0, notas: '',
-                  fechaAlta: new Date().toISOString().substring(0, 10) };
-      _repCatalogo[key] = obj;
-      promesas.push(DB.ref('repuestos_catalogo/' + key).set(obj));
-      importados++;
-    });
+  var promesas = [];
+  Object.values(fuentes).forEach(function(obj) {
+    if (_repCatalogo[obj._key]) return; // ya existe
+    obj.fechaAlta = obj.fechaAlta || new Date().toISOString().substring(0, 10);
+    _repCatalogo[obj._key] = obj;
+    promesas.push(DB.ref('repuestos_catalogo/' + obj._key).set(obj));
+    importados++;
   });
   if (promesas.length === 0) {
-    if (conToast) showToast('Todo al día — no hay repuestos nuevos en averías');
+    if (conToast) showToast('Todo al día — no hay repuestos nuevos');
     renderCatalogoRepuestos();
     return;
   }
   Promise.all(promesas).then(function() {
+    renderCatalogoRepuestos();
     if (conToast) showToast('✅ ' + importados + ' repuesto' + (importados !== 1 ? 's' : '') + ' importado' + (importados !== 1 ? 's' : ''));
+  }).catch(function() {
+    renderCatalogoRepuestos(); // mostrar aunque falle Firebase
   });
 }
 </script>
