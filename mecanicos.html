@@ -287,6 +287,7 @@ tbody td{padding:9px 8px;vertical-align:middle}
           <th>Ubicación</th>
           <th>Ref.</th>
           <th>Descripción</th>
+          <th style="text-align:center;width:60px">Docs</th>
         </tr>
       </thead>
       <tbody id="tablaRepuestos"></tbody>
@@ -425,12 +426,17 @@ function renderTabla(data, limit){
   const items = limit ? data.slice(0, limit) : data;
   tbody.innerHTML = items.map(r=>{
     const sc = getStockClass(r.stock, r.stockMin);
+    const docCell = (r.url||r.instrUrl)
+      ? (r.url ? `<a href="${r.url}" target="_blank" title="Ficha técnica" style="font-size:1.1rem;text-decoration:none;margin-right:3px">📄</a>` : '')
+        + (r.instrUrl ? `<a href="${r.instrUrl}" target="_blank" title="Instrucciones de uso" style="font-size:1.1rem;text-decoration:none">📝</a>` : '')
+      : '<span style="color:rgba(255,255,255,0.15)">—</span>';
     return `<tr>
       <td><span class="col-ubi">${r.ubicacion}</span></td>
       <td class="col-ref">${r.ref}</td>
       <td class="col-desc">${r.desc}</td>
+      <td style="text-align:center;white-space:nowrap">${docCell}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="5" class="no-results">Sin resultados</td></tr>';
+  }).join('') || '<tr><td colspan="4" class="no-results">Sin resultados</td></tr>';
 }
 
 function buscar(){
@@ -504,14 +510,14 @@ function buscar(){
           var ref = String(ex.ref || '');
           if (ref && idx[ref] !== undefined) {
             var r = repuestosData[idx[ref]];
-            ['fab','prov','url','notas','desc'].forEach(function(f){
+            ['fab','prov','url','instrUrl','notas','desc'].forEach(function(f){
               if (ex[f]) { r[f] = ex[f]; cambiado = true; }
             });
             if (ex.precio) { r.precio = ex.precio; cambiado = true; }
           } else if (ex.desc) {
             repuestosData.push({ ref: ex.ref||k, desc: ex.desc, ubicacion: ex.prov||'',
               familia:'', stock:0, stockMin:0, fab:ex.fab||'', prov:ex.prov||'',
-              url:ex.url||'', precio:ex.precio||0, notas:ex.notas||'' });
+              url:ex.url||'', instrUrl:ex.instrUrl||'', precio:ex.precio||0, notas:ex.notas||'' });
             cambiado = true;
           }
         });
