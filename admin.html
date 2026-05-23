@@ -1004,18 +1004,16 @@ const DB = firebase.database();
 // el panel del admin se actualiza automáticamente sin recargar
 DB.ref('averias').on('value', snap => {
   const val = snap.val();
-  if (val) {
-    const nuevas = Object.values(val).sort((a,b) => b.ts - a.ts);
-    localStorage.setItem('averias_v1', JSON.stringify(nuevas));
-    // Si el dashboard está visible, refrescarlo silenciosamente
-    if (document.getElementById('app') &&
-        document.getElementById('app').style.display !== 'none') {
-      renderDashboard();
-  cargarAlarmasPreventivo();
-  cargarProgresoPreventivo();
-  renderPendientesDash();
-      renderEstadoDatos();
-    }
+  const nuevas = val ? Object.values(val).sort((a,b) => b.ts - a.ts) : [];
+  localStorage.setItem('averias_v1', JSON.stringify(nuevas));
+  // Si el dashboard está visible, refrescarlo silenciosamente
+  if (document.getElementById('app') &&
+      document.getElementById('app').style.display !== 'none') {
+    renderDashboard();
+    cargarAlarmasPreventivo();
+    cargarProgresoPreventivo();
+    renderPendientesDash();
+    renderEstadoDatos();
   }
 });
 
@@ -2100,9 +2098,10 @@ function borrarAverias(){
 }
 
 function borrarMantenimientos(){
-  if(!confirm('⚠️ ¿Borrar TODOS los registros de mantenimiento? Esta acción no se puede deshacer.')) return;
-  Object.keys(localStorage).filter(k=>k.startsWith('turno_')||k.startsWith('checks_')).forEach(k=>localStorage.removeItem(k));
-  showToast('🗑 Mantenimientos eliminados');
+  if(!confirm('⚠️ ¿Borrar TODOS los registros de mantenimiento?\nSe borrara de todos los dispositivos (Firebase) y del navegador.\nEsta accion no se puede deshacer.')) return;
+  Object.keys(localStorage).filter(k=>k.startsWith('turno_')||k.startsWith('checks_')||k.startsWith('info_')).forEach(k=>localStorage.removeItem(k));
+  DB.ref('registros_turno').remove().catch(function(){});
+  showToast('Mantenimientos eliminados (local + nube)');
   renderEstadoDatos();
 }
 
