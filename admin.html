@@ -140,6 +140,13 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 .toast{position:fixed;bottom:24px;right:24px;background:var(--navy-mid);border:1px solid rgba(201,162,39,0.5);border-radius:10px;padding:14px 22px;font-size:0.95rem;font-weight:600;z-index:9999;opacity:0;transform:translateY(20px);transition:all .3s;pointer-events:none;max-width:340px}
 .toast.show{opacity:1;transform:translateY(0)}
 
+/* ── RECORDATORIOS ── */
+.rec-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.rec-modal-box{background:var(--navy-mid);border:1px solid rgba(201,162,39,0.35);border-radius:14px;padding:24px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto}
+.rec-form{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:6px}
+.rec-kpi{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 16px;font-size:0.85rem}
+.badge-purple{background:rgba(155,89,182,0.2);color:#c39bd3;border:1px solid rgba(155,89,182,0.3)}
+
 /* ── RESPONSIVE ── */
 @media(max-width:700px){
   .chart-grid{grid-template-columns:1fr}
@@ -225,6 +232,7 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
   <div class="tab" onclick="switchTab('enc')"  id="tab-enc">📢 Encargados</div>
   <div class="tab" onclick="switchTab('int')"  id="tab-int">🔩 Integrales</div>
   <div class="tab" onclick="switchTab('cur')"  id="tab-cur">📚 Cursos</div>
+  <div class="tab" onclick="switchTab('rec')"  id="tab-rec">🔔 Recordatorios</div>
 </div>
 
 <!-- ═══ DASHBOARD ═══ -->
@@ -236,6 +244,22 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
     <a href="maquinas_admin.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:linear-gradient(135deg,rgba(52,152,219,0.2),rgba(52,152,219,0.08));border:1px solid rgba(52,152,219,0.4);border-radius:8px;color:#3498db;text-decoration:none;font-family:'Barlow',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.04em;transition:all .2s" onmouseover="this.style.background='linear-gradient(135deg,rgba(52,152,219,0.35),rgba(52,152,219,0.15))'" onmouseout="this.style.background='linear-gradient(135deg,rgba(52,152,219,0.2),rgba(52,152,219,0.08))'">
       🏭 Fichas de Máquinas
     </a>
+    <button onclick="toggleRecordatoriosDash()" id="btnRecDash" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:linear-gradient(135deg,rgba(155,89,182,0.2),rgba(155,89,182,0.08));border:1px solid rgba(155,89,182,0.4);border-radius:8px;color:#c39bd3;font-family:'Barlow',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.04em;cursor:pointer;transition:all .2s" onmouseover="this.style.background='linear-gradient(135deg,rgba(155,89,182,0.35),rgba(155,89,182,0.15))'" onmouseout="this.style.background='linear-gradient(135deg,rgba(155,89,182,0.2),rgba(155,89,182,0.08))'">
+      🔔 Recordatorios <span id="recDashBadge" style="background:rgba(155,89,182,0.4);border-radius:10px;padding:1px 7px;font-size:0.75rem"></span>
+    </button>
+  </div>
+
+  <!-- ══ CAJÓN RECORDATORIOS ══ -->
+  <div id="recDashPanel" style="display:none;margin-bottom:16px;max-width:732px">
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:12px 16px;border-bottom:1px solid rgba(155,89,182,0.25);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div style="font-size:0.72rem;letter-spacing:.12em;text-transform:uppercase;color:#c39bd3;font-weight:700">🔔 Recordatorios</div>
+        <button onclick="abrirModalRec(null)" style="background:rgba(155,89,182,0.2);border:1px solid rgba(155,89,182,0.4);color:#c39bd3;border-radius:7px;padding:5px 12px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.8rem;font-weight:700">➕ Nuevo</button>
+      </div>
+      <div id="recDashLista" style="padding:8px 0">
+        <div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:0.85rem">Cargando...</div>
+      </div>
+    </div>
   </div>
   <div class="kpi-row" id="kpiRow"></div>
   
@@ -493,6 +517,26 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
       <button class="btn-export btn-green" onclick="exportarAverias()">📥 Exportar Averías (.xlsx)</button>
       <button class="btn-export btn-blue" onclick="exportarMantenimientos()">📥 Exportar Mantenimientos (.xlsx)</button>
       <button class="btn-export btn-gold" onclick="exportarCompleto()">📦 Exportar Todo</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:12px;border:1px solid rgba(201,162,39,0.25)">
+    <div class="sec-title">📊 Informe Mensual de Mantenimiento Preventivo</div>
+    <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+      <div>
+        <label style="font-size:0.75rem;color:var(--gold);display:block;margin-bottom:4px;letter-spacing:0.1em">MES</label>
+        <input type="month" id="expMes" style="background:var(--navy-mid);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:8px 12px;font-family:'Barlow',sans-serif;font-size:0.95rem">
+      </div>
+      <button class="btn-export btn-gold" onclick="exportarInformeMensual()" style="padding:9px 20px;font-size:0.9rem">
+        📊 Generar Informe Excel
+      </button>
+      <span id="expMesInfo" style="font-size:0.8rem;color:rgba(255,255,255,0.45);font-style:italic;align-self:center"></span>
+    </div>
+    <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);line-height:1.7">
+      Genera un <b style="color:rgba(255,255,255,0.55)">.xlsx</b> con 3 hojas:
+      <b style="color:var(--gold)">Por Máquina</b> — tareas agrupadas con fechas de realización ·
+      <b style="color:var(--gold)">Resumen Turnos</b> — cumplimiento por día/turno ·
+      <b style="color:var(--gold)">Registro Completo</b> — tabla plana con filtros Excel
     </div>
   </div>
 
@@ -904,6 +948,77 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
   <div id="encCount" style="font-size:0.72rem;color:rgba(255,255,255,0.3);margin-top:8px"></div>
 </div>
 
+<!-- ═══ RECORDATORIOS ═══ -->
+<div class="panel" id="panel-rec">
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+      <div class="sec-title" style="margin-bottom:0">🔔 Recordatorios</div>
+      <button class="btn-export btn-gold" onclick="abrirModalRec(null)">➕ Nuevo recordatorio</button>
+    </div>
+
+    <!-- Contadores rápidos -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px" id="recKpis"></div>
+
+    <!-- Tabla -->
+    <div style="overflow-x:auto">
+      <table class="data-table" id="tRecordatorios">
+        <thead><tr>
+          <th>Título</th>
+          <th>Descripción</th>
+          <th>Fecha / Hora</th>
+          <th>Prioridad</th>
+          <th>Estado</th>
+          <th>Mecánico</th>
+          <th>Acciones</th>
+        </tr></thead>
+        <tbody id="bRecordatorios">
+          <tr><td colspan="7" class="no-data">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="font-size:0.75rem;color:rgba(255,255,255,0.25);margin-top:10px">
+      ✅ Los recordatorios marcados como <b>Realizados</b> por el mecánico aparecen en verde — puedes borrarlos una vez revisados.
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL RECORDATORIO ═══ -->
+<div class="rec-modal-bg" id="recModal" style="display:none">
+  <div class="rec-modal-box">
+    <h3 style="font-size:1.1rem;font-weight:900;color:var(--gold-light);margin-bottom:18px" id="recModalTitle">➕ Nuevo recordatorio</h3>
+    <div class="rec-form">
+      <div class="field" style="margin:0;grid-column:1/-1">
+        <label>Título *</label>
+        <input type="text" id="recTitulo" placeholder="Ej: Revisar compresor sala 2">
+      </div>
+      <div class="field" style="margin:0;grid-column:1/-1">
+        <label>Descripción</label>
+        <input type="text" id="recDescripcion" placeholder="Detalles, observaciones...">
+      </div>
+      <div class="field" style="margin:0">
+        <label>Fecha</label>
+        <input type="date" id="recFecha">
+      </div>
+      <div class="field" style="margin:0">
+        <label>Hora</label>
+        <input type="time" id="recHora">
+      </div>
+      <div class="field" style="margin:0">
+        <label>Prioridad</label>
+        <select id="recPrioridad" style="width:100%;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:11px 14px;font-family:'Barlow',sans-serif;font-size:1rem">
+          <option value="media">🟡 Media</option>
+          <option value="alta">🔴 Alta</option>
+          <option value="baja">🟢 Baja</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn-export btn-gold" onclick="guardarRecordatorio()">💾 Guardar</button>
+      <button class="btn-export" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.2)" onclick="cerrarModalRec()">✕ Cancelar</button>
+    </div>
+  </div>
+</div>
+
 </div><!-- /app -->
 
 <div class="toast" id="toast"></div>
@@ -984,18 +1099,16 @@ const DB = firebase.database();
 // el panel del admin se actualiza automáticamente sin recargar
 DB.ref('averias').on('value', snap => {
   const val = snap.val();
-  if (val) {
-    const nuevas = Object.values(val).sort((a,b) => b.ts - a.ts);
-    localStorage.setItem('averias_v1', JSON.stringify(nuevas));
-    // Si el dashboard está visible, refrescarlo silenciosamente
-    if (document.getElementById('app') &&
-        document.getElementById('app').style.display !== 'none') {
-      renderDashboard();
-  cargarAlarmasPreventivo();
-  cargarProgresoPreventivo();
-  renderPendientesDash();
-      renderEstadoDatos();
-    }
+  const nuevas = val ? Object.values(val).sort((a,b) => b.ts - a.ts) : [];
+  localStorage.setItem('averias_v1', JSON.stringify(nuevas));
+  // Si el dashboard está visible, refrescarlo silenciosamente
+  if (document.getElementById('app') &&
+      document.getElementById('app').style.display !== 'none') {
+    renderDashboard();
+    cargarAlarmasPreventivo();
+    cargarProgresoPreventivo();
+    renderPendientesDash();
+    renderEstadoDatos();
   }
 });
 
@@ -1022,12 +1135,17 @@ let charts = {};
 function initApp(){
   initCostoHoraField();
   renderDashboard();
+  cargarMecanicosParaRec();
+  cargarRecordatorios();
   // fechas por defecto para mecánicos e informes (último mes)
   const hoy = new Date();
   const hace30 = new Date(hoy); hace30.setDate(hoy.getDate()-30);
   const fmt = d => d.toISOString().split('T')[0];
   ['mecDesde','infDesde'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=fmt(hace30); });
   ['mecHasta','infHasta'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=fmt(hoy); });
+  // Pre-fill mes actual en informe mensual
+  const expMesEl = document.getElementById('expMes');
+  if(expMesEl) expMesEl.value = hoy.toISOString().substring(0,7);
   renderEstadoDatos();
 }
 
@@ -1776,6 +1894,172 @@ function exportarCompleto(){
 }
 
 // ══════════════════════════════════════════════════
+// INFORME MENSUAL MANTENIMIENTO PREVENTIVO
+// ══════════════════════════════════════════════════
+var _MESES_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+function exportarInformeMensual(){
+  var mes = document.getElementById('expMes').value; // "2026-05"
+  if(!mes){ showToast('⚠️ Selecciona un mes'); return; }
+  var parts = mes.split('-');
+  var anio  = parts[0]; var mm = parts[1];
+  var mesLabel = _MESES_ES[parseInt(mm)-1] + ' ' + anio;
+  var info = document.getElementById('expMesInfo');
+  if(info) info.textContent = 'Buscando registros en Firebase...';
+
+  // Load from Firebase (all devices) + localStorage (this device) merged
+  Promise.all([
+    DB.ref('registros_turno').once('value'),
+    DB.ref('tareas_diarias').once('value')
+  ]).then(function(snaps){
+    var fbTurnos = snaps[0].val() || {};
+    var tareasMap = {};
+    Object.values(snaps[1].val() || {}).forEach(function(t){ tareasMap[t.id] = t; });
+
+    // Collect Firebase records for this month
+    var seenKeys = {};
+    var allTurnos = Object.values(fbTurnos).filter(function(r){
+      if(!r.fecha || !r.fecha.startsWith(mes)) return false;
+      // Deduplicate by fecha+turno+mecanico (keep latest)
+      var k = r.fecha+'|'+(r.turno||'')+'|'+(r.mecanico||'');
+      if(seenKeys[k] && seenKeys[k].ts >= (r.ts||0)) return false;
+      seenKeys[k] = r;
+      return true;
+    });
+
+    // Merge localStorage records not yet in Firebase (offline case)
+    getTurnos().filter(function(r){ return r.fecha && r.fecha.startsWith(mes); }).forEach(function(r){
+      var k = r.fecha+'|'+(r.turno||'')+'|'+(r.mecanico||'');
+      if(!seenKeys[k]){ allTurnos.push(r); seenKeys[k] = r; }
+    });
+
+    if(!allTurnos.length){
+      if(info) info.textContent = 'Sin registros para ' + mesLabel;
+      showToast('Sin registros de mantenimiento para ese mes');
+      return;
+    }
+    _generarExcelMensual(mes, mesLabel, allTurnos, tareasMap);
+    if(info) info.textContent = allTurnos.length + ' turnos encontrados en ' + mesLabel;
+  }).catch(function(){
+    // Full fallback: localStorage only
+    var allTurnos = getTurnos().filter(function(r){ return r.fecha && r.fecha.startsWith(mes); });
+    if(!allTurnos.length){
+      if(info) info.textContent = 'Sin registros para ' + mesLabel;
+      showToast('Sin registros de mantenimiento para ese mes');
+      return;
+    }
+    _generarExcelMensual(mes, mesLabel, allTurnos, {});
+    if(info) info.textContent = allTurnos.length + ' turnos (solo dispositivo local)';
+  });
+}
+
+function _generarExcelMensual(mes, mesLabel, turnos, tareasMap){
+  var wb = XLSX.utils.book_new();
+
+  // ── HOJA 1: POR MÁQUINA ──────────────────────────────────
+  // maqMap: { maquina: { taskId: { meta, completions[] } } }
+  var maqMap = {};
+
+  // Seed from tareasMap so we include tasks even if never completed that month
+  Object.values(tareasMap).forEach(function(t){
+    var maq = (t.maquina || 'SIN MAQUINA').toUpperCase();
+    if(!maqMap[maq]) maqMap[maq] = {};
+    maqMap[maq][t.id] = { tarea: t.tarea, maquina: maq, area: t.area||'', turnoConfig: t.turno||'TODOS', prioridad: t.prioridad||'', completions: [] };
+  });
+
+  // Fill completions from turno records
+  turnos.forEach(function(r){
+    if(!r.tareas) return;
+    r.tareas.forEach(function(t){
+      if(!t.ok) return;
+      var def = tareasMap[t.id];
+      var maq = def ? (def.maquina||'SIN MAQUINA').toUpperCase() : 'SIN MAQUINA';
+      if(!maqMap[maq]) maqMap[maq] = {};
+      if(!maqMap[maq][t.id]){
+        maqMap[maq][t.id] = { tarea: t.tarea||t.id, maquina: maq, area: def?def.area||'':'', turnoConfig: def?def.turno||'TODOS':'TODOS', prioridad: def?def.prioridad||'':'', completions: [] };
+      }
+      maqMap[maq][t.id].completions.push({ fecha: r.fecha, turno: r.turno, mecanico: r.mecanico, hora: (t.info&&t.info.time)?t.info.time:r.hora||'' });
+    });
+  });
+
+  var rows1 = [['INFORME MANTENIMIENTO PREVENTIVO — ' + mesLabel.toUpperCase(),'','','','','','','','']];
+  rows1.push(['GENERADO: ' + new Date().toLocaleDateString('es-ES'),'','','','','','','','']);
+  rows1.push([]);
+  rows1.push(['MÁQUINA','TAREA','ÁREA','TURNO ASIG.','PRIORIDAD','FECHA','TURNO REAL','MECÁNICO','HORA']);
+
+  Object.keys(maqMap).sort().forEach(function(maq){
+    rows1.push([]);
+    rows1.push(['══ ' + maq + ' ══','','','','','','','','']);
+    var tareas = Object.values(maqMap[maq]).sort(function(a,b){ return a.tarea.localeCompare(b.tarea); });
+    tareas.forEach(function(task){
+      if(task.completions.length === 0){
+        rows1.push(['', task.tarea, task.area, task.turnoConfig, task.prioridad, '—', '—', '—', 'PENDIENTE']);
+      } else {
+        task.completions.sort(function(a,b){ return a.fecha.localeCompare(b.fecha); }).forEach(function(c, i){
+          rows1.push(['', i===0?task.tarea:'', i===0?task.area:'', i===0?task.turnoConfig:'', i===0?task.prioridad:'', c.fecha, c.turno, c.mecanico, c.hora]);
+        });
+      }
+    });
+  });
+
+  var ws1 = XLSX.utils.aoa_to_sheet(rows1);
+  ws1['!cols'] = [{wch:28},{wch:40},{wch:14},{wch:12},{wch:10},{wch:12},{wch:12},{wch:14},{wch:8}];
+  XLSX.utils.book_append_sheet(wb, ws1, 'Por Maquina');
+
+  // ── HOJA 2: RESUMEN POR TURNO ────────────────────────────
+  var rows2 = [['RESUMEN DIARIO DE TURNOS — ' + mesLabel.toUpperCase()]];
+  rows2.push(['FECHA','DÍA SEMANA','TURNO','MECÁNICO','HORA CIERRE','REALIZADAS','TOTAL','% CUMPLIM.','EDITADO ADMIN']);
+  var diasSem = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  turnos.slice().sort(function(a,b){ return (a.fecha+(a.turno||'')).localeCompare(b.fecha+(b.turno||'')); }).forEach(function(r){
+    var d = r.fecha ? new Date(r.fecha+'T12:00:00') : null;
+    var diaSem = d ? diasSem[d.getDay()] : '';
+    var pct = r.total ? Math.round(r.done/r.total*100)+'%' : '—';
+    rows2.push([r.fecha||'', diaSem, r.turno||'', r.mecanico||'', r.hora||'', r.done||0, r.total||0, pct, r.editadoPorAdmin?'Sí':'No']);
+  });
+  // Totals row
+  var totalDone = turnos.reduce(function(s,r){ return s+(r.done||0); },0);
+  var totalTot  = turnos.reduce(function(s,r){ return s+(r.total||0); },0);
+  rows2.push([]);
+  rows2.push(['TOTAL MES','','','','', totalDone, totalTot, totalTot?Math.round(totalDone/totalTot*100)+'%':'—','']);
+
+  var ws2 = XLSX.utils.aoa_to_sheet(rows2);
+  ws2['!cols'] = [{wch:12},{wch:8},{wch:10},{wch:14},{wch:12},{wch:10},{wch:8},{wch:10},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, ws2, 'Resumen Turnos');
+
+  // ── HOJA 3: REGISTRO COMPLETO (FILTRABLE) ───────────────
+  var rows3 = [];
+  turnos.slice().sort(function(a,b){ return a.fecha.localeCompare(b.fecha); }).forEach(function(r){
+    if(!r.tareas) return;
+    r.tareas.forEach(function(t){
+      var def = tareasMap[t.id];
+      rows3.push({
+        'FECHA'      : r.fecha||'',
+        'TURNO'      : r.turno||'',
+        'MECÁNICO'   : r.mecanico||'',
+        'ID TAREA'   : t.id||'',
+        'TAREA'      : t.tarea||'',
+        'MÁQUINA'    : def?def.maquina||'—':'—',
+        'ÁREA'       : def?def.area||'—':'—',
+        'PRIORIDAD'  : def?def.prioridad||'—':'—',
+        'REALIZADA'  : t.ok?'SÍ':'NO',
+        'HORA'       : (t.info&&t.info.time)?t.info.time:'—'
+      });
+    });
+  });
+
+  if(rows3.length){
+    var ws3 = XLSX.utils.json_to_sheet(rows3);
+    var maxR = rows3.length;
+    ws3['!autofilter'] = { ref: 'A1:J'+(maxR+1) };
+    ws3['!cols'] = [{wch:12},{wch:10},{wch:14},{wch:14},{wch:40},{wch:20},{wch:14},{wch:10},{wch:10},{wch:8}];
+    XLSX.utils.book_append_sheet(wb, ws3, 'Registro Completo');
+  }
+
+  XLSX.writeFile(wb, 'informe_mantenimiento_' + mes + '.xlsx');
+  showToast('📊 Informe ' + mesLabel + ' generado correctamente');
+}
+
+// ══════════════════════════════════════════════════
 // CONFIGURACIÓN
 // ══════════════════════════════════════════════════
 function cambiarPwMecanicos(){
@@ -1911,9 +2195,10 @@ function borrarAverias(){
 }
 
 function borrarMantenimientos(){
-  if(!confirm('⚠️ ¿Borrar TODOS los registros de mantenimiento? Esta acción no se puede deshacer.')) return;
-  Object.keys(localStorage).filter(k=>k.startsWith('turno_')||k.startsWith('checks_')).forEach(k=>localStorage.removeItem(k));
-  showToast('🗑 Mantenimientos eliminados');
+  if(!confirm('⚠️ ¿Borrar TODOS los registros de mantenimiento?\nSe borrara de todos los dispositivos (Firebase) y del navegador.\nEsta accion no se puede deshacer.')) return;
+  Object.keys(localStorage).filter(k=>k.startsWith('turno_')||k.startsWith('checks_')||k.startsWith('info_')).forEach(k=>localStorage.removeItem(k));
+  DB.ref('registros_turno').remove().catch(function(){});
+  showToast('Mantenimientos eliminados (local + nube)');
   renderEstadoDatos();
 }
 
@@ -2146,6 +2431,7 @@ function switchTab(name){
   if(name==='cfg') cargarFechasRealizacion();
   if(name==='cfg') cargarFechasRealizacion();
   if(name==='cfg') renderEstadoDatos();
+  if(name==='rec') { cargarMecanicosParaRec(); cargarRecordatorios(); }
   if(name==='enc') cargarAvisosEncargados();
   if(name==='int') initIntegrales();
   if(name==='cur') initCursos();
@@ -3327,20 +3613,30 @@ function importarExcelRepuestos(input) {
         return {
           ref:      String(row[k.ref]       || row[k.referencia]  || '').trim(),
           desc:     String(row[k.desc]      || row[k.descripcion] || row[k.nombre] || '').trim().toUpperCase(),
-          ubicacion:String(row[k.ubicacion] || row[k.ubi]         || row[k.ubicacion] || '').trim(),
+          ubicacion:String(row[k.ubicacion] || row[k.ubi]         || '').trim(),
           familia:  String(row[k.familia]   || row[k.categoria]   || '').trim(),
           stock:    parseFloat(row[k.stock]    || 0) || 0,
-          stockMin: parseFloat(row[k.stockmin] || row[k.stock_min] || row[k.minimo] || 0) || 0
+          stockMin: parseFloat(row[k.stockmin] || row[k.stock_min] || row[k.minimo] || 0) || 0,
+          precio:   parseFloat(row[k.precio]   || row[k.coste]    || row[k.ultimo_coste] || 0) || 0
         };
       }
 
       var base = {};
+      var preciosUpdate = {};   // para actualizar precio en repuestos_catalogo sin machacar el resto
       rows.forEach(function(row, i) {
         var r = col(row);
         if (!r.desc && !r.ref) return;
         var key = r.ref || String(i + 1);
         base[key] = { ref: key, desc: r.desc, ubicacion: r.ubicacion,
                       familia: r.familia, stock: r.stock, stockMin: r.stockMin };
+        // Si viene precio, preparar update en repuestos_catalogo (solo el campo precio)
+        if (r.precio > 0) {
+          var catKey = _repKey(r.desc, key);
+          preciosUpdate[catKey + '/precio'] = r.precio;
+          preciosUpdate[catKey + '/_key']   = catKey;
+          preciosUpdate[catKey + '/ref']    = key;
+          preciosUpdate[catKey + '/desc']   = r.desc;
+        }
       });
 
       var total = Object.keys(base).length;
@@ -3350,14 +3646,19 @@ function importarExcelRepuestos(input) {
       DB.ref('repuestos_base').set(base).then(function() {
         return DB.ref('repuestos_base_ts').set(ts);
       }).then(function() {
-        // Actualizar caché local del admin
+        // Actualizar precios en repuestos_catalogo sin machacar otros campos
+        return Object.keys(preciosUpdate).length
+          ? DB.ref('repuestos_catalogo').update(preciosUpdate)
+          : Promise.resolve();
+      }).then(function() {
+        // Actualizar cache local del admin
         _repBase = Object.values(base);
         localStorage.setItem('repuestosCache', JSON.stringify(_repBase));
         localStorage.setItem('repuestos_base_ts', String(ts));
         _repPagina = 0;
         renderCatalogoRepuestos();
         msg.style.color = 'var(--green)';
-        msg.textContent = '✅ ' + total + ' repuestos importados';
+        msg.textContent = '✅ ' + total + ' repuestos importados (precios actualizados)';
         setTimeout(function() { msg.textContent = ''; }, 3500);
         input.value = '';
       }).catch(function(err) {
@@ -4100,6 +4401,250 @@ function eliminarCurso(id) {
   DB.ref('cursos/' + id).remove().then(function() {
     showToast('🗑 Curso eliminado');
   }).catch(function() { showToast('❌ Error'); });
+}
+
+// ══════════════════════════════════════════════════
+// RECORDATORIOS — CAJÓN DASHBOARD
+// ══════════════════════════════════════════════════
+let _recDashOpen = false;
+
+function toggleRecordatoriosDash() {
+  _recDashOpen = !_recDashOpen;
+  const panel = document.getElementById('recDashPanel');
+  const btn   = document.getElementById('btnRecDash');
+  panel.style.display = _recDashOpen ? 'block' : 'none';
+  if (_recDashOpen) {
+    cargarMecanicosParaRec();
+    cargarRecordatorios();
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  btn.style.borderColor = _recDashOpen ? 'rgba(155,89,182,0.8)' : 'rgba(155,89,182,0.4)';
+}
+
+function renderRecordatoriosDash(data) {
+  const lista = Object.keys(data).map(k => Object.assign({ _id: k }, data[k]))
+    .filter(r => r.estado !== 'realizado')
+    .sort((a, b) => {
+      const ord = { pendiente:0, asignado:1 };
+      const oa = ord[a.estado] !== undefined ? ord[a.estado] : 0;
+      const ob = ord[b.estado] !== undefined ? ord[b.estado] : 0;
+      if (oa !== ob) return oa - ob;
+      return (a.fecha || '').localeCompare(b.fecha || '');
+    });
+
+  const realizados = Object.values(data).filter(r => r.estado === 'realizado');
+
+  // Badge del botón
+  const total = Object.keys(data).length;
+  const badge = document.getElementById('recDashBadge');
+  if (badge) badge.textContent = total > 0 ? total : '';
+
+  // Si el cajón no está abierto, solo actualizamos el badge
+  if (!_recDashOpen) return;
+
+  const wrap = document.getElementById('recDashLista');
+  if (!wrap) return;
+
+  if (!lista.length && !realizados.length) {
+    wrap.innerHTML = '<div style="text-align:center;padding:24px;color:rgba(255,255,255,0.3);font-size:0.85rem">Sin recordatorios pendientes. Pulsa ➕ Nuevo para añadir.</div>';
+    return;
+  }
+
+  const mecOpts = _recMecs.map(m => '<option value="' + escRec(m) + '">' + escRec(m) + '</option>').join('');
+
+  let html = lista.map(function(r) {
+    const prioColor = r.prioridad === 'alta' ? '#e74c3c' : r.prioridad === 'baja' ? '#2ecc71' : '#f39c12';
+    const fechaHora = [r.fecha, r.hora].filter(Boolean).join(' ');
+    const esAsig    = r.estado === 'asignado';
+    const mecActSel = r.mecanico ? '<option value="' + escRec(r.mecanico) + '" selected>' + escRec(r.mecanico) + '</option>' : '';
+
+    return '<div style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid rgba(255,255,255,0.05);flex-wrap:wrap">'
+      + '<span style="width:8px;height:8px;border-radius:50%;background:' + prioColor + ';flex-shrink:0;display:inline-block"></span>'
+      + '<div style="flex:1;min-width:140px">'
+        + '<div style="font-size:0.9rem;font-weight:700">' + escRec(r.titulo || '—') + '</div>'
+        + (r.descripcion ? '<div style="font-size:0.75rem;color:rgba(255,255,255,0.4);margin-top:1px">' + escRec(r.descripcion) + '</div>' : '')
+        + (fechaHora ? '<div style="font-size:0.7rem;color:rgba(255,255,255,0.3);margin-top:1px">📅 ' + escRec(fechaHora) + '</div>' : '')
+      + '</div>'
+      + (esAsig ? '<span style="font-size:0.75rem;color:#3498db;font-weight:700;white-space:nowrap">👷 ' + escRec(r.mecanico) + '</span>' : '')
+      + '<select onchange="asignarRecordatorio(\'' + r._id + '\',this.value)"'
+        + ' style="background:#0d1b2a;border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:5px 8px;'
+        + 'color:#fff;font-family:\'Barlow\',sans-serif;font-size:0.78rem;cursor:pointer;max-width:160px">'
+        + '<option value="">— Asignar —</option>' + mecActSel + mecOpts
+      + '</select>'
+      + '<button onclick="borrarRecordatorio(\'' + r._id + '\')" title="Borrar"'
+        + ' style="background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);color:var(--red);'
+        + 'border-radius:6px;padding:5px 9px;cursor:pointer;font-family:\'Barlow\',sans-serif;font-size:.8rem">🗑</button>'
+      + '</div>';
+  }).join('');
+
+  // Realizados al final
+  if (realizados.length) {
+    html += '<div style="padding:8px 16px;border-top:1px solid rgba(46,204,113,0.2);margin-top:4px">'
+      + '<div style="font-size:0.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--green);margin-bottom:6px">✅ Realizados — puedes borrarlos</div>'
+      + realizados.map(function(r) {
+          return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04);opacity:.65">'
+            + '<span style="font-size:.85rem;flex:1">' + escRec(r.titulo || '—') + '</span>'
+            + '<span style="font-size:.75rem;color:var(--green)">👷 ' + escRec(r.mecanico || '—') + '</span>'
+            + '<button onclick="borrarRecordatorio(\'' + r._id + '\')"'
+              + ' style="background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.35);color:var(--green);'
+              + 'border-radius:6px;padding:4px 10px;cursor:pointer;font-family:\'Barlow\',sans-serif;font-size:.78rem">🗑 Borrar</button>'
+            + '</div>';
+        }).join('')
+      + '</div>';
+  }
+
+  wrap.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════
+// RECORDATORIOS
+// ══════════════════════════════════════════════════
+let _recEditId   = null;
+let _recData     = {};
+let _recDbRef    = null;
+let _recMecs     = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO'];
+
+function cargarMecanicosParaRec() {
+  DB.ref('config/mecanicos').once('value').then(snap => {
+    const v = snap.val();
+    if (v && v.length) _recMecs = v;
+  }).catch(() => {});
+}
+
+function cargarRecordatorios() {
+  if (_recDbRef) _recDbRef.off();
+  _recDbRef = DB.ref('recordatorios');
+  _recDbRef.on('value', snap => {
+    _recData = snap.val() || {};
+    renderRecordatorios(_recData);
+    renderRecordatoriosDash(_recData);
+  });
+}
+
+function escRec(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function renderRecordatorios(data) {
+  const lista = Object.keys(data).map(k => ({ _id: k, ...data[k] }))
+    .sort((a, b) => {
+      const ord = { pendiente:0, asignado:1, realizado:2 };
+      const oa = (ord[a.estado] != null ? ord[a.estado] : 0);
+      const ob = (ord[b.estado] != null ? ord[b.estado] : 0);
+      if (oa !== ob) return oa - ob;
+      return (a.fecha || '').localeCompare(b.fecha || '');
+    });
+
+  const pend  = lista.filter(r => r.estado === 'pendiente').length;
+  const asig  = lista.filter(r => r.estado === 'asignado').length;
+  const real  = lista.filter(r => r.estado === 'realizado').length;
+
+  document.getElementById('recKpis').innerHTML =
+    `<div class="rec-kpi"><span style="color:rgba(255,255,255,.45)">⏳ Pendientes: </span><b style="color:var(--yellow)">${pend}</b></div>
+     <div class="rec-kpi"><span style="color:rgba(255,255,255,.45)">👷 Asignados: </span><b style="color:var(--blue)">${asig}</b></div>
+     <div class="rec-kpi"><span style="color:rgba(255,255,255,.45)">✅ Realizados: </span><b style="color:var(--green)">${real}</b></div>`;
+
+  const tbody = document.getElementById('bRecordatorios');
+  if (!lista.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="no-data">Sin recordatorios. Pulsa "Nuevo recordatorio" para añadir.</td></tr>';
+    return;
+  }
+
+  const mecOpts = _recMecs.map(m => `<option value="${escRec(m)}">${escRec(m)}</option>`).join('');
+
+  tbody.innerHTML = lista.map(r => {
+    const prioClass = { alta:'badge-red', media:'badge-yellow', baja:'badge-green' }[r.prioridad] || 'badge-yellow';
+    const prioTxt   = { alta:'🔴 Alta',  media:'🟡 Media',     baja:'🟢 Baja'    }[r.prioridad] || (r.prioridad||'—');
+    const estadoBadge =
+      r.estado === 'pendiente' ? `<span class="badge badge-yellow">⏳ Pendiente</span>` :
+      r.estado === 'asignado'  ? `<span class="badge badge-blue">👷 Asignado</span>` :
+      r.estado === 'realizado' ? `<span class="badge badge-green">✅ Realizado</span>` : '';
+
+    const fechaHora = [r.fecha, r.hora].filter(Boolean).join(' ') || '—';
+    const rowStyle  = r.estado === 'realizado' ? 'opacity:.55' : '';
+    const mecActual = r.mecanico ? `<option value="${escRec(r.mecanico)}" selected>${escRec(r.mecanico)}</option>` : '';
+    const mecSel    = `<option value="">— Asignar —</option>${mecActual}${mecOpts}`;
+
+    const btnBorrar = `<button onclick="borrarRecordatorio('${r._id}')"
+      style="background:rgba(231,76,60,.15);border:1px solid rgba(231,76,60,.35);color:var(--red);
+             border-radius:6px;padding:5px 10px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:.78rem">
+      🗑 Borrar</button>`;
+
+    const btnAsignar = r.estado !== 'realizado' ? `
+      <select onchange="asignarRecordatorio('${r._id}',this.value)"
+        style="background:var(--navy-deep);border:1px solid rgba(255,255,255,.2);border-radius:6px;
+               padding:4px 8px;color:#fff;font-family:'Barlow',sans-serif;font-size:.78rem;cursor:pointer">
+        ${mecSel}
+      </select>` : '';
+
+    return `<tr style="${rowStyle}">
+      <td><b>${escRec(r.titulo)}</b></td>
+      <td style="font-size:.85rem;color:rgba(255,255,255,.6)">${escRec(r.descripcion||'—')}</td>
+      <td style="white-space:nowrap;font-size:.85rem">${escRec(fechaHora)}</td>
+      <td><span class="badge ${prioClass}">${prioTxt}</span></td>
+      <td>${estadoBadge}</td>
+      <td style="font-size:.85rem;color:${r.estado==='realizado'?'var(--green)':'inherit'}">${escRec(r.mecanico||'—')}</td>
+      <td><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${btnAsignar}${btnBorrar}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+function abrirModalRec(id) {
+  _recEditId = id;
+  const r = id ? (_recData[id] || {}) : {};
+  document.getElementById('recModalTitle').textContent    = id ? '✏️ Editar recordatorio' : '➕ Nuevo recordatorio';
+  document.getElementById('recTitulo').value              = r.titulo      || '';
+  document.getElementById('recDescripcion').value         = r.descripcion || '';
+  document.getElementById('recFecha').value               = r.fecha       || new Date().toISOString().split('T')[0];
+  document.getElementById('recHora').value                = r.hora        || '';
+  document.getElementById('recPrioridad').value           = r.prioridad   || 'media';
+  document.getElementById('recModal').style.display       = 'flex';
+  setTimeout(()=> document.getElementById('recTitulo').focus(), 80);
+}
+
+function cerrarModalRec() {
+  document.getElementById('recModal').style.display = 'none';
+  _recEditId = null;
+}
+
+function guardarRecordatorio() {
+  const titulo = document.getElementById('recTitulo').value.trim();
+  if (!titulo) { showToast('⚠️ El título es obligatorio'); return; }
+
+  const obj = {
+    titulo,
+    descripcion : document.getElementById('recDescripcion').value.trim(),
+    fecha       : document.getElementById('recFecha').value,
+    hora        : document.getElementById('recHora').value,
+    prioridad   : document.getElementById('recPrioridad').value
+  };
+
+  if (_recEditId) {
+    DB.ref('recordatorios/' + _recEditId).update(obj)
+      .then(() => { showToast('✅ Recordatorio actualizado'); cerrarModalRec(); })
+      .catch(() => showToast('❌ Error al guardar'));
+  } else {
+    obj.estado    = 'pendiente';
+    obj.creadoEn  = new Date().toISOString();
+    DB.ref('recordatorios').push(obj)
+      .then(() => { showToast('✅ Recordatorio creado'); cerrarModalRec(); })
+      .catch(() => showToast('❌ Error al guardar'));
+  }
+}
+
+function asignarRecordatorio(id, mecanico) {
+  if (!mecanico) return;
+  DB.ref('recordatorios/' + id).update({
+    mecanico,
+    estado     : 'asignado',
+    asignadoEn : new Date().toISOString()
+  }).then(() => showToast('👷 Asignado a ' + mecanico))
+    .catch(() => showToast('❌ Error al asignar'));
+}
+
+function borrarRecordatorio(id) {
+  if (!confirm('¿Borrar este recordatorio?')) return;
+  DB.ref('recordatorios/' + id).remove()
+    .then(() => showToast('🗑 Recordatorio eliminado'))
+    .catch(() => showToast('❌ Error al borrar'));
 }
 </script>
 
