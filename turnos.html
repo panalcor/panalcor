@@ -646,6 +646,12 @@ function showTab(name){
   document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', names[i]===name));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-'+name).classList.add('active');
+  // Render the panel content on every tab switch
+  if(name==='bolsas')    renderBolsas();
+  if(name==='ausencias') renderAusencias();
+  if(name==='sabados')   renderSabados();
+  if(name==='horas')     renderHoras();
+  if(name==='config')    renderConfig();
 }
 function refreshAll(){
   renderCalendar();
