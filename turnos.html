@@ -483,11 +483,11 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
     </div>
 
     <div class="card">
-      <div class="sec-title">Mecánicos adicionales (solo seguimiento)</div>
-      <p style="font-size:0.8rem;color:rgba(255,255,255,0.35);margin-bottom:14px;line-height:1.5">Aparecen en sábados y ausencias para control, pero <strong>no computan en la rotación de turnos</strong>.</p>
+      <div class="sec-title">Mecánicos de seguimiento (lista global)</div>
+      <p style="font-size:0.8rem;color:rgba(255,255,255,0.35);margin-bottom:14px;line-height:1.5">Se cargan automáticamente desde tu lista general de mecánicos. Aparecen en sábados y ausencias pero <strong>no computan en la rotación de turnos</strong>.</p>
       <div id="extraMecsForm"></div>
-      <div style="display:flex;gap:10px;margin-top:10px">
-        <button class="btn btn-add" onclick="addExtraMec()">+ Añadir mecánico</button>
+      <div style="display:flex;gap:10px;margin-top:12px">
+        <button class="btn btn-add" onclick="syncMecanicosGlobal()">🔄 Sincronizar lista global</button>
         <button class="btn btn-primary" onclick="saveExtraMecNombres()">Guardar nombres</button>
       </div>
     </div>
@@ -655,6 +655,47 @@ let weekEditMonday = null;
 // ════════════════════════════════════════════
 //  FIREBASE SYNC
 // ════════════════════════════════════════════
+// Normalize mechanic name for comparison (uppercase, strip trailing dots)
+function normMecName(n){ return (n||'').toUpperCase().replace(/\.+\s*$/,'').trim(); }
+
+// Read /config/mecanicos (global array) and auto-add extras to S.mecanicos (IDs 6+)
+function syncGlobalMecanicos(globalNames){
+  const rotNorms   = [1,2,3,4,5].map(i => normMecName(S.mecanicos[String(i)]?.nombre||''));
+  const extraNorms = getExtraMecIds().map(k => normMecName(S.mecanicos[k]?.nombre||''));
+  let nextId = Math.max(5, ...getAllMecIds().map(Number)) + 1;
+  let changed = false;
+
+  globalNames.forEach(name => {
+    const norm = normMecName(name);
+    if(!norm) return;
+    if(rotNorms.includes(norm))  return;   // ya es mecánico de rotación
+    if(extraNorms.includes(norm)) return;  // ya está como extra
+    S.mecanicos[String(nextId)] = { nombre: name, perfil: 'extra' };
+    ensureBolsa(String(nextId));
+    nextId++;
+    changed = true;
+  });
+
+  if(changed){
+    fbSet('mecanicos', S.mecanicos);
+    fbSet('bolsas', S.bolsas);
+    refreshAll();
+    showToast('Lista de mecánicos actualizada');
+  }
+}
+
+function syncMecanicosGlobal(){
+  DB.ref('config/mecanicos').once('value').then(snap => {
+    const names = snap.val();
+    if(names && Array.isArray(names) && names.length){
+      syncGlobalMecanicos(names);
+      showToast('Sincronizado con la lista global');
+    } else {
+      showToast('No se encontró la lista global');
+    }
+  });
+}
+
 function initApp(){
   REF.on('value', snap => {
     const d = snap.val() || {};
@@ -672,6 +713,11 @@ function initApp(){
       if(!S.mecanicos[k]) S.mecanicos[k] = DEFAULT_MEC(i);
     });
     refreshAll();
+  });
+  // Auto-sync global mechanics list on first load
+  DB.ref('config/mecanicos').once('value').then(snap => {
+    const names = snap.val();
+    if(names && Array.isArray(names) && names.length) syncGlobalMecanicos(names);
   });
 }
 function fbSet(path, value){ DB.ref('turnos/'+path).set(value); }
@@ -1410,15 +1456,6 @@ function saveCfgBolsas(){
   S.config.vacTotal=+document.getElementById('cfgVac').value||22;
   S.config.asuTotal=+document.getElementById('cfgAsu').value||4;
   fbSet('config',S.config); showToast('Guardado');
-}
-function addExtraMec(){
-  const ids=getAllMecIds().map(Number);
-  const nextId=String(Math.max(5,...ids)+1);
-  S.mecanicos[nextId]={ nombre:'Mecánico '+nextId, perfil:'extra' };
-  ensureBolsa(nextId);
-  fbSet('mecanicos',S.mecanicos);
-  renderConfig();
-  showToast('Mecánico añadido');
 }
 function deleteExtraMec(id){
   const nom=S.mecanicos[id]?.nombre||'este mecánico';
