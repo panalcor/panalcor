@@ -210,6 +210,26 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 .toast{position:fixed;bottom:24px;right:24px;background:var(--navy-mid);border:1px solid rgba(201,162,39,0.5);border-radius:10px;padding:13px 20px;font-size:0.92rem;font-weight:600;z-index:9999;opacity:0;transform:translateY(18px);transition:all .28s;pointer-events:none;max-width:320px}
 .toast.show{opacity:1;transform:translateY(0)}
 
+/* ── SÁBADO COLUMN ── */
+.sab-col-cell{padding:4px 7px;vertical-align:middle;min-width:90px}
+.sab-col-tag{display:inline-block;font-size:0.58rem;font-weight:700;background:rgba(201,162,39,0.13);border:1px solid rgba(201,162,39,0.28);color:var(--gold);padding:1px 5px;border-radius:3px;margin:1px 1px;white-space:nowrap}
+.sab-col-empty{font-size:0.65rem;color:rgba(255,255,255,0.18)}
+
+/* ── SÁBADOS COUNT GRID ── */
+.sab-count-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-bottom:20px}
+.sab-count-card{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px;text-align:center}
+.sab-count-name{font-size:0.75rem;font-weight:700;color:var(--gold-light);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sab-count-val{font-size:1.9rem;font-weight:900;color:var(--gold);line-height:1}
+.sab-count-lbl{font-size:0.58rem;color:rgba(255,255,255,0.28);letter-spacing:0.1em;text-transform:uppercase;margin-top:3px}
+.sab-count-extra{border-color:rgba(255,255,255,0.05);opacity:0.7}
+
+/* ── EXTRA MECHANICS FORM ── */
+.extra-mec-row{display:flex;gap:8px;align-items:flex-end;margin-bottom:10px}
+.extra-mec-row input{flex:1;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:9px 12px;font-family:'Barlow',sans-serif;font-size:0.9rem}
+.extra-mec-row input:focus{outline:none;border-color:var(--gold)}
+.extra-mec-del{background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.28);color:var(--red);padding:9px 13px;border-radius:6px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.82rem;white-space:nowrap}
+.extra-mec-del:hover{background:rgba(231,76,60,0.25)}
+
 /* ── AUSENCIAS ── */
 .aus-form{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:18px;margin-bottom:18px}
 .aus-form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
@@ -310,6 +330,7 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
           <th id="th4">JAVIER E.</th>
           <th id="th5">JOSE</th>
           <th style="min-width:80px">COBERTURA</th>
+          <th style="min-width:90px">SÁBADO</th>
           <th class="obs-col">OBSERVACIONES</th>
         </tr>
       </thead>
@@ -375,7 +396,9 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 
 <!-- ══ SÁBADOS ══ -->
 <div class="panel" id="panel-sabados">
-  <div class="sec-title">Registro de sábados trabajados</div>
+  <div class="sec-title">Resumen — Sábados trabajados por mecánico</div>
+  <div class="sab-count-grid" id="sabCountGrid"></div>
+  <div class="sec-title">Registrar sábado</div>
   <div class="sab-form">
     <div class="form-field" style="flex:0 0 170px">
       <label>Fecha</label>
@@ -457,6 +480,16 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
         <input type="number" id="cfgAsu" min="0" max="10" value="4">
       </div>
       <button class="btn btn-primary" onclick="saveCfgBolsas()">Guardar</button>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">Mecánicos adicionales (solo seguimiento)</div>
+      <p style="font-size:0.8rem;color:rgba(255,255,255,0.35);margin-bottom:14px;line-height:1.5">Aparecen en sábados y ausencias para control, pero <strong>no computan en la rotación de turnos</strong>.</p>
+      <div id="extraMecsForm"></div>
+      <div style="display:flex;gap:10px;margin-top:10px">
+        <button class="btn btn-add" onclick="addExtraMec()">+ Añadir mecánico</button>
+        <button class="btn btn-primary" onclick="saveExtraMecNombres()">Guardar nombres</button>
+      </div>
     </div>
 
   </div>
@@ -607,6 +640,11 @@ function ensureBolsa(k){
   if(!S.bolsas[k]) S.bolsas[k] = { vacacionesUsadas:0, asuntosUsados:0, sabadosExtra:0, diasLibreSabado:0 };
 }
 [1,2,3,4,5].forEach(i => ensureBolsa(String(i)));
+
+// All mechanic IDs sorted numerically (rotation 1-5 + any extras 6+)
+function getAllMecIds(){ return Object.keys(S.mecanicos).sort((a,b)=>+a-+b); }
+// Only IDs > 5 (non-rotation, tracking only)
+function getExtraMecIds(){ return getAllMecIds().filter(k=>+k>5); }
 
 let windowOffsetWeeks = 0;   // 0 = semana actual centrada (−2 / actual / +4)
 let editCell = null;
@@ -958,6 +996,17 @@ function renderCalendar(){
     tdCov.innerHTML = `<span class="cov-cell ${covCls}" style="font-size:0.65rem;letter-spacing:0.03em" title="${nocCount} noche · ${manCount} mañana · ${tarCount} tarde">${nocCount}N · ${manLbl}M · ${tarCount}T</span>`;
     tr.appendChild(tdCov);
 
+    // Saturday column
+    const satDate = new Date(wMon); satDate.setDate(wMon.getDate()+5);
+    const satDS   = toDS(satDate);
+    const satMecs = S.sabados[satDS]?.mecanicos || [];
+    const tdSat   = document.createElement('td');
+    tdSat.className = 'sab-col-cell';
+    tdSat.innerHTML = satMecs.length
+      ? satMecs.map(m=>`<span class="sab-col-tag">${S.mecanicos[String(m)]?.nombre||'Mec '+m}</span>`).join('')
+      : `<span class="sab-col-empty">—</span>`;
+    tr.appendChild(tdSat);
+
     // Observations
     const tdObs = document.createElement('td');
     tdObs.className = 'obs-td';
@@ -1201,11 +1250,11 @@ function saveBolsaEdit(){
 function initSabForm(){
   const wrap = document.getElementById('sabCbs');
   wrap.innerHTML = '';
-  for(let i=1;i<=5;i++){
-    const k   = String(i);
-    const nom = S.mecanicos[k]?.nombre||'Mec '+i;
-    wrap.innerHTML += `<label class="mec-cb"><input type="checkbox" id="sabCb${k}" value="${k}"> ${nom}</label>`;
-  }
+  getAllMecIds().forEach(k=>{
+    const nom = S.mecanicos[k]?.nombre||'Mec '+k;
+    const isExtra = +k > 5;
+    wrap.innerHTML += `<label class="mec-cb" ${isExtra?'style="opacity:0.7;border-style:dashed"':''}><input type="checkbox" id="sabCb${k}" value="${k}"> ${nom}</label>`;
+  });
   const t = new Date();
   const toSat = (6-t.getDay()+7)%7||7;
   const ns = new Date(t); ns.setDate(t.getDate()+toSat);
@@ -1215,20 +1264,22 @@ function addSabado(){
   const fecha = document.getElementById('sabFecha').value;
   if(!fecha){ showToast('Selecciona una fecha'); return; }
   const mecs = [];
-  for(let i=1;i<=5;i++){ const cb=document.getElementById('sabCb'+i); if(cb?.checked) mecs.push(i); }
+  getAllMecIds().forEach(k=>{ const cb=document.getElementById('sabCb'+k); if(cb?.checked) mecs.push(+k); });
   if(!mecs.length){ showToast('Selecciona al menos un mecánico'); return; }
   const prev = S.sabados[fecha]?.mecanicos||[];
   S.sabados[fecha] = { mecanicos:[...new Set([...prev,...mecs])] };
   recalcSabadosExtra();
   fbSet('sabados',S.sabados); fbSet('bolsas',S.bolsas);
   renderSabados();
+  renderCalendar();
   showToast('Sábado registrado');
-  for(let i=1;i<=5;i++){ const cb=document.getElementById('sabCb'+i); if(cb) cb.checked=false; }
+  getAllMecIds().forEach(k=>{ const cb=document.getElementById('sabCb'+k); if(cb) cb.checked=false; });
 }
 function recalcSabadosExtra(){
-  const c={'1':0,'2':0,'3':0,'4':0,'5':0};
+  const c={};
+  getAllMecIds().forEach(k=>{ c[k]=0; });
   Object.values(S.sabados).forEach(s=>(s.mecanicos||[]).forEach(m=>{ const k=String(m); if(c[k]!==undefined) c[k]++; }));
-  for(let i=1;i<=5;i++){ const k=String(i); ensureBolsa(k); S.bolsas[k].sabadosExtra=c[k]; }
+  getAllMecIds().forEach(k=>{ ensureBolsa(k); S.bolsas[k].sabadosExtra=c[k]||0; });
 }
 function deleteSabado(fecha){
   if(!confirm('¿Eliminar el sábado '+fecha+'?')) return;
@@ -1236,10 +1287,28 @@ function deleteSabado(fecha){
   recalcSabadosExtra();
   fbSet('sabados',S.sabados); fbSet('bolsas',S.bolsas);
   renderSabados();
+  renderCalendar();
   showToast('Eliminado');
 }
 function renderSabados(){
   initSabForm();
+
+  // ── Count grid ──
+  const countGrid = document.getElementById('sabCountGrid');
+  if(countGrid){
+    countGrid.innerHTML = getAllMecIds().map(k=>{
+      const nom = S.mecanicos[k]?.nombre||'Mec '+k;
+      const cnt = S.bolsas[k]?.sabadosExtra||0;
+      const isExtra = +k>5;
+      return `<div class="sab-count-card${isExtra?' sab-count-extra':''}">
+        <div class="sab-count-name" title="${nom}">${nom}</div>
+        <div class="sab-count-val">${cnt}</div>
+        <div class="sab-count-lbl">sábados</div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── List ──
   const list    = document.getElementById('sabList');
   const entries = Object.entries(S.sabados).sort((a,b)=>b[0].localeCompare(a[0]));
   if(!entries.length){ list.innerHTML='<div class="empty">Sin sábados registrados</div>'; return; }
@@ -1304,6 +1373,23 @@ function renderConfig(){
   document.getElementById('alexCovStarter').value  = S.config.alexCovStarter||'4';
   document.getElementById('cfgVac').value = S.config.vacTotal||22;
   document.getElementById('cfgAsu').value = S.config.asuTotal||4;
+
+  // Extra mechanics section
+  const extraIds=getExtraMecIds();
+  const extraForm=document.getElementById('extraMecsForm');
+  if(extraForm){
+    if(!extraIds.length){
+      extraForm.innerHTML='<div style="color:rgba(255,255,255,0.28);font-size:0.82rem;margin-bottom:6px">Sin mecánicos adicionales todavía</div>';
+    } else {
+      extraForm.innerHTML=extraIds.map(k=>`<div class="extra-mec-row">
+        <div style="flex:1">
+          <div style="font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:4px">Nombre</div>
+          <input type="text" id="nomMecExtra${k}" value="${S.mecanicos[k]?.nombre||'Mecánico '+k}">
+        </div>
+        <button class="extra-mec-del" onclick="deleteExtraMec('${k}')">✕ Eliminar</button>
+      </div>`).join('');
+    }
+  }
 }
 function saveNombres(){
   for(let i=1;i<=5;i++){ const k=String(i); const v=document.getElementById('nomMec'+k)?.value.trim(); if(v) S.mecanicos[k].nombre=v; }
@@ -1324,6 +1410,31 @@ function saveCfgBolsas(){
   S.config.vacTotal=+document.getElementById('cfgVac').value||22;
   S.config.asuTotal=+document.getElementById('cfgAsu').value||4;
   fbSet('config',S.config); showToast('Guardado');
+}
+function addExtraMec(){
+  const ids=getAllMecIds().map(Number);
+  const nextId=String(Math.max(5,...ids)+1);
+  S.mecanicos[nextId]={ nombre:'Mecánico '+nextId, perfil:'extra' };
+  ensureBolsa(nextId);
+  fbSet('mecanicos',S.mecanicos);
+  renderConfig();
+  showToast('Mecánico añadido');
+}
+function deleteExtraMec(id){
+  const nom=S.mecanicos[id]?.nombre||'este mecánico';
+  if(!confirm(`¿Eliminar a ${nom}? Sus datos de sábados y ausencias quedarán huérfanos.`)) return;
+  delete S.mecanicos[id];
+  fbSet('mecanicos',S.mecanicos);
+  renderConfig();
+  showToast('Eliminado');
+}
+function saveExtraMecNombres(){
+  getExtraMecIds().forEach(k=>{
+    const v=document.getElementById('nomMecExtra'+k)?.value.trim();
+    if(v&&S.mecanicos[k]) S.mecanicos[k].nombre=v;
+  });
+  fbSet('mecanicos',S.mecanicos);
+  showToast('Nombres guardados');
 }
 
 // ════════════════════════════════════════════
@@ -1526,9 +1637,10 @@ function renderAusencias(){
   const mecSel=document.getElementById('ausMec');
   if(mecSel){
     const prev=mecSel.value;
-    mecSel.innerHTML=[1,2,3,4,5].map(i=>{
-      const k=String(i);
-      return `<option value="${k}">${S.mecanicos[k]?.nombre||'Mec '+k}</option>`;
+    mecSel.innerHTML=getAllMecIds().map(k=>{
+      const nom=S.mecanicos[k]?.nombre||'Mec '+k;
+      const extra=+k>5?' (seguim.)':'';
+      return `<option value="${k}">${nom}${extra}</option>`;
     }).join('');
     if(prev) mecSel.value=prev;
   }
