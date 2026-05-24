@@ -9,6 +9,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -201,6 +202,7 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
       <div class="topbar h1" style="font-size:1.2rem;font-weight:900;letter-spacing:.06em;color:var(--gold-light)">🏭 Fichas de Máquinas</div>
       <div class="topbar sub" style="font-size:0.75rem;color:rgba(255,255,255,0.4)">PANALCOR S.L.</div>
     </div>
+    <button onclick="exportarMaquinasExcel()" style="background:linear-gradient(135deg,#27ae60,#1e8449);border:none;border-radius:8px;color:#fff;font-family:'Barlow',sans-serif;font-size:0.8rem;font-weight:700;padding:7px 14px;cursor:pointer;letter-spacing:0.04em" title="Exportar base de datos completa a Excel">⬇️ EXPORTAR EXCEL</button>
     <a href="admin.html" class="logout-btn" style="text-decoration:none">← Admin</a>
   </div>
 
@@ -1182,6 +1184,69 @@ function closeLightbox(){
 
 // Arrancar directamente sin login
 document.addEventListener('DOMContentLoaded', initApp);
+
+// ══════════════════════════════════════════
+// EXPORTAR A EXCEL
+// ══════════════════════════════════════════
+function exportarMaquinasExcel(){
+  var btn = document.querySelector('button[onclick="exportarMaquinasExcel()"]');
+  if(btn){ btn.textContent = '⏳ Exportando...'; btn.disabled = true; }
+
+  DB.ref('maquinas').once('value').then(function(snap){
+    var fb = snap.val() || {};
+    var todas = MAQUINAS.slice();
+    // Añadir extras si los hay
+    Object.values(fichasData).forEach(function(f){
+      if(f && f.id && !todas.find(function(m){ return m.id === f.id; })){
+        todas.push({id:f.id, n:f.nombre||f.id, t:'', f:'', a:'', c:''});
+      }
+    });
+
+    var filas = todas.map(function(m){
+      var d = fb[m.id] || {};
+      var inst = d.instrucciones || {};
+      return {
+        'ID':               m.id,
+        'NOMBRE':           m.n,
+        'TIPO':             m.t,
+        'FABRICANTE':       m.f || d.fabricante || '',
+        'AREA':             m.a,
+        'CRITICIDAD':       m.c,
+        'MODELO':           d.modelo  || '',
+        'N SERIE':          d.serie   || '',
+        'ESTADO':           d.estado  || '',
+        'NOTAS':            d.notas   || '',
+        'USO':              inst.uso   || '',
+        'MANTENIMIENTO':    inst.mant  || '',
+        'REPUESTOS':        inst.rep   || '',
+        'ADVERTENCIAS':     inst.advert|| ''
+      };
+    });
+
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.json_to_sheet(filas);
+
+    // Ancho de columnas
+    ws['!cols'] = [
+      {wch:10},{wch:30},{wch:22},{wch:16},{wch:12},{wch:11},
+      {wch:18},{wch:16},{wch:12},{wch:35},
+      {wch:40},{wch:40},{wch:40},{wch:40}
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Maquinaria');
+
+    var fecha = new Date();
+    var ds = fecha.getFullYear() + '-' +
+             String(fecha.getMonth()+1).padStart(2,'0') + '-' +
+             String(fecha.getDate()).padStart(2,'0');
+    XLSX.writeFile(wb, 'BD_Maquinaria_PANALCOR_' + ds + '.xlsx');
+
+    if(btn){ btn.textContent = '⬇️ EXPORTAR EXCEL'; btn.disabled = false; }
+  }).catch(function(){
+    if(btn){ btn.textContent = '⬇️ EXPORTAR EXCEL'; btn.disabled = false; }
+    alert('Error al exportar. Comprueba la conexión.');
+  });
+}
 </script>
 </body>
 </html>
