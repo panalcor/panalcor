@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Turnos — PANALCOR</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy-deep:#0d1b2a;--navy-mid:#1a2d42;--navy-light:#243d56;
+  --gold:#c9a227;--gold-light:#f0c040;--white:#f0f4f8;
+  --red:#e74c3c;--green:#2ecc71;--yellow:#f39c12;--blue:#3498db;
+  --purple:#9b59b6;--orange:#e67e22;--radius:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-serif;font-size:1rem;min-height:100vh}
+
+/* ── LOGIN ── */
+.login-screen{position:fixed;inset:0;background:var(--navy-deep);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column}
+.login-box{background:var(--navy-mid);border:1px solid rgba(201,162,39,0.3);border-radius:16px;padding:40px;width:340px;text-align:center}
+.login-box h2{font-size:1.5rem;font-weight:900;color:var(--gold-light);letter-spacing:0.08em;margin-bottom:6px}
+.login-sub{font-size:0.78rem;color:rgba(255,255,255,0.4);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:28px}
+.login-box input{width:100%;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:13px 16px;font-family:'Barlow',sans-serif;font-size:1.1rem;text-align:center;letter-spacing:0.2em;margin-bottom:14px}
+.login-box input:focus{outline:none;border-color:var(--gold)}
+.login-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a;border:none;border-radius:8px;font-family:'Barlow',sans-serif;font-size:1rem;font-weight:900;letter-spacing:0.1em;cursor:pointer}
+.login-err{color:var(--red);font-size:0.85rem;margin-top:8px;display:none}
+
+/* ── TOPBAR ── */
+.topbar{background:linear-gradient(135deg,#0a1520,var(--navy-mid));border-bottom:2px solid var(--gold);padding:14px 20px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100}
+.topbar-title{font-size:1.2rem;font-weight:900;color:var(--gold-light);letter-spacing:0.06em}
+.topbar-sub{font-size:0.78rem;color:rgba(255,255,255,0.45);letter-spacing:0.1em}
+.back-btn{background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.4);color:var(--gold);padding:8px 14px;border-radius:7px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.85rem;transition:all .2s}
+.back-btn:hover{background:rgba(201,162,39,0.3)}
+.logout-btn{margin-left:auto;background:transparent;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.45);padding:8px 14px;border-radius:7px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.85rem;transition:all .2s}
+.logout-btn:hover{color:var(--white);border-color:rgba(255,255,255,0.3)}
+
+/* ── TABS ── */
+.tabs{display:flex;background:var(--navy-mid);border-bottom:2px solid rgba(201,162,39,0.2);overflow-x:auto}
+.tab{padding:14px 18px;cursor:pointer;font-size:0.88rem;font-weight:600;letter-spacing:0.04em;color:rgba(255,255,255,0.45);border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap}
+.tab:hover{color:var(--white)}
+.tab.active{color:var(--gold-light);border-bottom-color:var(--gold)}
+
+/* ── PANELS ── */
+.panel{display:none;padding:20px}
+.panel.active{display:block}
+.sec-title{font-size:0.72rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid rgba(201,162,39,0.2)}
+.card{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius);padding:18px;margin-bottom:16px}
+
+/* ── MONTH NAV ── */
+.month-nav{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.month-nav h2{font-size:1.1rem;font-weight:900;color:var(--gold-light);letter-spacing:0.06em;flex:1;text-align:center;text-transform:capitalize}
+.nav-btn{background:rgba(201,162,39,0.12);border:1px solid rgba(201,162,39,0.35);color:var(--gold);padding:7px 16px;border-radius:7px;cursor:pointer;font-size:0.9rem;font-weight:700;transition:all .2s}
+.nav-btn:hover{background:rgba(201,162,39,0.28)}
+
+/* ── ALERT ── */
+.alert-banner{border-radius:8px;padding:10px 15px;margin-bottom:14px;font-size:0.83rem;display:none}
+.alert-banner.error{background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.35);color:#ff8a80}
+
+/* ── LEGEND ── */
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;padding:10px 14px;background:var(--navy-mid);border-radius:8px;border:1px solid rgba(255,255,255,0.06)}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:0.68rem;color:rgba(255,255,255,0.55)}
+
+/* ── SHIFT BADGES ── */
+.sh-badge{font-size:0.6rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;line-height:1.4}
+.sh-mañana{background:rgba(52,152,219,0.22);color:#7bb8f0;border:1px solid rgba(52,152,219,0.3)}
+.sh-tarde{background:rgba(230,126,34,0.22);color:#f0a060;border:1px solid rgba(230,126,34,0.3)}
+.sh-noche{background:rgba(155,89,182,0.22);color:#c39bd3;border:1px solid rgba(155,89,182,0.3)}
+
+/* ── STATUS BADGES ── */
+.st-badge{font-size:0.57rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;padding:1px 5px;border-radius:3px;line-height:1.4}
+.st-vacaciones{background:rgba(46,204,113,0.18);color:#2ecc71;border:1px solid rgba(46,204,113,0.28)}
+.st-asunto{background:rgba(243,156,18,0.18);color:#f39c12;border:1px solid rgba(243,156,18,0.28)}
+.st-baja{background:rgba(231,76,60,0.2);color:#e74c3c;border:1px solid rgba(231,76,60,0.3)}
+.st-sancion{background:rgba(192,57,43,0.3);color:#ff6b5b;border:1px solid rgba(231,76,60,0.45)}
+.st-libre{background:rgba(52,152,219,0.18);color:#74b9ff;border:1px solid rgba(52,152,219,0.28)}
+
+/* ── WEEKLY CALENDAR TABLE ── */
+.cal-wrap{overflow-x:auto;border-radius:10px;border:1px solid rgba(255,255,255,0.07)}
+.cal-table{width:100%;border-collapse:collapse;min-width:860px}
+.cal-table th{background:var(--navy-mid);padding:9px 6px;text-align:center;font-size:0.63rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid rgba(201,162,39,0.25);white-space:nowrap;position:sticky;top:0;z-index:2}
+.cal-table th.week-col{text-align:left;padding-left:14px;min-width:120px}
+.cal-table th.obs-col{text-align:left;padding-left:8px;min-width:180px}
+.cal-table td{padding:4px 4px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle}
+.cal-table tr.is-current td{background:rgba(201,162,39,0.04)}
+.cal-table tr.is-partial td{opacity:0.65}
+.cal-table tr:hover td{background:rgba(255,255,255,0.02)}
+
+/* ── WEEK LABEL ── */
+.week-label{padding-left:4px}
+.wk-num{font-size:0.6rem;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;display:block}
+.wk-dates{font-size:0.76rem;font-weight:600;white-space:nowrap}
+
+/* ── WEEK CELL ── */
+.week-cell{padding:5px 6px;border-radius:6px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:3px;border:1px solid transparent;min-height:46px;justify-content:center;min-width:82px}
+.week-cell:hover{border-color:rgba(201,162,39,0.5);background:rgba(201,162,39,0.07)}
+.week-cell.has-exc{border-color:rgba(243,156,18,0.45);background:rgba(243,156,18,0.05)}
+
+/* ── EXCEPTION CHIPS ── */
+.exc-days{display:flex;flex-wrap:wrap;gap:2px;justify-content:center}
+.exc-chip{font-size:0.55rem;font-weight:700;padding:1px 4px;border-radius:3px;cursor:pointer;letter-spacing:0.03em;line-height:1.4}
+.exc-chip:hover{filter:brightness(1.3)}
+.exc-vacaciones{background:rgba(46,204,113,0.25);color:#2ecc71}
+.exc-asunto{background:rgba(243,156,18,0.25);color:#f39c12}
+.exc-baja{background:rgba(231,76,60,0.25);color:#e74c3c}
+.exc-sancion{background:rgba(192,57,43,0.35);color:#ff6b5b}
+.exc-libre{background:rgba(52,152,219,0.22);color:#74b9ff}
+.exc-normal{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.5)}
+
+/* ── OBSERVATIONS COL ── */
+.obs-col td,.obs-td{padding:5px 8px;font-size:0.7rem;color:rgba(255,255,255,0.38);line-height:1.55;vertical-align:middle}
+
+/* ── COVERAGE COL ── */
+.cov-cell{font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.cov-ok{color:var(--green);background:rgba(46,204,113,0.1)}
+.cov-warn{color:var(--yellow);background:rgba(243,156,18,0.1)}
+.cov-bad{color:var(--red);background:rgba(231,76,60,0.12)}
+
+/* ── WEEK DAY PICKER MODAL ── */
+.week-day-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;border:1px solid rgba(255,255,255,0.07);margin-bottom:6px;cursor:pointer;transition:all .15s}
+.week-day-row:hover{border-color:rgba(201,162,39,0.4);background:rgba(201,162,39,0.06)}
+.wd-name{min-width:90px;font-size:0.82rem;font-weight:600;color:var(--white)}
+.wd-badges{display:flex;gap:5px;flex:1;align-items:center}
+.wd-note{font-size:0.68rem;color:rgba(255,255,255,0.28);max-width:120px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wd-weekend{opacity:0.45}
+
+/* ── BOLSAS ── */
+.bolsas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.bolsa-card{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:18px}
+.bolsa-name{font-size:1rem;font-weight:900;color:var(--gold-light);letter-spacing:0.04em}
+.bolsa-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.85rem}
+.bolsa-row:last-child{border:none}
+.bolsa-lbl{color:rgba(255,255,255,0.5)}
+.bolsa-val{font-weight:700}
+.bar-bg{background:rgba(255,255,255,0.07);border-radius:3px;height:4px;overflow:hidden;margin-top:5px;margin-bottom:10px}
+.bar-fill{height:100%;border-radius:3px;transition:width .5s}
+.bar-gold{background:linear-gradient(90deg,var(--gold),var(--gold-light))}
+.bar-blue{background:linear-gradient(90deg,#3498db,#74b9ff)}
+.bolsa-edit-btn{font-size:0.7rem;color:var(--gold);background:rgba(201,162,39,0.1);border:1px solid rgba(201,162,39,0.28);border-radius:5px;padding:3px 9px;cursor:pointer;transition:all .15s}
+.bolsa-edit-btn:hover{background:rgba(201,162,39,0.22)}
+
+/* ── SÁBADOS ── */
+.sab-form{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:18px;padding:14px;background:var(--navy-mid);border-radius:10px;border:1px solid rgba(255,255,255,0.07)}
+.form-field{flex:1;min-width:140px}
+.form-field label{font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:5px}
+.form-field input{width:100%;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:9px 12px;font-family:'Barlow',sans-serif;font-size:0.9rem}
+.form-field input:focus{outline:none;border-color:var(--gold)}
+.mec-checkboxes{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.mec-cb{display:flex;align-items:center;gap:5px;font-size:0.82rem;cursor:pointer;padding:5px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);transition:all .15s;user-select:none}
+.mec-cb:hover{border-color:var(--gold);background:rgba(201,162,39,0.07)}
+.mec-cb input{accent-color:var(--gold)}
+.sab-list{display:flex;flex-direction:column;gap:8px}
+.sab-item{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:11px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.sab-date{font-weight:700;font-size:0.88rem;min-width:140px}
+.sab-mecs{flex:1;display:flex;flex-wrap:wrap;gap:5px}
+.sab-mec-tag{font-size:0.68rem;background:rgba(201,162,39,0.13);border:1px solid rgba(201,162,39,0.28);color:var(--gold);padding:2px 7px;border-radius:4px}
+.sab-del{background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.28);color:var(--red);padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.78rem;font-family:'Barlow',sans-serif}
+.sab-del:hover{background:rgba(231,76,60,0.28)}
+
+/* ── HORAS NOCHE DOM ── */
+.hnd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.hnd-card{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:16px}
+.hnd-name{font-weight:700;color:var(--gold-light);margin-bottom:8px;font-size:0.92rem}
+.hnd-val{font-size:2rem;font-weight:900;color:var(--purple);line-height:1}
+.hnd-label{font-size:0.62rem;color:rgba(255,255,255,0.35);letter-spacing:0.1em;text-transform:uppercase;margin:4px 0 12px}
+.hnd-btns{display:flex;gap:6px;flex-wrap:wrap}
+.hnd-btn{padding:6px 12px;border-radius:6px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.78rem;font-weight:700;border:none;transition:all .15s}
+.hnd-add{background:rgba(155,89,182,0.22);color:var(--purple);border:1px solid rgba(155,89,182,0.38)}
+.hnd-add:hover{background:rgba(155,89,182,0.38)}
+.hnd-sub{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.45);border:1px solid rgba(255,255,255,0.12)}
+.hnd-sub:hover{background:rgba(255,255,255,0.12)}
+.hnd-cobrar{background:rgba(46,204,113,0.13);color:var(--green);border:1px solid rgba(46,204,113,0.28)}
+.hnd-cobrar:hover{background:rgba(46,204,113,0.25)}
+
+/* ── CONFIG ── */
+.config-section{max-width:520px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:5px}
+.field input,.field select{width:100%;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.18);border-radius:7px;padding:10px 13px;font-family:'Barlow',sans-serif;font-size:0.95rem}
+.field input:focus,.field select:focus{outline:none;border-color:var(--gold)}
+.field-hint{font-size:0.7rem;color:rgba(255,255,255,0.28);margin-top:4px}
+
+/* ── BUTTONS ── */
+.btn{padding:10px 20px;border-radius:8px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.92rem;font-weight:700;letter-spacing:0.05em;border:none;transition:all .2s}
+.btn-primary{background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a}
+.btn-primary:hover{background:linear-gradient(135deg,var(--gold-light),var(--gold))}
+.btn-secondary{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.1)}
+.btn-secondary:hover{background:rgba(255,255,255,0.13)}
+.btn-add{background:rgba(46,204,113,0.15);color:var(--green);border:1px solid rgba(46,204,113,0.32)}
+.btn-add:hover{background:rgba(46,204,113,0.28)}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.modal-box{background:var(--navy-mid);border:1px solid rgba(201,162,39,0.32);border-radius:14px;padding:24px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:1.05rem;font-weight:900;color:var(--gold-light);margin-bottom:3px}
+.modal-sub{font-size:0.76rem;color:rgba(255,255,255,0.38);margin-bottom:18px;letter-spacing:0.05em}
+.modal-field{margin-bottom:13px}
+.modal-field label{display:block;font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:5px}
+.modal-field select,.modal-field input,.modal-field textarea{width:100%;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.18);border-radius:7px;padding:9px 12px;font-family:'Barlow',sans-serif;font-size:0.92rem}
+.modal-field select:focus,.modal-field input:focus,.modal-field textarea:focus{outline:none;border-color:var(--gold)}
+.modal-field textarea{resize:vertical;min-height:56px}
+.modal-btns{display:flex;gap:10px;margin-top:16px}
+.modal-btns .btn{flex:1}
+.modal-info{font-size:0.78rem;padding:8px 11px;border-radius:6px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);color:rgba(255,255,255,0.5);margin-bottom:8px;line-height:1.5}
+.modal-info.warn{background:rgba(243,156,18,0.08);border-color:rgba(243,156,18,0.25);color:var(--yellow)}
+.bolsa-edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy-mid);border:1px solid rgba(201,162,39,0.5);border-radius:10px;padding:13px 20px;font-size:0.92rem;font-weight:600;z-index:9999;opacity:0;transform:translateY(18px);transition:all .28s;pointer-events:none;max-width:320px}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* ── MISC ── */
+.empty{text-align:center;padding:36px 20px;color:rgba(255,255,255,0.28);font-size:0.95rem}
+@media(max-width:600px){
+  .bolsas-grid{grid-template-columns:1fr}
+  .hnd-grid{grid-template-columns:1fr 1fr}
+  .bolsa-edit-grid{grid-template-columns:1fr}
+  .panel{padding:14px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div style="font-size:2.4rem;margin-bottom:12px">📅</div>
+    <h2>GESTIÓN DE TURNOS</h2>
+    <div class="login-sub">PANALCOR S.L. · Acceso restringido</div>
+    <input type="password" id="pwInput" placeholder="Contraseña" onkeydown="if(event.key==='Enter')login()">
+    <button class="login-btn" onclick="login()">ENTRAR</button>
+    <div class="login-err" id="loginErr">❌ Contraseña incorrecta</div>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <button class="back-btn" onclick="history.back()">← Volver</button>
+  <div>
+    <div class="topbar-title">GESTIÓN DE TURNOS</div>
+    <div class="topbar-sub">PANALCOR S.L.</div>
+  </div>
+  <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="showTab('calendario')">📅 Calendario</div>
+  <div class="tab" onclick="showTab('bolsas')">📊 Bolsas de días</div>
+  <div class="tab" onclick="showTab('sabados')">📋 Sábados</div>
+  <div class="tab" onclick="showTab('horas')">🌙 Horas noche dom.</div>
+  <div class="tab" onclick="showTab('config')">⚙️ Configuración</div>
+</div>
+
+<!-- ══ CALENDARIO ══ -->
+<div class="panel active" id="panel-calendario">
+  <div class="month-nav">
+    <button class="nav-btn" onclick="prevMonth()">◀</button>
+    <h2 id="monthTitle">—</h2>
+    <button class="nav-btn" onclick="nextMonth()">▶</button>
+  </div>
+  <div class="alert-banner error" id="coverageAlert"></div>
+  <div class="legend">
+    <div class="leg-item"><span class="sh-badge sh-mañana">MAÑ</span> Mañana</div>
+    <div class="leg-item"><span class="sh-badge sh-tarde">TAR</span> Tarde</div>
+    <div class="leg-item"><span class="sh-badge sh-noche">NOC</span> Noche</div>
+    <div class="leg-item"><span class="st-badge st-vacaciones">VAC</span> Vacaciones</div>
+    <div class="leg-item"><span class="st-badge st-asunto">ASU</span> Asunto</div>
+    <div class="leg-item"><span class="st-badge st-baja">BAJA</span> Baja</div>
+    <div class="leg-item"><span class="st-badge st-sancion">SAN</span> Sanción</div>
+    <div class="leg-item"><span class="st-badge st-libre">LIBRE</span> Día libre</div>
+    <div class="leg-item" style="margin-left:auto;font-size:0.64rem;color:rgba(255,255,255,0.25)">Celdas naranja = variación en algún día</div>
+  </div>
+  <div class="cal-wrap">
+    <table class="cal-table">
+      <thead>
+        <tr>
+          <th class="week-col">SEMANA</th>
+          <th id="th1">RAFA</th>
+          <th id="th2">ALEX</th>
+          <th id="th3">GREGORIO</th>
+          <th id="th4">JAVIER E.</th>
+          <th id="th5">JOSE</th>
+          <th style="min-width:60px">COB.MAÑ</th>
+          <th class="obs-col">OBSERVACIONES</th>
+        </tr>
+      </thead>
+      <tbody id="calBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ BOLSAS ══ -->
+<div class="panel" id="panel-bolsas">
+  <div class="sec-title">Bolsas de días por mecánico</div>
+  <div class="bolsas-grid" id="bolsasGrid"></div>
+</div>
+
+<!-- ══ SÁBADOS ══ -->
+<div class="panel" id="panel-sabados">
+  <div class="sec-title">Registro de sábados trabajados</div>
+  <div class="sab-form">
+    <div class="form-field" style="flex:0 0 170px">
+      <label>Fecha</label>
+      <input type="date" id="sabFecha">
+    </div>
+    <div class="form-field" style="flex:1;min-width:260px">
+      <label>Mecánicos que trabajaron</label>
+      <div class="mec-checkboxes" id="sabCbs"></div>
+    </div>
+    <button class="btn btn-add" onclick="addSabado()" style="align-self:flex-end;white-space:nowrap">+ Añadir</button>
+  </div>
+  <div id="sabList"><div class="empty">Sin sábados registrados</div></div>
+</div>
+
+<!-- ══ HORAS NOCHE DOM ══ -->
+<div class="panel" id="panel-horas">
+  <div class="sec-title">Horas extra — Noche domingo</div>
+  <p style="font-size:0.83rem;color:rgba(255,255,255,0.38);margin-bottom:18px;line-height:1.5">Cada domingo de turno noche genera horas extra. Se pueden acumular o cobrar/canjear.</p>
+  <div class="hnd-grid" id="hndGrid"></div>
+</div>
+
+<!-- ══ CONFIG ══ -->
+<div class="panel" id="panel-config">
+  <div class="sec-title">Configuración del módulo de turnos</div>
+  <div class="config-section">
+
+    <div class="card">
+      <div class="sec-title">Nombres de los mecánicos</div>
+      <div id="mecNombresForm"></div>
+      <button class="btn btn-primary" onclick="saveNombres()" style="margin-top:4px">Guardar nombres</button>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">Rotación Gregorio (Mecánico 3)</div>
+      <div class="field">
+        <label>Lunes de inicio de rotación</label>
+        <input type="date" id="rotInicioFecha">
+        <div class="field-hint">El primer lunes del ciclo de rotación de Gregorio</div>
+      </div>
+      <div class="field">
+        <label>Turno de inicio (primeras 2 semanas)</label>
+        <select id="rotInicioTurno">
+          <option value="mañana">☀️ Mañana</option>
+          <option value="tarde">🌅 Tarde</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="saveRotacion()">Guardar rotación</button>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">Rotación Javier E. / Jose cuando Gregorio está de tarde</div>
+      <div class="field">
+        <label>¿Quién va de mañana en la primera semana de cada bloque tarde de Gregorio?</label>
+        <select id="tarStarter">
+          <option value="4">Javier E. empieza de mañana</option>
+          <option value="5">Jose empieza de mañana</option>
+        </select>
+        <div class="field-hint">Luego alternan semana a semana dentro de cada bloque de 2 semanas tarde</div>
+      </div>
+      <div class="field">
+        <label>Cuando Alex cubre noche (Rafa ausente), ¿quién va de mañana primero?</label>
+        <select id="alexCovStarter">
+          <option value="4">Javier E. primero</option>
+          <option value="5">Jose primero</option>
+        </select>
+        <div class="field-hint">Luego se van alternando para equilibrar las semanas de mañana</div>
+      </div>
+      <button class="btn btn-primary" onclick="saveRotacionExtra()">Guardar</button>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">Bolsas anuales</div>
+      <div class="field">
+        <label>Días de vacaciones por mecánico</label>
+        <input type="number" id="cfgVac" min="0" max="40" value="22">
+      </div>
+      <div class="field">
+        <label>Asuntos propios por mecánico</label>
+        <input type="number" id="cfgAsu" min="0" max="10" value="4">
+      </div>
+      <button class="btn btn-primary" onclick="saveCfgBolsas()">Guardar</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ MODAL: SEMANA (DAY PICKER) ══ -->
+<div class="modal-bg" id="weekModal" style="display:none" onclick="bgClose(event,'weekModal')">
+  <div class="modal-box" style="max-width:460px">
+    <div class="modal-title" id="weekModalTitle">Semana</div>
+    <div class="modal-sub" id="weekModalSub"></div>
+    <div id="weekModalDays"></div>
+    <div class="modal-btns" style="margin-top:12px">
+      <button class="btn btn-secondary" onclick="closeModal('weekModal')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: EDITAR DÍA ══ -->
+<div class="modal-bg" id="cellModal" style="display:none" onclick="bgClose(event,'cellModal')">
+  <div class="modal-box">
+    <div class="modal-title" id="cellModalTitle">Mecánico</div>
+    <div class="modal-sub" id="cellModalSub"></div>
+    <div class="modal-field" id="turnoFieldWrap" style="display:none">
+      <label>Turno (solo Javier E. y Jose)</label>
+      <select id="editTurno">
+        <option value="mañana">☀️ Mañana</option>
+        <option value="tarde">🌅 Tarde</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label>Estado del día</label>
+      <select id="editEstado">
+        <option value="normal">✅ Normal — trabaja su turno</option>
+        <option value="vacaciones">🌴 Vacaciones</option>
+        <option value="asunto">📋 Asunto propio</option>
+        <option value="baja">🤒 Baja / Ausente</option>
+        <option value="sancion">🔴 Sanción (no trabaja, no computa)</option>
+        <option value="libre">🔵 Día libre (compensación sábados)</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label>Notas</label>
+      <textarea id="editNota" placeholder="Notas opcionales..."></textarea>
+    </div>
+    <div class="modal-info" id="cellModalInfo" style="display:none"></div>
+    <div class="modal-btns">
+      <button class="btn btn-secondary" onclick="closeModal('cellModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCellEdit()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: EDITAR BOLSA ══ -->
+<div class="modal-bg" id="bolsaModal" style="display:none" onclick="bgClose(event,'bolsaModal')">
+  <div class="modal-box">
+    <div class="modal-title" id="bolsaModalTitle">Bolsa de días</div>
+    <div class="modal-sub">Ajuste manual de valores</div>
+    <div class="bolsa-edit-grid">
+      <div class="modal-field">
+        <label>Vacaciones usadas</label>
+        <input type="number" id="bEditVac" min="0" max="40">
+      </div>
+      <div class="modal-field">
+        <label>Asuntos usados</label>
+        <input type="number" id="bEditAsu" min="0" max="10">
+      </div>
+      <div class="modal-field">
+        <label>Libres sáb. disfrutados</label>
+        <input type="number" id="bEditSabLib" min="0">
+      </div>
+      <div class="modal-field">
+        <label>Horas noche dom.</label>
+        <input type="number" id="bEditHnd" min="0">
+      </div>
+    </div>
+    <div class="modal-info">Los sábados extra se calculan automáticamente.</div>
+    <div class="modal-btns">
+      <button class="btn btn-secondary" onclick="closeModal('bolsaModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveBolsaEdit()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════
+//  FIREBASE
+// ════════════════════════════════════════════
+const FB_CFG = {
+  apiKey:            "AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU",
+  authDomain:        "panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:       "https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:         "panalcor-mantenimiento",
+  storageBucket:     "panalcor-mantenimiento.firebasestorage.app",
+  messagingSenderId: "67593058609",
+  appId:             "1:67593058609:web:c33fa1fa4fce2932485810"
+};
+if (!firebase.apps.length) firebase.initializeApp(FB_CFG);
+const DB  = firebase.database();
+const REF = DB.ref('turnos');
+
+// ════════════════════════════════════════════
+//  AUTH
+// ════════════════════════════════════════════
+const PW_KEY = 'adminPwd';
+function getPwd(){ return localStorage.getItem(PW_KEY) || 'admin'; }
+function login(){
+  const v = document.getElementById('pwInput').value;
+  if(v === getPwd()){
+    document.getElementById('loginScreen').style.display = 'none';
+    initApp();
+  } else {
+    document.getElementById('loginErr').style.display = 'block';
+    document.getElementById('pwInput').value = '';
+  }
+}
+function logout(){
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('pwInput').value = '';
+  document.getElementById('loginErr').style.display = 'none';
+}
+
+// ════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════
+const NOMBRES_DEFAULT = ['','RAFA','ALEX','GREGORIO','JAVIER E.','JOSE'];
+const PERFILES = ['','fijo_noche','fijo_mañana','rotativo','flexible','flexible'];
+const DEFAULT_MEC = (i) => ({ nombre: NOMBRES_DEFAULT[i], perfil: PERFILES[i] });
+
+let S = {
+  mecanicos: { '1':DEFAULT_MEC(1),'2':DEFAULT_MEC(2),'3':DEFAULT_MEC(3),'4':DEFAULT_MEC(4),'5':DEFAULT_MEC(5) },
+  bolsas: {},
+  dias: {},
+  sabados: {},
+  horasNocheDom: { '1':0,'2':0,'3':0,'4':0,'5':0 },
+  config: {
+    rotacionMec3:  { inicio:'', turnoInicio:'mañana' },
+    tarStarter:    '4',
+    alexCovStarter:'4',
+    vacTotal: 22,
+    asuTotal: 4
+  }
+};
+function ensureBolsa(k){
+  if(!S.bolsas[k]) S.bolsas[k] = { vacacionesUsadas:0, asuntosUsados:0, sabadosExtra:0, diasLibreSabado:0 };
+}
+[1,2,3,4,5].forEach(i => ensureBolsa(String(i)));
+
+let curYear  = new Date().getFullYear();
+let curMonth = new Date().getMonth();
+let editCell = null;
+let editBolsaMecId = null;
+let weekEditMecId  = null;
+let weekEditMonday = null;
+
+// ════════════════════════════════════════════
+//  FIREBASE SYNC
+// ════════════════════════════════════════════
+function initApp(){
+  REF.on('value', snap => {
+    const d = snap.val() || {};
+    if(d.mecanicos)     S.mecanicos     = d.mecanicos;
+    if(d.bolsas)        S.bolsas        = d.bolsas;
+    if(d.dias)          S.dias          = d.dias;
+    if(d.sabados)       S.sabados       = d.sabados;
+    if(d.horasNocheDom) S.horasNocheDom = d.horasNocheDom;
+    if(d.config)        S.config        = { ...S.config, ...d.config };
+    [1,2,3,4,5].forEach(i => {
+      const k = String(i);
+      ensureBolsa(k);
+      if(!S.horasNocheDom[k]) S.horasNocheDom[k] = 0;
+      if(!S.mecanicos[k]) S.mecanicos[k] = DEFAULT_MEC(i);
+    });
+    refreshAll();
+  });
+}
+function fbSet(path, value){ DB.ref('turnos/'+path).set(value); }
+
+// ════════════════════════════════════════════
+//  TABS
+// ════════════════════════════════════════════
+function showTab(name){
+  const names = ['calendario','bolsas','sabados','horas','config'];
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', names[i]===name));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+}
+function refreshAll(){
+  renderCalendar();
+  updateHeaders();
+  const activeId = document.querySelector('.panel.active')?.id;
+  if(activeId==='panel-bolsas')  renderBolsas();
+  if(activeId==='panel-sabados') renderSabados();
+  if(activeId==='panel-horas')   renderHoras();
+  if(activeId==='panel-config')  renderConfig();
+}
+
+// ════════════════════════════════════════════
+//  ROTATION LOGIC
+// ════════════════════════════════════════════
+
+// Monday of the week containing dateStr
+function getWeekMonday(dateStr){
+  const d = new Date(dateStr + 'T00:00:00');
+  const dow = d.getDay();
+  const diff = dow === 0 ? -6 : 1 - dow;
+  const m = new Date(d);
+  m.setDate(d.getDate() + diff);
+  return m;
+}
+
+// Gregorio's turno for any given date (uses week-level period)
+function getMec3Turno(dateStr){
+  const cfg = S.config.rotacionMec3;
+  if(!cfg || !cfg.inicio) return 'mañana';
+  const start = new Date(cfg.inicio + 'T00:00:00');
+  const date  = new Date(dateStr    + 'T00:00:00');
+  const diffDays  = Math.floor((date - start) / 86400000);
+  const diffWeeks = Math.floor(diffDays / 7);
+  const period    = Math.floor(Math.abs(diffWeeks) / 2);
+  const base = cfg.turnoInicio || 'mañana';
+  const alt  = base === 'mañana' ? 'tarde' : 'mañana';
+  if(diffDays < 0){
+    // Before start: reverse
+    const negWeeks = Math.floor((-diffDays - 1) / 7) + 1;
+    const negPer   = Math.floor(negWeeks / 2);
+    return negPer % 2 === 0 ? alt : base;
+  }
+  return period % 2 === 0 ? base : alt;
+}
+
+// Count Rafa's absences for the week containing weekMonday (a Date object)
+function getMec1Absences(weekMonday){
+  let count = 0;
+  const absentDays = [];
+  for(let i=0; i<7; i++){
+    const d = new Date(weekMonday);
+    d.setDate(weekMonday.getDate() + i);
+    const ds = toDS(d);
+    const e  = S.dias[ds]?.['1']?.estado;
+    if(e && e !== 'normal'){ count++; absentDays.push(ds); }
+  }
+  return { count, absentDays };
+}
+
+// Index of weekMonday among all TAR weeks since rotation start (0-indexed)
+// Returns -1 if Gregorio is MAÑ this week
+function getTarWeekIndex(weekMonday){
+  const cfg = S.config.rotacionMec3;
+  if(!cfg || !cfg.inicio) return -1;
+  const mondayStr = toDS(weekMonday);
+  if(getMec3Turno(mondayStr) === 'mañana') return -1;
+
+  const start = new Date(cfg.inicio + 'T00:00:00');
+  const diffMs    = weekMonday - start;
+  const diffWeeks = Math.max(0, Math.floor(diffMs / (7*86400000)));
+  const cyclePos  = diffWeeks % 4;
+  const startsMan = cfg.turnoInicio === 'mañana';
+
+  // Which position within the TAR pair inside the 4-week cycle
+  let tarPos;
+  if(startsMan){ tarPos = cyclePos - 2; }   // TAR weeks are pos 2,3
+  else         { tarPos = cyclePos;     }   // TAR weeks are pos 0,1
+
+  const fullCycles = Math.floor(diffWeeks / 4);
+  return fullCycles * 2 + tarPos;
+}
+
+// Which mechanic (4 or 5) goes MAÑ when Alex covers night AND Gregorio is MAÑ
+// Alternates based on how many times each has been assigned
+function getAlexCovMec(weekMonday){
+  const cfg = S.config;
+  const starter = cfg.alexCovStarter || '4';
+
+  // Count past Alex-coverage-AND-Greg-mañana weeks (before weekMonday)
+  const seenWeeks = new Set();
+  Object.keys(S.dias).forEach(ds => {
+    const e = S.dias[ds]?.['1']?.estado;
+    if(e && e !== 'normal') seenWeeks.add(toDS(getWeekMonday(ds)));
+  });
+
+  let idx = 0;
+  [...seenWeeks].sort().forEach(monStr => {
+    const mon = new Date(monStr + 'T00:00:00');
+    if(mon >= weekMonday) return;
+    const { count } = getMec1Absences(mon);
+    if(count >= 4 && getMec3Turno(monStr) === 'mañana') idx++;
+  });
+
+  const starterFirst = starter === '4';
+  return (idx % 2 === 0)
+    ? (starterFirst ? '4' : '5')
+    : (starterFirst ? '5' : '4');
+}
+
+// Compute expected shifts for all 5 mechanics for the given week
+function getWeekShifts(weekMonday){
+  const mondayStr = toDS(weekMonday);
+  const gregTurno = getMec3Turno(mondayStr);
+  const { count: rafaAbs } = getMec1Absences(weekMonday);
+  const alexNight = rafaAbs >= 4;
+
+  let mec4, mec5;
+
+  if(gregTurno === 'mañana'){
+    // Base: both TAR
+    mec4 = 'tarde'; mec5 = 'tarde';
+    if(alexNight){
+      // Need 1 more MAÑ (Gregorio provides 1, we need ≥2)
+      const cov = getAlexCovMec(weekMonday);
+      if(cov === '4') mec4 = 'mañana'; else mec5 = 'mañana';
+    }
+  } else {
+    // Gregorio TAR: alternate Javier/Jose
+    const tarIdx     = getTarWeekIndex(weekMonday);
+    const starter    = S.config.tarStarter || '4';
+    const javierFirst = starter === '4';
+    const javierMan   = (tarIdx % 2 === 0) ? javierFirst : !javierFirst;
+    mec4 = javierMan  ? 'mañana' : 'tarde';
+    mec5 = javierMan  ? 'tarde'  : 'mañana';
+
+    if(alexNight){
+      // Greg=TAR, Alex=NOC → need ≥2 MAÑ, Greg satisfies ≥1 TAR
+      // Both Javier & Jose go MAÑ so we hit 2 MAÑ (Javier+Jose), 1 TAR (Greg)
+      mec4 = 'mañana'; mec5 = 'mañana';
+    }
+  }
+
+  return {
+    '1': 'noche',
+    '2': alexNight ? 'noche' : 'mañana',
+    '3': gregTurno,
+    '4': mec4,
+    '5': mec5
+  };
+}
+
+// ════════════════════════════════════════════
+//  CALENDAR RENDER — WEEKLY VIEW
+// ════════════════════════════════════════════
+const MONTHS    = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const MONTHS_SH = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const DAYS_SH   = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const DAYS_LONG = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+
+function toDS(d){ return d.toISOString().slice(0,10); }
+function prevMonth(){ if(--curMonth<0){ curMonth=11; curYear--; } renderCalendar(); }
+function nextMonth(){ if(++curMonth>11){ curMonth=0;  curYear++; } renderCalendar(); }
+function updateHeaders(){
+  for(let i=1;i<=5;i++){
+    const el = document.getElementById('th'+i);
+    if(el) el.textContent = S.mecanicos[String(i)]?.nombre || 'Mec '+i;
+  }
+}
+
+function shiftLbl(t){ return t==='mañana'?'MAÑ':t==='tarde'?'TAR':'NOC'; }
+function estadoLbl(e){ return {vacaciones:'VAC',asunto:'ASU',baja:'BAJA',sancion:'SAN',libre:'LIBRE'}[e]||e.toUpperCase(); }
+
+function getWeekNumber(d){
+  const jan4 = new Date(d.getFullYear(), 0, 4);
+  return Math.ceil(((d - jan4) / 86400000 + jan4.getDay() + 1) / 7);
+}
+
+function renderCalendar(){
+  document.getElementById('monthTitle').textContent = MONTHS[curMonth]+' '+curYear;
+  updateHeaders();
+
+  const today    = new Date(); today.setHours(0,0,0,0);
+  const firstDay = new Date(curYear, curMonth, 1);
+  const lastDay  = new Date(curYear, curMonth+1, 0);
+
+  // Start from Monday of the week containing firstDay
+  let wMon = getWeekMonday(toDS(firstDay));
+  const tbody = document.getElementById('calBody');
+  tbody.innerHTML = '';
+  let badWeeks = 0;
+
+  while(wMon <= lastDay){
+    const wSun = new Date(wMon); wSun.setDate(wMon.getDate()+6);
+    const shifts = getWeekShifts(wMon);
+    const { count: rafaAbs } = getMec1Absences(wMon);
+
+    // Is any day of this week in current month?
+    const inMonth = wMon.getMonth()===curMonth || wSun.getMonth()===curMonth;
+    // Is today in this week?
+    const isCurrent = today >= wMon && today <= wSun;
+
+    // ── Gather exceptions per mechanic ──
+    const excByMec = { '1':[],'2':[],'3':[],'4':[],'5':[] };
+    const obsParts = [];
+
+    for(let mId=1; mId<=5; mId++){
+      const k = String(mId);
+      const defaultTurno = shifts[k];
+
+      for(let i=0; i<7; i++){
+        const d = new Date(wMon); d.setDate(wMon.getDate()+i);
+        const ds = toDS(d);
+        const dayData = S.dias[ds]?.[k] || {};
+        const estado  = dayData.estado || 'normal';
+        const storedT = dayData.turno;
+        const nota    = dayData.nota || '';
+
+        let isExc = false;
+        const parts = [];
+        if(estado !== 'normal'){ parts.push(estadoLbl(estado)); isExc = true; }
+        if((mId===4||mId===5) && storedT && storedT !== defaultTurno){
+          parts.push(shiftLbl(storedT));
+          isExc = true;
+        }
+        if(isExc){
+          excByMec[k].push({ ds, dow: d.getDay(), estado, parts, nota });
+          const nomMec = S.mecanicos[k]?.nombre || 'Mec'+k;
+          obsParts.push(`${nomMec}: ${DAYS_SH[d.getDay()]} ${parts.join('/')}`);
+        }
+      }
+    }
+
+    // ── Morning coverage count (base week, not accounting for per-day absences) ──
+    let manCount = 0;
+    for(let mId=1;mId<=5;mId++){
+      if(shifts[String(mId)]==='mañana') manCount++;
+    }
+    if(manCount < 2) badWeeks++;
+
+    // ── Build row ──
+    const tr = document.createElement('tr');
+    if(isCurrent) tr.classList.add('is-current');
+    if(!inMonth)  tr.classList.add('is-partial');
+
+    // Week label
+    const wStartLbl = `${wMon.getDate()} ${MONTHS_SH[wMon.getMonth()]}`;
+    const wEndLbl   = `${wSun.getDate()} ${MONTHS_SH[wSun.getMonth()]}`;
+    const tdW = document.createElement('td');
+    tdW.innerHTML = `<div class="week-label">
+      <span class="wk-num">Sem ${getWeekNumber(wMon)}</span>
+      <span class="wk-dates">${wStartLbl}–${wEndLbl}</span>
+    </div>`;
+    tr.appendChild(tdW);
+
+    // Mechanic cells
+    for(let mId=1;mId<=5;mId++){
+      const k   = String(mId);
+      const t   = shifts[k];
+      const excs = excByMec[k];
+      const hasExc = excs.length > 0;
+
+      let excHtml = '';
+      if(hasExc){
+        excHtml = '<div class="exc-days">' + excs.map(e =>
+          `<span class="exc-chip exc-${e.estado}" onclick="event.stopPropagation();openCellEdit('${k}','${e.ds}')"
+                 title="${e.parts.join(' | ')}">${DAYS_SH[e.dow]}</span>`
+        ).join('') + '</div>';
+      }
+
+      const td = document.createElement('td');
+      td.innerHTML = `<div class="week-cell${hasExc?' has-exc':''}"
+            onclick="openWeekModal('${k}','${toDS(wMon)}')">
+        <span class="sh-badge sh-${t}">${shiftLbl(t)}</span>
+        ${excHtml}
+      </div>`;
+      tr.appendChild(td);
+    }
+
+    // Coverage
+    const covCls = manCount>=3?'cov-ok':manCount>=2?'cov-warn':'cov-bad';
+    const tdCov = document.createElement('td');
+    tdCov.style.textAlign='center';
+    tdCov.innerHTML = `<span class="cov-cell ${covCls}">${manCount} 👷</span>`;
+    tr.appendChild(tdCov);
+
+    // Observations
+    const tdObs = document.createElement('td');
+    tdObs.className = 'obs-td';
+    if(obsParts.length){
+      tdObs.innerHTML = obsParts.map(p=>`<span style="display:block">${p}</span>`).join('');
+    }
+    tr.appendChild(tdObs);
+
+    tbody.appendChild(tr);
+    wMon = new Date(wMon); wMon.setDate(wMon.getDate()+7);
+  }
+
+  const banner = document.getElementById('coverageAlert');
+  if(badWeeks>0){
+    banner.style.display='block';
+    banner.textContent=`⚠️ ${badWeeks} semana(s) con cobertura de mañana insuficiente (< 2 mecánicos) en ${MONTHS[curMonth]}.`;
+  } else { banner.style.display='none'; }
+}
+
+// ════════════════════════════════════════════
+//  WEEK MODAL (day picker)
+// ════════════════════════════════════════════
+function openWeekModal(mecId, mondayStr){
+  weekEditMecId  = mecId;
+  weekEditMonday = new Date(mondayStr + 'T00:00:00');
+  const mec    = S.mecanicos[mecId];
+  const shifts = getWeekShifts(weekEditMonday);
+  const defaultTurno = shifts[mecId];
+
+  document.getElementById('weekModalTitle').textContent = mec?.nombre || 'Mec '+mecId;
+  const wSun = new Date(weekEditMonday); wSun.setDate(weekEditMonday.getDate()+6);
+  document.getElementById('weekModalSub').textContent =
+    `${weekEditMonday.getDate()} ${MONTHS_SH[weekEditMonday.getMonth()]} — ${wSun.getDate()} ${MONTHS_SH[wSun.getMonth()]}`;
+
+  const cont = document.getElementById('weekModalDays');
+  cont.innerHTML = '';
+
+  for(let i=0; i<7; i++){
+    const d  = new Date(weekEditMonday); d.setDate(weekEditMonday.getDate()+i);
+    const ds = toDS(d);
+    const dayData  = S.dias[ds]?.[mecId] || {};
+    const estado   = dayData.estado || 'normal';
+    const storedT  = dayData.turno  || defaultTurno;
+    const nota     = dayData.nota   || '';
+    const isWE     = d.getDay()===0 || d.getDay()===6;
+
+    const shHtml = `<span class="sh-badge sh-${storedT}">${shiftLbl(storedT)}</span>`;
+    const stHtml = estado!=='normal'
+      ? `<span class="st-badge st-${estado}">${estadoLbl(estado)}</span>` : '';
+    const noteHtml = nota ? `<span class="wd-note" title="${nota}">📝</span>` : '';
+
+    const div = document.createElement('div');
+    div.className = 'week-day-row' + (isWE?' wd-weekend':'');
+    div.innerHTML = `<span class="wd-name">${DAYS_LONG[d.getDay()]} ${d.getDate()}</span>
+      <div class="wd-badges">${shHtml}${stHtml}</div>
+      ${noteHtml}
+      <span style="font-size:0.68rem;color:rgba(201,162,39,0.6)">✎</span>`;
+    div.onclick = () => {
+      closeModal('weekModal');
+      openCellEdit(mecId, ds);
+    };
+    cont.appendChild(div);
+  }
+
+  document.getElementById('weekModal').style.display = 'flex';
+}
+
+// ════════════════════════════════════════════
+//  CELL EDIT MODAL
+// ════════════════════════════════════════════
+function openCellEdit(mecId, dateStr){
+  editCell = { mecId, dateStr };
+  const mec = S.mecanicos[mecId];
+  const d   = new Date(dateStr + 'T12:00:00');
+  const dFmt= `${DAYS_LONG[d.getDay()]} ${d.getDate()} de ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+
+  document.getElementById('cellModalTitle').textContent = mec?.nombre || 'Mec '+mecId;
+  document.getElementById('cellModalSub').textContent   = dFmt;
+
+  const mDat  = (S.dias[dateStr] || {})[mecId] || {};
+  const est   = mDat.estado || 'normal';
+  const nota  = mDat.nota   || '';
+
+  const turnoWrap = document.getElementById('turnoFieldWrap');
+  if(mecId==='4' || mecId==='5'){
+    turnoWrap.style.display = 'block';
+    // Show computed default as hint
+    const wMon = getWeekMonday(dateStr);
+    const shifts = getWeekShifts(wMon);
+    const computed = shifts[mecId];
+    document.getElementById('editTurno').value = mDat.turno || computed;
+    turnoWrap.querySelector('label').textContent =
+      `Turno (por rotación: ${shiftLbl(computed)})`;
+  } else {
+    turnoWrap.style.display = 'none';
+  }
+
+  document.getElementById('editEstado').value = est;
+  document.getElementById('editNota').value   = nota;
+
+  const info = document.getElementById('cellModalInfo');
+  if(mecId === '1'){
+    const wMon = getWeekMonday(dateStr);
+    const { count } = getMec1Absences(wMon);
+    let txt = `Esta semana Rafa lleva ${count} ausencia(s). `;
+    txt += count >= 4 ? '⚠️ Alex cubre TODA la semana de noche.'
+         : count > 0  ? 'Alex cubre los días de ausencia.'
+         : 'Si supera 3 días, Alex cubrirá toda la semana.';
+    info.textContent = txt;
+    info.className   = count >= 4 ? 'modal-info warn' : 'modal-info';
+    info.style.display = 'block';
+  } else {
+    info.style.display = 'none';
+  }
+
+  document.getElementById('cellModal').style.display = 'flex';
+}
+
+function saveCellEdit(){
+  if(!editCell) return;
+  const { mecId, dateStr } = editCell;
+  const est  = document.getElementById('editEstado').value;
+  const nota = document.getElementById('editNota').value.trim();
+  const entry = { estado: est, nota };
+
+  if(mecId==='4' || mecId==='5'){
+    const wMon    = getWeekMonday(dateStr);
+    const shifts  = getWeekShifts(wMon);
+    const picked  = document.getElementById('editTurno').value;
+    // Only store turno if it differs from computed default
+    if(picked !== shifts[mecId]) entry.turno = picked;
+  }
+
+  if(!S.dias[dateStr]) S.dias[dateStr] = {};
+  if(est==='normal' && !nota && !entry.turno){
+    delete S.dias[dateStr][mecId];
+    if(!Object.keys(S.dias[dateStr]).length) delete S.dias[dateStr];
+  } else {
+    S.dias[dateStr][mecId] = entry;
+  }
+
+  fbSet('dias', S.dias);
+  recalcBolsaFromDias(mecId);
+  closeModal('cellModal');
+  renderCalendar();
+  showToast('Guardado');
+}
+
+function recalcBolsaFromDias(mecId){
+  const k = String(mecId);
+  let vac=0, asu=0;
+  Object.values(S.dias).forEach(dayObj => {
+    const m = dayObj[k];
+    if(!m) return;
+    if(m.estado==='vacaciones') vac++;
+    if(m.estado==='asunto')     asu++;
+  });
+  ensureBolsa(k);
+  S.bolsas[k].vacacionesUsadas = vac;
+  S.bolsas[k].asuntosUsados    = asu;
+  fbSet('bolsas', S.bolsas);
+}
+
+// ════════════════════════════════════════════
+//  BOLSAS
+// ════════════════════════════════════════════
+function renderBolsas(){
+  const grid   = document.getElementById('bolsasGrid');
+  const vacTot = S.config.vacTotal || 22;
+  const asuTot = S.config.asuTotal || 4;
+  grid.innerHTML = '';
+
+  for(let i=1;i<=5;i++){
+    const k   = String(i);
+    const mec = S.mecanicos[k];
+    const b   = S.bolsas[k] || {};
+    const vUs = b.vacacionesUsadas || 0;
+    const aUs = b.asuntosUsados    || 0;
+    const sEx = b.sabadosExtra     || 0;
+    const sLi = b.diasLibreSabado  || 0;
+    const vRe = Math.max(0, vacTot-vUs);
+    const aRe = Math.max(0, asuTot-aUs);
+    const sabGen  = Math.floor(sEx/10);
+    const sabDisp = Math.max(0, sabGen-sLi);
+    const hnd     = S.horasNocheDom[k] || 0;
+    const vPct = Math.min(100, vUs/vacTot*100);
+    const aPct = Math.min(100, aUs/asuTot*100);
+
+    grid.innerHTML += `<div class="bolsa-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="bolsa-name">${mec?.nombre||'Mec '+i}</div>
+        <button class="bolsa-edit-btn" onclick="openBolsaModal('${k}')">✏️ Ajustar</button>
+      </div>
+      <div class="bolsa-row"><span class="bolsa-lbl">Vacaciones usadas</span><span class="bolsa-val">${vUs}/${vacTot}</span></div>
+      <div class="bar-bg"><div class="bar-fill bar-gold" style="width:${vPct}%"></div></div>
+      <div class="bolsa-row"><span class="bolsa-lbl">Restantes</span><span class="bolsa-val" style="color:var(--green)">${vRe} días</span></div>
+      <div class="bolsa-row" style="margin-top:6px"><span class="bolsa-lbl">Asuntos usados</span><span class="bolsa-val">${aUs}/${asuTot}</span></div>
+      <div class="bar-bg"><div class="bar-fill bar-blue" style="width:${aPct}%"></div></div>
+      <div class="bolsa-row"><span class="bolsa-lbl">Restantes</span><span class="bolsa-val" style="color:var(--blue)">${aRe} días</span></div>
+      <div class="bolsa-row" style="margin-top:6px"><span class="bolsa-lbl">Sáb. extra acumulados</span><span class="bolsa-val">${sEx}</span></div>
+      <div class="bolsa-row"><span class="bolsa-lbl">Días libres generados</span><span class="bolsa-val">${sabGen}</span></div>
+      <div class="bolsa-row"><span class="bolsa-lbl">Libres disfrutados</span><span class="bolsa-val">${sLi}</span></div>
+      <div class="bolsa-row"><span class="bolsa-lbl" style="color:var(--gold)">Disponibles</span><span class="bolsa-val" style="color:var(--gold)">${sabDisp}${sabDisp>0?' 🎯':''}</span></div>
+      <div class="bolsa-row" style="margin-top:6px"><span class="bolsa-lbl">Horas noche domingo</span><span class="bolsa-val" style="color:var(--purple)">${hnd}h</span></div>
+    </div>`;
+  }
+}
+
+function openBolsaModal(mecId){
+  editBolsaMecId = mecId;
+  const mec = S.mecanicos[mecId];
+  const b   = S.bolsas[mecId] || {};
+  document.getElementById('bolsaModalTitle').textContent = mec?.nombre||'Mec '+mecId;
+  document.getElementById('bEditVac').value    = b.vacacionesUsadas || 0;
+  document.getElementById('bEditAsu').value    = b.asuntosUsados    || 0;
+  document.getElementById('bEditSabLib').value = b.diasLibreSabado  || 0;
+  document.getElementById('bEditHnd').value    = S.horasNocheDom[mecId] || 0;
+  document.getElementById('bolsaModal').style.display = 'flex';
+}
+function saveBolsaEdit(){
+  if(!editBolsaMecId) return;
+  const k = editBolsaMecId;
+  ensureBolsa(k);
+  S.bolsas[k].vacacionesUsadas = +document.getElementById('bEditVac').value||0;
+  S.bolsas[k].asuntosUsados    = +document.getElementById('bEditAsu').value||0;
+  S.bolsas[k].diasLibreSabado  = +document.getElementById('bEditSabLib').value||0;
+  S.horasNocheDom[k]           = +document.getElementById('bEditHnd').value||0;
+  fbSet('bolsas', S.bolsas);
+  fbSet('horasNocheDom', S.horasNocheDom);
+  closeModal('bolsaModal');
+  renderBolsas();
+  showToast('Bolsa actualizada');
+}
+
+// ════════════════════════════════════════════
+//  SÁBADOS
+// ════════════════════════════════════════════
+function initSabForm(){
+  const wrap = document.getElementById('sabCbs');
+  wrap.innerHTML = '';
+  for(let i=1;i<=5;i++){
+    const k   = String(i);
+    const nom = S.mecanicos[k]?.nombre||'Mec '+i;
+    wrap.innerHTML += `<label class="mec-cb"><input type="checkbox" id="sabCb${k}" value="${k}"> ${nom}</label>`;
+  }
+  const t = new Date();
+  const toSat = (6-t.getDay()+7)%7||7;
+  const ns = new Date(t); ns.setDate(t.getDate()+toSat);
+  document.getElementById('sabFecha').value = toDS(ns);
+}
+function addSabado(){
+  const fecha = document.getElementById('sabFecha').value;
+  if(!fecha){ showToast('Selecciona una fecha'); return; }
+  const mecs = [];
+  for(let i=1;i<=5;i++){ const cb=document.getElementById('sabCb'+i); if(cb?.checked) mecs.push(i); }
+  if(!mecs.length){ showToast('Selecciona al menos un mecánico'); return; }
+  const prev = S.sabados[fecha]?.mecanicos||[];
+  S.sabados[fecha] = { mecanicos:[...new Set([...prev,...mecs])] };
+  recalcSabadosExtra();
+  fbSet('sabados',S.sabados); fbSet('bolsas',S.bolsas);
+  renderSabados();
+  showToast('Sábado registrado');
+  for(let i=1;i<=5;i++){ const cb=document.getElementById('sabCb'+i); if(cb) cb.checked=false; }
+}
+function recalcSabadosExtra(){
+  const c={'1':0,'2':0,'3':0,'4':0,'5':0};
+  Object.values(S.sabados).forEach(s=>(s.mecanicos||[]).forEach(m=>{ const k=String(m); if(c[k]!==undefined) c[k]++; }));
+  for(let i=1;i<=5;i++){ const k=String(i); ensureBolsa(k); S.bolsas[k].sabadosExtra=c[k]; }
+}
+function deleteSabado(fecha){
+  if(!confirm('¿Eliminar el sábado '+fecha+'?')) return;
+  delete S.sabados[fecha];
+  recalcSabadosExtra();
+  fbSet('sabados',S.sabados); fbSet('bolsas',S.bolsas);
+  renderSabados();
+  showToast('Eliminado');
+}
+function renderSabados(){
+  initSabForm();
+  const list    = document.getElementById('sabList');
+  const entries = Object.entries(S.sabados).sort((a,b)=>b[0].localeCompare(a[0]));
+  if(!entries.length){ list.innerHTML='<div class="empty">Sin sábados registrados</div>'; return; }
+  list.innerHTML = entries.map(([fecha,data])=>{
+    const d = new Date(fecha+'T12:00:00');
+    const tags = (data.mecanicos||[]).map(m=>`<span class="sab-mec-tag">${S.mecanicos[String(m)]?.nombre||'Mec '+m}</span>`).join('');
+    return `<div class="sab-item">
+      <div class="sab-date">📅 ${d.getDate()} ${MONTHS_SH[d.getMonth()]} ${d.getFullYear()}</div>
+      <div class="sab-mecs">${tags}</div>
+      <button class="sab-del" onclick="deleteSabado('${fecha}')">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════
+//  HORAS NOCHE DOMINGO
+// ════════════════════════════════════════════
+function renderHoras(){
+  const grid = document.getElementById('hndGrid');
+  grid.innerHTML = '';
+  for(let i=1;i<=5;i++){
+    const k=String(i);
+    const nom=S.mecanicos[k]?.nombre||'Mec '+i;
+    const h=S.horasNocheDom[k]||0;
+    grid.innerHTML+=`<div class="hnd-card">
+      <div class="hnd-name">${nom}</div>
+      <div class="hnd-val">${h}h</div>
+      <div class="hnd-label">Acumuladas noche domingo</div>
+      <div class="hnd-btns">
+        <button class="hnd-btn hnd-add" onclick="adjHoras('${k}',1)">+1h</button>
+        <button class="hnd-btn hnd-sub" onclick="adjHoras('${k}',-1)">−1h</button>
+        <button class="hnd-btn hnd-cobrar" onclick="cobrarHoras('${k}')">Liquidar</button>
+      </div>
+    </div>`;
+  }
+}
+function adjHoras(k,d){ S.horasNocheDom[k]=Math.max(0,(S.horasNocheDom[k]||0)+d); fbSet('horasNocheDom',S.horasNocheDom); renderHoras(); }
+function cobrarHoras(k){
+  const h=S.horasNocheDom[k]||0;
+  if(!h){ showToast('No hay horas acumuladas'); return; }
+  if(confirm(`¿Liquidar ${h}h de ${S.mecanicos[k]?.nombre}?`)){ S.horasNocheDom[k]=0; fbSet('horasNocheDom',S.horasNocheDom); renderHoras(); showToast('Horas liquidadas'); }
+}
+
+// ════════════════════════════════════════════
+//  CONFIG
+// ════════════════════════════════════════════
+const CFG_PERFILES=['','Fijo noche','Fijo mañana / cubre noche','Rotativo 2 sem.','Flexible','Flexible'];
+function renderConfig(){
+  const form=document.getElementById('mecNombresForm');
+  form.innerHTML='';
+  for(let i=1;i<=5;i++){
+    const k=String(i);
+    form.innerHTML+=`<div class="field">
+      <label>Mecánico ${i} <span style="color:rgba(255,255,255,0.25);font-size:0.62rem;text-transform:none;letter-spacing:0;font-weight:400">— ${CFG_PERFILES[i]}</span></label>
+      <input type="text" id="nomMec${k}" value="${S.mecanicos[k]?.nombre||NOMBRES_DEFAULT[i]}">
+    </div>`;
+  }
+  const rot=S.config.rotacionMec3||{};
+  document.getElementById('rotInicioFecha').value  = rot.inicio||'';
+  document.getElementById('rotInicioTurno').value  = rot.turnoInicio||'mañana';
+  document.getElementById('tarStarter').value      = S.config.tarStarter||'4';
+  document.getElementById('alexCovStarter').value  = S.config.alexCovStarter||'4';
+  document.getElementById('cfgVac').value = S.config.vacTotal||22;
+  document.getElementById('cfgAsu').value = S.config.asuTotal||4;
+}
+function saveNombres(){
+  for(let i=1;i<=5;i++){ const k=String(i); const v=document.getElementById('nomMec'+k)?.value.trim(); if(v) S.mecanicos[k].nombre=v; }
+  fbSet('mecanicos',S.mecanicos); updateHeaders(); showToast('Nombres guardados');
+}
+function saveRotacion(){
+  const inicio=document.getElementById('rotInicioFecha').value;
+  if(!inicio){ showToast('Selecciona fecha de inicio'); return; }
+  S.config.rotacionMec3={ inicio, turnoInicio:document.getElementById('rotInicioTurno').value };
+  fbSet('config',S.config); renderCalendar(); showToast('Rotación configurada');
+}
+function saveRotacionExtra(){
+  S.config.tarStarter    = document.getElementById('tarStarter').value;
+  S.config.alexCovStarter= document.getElementById('alexCovStarter').value;
+  fbSet('config',S.config); renderCalendar(); showToast('Configuración guardada');
+}
+function saveCfgBolsas(){
+  S.config.vacTotal=+document.getElementById('cfgVac').value||22;
+  S.config.asuTotal=+document.getElementById('cfgAsu').value||4;
+  fbSet('config',S.config); showToast('Guardado');
+}
+
+// ════════════════════════════════════════════
+//  UTILS
+// ════════════════════════════════════════════
+function closeModal(id){ document.getElementById(id).style.display='none'; editCell=null; editBolsaMecId=null; }
+function bgClose(e,id){ if(e.target.classList.contains('modal-bg')) closeModal(id); }
+let toastT;
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2500); }
+
+window.addEventListener('DOMContentLoaded',()=>{ document.getElementById('pwInput').focus?.(); });
+</script>
+</body>
+</html>
