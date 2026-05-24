@@ -135,6 +135,12 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:'Bar
 </head>
 <body>
 
+<!-- Barra mecánico (visible en choice y docs) -->
+<div id="mecTopBar" style="display:none;position:fixed;top:0;left:0;right:0;background:rgba(13,27,42,0.96);border-bottom:1px solid rgba(46,204,113,0.3);padding:9px 16px;z-index:200;backdrop-filter:blur(6px)">
+  <span style="font-size:0.9rem;font-weight:700;color:#2ecc71">&#x1F477; <span id="mecTopBarName"></span></span>
+  <span style="font-size:0.72rem;color:rgba(255,255,255,0.3);margin-left:10px" id="mecTopBarMaq"></span>
+</div>
+
 <!-- ══ PANTALLA 1: LOGIN ══ -->
 <div class="screen" id="screenLogin">
   <div class="maq-banner" id="maqBanner" style="display:none">
@@ -431,8 +437,18 @@ function mostrar(id){
 }
 
 function mostrarChoice(){
-  document.getElementById('choiceWho').textContent = '\u{1F477} ' + mecActual
-    + (maqActual ? '  ·  \u{1F3ED} ' + maqActual.n : '');
+  document.getElementById('choiceWho').textContent = maqActual ? '\u{1F3ED} ' + maqActual.n : '';
+  var bar  = document.getElementById('mecTopBar');
+  var name = document.getElementById('mecTopBarName');
+  var maq  = document.getElementById('mecTopBarMaq');
+  if(bar)  bar.style.display  = 'block';
+  if(name) name.textContent   = mecActual;
+  if(maq)  maq.textContent    = maqActual ? maqActual.n : '';
+  // Dar espacio para la barra fija
+  ['screenChoice','screenDocs'].forEach(function(s){
+    var el = document.getElementById(s);
+    if(el) el.style.paddingTop = '50px';
+  });
   mostrar('screenChoice');
 }
 
@@ -476,6 +492,8 @@ function cambiarMecanico(){
   mecActual = null;
   document.getElementById('loginErr').textContent = '';
   document.getElementById('pwInput').value = '';
+  var bar = document.getElementById('mecTopBar');
+  if(bar) bar.style.display = 'none';
   mostrar('screenLogin');
 }
 
@@ -495,6 +513,8 @@ function irA(destino){
 
 function volverAChoice(){
   mostrar('screenChoice');
+  var bar = document.getElementById('mecTopBar');
+  if(bar) bar.style.display = 'block';
 }
 
 function verDocs(){
