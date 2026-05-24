@@ -296,7 +296,7 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
     <div class="leg-item"><span class="st-badge st-baja">BAJA</span> Baja</div>
     <div class="leg-item"><span class="st-badge st-sancion">SAN</span> Sanción</div>
     <div class="leg-item"><span class="st-badge st-libre">LIBRE</span> Día libre</div>
-    <div class="leg-item" style="margin-left:auto;font-size:0.64rem;color:rgba(255,255,255,0.25)">Celdas naranja = variación en algún día</div>
+    <div class="leg-item" style="margin-left:auto;font-size:0.64rem;color:rgba(255,255,255,0.25)">Celdas naranja = variación · COB: N·M·T (👤M = jefe cubre mañana)</div>
   </div>
   <div class="cal-wrap">
     <table class="cal-table">
@@ -308,7 +308,7 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
           <th id="th3">GREGORIO</th>
           <th id="th4">JAVIER E.</th>
           <th id="th5">JOSE</th>
-          <th style="min-width:60px">COB.MAÑ</th>
+          <th style="min-width:80px">COBERTURA</th>
           <th class="obs-col">OBSERVACIONES</th>
         </tr>
       </thead>
@@ -885,12 +885,17 @@ function renderCalendar(){
       }
     }
 
-    // ── Morning coverage count (base week, not accounting for per-day absences) ──
-    let manCount = 0;
+    // ── Shift coverage count (base week, rotation defaults) ──
+    // Priority: 1 NOC + 1 MAÑ + 1 TAR minimum.
+    // User covers MAÑ if mechanics = 0, so real alert = TAR or NOC = 0.
+    let manCount=0, tarCount=0, nocCount=0;
     for(let mId=1;mId<=5;mId++){
-      if(shifts[String(mId)]==='mañana') manCount++;
+      const t=shifts[String(mId)];
+      if(t==='mañana') manCount++;
+      else if(t==='tarde') tarCount++;
+      else if(t==='noche') nocCount++;
     }
-    if(manCount < 2) badWeeks++;
+    if(tarCount===0||nocCount===0) badWeeks++;
 
     // ── Build row ──
     const tr = document.createElement('tr');
@@ -932,10 +937,12 @@ function renderCalendar(){
     }
 
     // Coverage
-    const covCls = manCount>=3?'cov-ok':manCount>=2?'cov-warn':'cov-bad';
+    // bad = sin tarde o sin noche (el jefe cubre mañana si hace falta)
+    const covCls = (tarCount===0||nocCount===0)?'cov-bad': manCount===0?'cov-warn':'cov-ok';
+    const manLbl = manCount===0 ? '<span title="Jefe cubre mañana">👤</span>' : `${manCount}`;
     const tdCov = document.createElement('td');
     tdCov.style.textAlign='center';
-    tdCov.innerHTML = `<span class="cov-cell ${covCls}">${manCount} 👷</span>`;
+    tdCov.innerHTML = `<span class="cov-cell ${covCls}" style="font-size:0.65rem;letter-spacing:0.03em" title="${nocCount} noche · ${manCount} mañana · ${tarCount} tarde">${nocCount}N · ${manLbl}M · ${tarCount}T</span>`;
     tr.appendChild(tdCov);
 
     // Observations
@@ -953,7 +960,7 @@ function renderCalendar(){
   const banner = document.getElementById('coverageAlert');
   if(badWeeks>0){
     banner.style.display='block';
-    banner.textContent=`⚠️ ${badWeeks} semana(s) con cobertura de mañana insuficiente (< 2 mecánicos) en ${MONTHS[curMonth]}.`;
+    banner.textContent=`⚠️ ${badWeeks} semana(s) en ${MONTHS[curMonth]} sin cobertura de tarde o noche — revisar rotación / ausencias.`;
   } else { banner.style.display='none'; }
 }
 
@@ -1407,7 +1414,7 @@ function deleteAusencia(id){
 }
 
 function getOverlaps(){
-  // Find weeks where at least one mechanic is absent and morning coverage <2
+  // Find weeks where absences leave tarde=0 (critical) or mañana=0 (user covers)
   const weekSet=new Set();
   Object.values(S.ausencias).forEach(aus=>{
     let d=new Date(aus.desde+'T00:00:00');
@@ -1428,23 +1435,29 @@ function getOverlaps(){
       const day=new Date(mon); day.setDate(mon.getDate()+i);
       const ds=toDS(day);
 
-      // Mechanics absent from ausencias this day
       const absMecs=new Set();
       Object.values(S.ausencias).forEach(aus=>{
         if(ds>=aus.desde&&ds<=aus.hasta) absMecs.add(aus.mecId);
       });
       if(!absMecs.size) continue;
 
-      // Morning count excluding absent mechanics
-      let mornCount=0;
+      let manCount=0, tarCount=0, nocCount=0;
       const absentNames=[];
       for(let mId=1;mId<=5;mId++){
         const k=String(mId);
-        if(absMecs.has(k)) absentNames.push(S.mecanicos[k]?.nombre||'Mec'+k);
-        else if(shifts[k]==='mañana') mornCount++;
+        if(absMecs.has(k)){
+          absentNames.push(S.mecanicos[k]?.nombre||'Mec'+k);
+        } else {
+          const t=shifts[k];
+          if(t==='mañana') manCount++;
+          else if(t==='tarde') tarCount++;
+          else if(t==='noche') nocCount++;
+        }
       }
-      if(mornCount<2){
-        dayProbs.push({ ds, dow:day.getDay(), mornCount, absentNames });
+      // Flag: tarde=0 (critical) OR mañana=0 (user must step in)
+      if(tarCount===0||manCount===0){
+        dayProbs.push({ ds, dow:day.getDay(), manCount, tarCount, nocCount, absentNames,
+          critical: tarCount===0||nocCount===0 });
       }
     }
     if(dayProbs.length) problems.push({ monStr, dayProbs });
@@ -1457,7 +1470,7 @@ function renderOverlapView(){
   if(!cont) return;
   const problems=getOverlaps();
   if(!problems.length){
-    cont.innerHTML='<div class="overlap-ok">✅ Sin conflictos de cobertura MAÑ detectados con las ausencias registradas</div>';
+    cont.innerHTML='<div class="overlap-ok">✅ Sin conflictos de cobertura detectados con las ausencias registradas</div>';
     return;
   }
   cont.innerHTML=problems.map(w=>{
@@ -1465,11 +1478,18 @@ function renderOverlapView(){
     const sun=new Date(mon); sun.setDate(mon.getDate()+6);
     const wLbl=`Sem ${getWeekNumber(mon)} · ${mon.getDate()} ${MONTHS_SH[mon.getMonth()]} – ${sun.getDate()} ${MONTHS_SH[sun.getMonth()]} ${sun.getFullYear()}`;
     const daysHtml=w.dayProbs.map(p=>{
-      const cls=p.mornCount===0?'overlap-cov-bad':'overlap-cov-warn';
+      const nocTxt=`${p.nocCount}N`;
+      const manTxt=p.manCount===0
+        ? `<span style="color:var(--yellow);font-size:0.7rem">0M (jefe cubre)</span>`
+        : `${p.manCount}M`;
+      const tarTxt=p.tarCount===0
+        ? `<span class="overlap-cov overlap-cov-bad">0 TAR ⚠️</span>`
+        : `<span class="overlap-cov overlap-cov-warn">${p.tarCount}T</span>`;
       return `<div class="overlap-day-row">
         <span style="min-width:30px;font-weight:700;color:rgba(255,255,255,0.7)">${DAYS_SH[p.dow]}</span>
-        <span class="overlap-cov ${cls}">${p.mornCount} MAÑ</span>
-        <span style="color:rgba(255,255,255,0.4);font-size:0.72rem">Ausente: ${p.absentNames.join(', ')}</span>
+        <span style="font-size:0.72rem;color:rgba(255,255,255,0.55);min-width:80px">${nocTxt} · ${manTxt}</span>
+        ${tarTxt}
+        <span style="color:rgba(255,255,255,0.35);font-size:0.7rem">Ausente: ${p.absentNames.join(', ')}</span>
       </div>`;
     }).join('');
     return `<div class="overlap-item">
