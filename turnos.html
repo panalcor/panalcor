@@ -1228,40 +1228,70 @@ function renderBolsas(){
   const asuTot = S.config.asuTotal || 4;
   grid.innerHTML = '';
 
-  for(let i=1;i<=5;i++){
-    const k   = String(i);
-    const mec = S.mecanicos[k];
-    const b   = S.bolsas[k] || {};
-    const vUs = b.vacacionesUsadas || 0;
-    const aUs = b.asuntosUsados    || 0;
-    const sEx = b.sabadosExtra     || 0;
-    const sLi = b.diasLibreSabado  || 0;
-    const vRe = Math.max(0, vacTot-vUs);
-    const aRe = Math.max(0, asuTot-aUs);
-    const sabGen  = Math.floor(sEx/10);
-    const sabDisp = Math.max(0, sabGen-sLi);
-    const hnd     = S.horasNocheDom[k] || 0;
-    const vPct = Math.min(100, vUs/vacTot*100);
-    const aPct = Math.min(100, aUs/asuTot*100);
+  // Contar sábados en tiempo real desde S.sabados (evita cache obsoleto)
+  const sabCounts = {};
+  getAllMecIds().forEach(k => { sabCounts[k] = 0; });
+  Object.values(S.sabados).forEach(s =>
+    (s.mecanicos||[]).forEach(m => { const k=String(m); if(sabCounts[k]!==undefined) sabCounts[k]++; })
+  );
 
-    grid.innerHTML += `<div class="bolsa-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <div class="bolsa-name">${mec?.nombre||'Mec '+i}</div>
-        <button class="bolsa-edit-btn" onclick="openBolsaModal('${k}')">✏️ Ajustar</button>
-      </div>
+  getAllMecIds().forEach(k => {
+    const mec      = S.mecanicos[k];
+    const b        = S.bolsas[k] || {};
+    const isExtra  = +k > 5;
+    const vUs      = b.vacacionesUsadas || 0;
+    const aUs      = b.asuntosUsados    || 0;
+    const sEx      = sabCounts[k];                      // conteo en tiempo real
+    const sLi      = b.diasLibreSabado  || 0;
+    const vRe      = Math.max(0, vacTot - vUs);
+    const aRe      = Math.max(0, asuTot - aUs);
+    // Regla: los primeros 10 sábados no generan días; a partir del 11.º, 1 día por sábado
+    const sabGen   = Math.max(0, sEx - 10);
+    const sabDisp  = Math.max(0, sabGen - sLi);
+    const hnd      = S.horasNocheDom[k] || 0;
+    const vPct     = Math.min(100, vacTot > 0 ? vUs/vacTot*100 : 0);
+    const aPct     = Math.min(100, asuTot > 0 ? aUs/asuTot*100 : 0);
+
+    // Hint de progreso hacia el primer día libre
+    const sabHint  = (sEx > 0 && sEx <= 10)
+      ? ` <span style="font-size:0.62rem;color:rgba(255,255,255,0.28)">(faltan ${10-sEx} para 1.º día)</span>`
+      : '';
+
+    // Mecánicos extra: tarjeta simplificada (sin vac/asu/horas noche)
+    const vacAsuRows = isExtra ? '' : `
       <div class="bolsa-row"><span class="bolsa-lbl">Vacaciones usadas</span><span class="bolsa-val">${vUs}/${vacTot}</span></div>
       <div class="bar-bg"><div class="bar-fill bar-gold" style="width:${vPct}%"></div></div>
       <div class="bolsa-row"><span class="bolsa-lbl">Restantes</span><span class="bolsa-val" style="color:var(--green)">${vRe} días</span></div>
       <div class="bolsa-row" style="margin-top:6px"><span class="bolsa-lbl">Asuntos usados</span><span class="bolsa-val">${aUs}/${asuTot}</span></div>
       <div class="bar-bg"><div class="bar-fill bar-blue" style="width:${aPct}%"></div></div>
-      <div class="bolsa-row"><span class="bolsa-lbl">Restantes</span><span class="bolsa-val" style="color:var(--blue)">${aRe} días</span></div>
-      <div class="bolsa-row" style="margin-top:6px"><span class="bolsa-lbl">Sáb. extra acumulados</span><span class="bolsa-val">${sEx}</span></div>
-      <div class="bolsa-row"><span class="bolsa-lbl">Días libres generados</span><span class="bolsa-val">${sabGen}</span></div>
+      <div class="bolsa-row"><span class="bolsa-lbl">Restantes</span><span class="bolsa-val" style="color:var(--blue)">${aRe} días</span></div>`;
+    const horaRow = isExtra ? '' :
+      `<div class="bolsa-row" style="margin-top:6px"><span class="bolsa-lbl">Horas noche domingo</span><span class="bolsa-val" style="color:var(--purple)">${hnd}h</span></div>`;
+    const extraLabel = isExtra
+      ? '<span style="font-size:0.6rem;color:rgba(255,255,255,0.28);font-weight:400;text-transform:none;letter-spacing:0"> · seguim.</span>' : '';
+
+    grid.innerHTML += `<div class="bolsa-card" style="${isExtra?'border-style:dashed;opacity:0.85':''}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="bolsa-name">${mec?.nombre||'Mec '+k}${extraLabel}</div>
+        <button class="bolsa-edit-btn" onclick="openBolsaModal('${k}')">✏️ Ajustar</button>
+      </div>
+      ${vacAsuRows}
+      <div class="bolsa-row" style="margin-top:${isExtra?'0':'6px'}">
+        <span class="bolsa-lbl">Sáb. extra acumulados</span>
+        <span class="bolsa-val">${sEx}</span>
+      </div>
+      <div class="bolsa-row">
+        <span class="bolsa-lbl">Días libres generados</span>
+        <span class="bolsa-val" style="${sabGen>0?'color:var(--gold)':''}">${sabGen}${sabHint}</span>
+      </div>
       <div class="bolsa-row"><span class="bolsa-lbl">Libres disfrutados</span><span class="bolsa-val">${sLi}</span></div>
-      <div class="bolsa-row"><span class="bolsa-lbl" style="color:var(--gold)">Disponibles</span><span class="bolsa-val" style="color:var(--gold)">${sabDisp}${sabDisp>0?' 🎯':''}</span></div>
-      <div class="bolsa-row" style="margin-top:6px"><span class="bolsa-lbl">Horas noche domingo</span><span class="bolsa-val" style="color:var(--purple)">${hnd}h</span></div>
+      <div class="bolsa-row">
+        <span class="bolsa-lbl" style="color:var(--gold)">Disponibles</span>
+        <span class="bolsa-val" style="color:var(--gold)">${sabDisp}${sabDisp>0?' 🎯':''}</span>
+      </div>
+      ${horaRow}
     </div>`;
-  }
+  });
 }
 
 function openBolsaModal(mecId){
