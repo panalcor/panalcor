@@ -210,6 +210,31 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 .toast{position:fixed;bottom:24px;right:24px;background:var(--navy-mid);border:1px solid rgba(201,162,39,0.5);border-radius:10px;padding:13px 20px;font-size:0.92rem;font-weight:600;z-index:9999;opacity:0;transform:translateY(18px);transition:all .28s;pointer-events:none;max-width:320px}
 .toast.show{opacity:1;transform:translateY(0)}
 
+/* ── AUSENCIAS ── */
+.aus-form{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:18px;margin-bottom:18px}
+.aus-form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.aus-form-field{flex:1;min-width:140px}
+.aus-form-field label{font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:5px}
+.aus-form-field select,.aus-form-field input{width:100%;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:9px 12px;font-family:'Barlow',sans-serif;font-size:0.9rem}
+.aus-form-field select:focus,.aus-form-field input:focus{outline:none;border-color:var(--gold)}
+.aus-warn{background:rgba(243,156,18,0.1);border:1px solid rgba(243,156,18,0.3);border-radius:8px;padding:10px 14px;font-size:0.82rem;color:var(--yellow);margin-top:12px;display:none}
+.aus-list{display:flex;flex-direction:column;gap:8px}
+.aus-item{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:12px 15px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.aus-item-info{flex:1;min-width:200px}
+.aus-item-name{font-weight:700;font-size:0.88rem;color:var(--gold-light)}
+.aus-item-range{font-size:0.78rem;color:rgba(255,255,255,0.55);margin-top:2px}
+.aus-item-nota{font-size:0.73rem;color:rgba(255,255,255,0.3);margin-top:2px;font-style:italic}
+.aus-tipo-tag{font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap}
+.aus-del{background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.28);color:var(--red);padding:6px 12px;border-radius:5px;cursor:pointer;font-size:0.78rem;font-family:'Barlow',sans-serif;transition:all .15s}
+.aus-del:hover{background:rgba(231,76,60,0.28)}
+.overlap-ok{text-align:center;padding:24px;color:rgba(255,255,255,0.28);font-size:0.9rem;background:var(--navy-mid);border-radius:8px;border:1px solid rgba(255,255,255,0.05)}
+.overlap-item{background:rgba(231,76,60,0.07);border:1px solid rgba(231,76,60,0.22);border-radius:8px;padding:12px 15px;margin-bottom:8px}
+.overlap-week{font-size:0.8rem;font-weight:700;color:#ff8a80;margin-bottom:7px}
+.overlap-day-row{display:flex;align-items:center;gap:8px;padding:2px 0}
+.overlap-cov{font-size:0.68rem;font-weight:700;padding:1px 6px;border-radius:3px}
+.overlap-cov-bad{background:rgba(231,76,60,0.2);color:var(--red)}
+.overlap-cov-warn{background:rgba(243,156,18,0.2);color:var(--yellow)}
+
 /* ── MISC ── */
 .empty{text-align:center;padding:36px 20px;color:rgba(255,255,255,0.28);font-size:0.95rem}
 @media(max-width:600px){
@@ -248,6 +273,7 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 <div class="tabs">
   <div class="tab active" onclick="showTab('calendario')">📅 Calendario</div>
   <div class="tab" onclick="showTab('bolsas')">📊 Bolsas de días</div>
+  <div class="tab" onclick="showTab('ausencias')">🏖️ Ausencias</div>
   <div class="tab" onclick="showTab('sabados')">📋 Sábados</div>
   <div class="tab" onclick="showTab('horas')">🌙 Horas noche dom.</div>
   <div class="tab" onclick="showTab('config')">⚙️ Configuración</div>
@@ -295,6 +321,55 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 <div class="panel" id="panel-bolsas">
   <div class="sec-title">Bolsas de días por mecánico</div>
   <div class="bolsas-grid" id="bolsasGrid"></div>
+</div>
+
+<!-- ══ AUSENCIAS ══ -->
+<div class="panel" id="panel-ausencias">
+  <div class="sec-title">Registro de ausencias por rango de fechas</div>
+
+  <!-- Form -->
+  <div class="aus-form">
+    <div class="aus-form-row">
+      <div class="aus-form-field" style="flex:0 0 155px">
+        <label>Mecánico</label>
+        <select id="ausMec"></select>
+      </div>
+      <div class="aus-form-field" style="flex:0 0 170px">
+        <label>Tipo</label>
+        <select id="ausTipo">
+          <option value="vacaciones">🌴 Vacaciones</option>
+          <option value="asunto">📋 Asunto propio</option>
+          <option value="baja">🤒 Baja / Enfermedad</option>
+          <option value="libre">🔵 Día libre (sábado)</option>
+          <option value="sancion">🔴 Sanción</option>
+        </select>
+      </div>
+      <div class="aus-form-field" style="flex:0 0 148px">
+        <label>Desde</label>
+        <input type="date" id="ausDesde">
+      </div>
+      <div class="aus-form-field" style="flex:0 0 148px">
+        <label>Hasta</label>
+        <input type="date" id="ausHasta">
+      </div>
+      <div class="aus-form-field">
+        <label>Nota (opcional)</label>
+        <input type="text" id="ausNota" placeholder="Observación...">
+      </div>
+      <button class="btn btn-add" onclick="addAusencia()" style="align-self:flex-end;white-space:nowrap">+ Añadir</button>
+    </div>
+    <div class="aus-warn" id="ausWarn"></div>
+  </div>
+
+  <!-- Overlap / coverage alert view -->
+  <div style="margin-bottom:20px">
+    <div class="sec-title">⚠️ Vista rápida — Cobertura MAÑ insuficiente</div>
+    <div id="overlapView"></div>
+  </div>
+
+  <!-- Absence list -->
+  <div class="sec-title">Ausencias registradas</div>
+  <div class="aus-list" id="ausList"></div>
 </div>
 
 <!-- ══ SÁBADOS ══ -->
@@ -517,6 +592,7 @@ let S = {
   bolsas: {},
   dias: {},
   sabados: {},
+  ausencias: {},
   horasNocheDom: { '1':0,'2':0,'3':0,'4':0,'5':0 },
   config: {
     rotacionMec3:  { inicio:'', turnoInicio:'mañana' },
@@ -548,6 +624,7 @@ function initApp(){
     if(d.bolsas)        S.bolsas        = d.bolsas;
     if(d.dias)          S.dias          = d.dias;
     if(d.sabados)       S.sabados       = d.sabados;
+    if(d.ausencias)     S.ausencias     = d.ausencias;
     if(d.horasNocheDom) S.horasNocheDom = d.horasNocheDom;
     if(d.config)        S.config        = { ...S.config, ...d.config };
     [1,2,3,4,5].forEach(i => {
@@ -565,7 +642,7 @@ function fbSet(path, value){ DB.ref('turnos/'+path).set(value); }
 //  TABS
 // ════════════════════════════════════════════
 function showTab(name){
-  const names = ['calendario','bolsas','sabados','horas','config'];
+  const names = ['calendario','bolsas','ausencias','sabados','horas','config'];
   document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', names[i]===name));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-'+name).classList.add('active');
@@ -574,10 +651,11 @@ function refreshAll(){
   renderCalendar();
   updateHeaders();
   const activeId = document.querySelector('.panel.active')?.id;
-  if(activeId==='panel-bolsas')  renderBolsas();
-  if(activeId==='panel-sabados') renderSabados();
-  if(activeId==='panel-horas')   renderHoras();
-  if(activeId==='panel-config')  renderConfig();
+  if(activeId==='panel-bolsas')    renderBolsas();
+  if(activeId==='panel-ausencias') renderAusencias();
+  if(activeId==='panel-sabados')   renderSabados();
+  if(activeId==='panel-horas')     renderHoras();
+  if(activeId==='panel-config')    renderConfig();
 }
 
 // ════════════════════════════════════════════
@@ -1011,9 +1089,12 @@ function saveCellEdit(){
 function recalcBolsaFromDias(mecId){
   const k = String(mecId);
   let vac=0, asu=0;
-  Object.values(S.dias).forEach(dayObj => {
+  Object.entries(S.dias).forEach(([ds, dayObj]) => {
     const m = dayObj[k];
     if(!m) return;
+    // Skip weekends — only laborables count against bolsa
+    const dow = new Date(ds + 'T12:00:00').getDay();
+    if(dow === 0 || dow === 6) return;
     if(m.estado==='vacaciones') vac++;
     if(m.estado==='asunto')     asu++;
   });
@@ -1223,6 +1304,231 @@ function saveCfgBolsas(){
   S.config.vacTotal=+document.getElementById('cfgVac').value||22;
   S.config.asuTotal=+document.getElementById('cfgAsu').value||4;
   fbSet('config',S.config); showToast('Guardado');
+}
+
+// ════════════════════════════════════════════
+//  AUSENCIAS
+// ════════════════════════════════════════════
+
+function countWeekdays(desde, hasta){
+  let n=0;
+  let d=new Date(desde+'T00:00:00');
+  const end=new Date(hasta+'T00:00:00');
+  while(d<=end){ const dw=d.getDay(); if(dw!==0&&dw!==6) n++; d.setDate(d.getDate()+1); }
+  return n;
+}
+
+function applyRangeToDias(mecId, desde, hasta, tipo, nota, aid){
+  let d=new Date(desde+'T00:00:00');
+  const end=new Date(hasta+'T00:00:00');
+  while(d<=end){
+    const dw=d.getDay();
+    if(dw!==0&&dw!==6){
+      const ds=toDS(d);
+      if(!S.dias[ds]) S.dias[ds]={};
+      S.dias[ds][mecId]={ estado:tipo, nota, _aid:aid };
+    }
+    d.setDate(d.getDate()+1);
+  }
+}
+
+function removeRangeFromDias(aid){
+  Object.keys(S.dias).forEach(ds=>{
+    Object.keys(S.dias[ds]).forEach(mid=>{
+      if(S.dias[ds][mid]?._aid===aid){
+        delete S.dias[ds][mid];
+        if(!Object.keys(S.dias[ds]).length) delete S.dias[ds];
+      }
+    });
+  });
+}
+
+function addAusencia(){
+  const mecId = document.getElementById('ausMec').value;
+  const tipo  = document.getElementById('ausTipo').value;
+  const desde = document.getElementById('ausDesde').value;
+  const hastaRaw = document.getElementById('ausHasta').value;
+  const hasta = hastaRaw || desde;
+  const nota  = (document.getElementById('ausNota').value||'').trim();
+
+  if(!mecId||!desde){ showToast('Selecciona mecánico y fecha de inicio'); return; }
+  if(hasta<desde){ showToast('La fecha fin debe ser ≥ fecha inicio'); return; }
+
+  const days = countWeekdays(desde, hasta);
+  const warn = document.getElementById('ausWarn');
+  const vacTot = S.config.vacTotal||22;
+  const asuTot = S.config.asuTotal||4;
+
+  warn.style.display='none';
+  if(tipo==='vacaciones'){
+    const rem = vacTot - (S.bolsas[mecId]?.vacacionesUsadas||0);
+    if(days>rem){
+      warn.textContent=`⚠️ ${S.mecanicos[mecId]?.nombre} tiene solo ${rem} día(s) de vacaciones restantes. Estás añadiendo ${days} días laborables.`;
+      warn.style.display='block';
+    }
+  } else if(tipo==='asunto'){
+    const rem = asuTot - (S.bolsas[mecId]?.asuntosUsados||0);
+    if(days>rem){
+      warn.textContent=`⚠️ ${S.mecanicos[mecId]?.nombre} tiene solo ${rem} asunto(s) restante(s). Estás añadiendo ${days} días laborables.`;
+      warn.style.display='block';
+    }
+  }
+
+  const id='aus_'+Date.now();
+  S.ausencias[id]={ mecId, tipo, desde, hasta, nota, ts:Date.now() };
+  applyRangeToDias(mecId, desde, hasta, tipo, nota, id);
+
+  fbSet('ausencias',S.ausencias);
+  fbSet('dias',S.dias);
+  recalcBolsaFromDias(mecId);
+
+  document.getElementById('ausDesde').value='';
+  document.getElementById('ausHasta').value='';
+  document.getElementById('ausNota').value='';
+
+  renderAusencias();
+  renderCalendar();
+  showToast('Ausencia registrada');
+}
+
+function deleteAusencia(id){
+  const aus=S.ausencias[id];
+  if(!aus) return;
+  const nom=S.mecanicos[aus.mecId]?.nombre||'Mec '+aus.mecId;
+  if(!confirm(`¿Eliminar la ausencia de ${nom} (${aus.desde}→${aus.hasta})?`)) return;
+  removeRangeFromDias(id);
+  delete S.ausencias[id];
+  fbSet('ausencias',S.ausencias);
+  fbSet('dias',S.dias);
+  recalcBolsaFromDias(aus.mecId);
+  renderAusencias();
+  renderCalendar();
+  showToast('Ausencia eliminada');
+}
+
+function getOverlaps(){
+  // Find weeks where at least one mechanic is absent and morning coverage <2
+  const weekSet=new Set();
+  Object.values(S.ausencias).forEach(aus=>{
+    let d=new Date(aus.desde+'T00:00:00');
+    const end=new Date(aus.hasta+'T00:00:00');
+    while(d<=end){
+      if(d.getDay()!==0&&d.getDay()!==6) weekSet.add(toDS(getWeekMonday(toDS(d))));
+      d.setDate(d.getDate()+1);
+    }
+  });
+
+  const problems=[];
+  [...weekSet].sort().forEach(monStr=>{
+    const mon=new Date(monStr+'T00:00:00');
+    const shifts=getWeekShifts(mon);
+    const dayProbs=[];
+
+    for(let i=0;i<5;i++){  // Mon–Fri
+      const day=new Date(mon); day.setDate(mon.getDate()+i);
+      const ds=toDS(day);
+
+      // Mechanics absent from ausencias this day
+      const absMecs=new Set();
+      Object.values(S.ausencias).forEach(aus=>{
+        if(ds>=aus.desde&&ds<=aus.hasta) absMecs.add(aus.mecId);
+      });
+      if(!absMecs.size) continue;
+
+      // Morning count excluding absent mechanics
+      let mornCount=0;
+      const absentNames=[];
+      for(let mId=1;mId<=5;mId++){
+        const k=String(mId);
+        if(absMecs.has(k)) absentNames.push(S.mecanicos[k]?.nombre||'Mec'+k);
+        else if(shifts[k]==='mañana') mornCount++;
+      }
+      if(mornCount<2){
+        dayProbs.push({ ds, dow:day.getDay(), mornCount, absentNames });
+      }
+    }
+    if(dayProbs.length) problems.push({ monStr, dayProbs });
+  });
+  return problems;
+}
+
+function renderOverlapView(){
+  const cont=document.getElementById('overlapView');
+  if(!cont) return;
+  const problems=getOverlaps();
+  if(!problems.length){
+    cont.innerHTML='<div class="overlap-ok">✅ Sin conflictos de cobertura MAÑ detectados con las ausencias registradas</div>';
+    return;
+  }
+  cont.innerHTML=problems.map(w=>{
+    const mon=new Date(w.monStr+'T00:00:00');
+    const sun=new Date(mon); sun.setDate(mon.getDate()+6);
+    const wLbl=`Sem ${getWeekNumber(mon)} · ${mon.getDate()} ${MONTHS_SH[mon.getMonth()]} – ${sun.getDate()} ${MONTHS_SH[sun.getMonth()]} ${sun.getFullYear()}`;
+    const daysHtml=w.dayProbs.map(p=>{
+      const cls=p.mornCount===0?'overlap-cov-bad':'overlap-cov-warn';
+      return `<div class="overlap-day-row">
+        <span style="min-width:30px;font-weight:700;color:rgba(255,255,255,0.7)">${DAYS_SH[p.dow]}</span>
+        <span class="overlap-cov ${cls}">${p.mornCount} MAÑ</span>
+        <span style="color:rgba(255,255,255,0.4);font-size:0.72rem">Ausente: ${p.absentNames.join(', ')}</span>
+      </div>`;
+    }).join('');
+    return `<div class="overlap-item">
+      <div class="overlap-week">⚠️ ${wLbl}</div>
+      <div>${daysHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+const AUS_TIPO_STYLE={
+  vacaciones:'background:rgba(46,204,113,0.18);color:#2ecc71;border:1px solid rgba(46,204,113,0.28)',
+  asunto:    'background:rgba(243,156,18,0.18);color:#f39c12;border:1px solid rgba(243,156,18,0.28)',
+  baja:      'background:rgba(231,76,60,0.2);color:#e74c3c;border:1px solid rgba(231,76,60,0.3)',
+  libre:     'background:rgba(52,152,219,0.18);color:#74b9ff;border:1px solid rgba(52,152,219,0.28)',
+  sancion:   'background:rgba(192,57,43,0.3);color:#ff6b5b;border:1px solid rgba(231,76,60,0.45)'
+};
+const AUS_TIPO_LABEL={ vacaciones:'VACACIONES', asunto:'ASUNTO', baja:'BAJA', libre:'LIBRE', sancion:'SANCIÓN' };
+
+function renderAusencias(){
+  // Populate mechanic select (preserve selection)
+  const mecSel=document.getElementById('ausMec');
+  if(mecSel){
+    const prev=mecSel.value;
+    mecSel.innerHTML=[1,2,3,4,5].map(i=>{
+      const k=String(i);
+      return `<option value="${k}">${S.mecanicos[k]?.nombre||'Mec '+k}</option>`;
+    }).join('');
+    if(prev) mecSel.value=prev;
+  }
+
+  renderOverlapView();
+
+  const list=document.getElementById('ausList');
+  if(!list) return;
+  const entries=Object.entries(S.ausencias).sort((a,b)=>b[1].desde.localeCompare(a[1].desde));
+  if(!entries.length){
+    list.innerHTML='<div class="empty">Sin ausencias registradas</div>';
+    return;
+  }
+  list.innerHTML=entries.map(([id,aus])=>{
+    const nom=S.mecanicos[aus.mecId]?.nombre||'Mec '+aus.mecId;
+    const days=countWeekdays(aus.desde,aus.hasta);
+    const dFrom=new Date(aus.desde+'T12:00:00');
+    const dTo=new Date(aus.hasta+'T12:00:00');
+    const fmtF=`${dFrom.getDate()} ${MONTHS_SH[dFrom.getMonth()]} ${dFrom.getFullYear()}`;
+    const fmtT=aus.desde===aus.hasta?'':`→ ${dTo.getDate()} ${MONTHS_SH[dTo.getMonth()]} ${dTo.getFullYear()}`;
+    const daysLbl=days===1?'1 día lab.':`${days} días lab.`;
+    const tStyle=AUS_TIPO_STYLE[aus.tipo]||'';
+    const tLabel=AUS_TIPO_LABEL[aus.tipo]||aus.tipo.toUpperCase();
+    return `<div class="aus-item">
+      <div class="aus-item-info">
+        <div class="aus-item-name">${nom}</div>
+        <div class="aus-item-range">📅 ${fmtF} ${fmtT} <span style="color:rgba(255,255,255,0.3)">(${daysLbl})</span></div>
+        ${aus.nota?`<div class="aus-item-nota">"${aus.nota}"</div>`:''}
+      </div>
+      <span class="aus-tipo-tag" style="${tStyle}">${tLabel}</span>
+      <button class="aus-del" onclick="deleteAusencia('${id}')">✕ Eliminar</button>
+    </div>`;
+  }).join('');
 }
 
 // ════════════════════════════════════════════
