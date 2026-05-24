@@ -140,6 +140,13 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 .toast{position:fixed;bottom:24px;right:24px;background:var(--navy-mid);border:1px solid rgba(201,162,39,0.5);border-radius:10px;padding:14px 22px;font-size:0.95rem;font-weight:600;z-index:9999;opacity:0;transform:translateY(20px);transition:all .3s;pointer-events:none;max-width:340px}
 .toast.show{opacity:1;transform:translateY(0)}
 
+/* ── RECORDATORIOS ── */
+.rec-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.rec-modal-box{background:var(--navy-mid);border:1px solid rgba(201,162,39,0.35);border-radius:14px;padding:24px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto}
+.rec-form{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:6px}
+.rec-kpi{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 16px;font-size:0.85rem}
+.badge-purple{background:rgba(155,89,182,0.2);color:#c39bd3;border:1px solid rgba(155,89,182,0.3)}
+
 /* ── RESPONSIVE ── */
 @media(max-width:700px){
   .chart-grid{grid-template-columns:1fr}
@@ -225,6 +232,7 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
   <div class="tab" onclick="switchTab('enc')"  id="tab-enc">📢 Encargados</div>
   <div class="tab" onclick="switchTab('int')"  id="tab-int">🔩 Integrales</div>
   <div class="tab" onclick="switchTab('cur')"  id="tab-cur">📚 Cursos</div>
+  <div class="tab" onclick="switchTab('rec')"  id="tab-rec">🔔 Recordatorios</div>
 </div>
 
 <!-- ═══ DASHBOARD ═══ -->
@@ -236,6 +244,25 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
     <a href="maquinas_admin.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:linear-gradient(135deg,rgba(52,152,219,0.2),rgba(52,152,219,0.08));border:1px solid rgba(52,152,219,0.4);border-radius:8px;color:#3498db;text-decoration:none;font-family:'Barlow',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.04em;transition:all .2s" onmouseover="this.style.background='linear-gradient(135deg,rgba(52,152,219,0.35),rgba(52,152,219,0.15))'" onmouseout="this.style.background='linear-gradient(135deg,rgba(52,152,219,0.2),rgba(52,152,219,0.08))'">
       🏭 Fichas de Máquinas
     </a>
+    <a href="turnos.html" onclick="sessionStorage.setItem('turnosAuth','1')" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:linear-gradient(135deg,rgba(46,204,113,0.2),rgba(46,204,113,0.08));border:1px solid rgba(46,204,113,0.4);border-radius:8px;color:#2ecc71;text-decoration:none;font-family:'Barlow',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.04em;transition:all .2s" onmouseover="this.style.background='linear-gradient(135deg,rgba(46,204,113,0.35),rgba(46,204,113,0.15))'" onmouseout="this.style.background='linear-gradient(135deg,rgba(46,204,113,0.2),rgba(46,204,113,0.08))'">
+      📅 Gestión de Turnos
+    </a>
+    <button onclick="toggleRecordatoriosDash()" id="btnRecDash" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:linear-gradient(135deg,rgba(155,89,182,0.2),rgba(155,89,182,0.08));border:1px solid rgba(155,89,182,0.4);border-radius:8px;color:#c39bd3;font-family:'Barlow',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.04em;cursor:pointer;transition:all .2s" onmouseover="this.style.background='linear-gradient(135deg,rgba(155,89,182,0.35),rgba(155,89,182,0.15))'" onmouseout="this.style.background='linear-gradient(135deg,rgba(155,89,182,0.2),rgba(155,89,182,0.08))'">
+      🔔 Recordatorios <span id="recDashBadge" style="background:rgba(155,89,182,0.4);border-radius:10px;padding:1px 7px;font-size:0.75rem"></span>
+    </button>
+  </div>
+
+  <!-- ══ CAJÓN RECORDATORIOS ══ -->
+  <div id="recDashPanel" style="display:none;margin-bottom:16px;max-width:732px">
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:12px 16px;border-bottom:1px solid rgba(155,89,182,0.25);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div style="font-size:0.72rem;letter-spacing:.12em;text-transform:uppercase;color:#c39bd3;font-weight:700">🔔 Recordatorios</div>
+        <button onclick="abrirModalRec(null)" style="background:rgba(155,89,182,0.2);border:1px solid rgba(155,89,182,0.4);color:#c39bd3;border-radius:7px;padding:5px 12px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.8rem;font-weight:700">➕ Nuevo</button>
+      </div>
+      <div id="recDashLista" style="padding:8px 0">
+        <div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:0.85rem">Cargando...</div>
+      </div>
+    </div>
   </div>
   <div class="kpi-row" id="kpiRow"></div>
   
@@ -924,6 +951,77 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
   <div id="encCount" style="font-size:0.72rem;color:rgba(255,255,255,0.3);margin-top:8px"></div>
 </div>
 
+<!-- ═══ RECORDATORIOS ═══ -->
+<div class="panel" id="panel-rec">
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+      <div class="sec-title" style="margin-bottom:0">🔔 Recordatorios</div>
+      <button class="btn-export btn-gold" onclick="abrirModalRec(null)">➕ Nuevo recordatorio</button>
+    </div>
+
+    <!-- Contadores rápidos -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px" id="recKpis"></div>
+
+    <!-- Tabla -->
+    <div style="overflow-x:auto">
+      <table class="data-table" id="tRecordatorios">
+        <thead><tr>
+          <th>Título</th>
+          <th>Descripción</th>
+          <th>Fecha / Hora</th>
+          <th>Prioridad</th>
+          <th>Estado</th>
+          <th>Mecánico</th>
+          <th>Acciones</th>
+        </tr></thead>
+        <tbody id="bRecordatorios">
+          <tr><td colspan="7" class="no-data">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="font-size:0.75rem;color:rgba(255,255,255,0.25);margin-top:10px">
+      ✅ Los recordatorios marcados como <b>Realizados</b> por el mecánico aparecen en verde — puedes borrarlos una vez revisados.
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL RECORDATORIO ═══ -->
+<div class="rec-modal-bg" id="recModal" style="display:none">
+  <div class="rec-modal-box">
+    <h3 style="font-size:1.1rem;font-weight:900;color:var(--gold-light);margin-bottom:18px" id="recModalTitle">➕ Nuevo recordatorio</h3>
+    <div class="rec-form">
+      <div class="field" style="margin:0;grid-column:1/-1">
+        <label>Título *</label>
+        <input type="text" id="recTitulo" placeholder="Ej: Revisar compresor sala 2">
+      </div>
+      <div class="field" style="margin:0;grid-column:1/-1">
+        <label>Descripción</label>
+        <input type="text" id="recDescripcion" placeholder="Detalles, observaciones...">
+      </div>
+      <div class="field" style="margin:0">
+        <label>Fecha</label>
+        <input type="date" id="recFecha">
+      </div>
+      <div class="field" style="margin:0">
+        <label>Hora</label>
+        <input type="time" id="recHora">
+      </div>
+      <div class="field" style="margin:0">
+        <label>Prioridad</label>
+        <select id="recPrioridad" style="width:100%;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:11px 14px;font-family:'Barlow',sans-serif;font-size:1rem">
+          <option value="media">🟡 Media</option>
+          <option value="alta">🔴 Alta</option>
+          <option value="baja">🟢 Baja</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn-export btn-gold" onclick="guardarRecordatorio()">💾 Guardar</button>
+      <button class="btn-export" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.2)" onclick="cerrarModalRec()">✕ Cancelar</button>
+    </div>
+  </div>
+</div>
+
 </div><!-- /app -->
 
 <div class="toast" id="toast"></div>
@@ -1042,6 +1140,8 @@ let charts = {};
 function initApp(){
   initCostoHoraField();
   renderDashboard();
+  cargarMecanicosParaRec();
+  cargarRecordatorios();
   // fechas por defecto para mecánicos e informes (último mes)
   const hoy = new Date();
   const hace30 = new Date(hoy); hace30.setDate(hoy.getDate()-30);
@@ -2336,6 +2436,7 @@ function switchTab(name){
   if(name==='cfg') cargarFechasRealizacion();
   if(name==='cfg') cargarFechasRealizacion();
   if(name==='cfg') renderEstadoDatos();
+  if(name==='rec') { cargarMecanicosParaRec(); cargarRecordatorios(); }
   if(name==='enc') cargarAvisosEncargados();
   if(name==='int') initIntegrales();
   if(name==='cur') initCursos();
@@ -4305,6 +4406,250 @@ function eliminarCurso(id) {
   DB.ref('cursos/' + id).remove().then(function() {
     showToast('🗑 Curso eliminado');
   }).catch(function() { showToast('❌ Error'); });
+}
+
+// ══════════════════════════════════════════════════
+// RECORDATORIOS — CAJÓN DASHBOARD
+// ══════════════════════════════════════════════════
+let _recDashOpen = false;
+
+function toggleRecordatoriosDash() {
+  _recDashOpen = !_recDashOpen;
+  const panel = document.getElementById('recDashPanel');
+  const btn   = document.getElementById('btnRecDash');
+  panel.style.display = _recDashOpen ? 'block' : 'none';
+  if (_recDashOpen) {
+    cargarMecanicosParaRec();
+    cargarRecordatorios();
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  btn.style.borderColor = _recDashOpen ? 'rgba(155,89,182,0.8)' : 'rgba(155,89,182,0.4)';
+}
+
+function renderRecordatoriosDash(data) {
+  const lista = Object.keys(data).map(k => Object.assign({ _id: k }, data[k]))
+    .filter(r => r.estado !== 'realizado')
+    .sort((a, b) => {
+      const ord = { pendiente:0, asignado:1 };
+      const oa = ord[a.estado] !== undefined ? ord[a.estado] : 0;
+      const ob = ord[b.estado] !== undefined ? ord[b.estado] : 0;
+      if (oa !== ob) return oa - ob;
+      return (a.fecha || '').localeCompare(b.fecha || '');
+    });
+
+  const realizados = Object.values(data).filter(r => r.estado === 'realizado');
+
+  // Badge del botón
+  const total = Object.keys(data).length;
+  const badge = document.getElementById('recDashBadge');
+  if (badge) badge.textContent = total > 0 ? total : '';
+
+  // Si el cajón no está abierto, solo actualizamos el badge
+  if (!_recDashOpen) return;
+
+  const wrap = document.getElementById('recDashLista');
+  if (!wrap) return;
+
+  if (!lista.length && !realizados.length) {
+    wrap.innerHTML = '<div style="text-align:center;padding:24px;color:rgba(255,255,255,0.3);font-size:0.85rem">Sin recordatorios pendientes. Pulsa ➕ Nuevo para añadir.</div>';
+    return;
+  }
+
+  const mecOpts = _recMecs.map(m => '<option value="' + escRec(m) + '">' + escRec(m) + '</option>').join('');
+
+  let html = lista.map(function(r) {
+    const prioColor = r.prioridad === 'alta' ? '#e74c3c' : r.prioridad === 'baja' ? '#2ecc71' : '#f39c12';
+    const fechaHora = [r.fecha, r.hora].filter(Boolean).join(' ');
+    const esAsig    = r.estado === 'asignado';
+    const mecActSel = r.mecanico ? '<option value="' + escRec(r.mecanico) + '" selected>' + escRec(r.mecanico) + '</option>' : '';
+
+    return '<div style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid rgba(255,255,255,0.05);flex-wrap:wrap">'
+      + '<span style="width:8px;height:8px;border-radius:50%;background:' + prioColor + ';flex-shrink:0;display:inline-block"></span>'
+      + '<div style="flex:1;min-width:140px">'
+        + '<div style="font-size:0.9rem;font-weight:700">' + escRec(r.titulo || '—') + '</div>'
+        + (r.descripcion ? '<div style="font-size:0.75rem;color:rgba(255,255,255,0.4);margin-top:1px">' + escRec(r.descripcion) + '</div>' : '')
+        + (fechaHora ? '<div style="font-size:0.7rem;color:rgba(255,255,255,0.3);margin-top:1px">📅 ' + escRec(fechaHora) + '</div>' : '')
+      + '</div>'
+      + (esAsig ? '<span style="font-size:0.75rem;color:#3498db;font-weight:700;white-space:nowrap">👷 ' + escRec(r.mecanico) + '</span>' : '')
+      + '<select onchange="asignarRecordatorio(\'' + r._id + '\',this.value)"'
+        + ' style="background:#0d1b2a;border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:5px 8px;'
+        + 'color:#fff;font-family:\'Barlow\',sans-serif;font-size:0.78rem;cursor:pointer;max-width:160px">'
+        + '<option value="">— Asignar —</option>' + mecActSel + mecOpts
+      + '</select>'
+      + '<button onclick="borrarRecordatorio(\'' + r._id + '\')" title="Borrar"'
+        + ' style="background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);color:var(--red);'
+        + 'border-radius:6px;padding:5px 9px;cursor:pointer;font-family:\'Barlow\',sans-serif;font-size:.8rem">🗑</button>'
+      + '</div>';
+  }).join('');
+
+  // Realizados al final
+  if (realizados.length) {
+    html += '<div style="padding:8px 16px;border-top:1px solid rgba(46,204,113,0.2);margin-top:4px">'
+      + '<div style="font-size:0.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--green);margin-bottom:6px">✅ Realizados — puedes borrarlos</div>'
+      + realizados.map(function(r) {
+          return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04);opacity:.65">'
+            + '<span style="font-size:.85rem;flex:1">' + escRec(r.titulo || '—') + '</span>'
+            + '<span style="font-size:.75rem;color:var(--green)">👷 ' + escRec(r.mecanico || '—') + '</span>'
+            + '<button onclick="borrarRecordatorio(\'' + r._id + '\')"'
+              + ' style="background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.35);color:var(--green);'
+              + 'border-radius:6px;padding:4px 10px;cursor:pointer;font-family:\'Barlow\',sans-serif;font-size:.78rem">🗑 Borrar</button>'
+            + '</div>';
+        }).join('')
+      + '</div>';
+  }
+
+  wrap.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════
+// RECORDATORIOS
+// ══════════════════════════════════════════════════
+let _recEditId   = null;
+let _recData     = {};
+let _recDbRef    = null;
+let _recMecs     = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO'];
+
+function cargarMecanicosParaRec() {
+  DB.ref('config/mecanicos').once('value').then(snap => {
+    const v = snap.val();
+    if (v && v.length) _recMecs = v;
+  }).catch(() => {});
+}
+
+function cargarRecordatorios() {
+  if (_recDbRef) _recDbRef.off();
+  _recDbRef = DB.ref('recordatorios');
+  _recDbRef.on('value', snap => {
+    _recData = snap.val() || {};
+    renderRecordatorios(_recData);
+    renderRecordatoriosDash(_recData);
+  });
+}
+
+function escRec(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function renderRecordatorios(data) {
+  const lista = Object.keys(data).map(k => ({ _id: k, ...data[k] }))
+    .sort((a, b) => {
+      const ord = { pendiente:0, asignado:1, realizado:2 };
+      const oa = (ord[a.estado] != null ? ord[a.estado] : 0);
+      const ob = (ord[b.estado] != null ? ord[b.estado] : 0);
+      if (oa !== ob) return oa - ob;
+      return (a.fecha || '').localeCompare(b.fecha || '');
+    });
+
+  const pend  = lista.filter(r => r.estado === 'pendiente').length;
+  const asig  = lista.filter(r => r.estado === 'asignado').length;
+  const real  = lista.filter(r => r.estado === 'realizado').length;
+
+  document.getElementById('recKpis').innerHTML =
+    `<div class="rec-kpi"><span style="color:rgba(255,255,255,.45)">⏳ Pendientes: </span><b style="color:var(--yellow)">${pend}</b></div>
+     <div class="rec-kpi"><span style="color:rgba(255,255,255,.45)">👷 Asignados: </span><b style="color:var(--blue)">${asig}</b></div>
+     <div class="rec-kpi"><span style="color:rgba(255,255,255,.45)">✅ Realizados: </span><b style="color:var(--green)">${real}</b></div>`;
+
+  const tbody = document.getElementById('bRecordatorios');
+  if (!lista.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="no-data">Sin recordatorios. Pulsa "Nuevo recordatorio" para añadir.</td></tr>';
+    return;
+  }
+
+  const mecOpts = _recMecs.map(m => `<option value="${escRec(m)}">${escRec(m)}</option>`).join('');
+
+  tbody.innerHTML = lista.map(r => {
+    const prioClass = { alta:'badge-red', media:'badge-yellow', baja:'badge-green' }[r.prioridad] || 'badge-yellow';
+    const prioTxt   = { alta:'🔴 Alta',  media:'🟡 Media',     baja:'🟢 Baja'    }[r.prioridad] || (r.prioridad||'—');
+    const estadoBadge =
+      r.estado === 'pendiente' ? `<span class="badge badge-yellow">⏳ Pendiente</span>` :
+      r.estado === 'asignado'  ? `<span class="badge badge-blue">👷 Asignado</span>` :
+      r.estado === 'realizado' ? `<span class="badge badge-green">✅ Realizado</span>` : '';
+
+    const fechaHora = [r.fecha, r.hora].filter(Boolean).join(' ') || '—';
+    const rowStyle  = r.estado === 'realizado' ? 'opacity:.55' : '';
+    const mecActual = r.mecanico ? `<option value="${escRec(r.mecanico)}" selected>${escRec(r.mecanico)}</option>` : '';
+    const mecSel    = `<option value="">— Asignar —</option>${mecActual}${mecOpts}`;
+
+    const btnBorrar = `<button onclick="borrarRecordatorio('${r._id}')"
+      style="background:rgba(231,76,60,.15);border:1px solid rgba(231,76,60,.35);color:var(--red);
+             border-radius:6px;padding:5px 10px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:.78rem">
+      🗑 Borrar</button>`;
+
+    const btnAsignar = r.estado !== 'realizado' ? `
+      <select onchange="asignarRecordatorio('${r._id}',this.value)"
+        style="background:var(--navy-deep);border:1px solid rgba(255,255,255,.2);border-radius:6px;
+               padding:4px 8px;color:#fff;font-family:'Barlow',sans-serif;font-size:.78rem;cursor:pointer">
+        ${mecSel}
+      </select>` : '';
+
+    return `<tr style="${rowStyle}">
+      <td><b>${escRec(r.titulo)}</b></td>
+      <td style="font-size:.85rem;color:rgba(255,255,255,.6)">${escRec(r.descripcion||'—')}</td>
+      <td style="white-space:nowrap;font-size:.85rem">${escRec(fechaHora)}</td>
+      <td><span class="badge ${prioClass}">${prioTxt}</span></td>
+      <td>${estadoBadge}</td>
+      <td style="font-size:.85rem;color:${r.estado==='realizado'?'var(--green)':'inherit'}">${escRec(r.mecanico||'—')}</td>
+      <td><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${btnAsignar}${btnBorrar}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+function abrirModalRec(id) {
+  _recEditId = id;
+  const r = id ? (_recData[id] || {}) : {};
+  document.getElementById('recModalTitle').textContent    = id ? '✏️ Editar recordatorio' : '➕ Nuevo recordatorio';
+  document.getElementById('recTitulo').value              = r.titulo      || '';
+  document.getElementById('recDescripcion').value         = r.descripcion || '';
+  document.getElementById('recFecha').value               = r.fecha       || new Date().toISOString().split('T')[0];
+  document.getElementById('recHora').value                = r.hora        || '';
+  document.getElementById('recPrioridad').value           = r.prioridad   || 'media';
+  document.getElementById('recModal').style.display       = 'flex';
+  setTimeout(()=> document.getElementById('recTitulo').focus(), 80);
+}
+
+function cerrarModalRec() {
+  document.getElementById('recModal').style.display = 'none';
+  _recEditId = null;
+}
+
+function guardarRecordatorio() {
+  const titulo = document.getElementById('recTitulo').value.trim();
+  if (!titulo) { showToast('⚠️ El título es obligatorio'); return; }
+
+  const obj = {
+    titulo,
+    descripcion : document.getElementById('recDescripcion').value.trim(),
+    fecha       : document.getElementById('recFecha').value,
+    hora        : document.getElementById('recHora').value,
+    prioridad   : document.getElementById('recPrioridad').value
+  };
+
+  if (_recEditId) {
+    DB.ref('recordatorios/' + _recEditId).update(obj)
+      .then(() => { showToast('✅ Recordatorio actualizado'); cerrarModalRec(); })
+      .catch(() => showToast('❌ Error al guardar'));
+  } else {
+    obj.estado    = 'pendiente';
+    obj.creadoEn  = new Date().toISOString();
+    DB.ref('recordatorios').push(obj)
+      .then(() => { showToast('✅ Recordatorio creado'); cerrarModalRec(); })
+      .catch(() => showToast('❌ Error al guardar'));
+  }
+}
+
+function asignarRecordatorio(id, mecanico) {
+  if (!mecanico) return;
+  DB.ref('recordatorios/' + id).update({
+    mecanico,
+    estado     : 'asignado',
+    asignadoEn : new Date().toISOString()
+  }).then(() => showToast('👷 Asignado a ' + mecanico))
+    .catch(() => showToast('❌ Error al asignar'));
+}
+
+function borrarRecordatorio(id) {
+  if (!confirm('¿Borrar este recordatorio?')) return;
+  DB.ref('recordatorios/' + id).remove()
+    .then(() => showToast('🗑 Recordatorio eliminado'))
+    .catch(() => showToast('❌ Error al borrar'));
 }
 </script>
 

@@ -187,6 +187,9 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
     <!-- Mantenimientos integrales próximos -->
     <div id="integralesWrap"></div>
 
+    <!-- Recordatorios asignados al mecánico -->
+    <div id="recordatoriosWrap"></div>
+
     <!-- Averías pendientes del mecánico -->
     <div id="avPendWrap"></div>
 
@@ -359,6 +362,7 @@ function arrancarApp(){
 
   cargarMes(mesActual);
   renderAvPendientes();
+  cargarRecordatoriosMec();
   cargarIntegralesMec();
 }
 
@@ -690,6 +694,71 @@ function renderIntegralesMec(lista) {
 
 function escHtmlMec(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ══════════════════════════════════════════════════
+// RECORDATORIOS ASIGNADOS AL MECÁNICO
+// ══════════════════════════════════════════════════
+var _recDbListener = null;
+
+function cargarRecordatoriosMec() {
+  if (_recDbListener) { _recDbListener.off(); _recDbListener = null; }
+  var wrap = document.getElementById('recordatoriosWrap');
+  if (!wrap || !mecActual) return;
+
+  _recDbListener = DB.ref('recordatorios');
+  _recDbListener.on('value', function(snap) {
+    var data = snap.val() || {};
+    var mios = Object.keys(data)
+      .map(function(k){ return Object.assign({ _id: k }, data[k]); })
+      .filter(function(r){ return r.mecanico === mecActual && r.estado !== 'realizado'; });
+    renderRecordatoriosMec(mios);
+  });
+}
+
+function renderRecordatoriosMec(lista) {
+  var wrap = document.getElementById('recordatoriosWrap');
+  if (!wrap) return;
+  if (!lista.length) { wrap.innerHTML = ''; return; }
+
+  var items = lista.map(function(r) {
+    var prioColor = r.prioridad === 'alta' ? '#e74c3c' : r.prioridad === 'baja' ? '#2ecc71' : '#f39c12';
+    var fechaHora = [r.fecha, r.hora].filter(Boolean).join(' ');
+    return '<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;'
+         + 'border-bottom:1px solid rgba(255,255,255,0.06)">'
+         + '<span style="width:9px;height:9px;border-radius:50%;background:' + prioColor + ';flex-shrink:0;margin-top:5px;display:inline-block"></span>'
+         + '<div style="flex:1;min-width:0">'
+           + '<div style="font-size:.92rem;font-weight:700">' + escHtmlMec(r.titulo || '—') + '</div>'
+           + (r.descripcion ? '<div style="font-size:.78rem;color:rgba(255,255,255,.45);margin-top:2px">' + escHtmlMec(r.descripcion) + '</div>' : '')
+           + (fechaHora ? '<div style="font-size:.72rem;color:rgba(255,255,255,.3);margin-top:2px">📅 ' + escHtmlMec(fechaHora) + '</div>' : '')
+         + '</div>'
+         + '<button onclick="marcarRecordatorioHecho(\'' + r._id + '\')"'
+         + ' style="background:rgba(46,204,113,.2);border:1px solid rgba(46,204,113,.4);color:#2ecc71;'
+         + 'border-radius:8px;padding:7px 14px;font-family:\'Barlow\',sans-serif;font-size:.82rem;'
+         + 'font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">✅ Hecho</button>'
+         + '</div>';
+  }).join('');
+
+  wrap.innerHTML = '<div style="background:rgba(201,162,39,0.07);border:1px solid rgba(201,162,39,0.3);'
+    + 'border-radius:12px;margin-bottom:14px;overflow:hidden">'
+    + '<div style="padding:10px 14px;border-bottom:1px solid rgba(201,162,39,0.2);'
+      + 'font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:700">'
+      + '🔔 Recordatorios asignados (' + lista.length + ')'
+    + '</div>'
+    + items
+    + '</div>';
+}
+
+function marcarRecordatorioHecho(id) {
+  DB.ref('recordatorios/' + id).update({
+    estado      : 'realizado',
+    realizadoEn : new Date().toISOString(),
+    realizadoPor: mecActual
+  }).then(function() {
+    showToast('✅ Recordatorio marcado como realizado');
+  }).catch(function() {
+    showToast('❌ Error al actualizar');
+  });
 }
 </script>
 </body>
