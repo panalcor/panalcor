@@ -623,8 +623,17 @@ function buscar(){
 let checks = {};
 let adminUnlocked = false;
 
+// Devuelve la fecha del turno: si >= 22h es el día siguiente.
+// Excepción domingo: el turno de noche empieza a las 21h → desde las 21h ya es lunes.
+function getFechaTurno(){
+  var d = new Date();
+  var h = d.getHours();
+  var umbral = (d.getDay() === 0) ? 21 : 22; // 0 = domingo
+  if(h >= umbral) d.setDate(d.getDate() + 1);
+  return d;
+}
 function getTodayKey(){
-  const d = new Date();
+  const d = getFechaTurno();
   return d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0');
 }
 
@@ -753,9 +762,11 @@ function resetChecks(){
 }
 
 function getTurnoActual(){
-  const h = new Date().getHours();
+  var d = new Date();
+  var h = d.getHours();
+  var nocheInicio = (d.getDay() === 0) ? 21 : 22; // domingo desde las 21h
   if(h>=6&&h<14) return 'MAÑANA';
-  if(h>=14&&h<22) return 'TARDE';
+  if(h>=14&&h<nocheInicio) return 'TARDE';
   return 'NOCHE';
 }
 

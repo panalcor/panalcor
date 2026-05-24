@@ -349,8 +349,16 @@ function cambiarMecanico(){
 }
 
 /* ══ HELPERS MES ══ */
-function mesActualISO(){
+// Fecha ajustada al turno: desde las 22h (21h domingo) ya es el día siguiente
+function getFechaTurno(){
   var d = new Date();
+  var h = d.getHours();
+  var umbral = (d.getDay() === 0) ? 21 : 22;
+  if(h >= umbral) d.setDate(d.getDate() + 1);
+  return d;
+}
+function mesActualISO(){
+  var d = getFechaTurno();
   var m = d.getMonth()+1;
   return d.getFullYear() + '-' + (m<10?'0'+m:m);
 }
