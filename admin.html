@@ -2649,7 +2649,7 @@ function switchTab(name){
   if(name==='cfg') renderEstadoDatos();
   if(name==='rec') { cargarMecanicosParaRec(); cargarRecordatorios(); }
   if(name==='enc') cargarAvisosEncargados();
-  if(name==='int') initIntegrales();
+  if(name==='int') { cargarCatalogoRepuestos(); initIntegrales(); }
   if(name==='cur') initCursos();
 }
 
