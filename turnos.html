@@ -157,6 +157,9 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 .sab-mec-tag{font-size:0.68rem;background:rgba(201,162,39,0.13);border:1px solid rgba(201,162,39,0.28);color:var(--gold);padding:2px 7px;border-radius:4px}
 .sab-del{background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.28);color:var(--red);padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.78rem;font-family:'Barlow',sans-serif}
 .sab-del:hover{background:rgba(231,76,60,0.28)}
+.sab-item-fest{border-color:rgba(255,165,0,0.35);background:rgba(255,140,0,0.06)}
+.fest-item{border-color:rgba(255,165,0,0.25);background:rgba(255,140,0,0.05)}
+.fest-badge{font-size:0.6rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;background:rgba(255,165,0,0.18);color:#ffb347;border:1px solid rgba(255,165,0,0.35);padding:2px 6px;border-radius:4px;margin-left:8px}
 
 /* ── HORAS NOCHE DOM ── */
 .hnd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
@@ -411,6 +414,26 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
     <button class="btn btn-add" onclick="addSabado()" style="align-self:flex-end;white-space:nowrap">+ Añadir</button>
   </div>
   <div id="sabList"><div class="empty">Sin sábados registrados</div></div>
+
+  <div class="sec-title" style="margin-top:26px">Festivos trabajados — resumen</div>
+  <div class="sab-count-grid" id="festCountGrid"></div>
+  <div class="sec-title">Registrar festivo trabajado</div>
+  <div class="sab-form">
+    <div class="form-field" style="flex:0 0 170px">
+      <label>Fecha festivo</label>
+      <input type="date" id="festFecha">
+    </div>
+    <div class="form-field" style="flex:1;min-width:260px">
+      <label>Mecánicos que trabajaron</label>
+      <div class="mec-checkboxes" id="festCbs"></div>
+    </div>
+    <button class="btn btn-add" onclick="addFestivo()" style="align-self:flex-end;white-space:nowrap">+ Añadir</button>
+  </div>
+  <div style="font-size:0.74rem;color:rgba(255,255,255,0.32);margin-bottom:10px;line-height:1.5">
+    Si el festivo cae en sábado, ese sábado quedará excluido del conteo de sábados extra.
+    Alberto genera 3 días libres por festivo (configurable en ✏️ Ajustar de cada mecánico). El resto cobra el festivo.
+  </div>
+  <div id="festList"><div class="empty">Sin festivos registrados</div></div>
 </div>
 
 <!-- ══ HORAS NOCHE DOM ══ -->
@@ -574,8 +597,18 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
         <input type="number" id="bEditSabMult" min="1" max="10" step="0.5">
         <div style="font-size:0.68rem;color:rgba(255,255,255,0.28);margin-top:3px">Ej: 2 → cada sábado genera 2 días</div>
       </div>
+      <div class="modal-field">
+        <label>Días libres por festivo</label>
+        <input type="number" id="bEditFestDias" min="0" max="10" step="0.5">
+        <div style="font-size:0.68rem;color:rgba(255,255,255,0.28);margin-top:3px">0 = cobra festivo · 3 = 3 días libres (ej. Alberto)</div>
+      </div>
+      <div class="modal-field">
+        <label>Libres festivo disfrutados</label>
+        <input type="number" id="bEditFestDisf" min="0">
+        <div style="font-size:0.68rem;color:rgba(255,255,255,0.28);margin-top:3px">Días de festivo ya usados</div>
+      </div>
     </div>
-    <div class="modal-info">Los sábados extra se calculan automáticamente.</div>
+    <div class="modal-info">Los sábados y festivos se calculan automáticamente.</div>
     <div class="modal-btns">
       <button class="btn btn-secondary" onclick="closeModal('bolsaModal')">Cancelar</button>
       <button class="btn btn-primary" onclick="saveBolsaEdit()">Guardar</button>
@@ -636,6 +669,7 @@ let S = {
   bolsas: {},
   dias: {},
   sabados: {},
+  festivos: {},
   ausencias: {},
   horasNocheDom: { '1':0,'2':0,'3':0,'4':0,'5':0 },
   config: {
@@ -713,6 +747,7 @@ function initApp(){
     if(d.bolsas)        S.bolsas        = d.bolsas;
     if(d.dias)          S.dias          = d.dias;
     if(d.sabados)       S.sabados       = d.sabados;
+    if(d.festivos)      S.festivos      = d.festivos;
     if(d.ausencias)     S.ausencias     = d.ausencias;
     if(d.horasNocheDom) S.horasNocheDom = d.horasNocheDom;
     if(d.config)        S.config        = { ...S.config, ...d.config };
@@ -1232,6 +1267,7 @@ function recalcBolsaFromDias(mecId){
 
 // Recalcula bolsas de TODOS los mecánicos y guarda en Firebase
 function recalcAllBolsas(){
+  recalcSabadosExtra(); // actualiza conteo de sáb. (excluye festivos)
   getAllMecIds().forEach(k => recalcBolsaFromDias(k));
   fbSet('bolsas', S.bolsas);
 }
@@ -1245,11 +1281,19 @@ function renderBolsas(){
   const asuTot = S.config.asuTotal || 4;
   grid.innerHTML = '';
 
-  // Contar sábados en tiempo real desde S.sabados (evita cache obsoleto)
+  // Contar sábados en tiempo real (excluye sábados festivos)
   const sabCounts = {};
   getAllMecIds().forEach(k => { sabCounts[k] = 0; });
-  Object.values(S.sabados).forEach(s =>
-    (s.mecanicos||[]).forEach(m => { const k=String(m); if(sabCounts[k]!==undefined) sabCounts[k]++; })
+  Object.entries(S.sabados).forEach(([fecha, s]) => {
+    if(S.festivos[fecha]) return;
+    (s.mecanicos||[]).forEach(m => { const k=String(m); if(sabCounts[k]!==undefined) sabCounts[k]++; });
+  });
+
+  // Contar festivos en tiempo real
+  const festCounts = {};
+  getAllMecIds().forEach(k => { festCounts[k] = 0; });
+  Object.values(S.festivos).forEach(s =>
+    (s.mecanicos||[]).forEach(m => { const k=String(m); if(festCounts[k]!==undefined) festCounts[k]++; })
   );
 
   getAllMecIds().forEach(k => {
@@ -1267,6 +1311,12 @@ function renderBolsas(){
     const sabMult   = mec?.sabMult   ?? 1;    // días libres por sábado a partir del umbral
     const sabGen    = Math.max(0, sEx - sabUmbral) * sabMult;
     const sabDisp   = Math.max(0, sabGen - sLi);
+    // Festivos
+    const festEx    = festCounts[k] || 0;
+    const festivosDias = mec?.festivosDias ?? 0; // 0 = cobran monetariamente; >0 = días libres (ej. Alberto=3)
+    const festGen   = festEx * festivosDias;
+    const festDisf  = b.festivosDisfrutados || 0;
+    const festDisp  = Math.max(0, festGen - festDisf);
     const hnd      = S.horasNocheDom[k] || 0;
     const vPct     = Math.min(100, vacTot > 0 ? vUs/vacTot*100 : 0);
     const aPct     = Math.min(100, asuTot > 0 ? aUs/asuTot*100 : 0);
@@ -1308,6 +1358,16 @@ function renderBolsas(){
         <span class="bolsa-lbl" style="color:var(--gold)">Disponibles</span>
         <span class="bolsa-val" style="color:var(--gold)">${sabDisp}${sabDisp>0?' 🎯':''}</span>
       </div>
+      ${festEx > 0 || festivosDias > 0 ? `
+      <div style="border-top:1px solid rgba(255,165,0,0.18);margin:8px 0 6px"></div>
+      ${festivosDias > 0 ? `
+      <div class="bolsa-row"><span class="bolsa-lbl">Festivos trabajados</span><span class="bolsa-val">${festEx}</span></div>
+      <div class="bolsa-row"><span class="bolsa-lbl">Días libres generados</span><span class="bolsa-val" style="${festGen>0?'color:var(--gold)':''}">${festGen} <span style="font-size:0.62rem;color:rgba(255,255,255,0.28)">(×${festivosDias}/fest.)</span></span></div>
+      <div class="bolsa-row"><span class="bolsa-lbl">Libres fest. disfrutados</span><span class="bolsa-val">${festDisf}</span></div>
+      <div class="bolsa-row"><span class="bolsa-lbl" style="color:var(--orange)">Disponibles festivos</span><span class="bolsa-val" style="color:var(--orange)">${festDisp}${festDisp>0?' 🎯':''}</span></div>
+      ` : `
+      <div class="bolsa-row"><span class="bolsa-lbl">Festivos cobrados</span><span class="bolsa-val" style="color:var(--green)">${festEx} 💰</span></div>
+      `}` : ''}
       <div class="bolsa-row" style="margin-top:6px"><span class="bolsa-lbl">Horas noche dom.</span><span class="bolsa-val" style="color:var(--purple)">${hnd}h</span></div>
     </div>`;
   });
@@ -1322,8 +1382,10 @@ function openBolsaModal(mecId){
   document.getElementById('bEditAsu').value       = b.asuntosUsados    || 0;
   document.getElementById('bEditSabLib').value    = b.diasLibreSabado  || 0;
   document.getElementById('bEditHnd').value       = S.horasNocheDom[mecId] || 0;
-  document.getElementById('bEditSabUmbral').value = mec?.sabUmbral ?? 10;
-  document.getElementById('bEditSabMult').value   = mec?.sabMult   ?? 1;
+  document.getElementById('bEditSabUmbral').value  = mec?.sabUmbral    ?? 10;
+  document.getElementById('bEditSabMult').value    = mec?.sabMult     ?? 1;
+  document.getElementById('bEditFestDias').value   = mec?.festivosDias ?? 0;
+  document.getElementById('bEditFestDisf').value   = b.festivosDisfrutados || 0;
   document.getElementById('bolsaModal').style.display = 'flex';
 }
 function saveBolsaEdit(){
@@ -1336,8 +1398,10 @@ function saveBolsaEdit(){
   S.horasNocheDom[k]           = +document.getElementById('bEditHnd').value||0;
   // Parámetros sábados: se guardan en mecanicos (son config del mecánico)
   if(!S.mecanicos[k]) S.mecanicos[k] = {};
-  S.mecanicos[k].sabUmbral = +document.getElementById('bEditSabUmbral').value ?? 10;
-  S.mecanicos[k].sabMult   = +document.getElementById('bEditSabMult').value   ?? 1;
+  S.mecanicos[k].sabUmbral    = +document.getElementById('bEditSabUmbral').value ?? 10;
+  S.mecanicos[k].sabMult      = +document.getElementById('bEditSabMult').value   ?? 1;
+  S.mecanicos[k].festivosDias = +document.getElementById('bEditFestDias').value  ?? 0;
+  S.bolsas[k].festivosDisfrutados = +document.getElementById('bEditFestDisf').value || 0;
   fbSet('bolsas', S.bolsas);
   fbSet('horasNocheDom', S.horasNocheDom);
   fbSet('mecanicos', S.mecanicos);
@@ -1380,7 +1444,10 @@ function addSabado(){
 function recalcSabadosExtra(){
   const c={};
   getAllMecIds().forEach(k=>{ c[k]=0; });
-  Object.values(S.sabados).forEach(s=>(s.mecanicos||[]).forEach(m=>{ const k=String(m); if(c[k]!==undefined) c[k]++; }));
+  Object.entries(S.sabados).forEach(([fecha, s])=>{
+    if(S.festivos[fecha]) return; // sábado festivo → no computa como sábado extra
+    (s.mecanicos||[]).forEach(m=>{ const k=String(m); if(c[k]!==undefined) c[k]++; });
+  });
   getAllMecIds().forEach(k=>{ ensureBolsa(k); S.bolsas[k].sabadosExtra=c[k]||0; });
 }
 function deleteSabado(fecha){
@@ -1392,18 +1459,58 @@ function deleteSabado(fecha){
   renderCalendar();
   showToast('Eliminado');
 }
+
+// ── FESTIVOS ──
+function initFestForm(){
+  const wrap = document.getElementById('festCbs');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  getAllMecIds().forEach(k=>{
+    const nom = S.mecanicos[k]?.nombre||'Mec '+k;
+    const isExtra = +k > 5;
+    wrap.innerHTML += `<label class="mec-cb" ${isExtra?'style="opacity:0.7;border-style:dashed"':''}><input type="checkbox" id="festCb${k}" value="${k}"> ${nom}</label>`;
+  });
+  document.getElementById('festFecha').value = toDS(new Date());
+}
+function addFestivo(){
+  const fecha = document.getElementById('festFecha').value;
+  if(!fecha){ showToast('Selecciona una fecha'); return; }
+  const mecs = [];
+  getAllMecIds().forEach(k=>{ const cb=document.getElementById('festCb'+k); if(cb?.checked) mecs.push(+k); });
+  if(!mecs.length){ showToast('Selecciona al menos un mecánico'); return; }
+  const prev = S.festivos[fecha]?.mecanicos||[];
+  S.festivos[fecha] = { mecanicos:[...new Set([...prev,...mecs])] };
+  recalcSabadosExtra(); // re-excluir si el festivo es sábado
+  recalcAllBolsas();
+  fbSet('festivos',S.festivos); fbSet('sabados',S.sabados); fbSet('bolsas',S.bolsas);
+  renderSabados();
+  renderCalendar();
+  showToast('Festivo registrado');
+  getAllMecIds().forEach(k=>{ const cb=document.getElementById('festCb'+k); if(cb) cb.checked=false; });
+}
+function deleteFestivo(fecha){
+  if(!confirm('¿Eliminar el festivo '+fecha+'?')) return;
+  delete S.festivos[fecha];
+  recalcSabadosExtra(); // el sábado vuelve a contar si aplica
+  recalcAllBolsas();
+  fbSet('festivos',S.festivos); fbSet('bolsas',S.bolsas);
+  renderSabados();
+  renderCalendar();
+  showToast('Festivo eliminado');
+}
 function renderSabados(){
   initSabForm();
+  initFestForm();
 
-  // ── Count grid — calculado en tiempo real desde S.sabados ──
+  // ── Sábados count grid (excluye sábados festivos) ──
   const countGrid = document.getElementById('sabCountGrid');
   if(countGrid){
-    // Contar directamente desde los registros (no depende de bolsas cacheadas)
     const c = {};
     getAllMecIds().forEach(k => { c[k] = 0; });
-    Object.values(S.sabados).forEach(s =>
-      (s.mecanicos||[]).forEach(m => { const k=String(m); if(c[k]!==undefined) c[k]++; })
-    );
+    Object.entries(S.sabados).forEach(([fecha, s]) => {
+      if(S.festivos[fecha]) return; // festivo → no computa
+      (s.mecanicos||[]).forEach(m => { const k=String(m); if(c[k]!==undefined) c[k]++; });
+    });
     countGrid.innerHTML = getAllMecIds().map(k=>{
       const nom = S.mecanicos[k]?.nombre||'Mec '+k;
       const cnt = c[k]||0;
@@ -1416,19 +1523,72 @@ function renderSabados(){
     }).join('');
   }
 
-  // ── List ──
+  // ── Sábados list ──
   const list    = document.getElementById('sabList');
   const entries = Object.entries(S.sabados).sort((a,b)=>b[0].localeCompare(a[0]));
-  if(!entries.length){ list.innerHTML='<div class="empty">Sin sábados registrados</div>'; return; }
-  list.innerHTML = entries.map(([fecha,data])=>{
-    const d = new Date(fecha+'T12:00:00');
-    const tags = (data.mecanicos||[]).map(m=>`<span class="sab-mec-tag">${S.mecanicos[String(m)]?.nombre||'Mec '+m}</span>`).join('');
-    return `<div class="sab-item">
-      <div class="sab-date">📅 ${d.getDate()} ${MONTHS_SH[d.getMonth()]} ${d.getFullYear()}</div>
-      <div class="sab-mecs">${tags}</div>
-      <button class="sab-del" onclick="deleteSabado('${fecha}')">✕</button>
-    </div>`;
-  }).join('');
+  if(!entries.length){ list.innerHTML='<div class="empty">Sin sábados registrados</div>'; }
+  else {
+    list.innerHTML = entries.map(([fecha,data])=>{
+      const d = new Date(fecha+'T12:00:00');
+      const esFestivo = !!S.festivos[fecha];
+      const tags = (data.mecanicos||[]).map(m=>`<span class="sab-mec-tag">${S.mecanicos[String(m)]?.nombre||'Mec '+m}</span>`).join('');
+      const festBadge = esFestivo ? '<span class="fest-badge">FESTIVO — no computa</span>' : '';
+      return `<div class="sab-item${esFestivo?' sab-item-fest':''}">
+        <div class="sab-date">📅 ${d.getDate()} ${MONTHS_SH[d.getMonth()]} ${d.getFullYear()}${festBadge}</div>
+        <div class="sab-mecs">${tags}</div>
+        <button class="sab-del" onclick="deleteSabado('${fecha}')">✕</button>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Festivos count grid ──
+  const festGrid = document.getElementById('festCountGrid');
+  if(festGrid){
+    const cf = {};
+    getAllMecIds().forEach(k => { cf[k] = 0; });
+    Object.values(S.festivos).forEach(s =>
+      (s.mecanicos||[]).forEach(m => { const k=String(m); if(cf[k]!==undefined) cf[k]++; })
+    );
+    if(!Object.keys(S.festivos).length){
+      festGrid.innerHTML = '<div class="empty" style="width:100%;padding:10px 0">Sin festivos registrados</div>';
+    } else {
+      festGrid.innerHTML = getAllMecIds().map(k=>{
+        const nom = S.mecanicos[k]?.nombre||'Mec '+k;
+        const cnt = cf[k]||0;
+        const fDias = S.mecanicos[k]?.festivosDias ?? 0;
+        const isExtra = +k>5;
+        const lbl = fDias > 0 ? `→ ${cnt*fDias} días lib.` : (cnt > 0 ? 'cobrados' : 'festivos');
+        return `<div class="sab-count-card${isExtra?' sab-count-extra':''}">
+          <div class="sab-count-name" title="${nom}">${nom}</div>
+          <div class="sab-count-val" style="${fDias>0&&cnt>0?'color:var(--gold)':''}${fDias===0&&cnt>0?'color:var(--green)':''}">${cnt}</div>
+          <div class="sab-count-lbl">${lbl}</div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // ── Festivos list ──
+  const festList = document.getElementById('festList');
+  if(festList){
+    const fEntries = Object.entries(S.festivos).sort((a,b)=>b[0].localeCompare(a[0]));
+    if(!fEntries.length){ festList.innerHTML='<div class="empty">Sin festivos registrados</div>'; }
+    else {
+      festList.innerHTML = fEntries.map(([fecha,data])=>{
+        const d = new Date(fecha+'T12:00:00');
+        const dow = d.getDay();
+        const esSab = dow === 6;
+        const enSabs = esSab && !!S.sabados[fecha];
+        const tags = (data.mecanicos||[]).map(m=>`<span class="sab-mec-tag">${S.mecanicos[String(m)]?.nombre||'Mec '+m}</span>`).join('') || '<span style="color:rgba(255,255,255,0.28);font-size:0.78rem">Sin mecánicos</span>';
+        const DAYS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+        const sabNote = enSabs ? '<span class="fest-badge">Sáb. excluido del conteo</span>' : '';
+        return `<div class="sab-item fest-item">
+          <div class="sab-date">🎌 ${DAYS[dow]} ${d.getDate()} ${MONTHS_SH[d.getMonth()]} ${d.getFullYear()}${sabNote}</div>
+          <div class="sab-mecs">${tags}</div>
+          <button class="sab-del" onclick="deleteFestivo('${fecha}')">✕</button>
+        </div>`;
+      }).join('');
+    }
+  }
 }
 
 // ════════════════════════════════════════════
