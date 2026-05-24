@@ -229,9 +229,43 @@ tbody td{padding:9px 8px;vertical-align:middle}
   .col-desc{max-width:160px}
   .summary-bar{gap:6px}
 }
+
+/* ── Login mecánico overlay ── */
+#mecLoginOverlay{position:fixed;inset:0;background:rgba(10,21,32,0.98);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
+.mec-ov-box{background:#1a2a3a;border:1px solid rgba(201,162,39,0.35);border-radius:18px;padding:32px 28px;width:100%;max-width:360px;text-align:center}
+.mec-ov-box .logo{font-size:2.8rem;margin-bottom:10px}
+.mec-ov-box h2{font-size:1.4rem;font-weight:900;color:#e8c14e;letter-spacing:0.06em;margin-bottom:4px;font-family:'Oswald',sans-serif}
+.mec-ov-box .sub{font-size:0.78rem;color:rgba(255,255,255,0.35);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:20px}
+.mec-ov-sel,.mec-ov-pw{width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:9px;padding:13px 16px;font-family:'Barlow',sans-serif;font-size:1rem;margin-bottom:12px;display:block;box-sizing:border-box}
+.mec-ov-sel:focus,.mec-ov-pw:focus{outline:none;border-color:#c9a227}
+.mec-ov-pw{text-align:center;letter-spacing:0.2em;font-size:1.1rem}
+.mec-ov-check{display:flex;align-items:center;gap:10px;margin-bottom:16px;cursor:pointer;justify-content:center;font-size:0.85rem;color:rgba(255,255,255,0.6)}
+.mec-ov-check input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:#c9a227;flex-shrink:0}
+.mec-ov-btn{width:100%;padding:14px;background:linear-gradient(135deg,#c9a227,#a07d1a);color:#0d1b2a;border:none;border-radius:9px;font-family:'Barlow',sans-serif;font-size:1.05rem;font-weight:900;letter-spacing:0.1em;cursor:pointer;transition:all .2s}
+.mec-ov-btn:hover{background:linear-gradient(135deg,#e8c14e,#c9a227)}
+.mec-ov-err{color:#e74c3c;font-size:0.88rem;margin-top:10px;min-height:20px}
 </style>
 </head>
 <body>
+
+<!-- ══ LOGIN MECÁNICO ══ -->
+<div id="mecLoginOverlay">
+  <div class="mec-ov-box">
+    <div class="logo">🔧</div>
+    <h2>PANALCOR S.L.</h2>
+    <div class="sub">Panel Mecánicos &middot; Acceso</div>
+    <select id="mecOvSel" class="mec-ov-sel">
+      <option value="">— Selecciona tu nombre —</option>
+    </select>
+    <input type="password" id="mecOvPw" class="mec-ov-pw" placeholder="Contraseña" autocomplete="off"
+           onkeydown="if(event.key==='Enter') mecOvLogin()">
+    <label class="mec-ov-check">
+      <input type="checkbox" id="mecOvMiTel"> Es mi teléfono (sesión indefinida)
+    </label>
+    <button class="mec-ov-btn" onclick="mecOvLogin()">ENTRAR</button>
+    <div class="mec-ov-err" id="mecOvErr"></div>
+  </div>
+</div>
 
 <!-- TOP BAR -->
 <div class="topbar">
@@ -248,6 +282,7 @@ tbody td{padding:9px 8px;vertical-align:middle}
     <div>
       <div class="topbar-title">PANALCOR <span>S.L.</span></div>
       <div style="font-size:0.65rem;color:rgba(255,255,255,0.4);letter-spacing:0.08em">PANEL MECÁNICOS</div>
+      <div id="mecNomTopbar" style="font-size:0.72rem;color:#2ecc71;font-weight:700;letter-spacing:0.06em;margin-top:2px;display:none"></div>
     </div>
   </div>
   <div class="topbar-date" id="fechaHora"></div>
@@ -996,6 +1031,94 @@ function _ytIdMec(url) {
 function escF(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ══════════════════════════════════════
+// LOGIN MECANICO — sesion persistente
+// ══════════════════════════════════════
+var MEC_SESION_KEY = 'mecSesion';
+
+function _mecSesionValida(){
+  try {
+    var s = JSON.parse(localStorage.getItem(MEC_SESION_KEY) || 'null');
+    if(!s || !s.nombre) return false;
+    if(s.expires !== null && Date.now() > s.expires){ localStorage.removeItem(MEC_SESION_KEY); return false; }
+    return s.nombre;
+  } catch(e){ return false; }
+}
+
+function _adminSesionValida(){
+  var t = parseInt(localStorage.getItem('adminSession') || 0);
+  return t > 0 && (Date.now() - t) < 8 * 3600 * 1000;
+}
+
+function _aplicarSesionMec(nombre){
+  document.getElementById('mecLoginOverlay').style.display = 'none';
+  var el = document.getElementById('mecNomTopbar');
+  if(el){ el.textContent = '\u{1F477} ' + nombre; el.style.display = 'block'; }
+  var sel = document.getElementById('mecSelect');
+  if(sel){
+    Array.from(sel.options).forEach(function(o){
+      if(o.value && o.value.toUpperCase() === nombre.toUpperCase()) sel.value = o.value;
+    });
+  }
+}
+
+(function cargarMecOvSel(){
+  var sel = document.getElementById('mecOvSel');
+  if(!sel) return;
+  function poblar(lista){
+    lista.forEach(function(n){
+      var o = document.createElement('option');
+      o.value = n; o.textContent = n; sel.appendChild(o);
+    });
+  }
+  if(typeof _DB_MEC !== 'undefined'){
+    _DB_MEC.ref('config/mecanicos').once('value')
+      .then(function(snap){ var v=snap.val(); poblar(v&&v.length?v:_MEC_FALLBACK); })
+      .catch(function(){ poblar(_MEC_FALLBACK); });
+  } else { poblar(_MEC_FALLBACK); }
+})();
+
+function mecOvLogin(){
+  var nombre  = document.getElementById('mecOvSel').value;
+  var pw      = document.getElementById('mecOvPw').value;
+  var err     = document.getElementById('mecOvErr');
+  var esMiTel = document.getElementById('mecOvMiTel').checked;
+  err.textContent = '';
+  if(!nombre){ err.textContent = '⚠️ Selecciona tu nombre'; return; }
+  if(!pw)    { err.textContent = '⚠️ Introduce la contrasena'; return; }
+  _DB_MEC.ref('config/mecanicos_pwd').once('value').then(function(snap){
+    var pwsObj = snap.val() || {};
+    var pwEsperada = pwsObj[nombre] || null;
+    if(!pwEsperada){ err.textContent = '❌ Sin contrasena asignada. Contacta con el responsable.'; return; }
+    if(pw !== pwEsperada){
+      err.textContent = '❌ Contrasena incorrecta';
+      document.getElementById('mecOvPw').value = '';
+      document.getElementById('mecOvPw').focus();
+      return;
+    }
+    _DB_MEC.ref('config/mecSessionHoras').once('value').then(function(snap2){
+      var horas = snap2.val() || 8;
+      var expires = esMiTel ? null : (Date.now() + horas * 3600 * 1000);
+      localStorage.setItem(MEC_SESION_KEY, JSON.stringify({nombre:nombre, expires:expires}));
+      _aplicarSesionMec(nombre);
+    }).catch(function(){
+      var expires = esMiTel ? null : (Date.now() + 8 * 3600 * 1000);
+      localStorage.setItem(MEC_SESION_KEY, JSON.stringify({nombre:nombre, expires:expires}));
+      _aplicarSesionMec(nombre);
+    });
+  }).catch(function(){ err.textContent = '❌ Error de conexion. Intentalo de nuevo.'; });
+}
+
+(function checkMecSesionInicio(){
+  var nombre = _mecSesionValida();
+  if(nombre){ _aplicarSesionMec(nombre); return; }
+  if(_adminSesionValida()){
+    document.getElementById('mecLoginOverlay').style.display = 'none';
+    return;
+  }
+  document.getElementById('mecLoginOverlay').style.display = 'flex';
+})();
 </script>
 </body>
 </html>

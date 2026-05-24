@@ -772,15 +772,15 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
   </div>
 
   <div class="card config-section">
-    <div class="sec-title">🔧 Contraseña de mecánicos</div>
+    <div class="sec-title">🔑 Contraseñas individuales de mecánicos</div>
     <p style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:16px;line-height:1.6">
-      Esta es la contraseña que pide el formulario de averías cuando un mecánico escanea un QR. Compártela solo con tu equipo.
+      Cada mecánico tiene su propia contraseña. Gestiónalas en la pestaña <b>👷 Mecánicos</b> — columna <b>Contraseña</b>. Al guardar un mecánico se sincronizan automáticamente con Firebase.
     </p>
     <div class="field">
-      <label>Nueva contraseña de mecánicos</label>
-      <input type="text" id="cfgMecPw" placeholder="Contraseña actual: panalcor" autocomplete="off">
+      <label>Duración de sesión en dispositivos compartidos (horas)</label>
+      <input type="number" id="cfgMecSessionHoras" min="1" max="8760" placeholder="Por defecto: 8 horas" autocomplete="off">
     </div>
-    <button class="btn-export btn-gold" onclick="cambiarPwMecanicos()">💾 Guardar contraseña de mecánicos</button>
+    <button class="btn-export btn-gold" onclick="guardarSesionConfig()">💾 Guardar duración de sesión</button>
   </div>
 
   <div class="card config-section">
@@ -1152,6 +1152,12 @@ function initApp(){
   // Pre-fill mes actual en informe mensual
   const expMesEl = document.getElementById('expMes');
   if(expMesEl) expMesEl.value = hoy.toISOString().substring(0,7);
+  // Cargar duración de sesión configurada
+  DB.ref('config/mecSessionHoras').once('value').then(snap=>{
+    const h = snap.val();
+    const el = document.getElementById('cfgMecSessionHoras');
+    if(el && h) el.value = h;
+  }).catch(()=>{});
   renderEstadoDatos();
 }
 
@@ -2068,15 +2074,17 @@ function _generarExcelMensual(mes, mesLabel, turnos, tareasMap){
 // ══════════════════════════════════════════════════
 // CONFIGURACIÓN
 // ══════════════════════════════════════════════════
-function cambiarPwMecanicos(){
-  const nueva = document.getElementById('cfgMecPw').value.trim();
-  if(!nueva){ showToast('⚠️ Escribe la nueva contraseña'); return; }
-  if(nueva.length < 3){ showToast('⚠️ Mínimo 3 caracteres'); return; }
-  DB.ref('config/mecanicoPwd').set(nueva).then(()=>{
-    localStorage.setItem('mecanicoPwd', nueva);
-    document.getElementById('cfgMecPw').value = '';
-    showToast('✅ Contraseña de mecánicos actualizada');
+function guardarSesionConfig(){
+  const h = parseInt(document.getElementById('cfgMecSessionHoras').value) || 0;
+  if(!h || h < 1){ showToast('⚠️ Introduce un número de horas válido (mín. 1)'); return; }
+  DB.ref('config/mecSessionHoras').set(h).then(()=>{
+    showToast('✅ Duración de sesión: '+h+' hora'+(h!==1?'s':'')+' en dispositivos compartidos');
   }).catch(()=>{ showToast('❌ Error al guardar. Comprueba la conexión.'); });
+}
+
+function cambiarPwMecanicos(){
+  // Mantenida por compatibilidad — ahora las contraseñas son por mecánico (pestaña Mecánicos)
+  showToast('ℹ️ Las contraseñas ahora son individuales. Edítalas en la pestaña Mecánicos.');
 }
 
 function cambiarPassword(){
@@ -2480,6 +2488,10 @@ function syncPersonalFirebase(){
   DB.ref('config/personal').set(personalData);
   const activos = personalData.filter(m=>m.estado==='ACTIVO').map(m=>m.nombre);
   DB.ref('config/mecanicos').set(activos);
+  // Sync contraseñas individuales para el login de mecánicos
+  const pwds = {};
+  personalData.filter(m=>m.estado==='ACTIVO'&&m.pwd).forEach(m=>{ pwds[m.nombre]=m.pwd; });
+  if(Object.keys(pwds).length) DB.ref('config/mecanicos_pwd').set(pwds);
 }
 
 function renderPersonal(){

@@ -227,12 +227,18 @@ a{color:inherit;text-decoration:none}
   <div class="mec-login-box">
     <div class="logo">🔧</div>
     <h2>PANALCOR S.L.</h2>
-    <div class="sub">Partes de Averías · Acceso</div>
+    <div class="sub">Partes de Aver&iacute;as &middot; Acceso</div>
+    <select id="mecLoginSel" style="width:100%;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:9px;padding:13px 16px;font-family:'Barlow',sans-serif;font-size:1rem;margin-bottom:12px;display:block;box-sizing:border-box">
+      <option value="">— Selecciona tu nombre —</option>
+    </select>
     <input type="password" id="mecPwInput" placeholder="Contraseña" autocomplete="off"
-           onkeydown="if(event.key==='Enter') mecLogin()">
-    <button class="mec-login-btn" onclick="mecLogin()">ENTRAR</button>
+           onkeydown="if(event.key==='Enter') mecLoginSubmit()">
+    <label style="display:flex;align-items:center;gap:10px;margin:10px 0 16px;cursor:pointer;justify-content:center;font-size:0.85rem;color:rgba(255,255,255,0.6)">
+      <input type="checkbox" id="mecLoginMiTel" style="width:18px;height:18px;cursor:pointer;accent-color:#c9a227;flex-shrink:0"> Es mi tel&eacute;fono (sesi&oacute;n indefinida)
+    </label>
+    <button class="mec-login-btn" onclick="mecLoginSubmit()">ENTRAR</button>
     <div class="mec-login-err" id="mecLoginErr"></div>
-    <div class="mec-login-hint">Contacta con el responsable de mantenimiento si no tienes la contraseña</div>
+    <div class="mec-login-hint">Contacta con el responsable si no tienes contrase&ntilde;a asignada</div>
   </div>
 </div>
 
@@ -271,6 +277,7 @@ a{color:inherit;text-decoration:none}
   <div>
     <div class="sub">PANADERÍA · MANTENIMIENTO</div>
     <h1>🔧 GESTIÓN DE AVERÍAS</h1>
+    <div id="mecNomTopbar" style="font-size:0.78rem;color:#2ecc71;font-weight:700;margin-top:2px;display:none"></div>
   </div>
 </div>
 
@@ -1584,44 +1591,84 @@ document.addEventListener('click',e=>{
 
 <script>
 // ══════════════════════════════════════════════
-// LOGIN MECÁNICO
+// LOGIN MECANICO — sesion persistente por nombre
 // ══════════════════════════════════════════════
-const MEC_SESSION_KEY = 'mecAuth';
-const MEC_PW_DEFAULT  = 'panalcor';
+var MEC_SESION_KEY = 'mecSesion';
+var _MEC_FALLBACK_AV = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE'];
 
-function getMecPwd(callback){
-  DB.ref('config/mecanicoPwd').once('value')
-    .then(snap => callback(snap.val() || MEC_PW_DEFAULT))
-    .catch(()  => callback(localStorage.getItem('mecanicoPwd') || MEC_PW_DEFAULT));
+function _mecSesionValida(){
+  try {
+    var s = JSON.parse(localStorage.getItem(MEC_SESION_KEY) || 'null');
+    if(!s || !s.nombre) return false;
+    if(s.expires !== null && Date.now() > s.expires){ localStorage.removeItem(MEC_SESION_KEY); return false; }
+    return s.nombre;
+  } catch(e){ return false; }
 }
 
-function mecLogin(){
-  const val = document.getElementById('mecPwInput').value;
-  const err = document.getElementById('mecLoginErr');
-  if(!val){ err.textContent = '⚠️ Introduce la contraseña'; return; }
-  getMecPwd(pwd => {
-    if(val === pwd){
-      sessionStorage.setItem(MEC_SESSION_KEY, '1');
-      document.getElementById('mecLogin').style.display   = 'none';
-      document.getElementById('appAverias').style.display = 'block';
-      err.textContent = '';
-    } else {
-      err.textContent = '❌ Contraseña incorrecta';
-      document.getElementById('mecPwInput').value = '';
-      document.getElementById('mecPwInput').focus();
-    }
-  });
-}
-
-// Comprobar sesión al cargar
 function _adminSessionValida(){
   var t = parseInt(localStorage.getItem('adminSession') || 0);
   return t > 0 && (Date.now() - t) < 8 * 3600 * 1000;
 }
+
+function _aplicarSesionAverias(nombre){
+  document.getElementById('mecLogin').style.display   = 'none';
+  document.getElementById('appAverias').style.display = 'block';
+  var el = document.getElementById('mecNomTopbar');
+  if(el){ el.textContent = '\u{1F477} ' + nombre; el.style.display = 'block'; }
+}
+
+(function cargarMecLoginAv(){
+  var sel = document.getElementById('mecLoginSel');
+  if(!sel) return;
+  function poblarAv(lista){
+    lista.forEach(function(n){
+      var o = document.createElement('option');
+      o.value = n; o.textContent = n; sel.appendChild(o);
+    });
+  }
+  DB.ref('config/mecanicos').once('value')
+    .then(function(snap){ var v=snap.val(); poblarAv(v&&v.length?v:_MEC_FALLBACK_AV); })
+    .catch(function(){ poblarAv(_MEC_FALLBACK_AV); });
+})();
+
+function mecLoginSubmit(){
+  var nombre  = document.getElementById('mecLoginSel').value;
+  var pw      = document.getElementById('mecPwInput').value;
+  var err     = document.getElementById('mecLoginErr');
+  var esMiTel = document.getElementById('mecLoginMiTel').checked;
+  err.textContent = '';
+  if(!nombre){ err.textContent = '⚠️ Selecciona tu nombre'; return; }
+  if(!pw)    { err.textContent = '⚠️ Introduce la contrasena'; return; }
+  DB.ref('config/mecanicos_pwd').once('value').then(function(snap){
+    var pwsObj = snap.val() || {};
+    var pwEsperada = pwsObj[nombre] || null;
+    if(!pwEsperada){ err.textContent = '❌ Sin contrasena asignada. Contacta con el responsable.'; return; }
+    if(pw !== pwEsperada){
+      err.textContent = '❌ Contrasena incorrecta';
+      document.getElementById('mecPwInput').value = '';
+      document.getElementById('mecPwInput').focus();
+      return;
+    }
+    DB.ref('config/mecSessionHoras').once('value').then(function(snap2){
+      var horas = snap2.val() || 8;
+      var expires = esMiTel ? null : (Date.now() + horas * 3600 * 1000);
+      localStorage.setItem(MEC_SESION_KEY, JSON.stringify({nombre:nombre, expires:expires}));
+      _aplicarSesionAverias(nombre);
+    }).catch(function(){
+      var expires = esMiTel ? null : (Date.now() + 8 * 3600 * 1000);
+      localStorage.setItem(MEC_SESION_KEY, JSON.stringify({nombre:nombre, expires:expires}));
+      _aplicarSesionAverias(nombre);
+    });
+  }).catch(function(){ err.textContent = '❌ Error de conexion. Intentalo de nuevo.'; });
+}
+
 (function checkMecSession(){
-  if(sessionStorage.getItem(MEC_SESSION_KEY) === '1' || _adminSessionValida()){
+  var nombre = _mecSesionValida();
+  if(nombre){ _aplicarSesionAverias(nombre); return; }
+  if(_adminSessionValida()){
     document.getElementById('mecLogin').style.display   = 'none';
     document.getElementById('appAverias').style.display = 'block';
+    return;
   }
 })();
 
