@@ -948,6 +948,7 @@ function login(){
   try {
     const val = document.getElementById('pwInput').value;
     if(val === getPwd()){
+      localStorage.setItem('adminSession', Date.now());
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('app').style.display = 'block';
       try { initApp(); } catch(e2) {
@@ -965,6 +966,7 @@ function login(){
 }
 
 function logout(){
+  localStorage.removeItem('adminSession');
   document.getElementById('app').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('pwInput').value = '';

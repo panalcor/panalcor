@@ -1614,8 +1614,12 @@ function mecLogin(){
 }
 
 // Comprobar sesión al cargar
+function _adminSessionValida(){
+  var t = parseInt(localStorage.getItem('adminSession') || 0);
+  return t > 0 && (Date.now() - t) < 8 * 3600 * 1000;
+}
 (function checkMecSession(){
-  if(sessionStorage.getItem(MEC_SESSION_KEY) === '1'){
+  if(sessionStorage.getItem(MEC_SESSION_KEY) === '1' || _adminSessionValida()){
     document.getElementById('mecLogin').style.display   = 'none';
     document.getElementById('appAverias').style.display = 'block';
   }

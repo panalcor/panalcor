@@ -624,8 +624,12 @@ function showToast(msg){
 }
 
 /* ══ ARRANQUE ══ */
+function _adminSessionValida(){
+  var t = parseInt(localStorage.getItem('adminSession') || 0);
+  return t > 0 && (Date.now() - t) < 8 * 3600 * 1000;
+}
 (function(){
-  if(sessionStorage.getItem(SESSION_KEY) === '1'){
+  if(sessionStorage.getItem(SESSION_KEY) === '1' || _adminSessionValida()){
     document.getElementById('loginScreen').style.display = 'none';
     mostrarSelectorMecanico();
   }
