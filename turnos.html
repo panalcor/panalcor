@@ -722,6 +722,8 @@ function initApp(){
       if(!S.horasNocheDom[k]) S.horasNocheDom[k] = 0;
       if(!S.mecanicos[k]) S.mecanicos[k] = DEFAULT_MEC(i);
     });
+    getAllMecIds().forEach(k => ensureBolsa(k));
+    getAllMecIds().forEach(k => recalcBolsaFromDias(k)); // solo memoria, sin fbSet para no bucle infinito
     refreshAll();
   });
   // Auto-sync global mechanics list on first load
@@ -1205,7 +1207,7 @@ function saveCellEdit(){
   }
 
   fbSet('dias', S.dias);
-  recalcBolsaFromDias(mecId);
+  recalcAllBolsas();
   closeModal('cellModal');
   renderCalendar();
   showToast('Guardado');
@@ -1217,7 +1219,7 @@ function recalcBolsaFromDias(mecId){
   Object.entries(S.dias).forEach(([ds, dayObj]) => {
     const m = dayObj[k];
     if(!m) return;
-    // Skip weekends — only laborables count against bolsa
+    // Solo laborables (L-V) cuentan contra bolsa
     const dow = new Date(ds + 'T12:00:00').getDay();
     if(dow === 0 || dow === 6) return;
     if(m.estado==='vacaciones') vac++;
@@ -1226,6 +1228,11 @@ function recalcBolsaFromDias(mecId){
   ensureBolsa(k);
   S.bolsas[k].vacacionesUsadas = vac;
   S.bolsas[k].asuntosUsados    = asu;
+}
+
+// Recalcula bolsas de TODOS los mecánicos y guarda en Firebase
+function recalcAllBolsas(){
+  getAllMecIds().forEach(k => recalcBolsaFromDias(k));
   fbSet('bolsas', S.bolsas);
 }
 
@@ -1269,32 +1276,26 @@ function renderBolsas(){
     const sabHint  = (sEx < sabUmbral && sEx > 0)
       ? ` <span style="font-size:0.62rem;color:rgba(255,255,255,0.28)">(faltan ${faltan} para 1.º día)</span>`
       : '';
-    // Config del mecánico (se muestra si es distinto del estándar)
-    const cfgInfo  = (sabUmbral !== 10 || sabMult !== 1)
+    // Config sáb. (solo si difiere del estándar)
+    const cfgInfo = (sabUmbral !== 10 || sabMult !== 1)
       ? `<div class="bolsa-row" style="margin-top:4px"><span class="bolsa-lbl" style="font-size:0.65rem">Config sáb.</span><span style="font-size:0.68rem;color:rgba(255,255,255,0.4)">umbral ${sabUmbral} · ×${sabMult} días</span></div>`
       : '';
+    const extraLabel = isExtra
+      ? '<span style="font-size:0.6rem;color:rgba(255,255,255,0.28);font-weight:400;text-transform:none;letter-spacing:0"> · seguim.</span>' : '';
 
-    // Mecánicos extra: tarjeta simplificada (sin vac/asu/horas noche)
-    const vacAsuRows = isExtra ? '' : `
+    grid.innerHTML += `<div class="bolsa-card" style="${isExtra?'border-style:dashed;opacity:0.9':''}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="bolsa-name">${mec?.nombre||'Mec '+k}${extraLabel}</div>
+        <button class="bolsa-edit-btn" onclick="openBolsaModal('${k}')">✏️ Ajustar</button>
+      </div>
       <div class="bolsa-row"><span class="bolsa-lbl">Vacaciones usadas</span><span class="bolsa-val">${vUs}/${vacTot}</span></div>
       <div class="bar-bg"><div class="bar-fill bar-gold" style="width:${vPct}%"></div></div>
       <div class="bolsa-row"><span class="bolsa-lbl">Restantes</span><span class="bolsa-val" style="color:var(--green)">${vRe} días</span></div>
       <div class="bolsa-row" style="margin-top:6px"><span class="bolsa-lbl">Asuntos usados</span><span class="bolsa-val">${aUs}/${asuTot}</span></div>
       <div class="bar-bg"><div class="bar-fill bar-blue" style="width:${aPct}%"></div></div>
-      <div class="bolsa-row"><span class="bolsa-lbl">Restantes</span><span class="bolsa-val" style="color:var(--blue)">${aRe} días</span></div>`;
-    const horaRow = isExtra ? '' :
-      `<div class="bolsa-row" style="margin-top:6px"><span class="bolsa-lbl">Horas noche domingo</span><span class="bolsa-val" style="color:var(--purple)">${hnd}h</span></div>`;
-    const extraLabel = isExtra
-      ? '<span style="font-size:0.6rem;color:rgba(255,255,255,0.28);font-weight:400;text-transform:none;letter-spacing:0"> · seguim.</span>' : '';
-
-    grid.innerHTML += `<div class="bolsa-card" style="${isExtra?'border-style:dashed;opacity:0.85':''}">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <div class="bolsa-name">${mec?.nombre||'Mec '+k}${extraLabel}</div>
-        <button class="bolsa-edit-btn" onclick="openBolsaModal('${k}')">✏️ Ajustar</button>
-      </div>
-      ${vacAsuRows}
+      <div class="bolsa-row"><span class="bolsa-lbl">Restantes</span><span class="bolsa-val" style="color:var(--blue)">${aRe} días</span></div>
       ${cfgInfo}
-      <div class="bolsa-row" style="margin-top:${isExtra?'0':'6px'}">
+      <div class="bolsa-row" style="margin-top:6px">
         <span class="bolsa-lbl">Sáb. extra acumulados</span>
         <span class="bolsa-val">${sEx}</span>
       </div>
@@ -1307,7 +1308,7 @@ function renderBolsas(){
         <span class="bolsa-lbl" style="color:var(--gold)">Disponibles</span>
         <span class="bolsa-val" style="color:var(--gold)">${sabDisp}${sabDisp>0?' 🎯':''}</span>
       </div>
-      ${horaRow}
+      <div class="bolsa-row" style="margin-top:6px"><span class="bolsa-lbl">Horas noche dom.</span><span class="bolsa-val" style="color:var(--purple)">${hnd}h</span></div>
     </div>`;
   });
 }
@@ -1609,7 +1610,7 @@ function addAusencia(){
 
   fbSet('ausencias',S.ausencias);
   fbSet('dias',S.dias);
-  recalcBolsaFromDias(mecId);
+  recalcAllBolsas();
 
   document.getElementById('ausDesde').value='';
   document.getElementById('ausHasta').value='';
@@ -1629,7 +1630,7 @@ function deleteAusencia(id){
   delete S.ausencias[id];
   fbSet('ausencias',S.ausencias);
   fbSet('dias',S.dias);
-  recalcBolsaFromDias(aus.mecId);
+  recalcAllBolsas();
   renderAusencias();
   renderCalendar();
   showToast('Ausencia eliminada');
