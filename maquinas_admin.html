@@ -210,7 +210,7 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
     <button class="area-chip active" data-area="TODOS" onclick="setArea(this)">TODOS</button>
     <button class="area-chip" data-area="OBRADOR" onclick="setArea(this)">OBRADOR</button>
     <button class="area-chip" data-area="HORNOS" onclick="setArea(this)">HORNOS</button>
-    <button class="area-chip" data-area="TUNELES" onclick="setArea(this)">TÚNELES</button>
+    <button class="area-chip" data-area="FRIO/CLIMA" onclick="setArea(this)">❄️ FRÍO/CLIMA</button>
     <button class="area-chip" data-area="EXPEDICION" onclick="setArea(this)">EXPEDICIÓN</button>
     <button class="area-chip" data-area="SALA COMPRESORES" onclick="setArea(this)">COMPRESORES</button>
     <span class="maq-count" id="maqCount"></span>
@@ -495,8 +495,8 @@ const MAQUINAS = [
   {id:'MAQ-055',n:'EMBOLADORA N7',t:'EMBOLADORA',f:'',a:'OBRADOR',c:''},
   {id:'MAQ-056',n:'EMBOLADORA N8',t:'EMBOLADORA',f:'',a:'OBRADOR',c:''},
   {id:'MAQ-057',n:'EMBOLADORA N9',t:'EMBOLADORA',f:'',a:'OBRADOR',c:''},
-  {id:'MAQ-058',n:'FERMENTADORA RELAMPAGO',t:'FERMENTADORA',f:'INFRISA',a:'FERMENTADORA',c:''},
-  {id:'MAQ-059',n:'FERMENTADORA TRUENO',t:'FERMENTADORA',f:'INFRISA',a:'TRUENO-FERMENTADORA',c:''},
+  {id:'MAQ-058',n:'FERMENTADORA RELAMPAGO',t:'FERMENTADORA',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-059',n:'FERMENTADORA TRUENO',t:'FERMENTADORA',f:'INFRISA',a:'FRIO/CLIMA',c:''},
   {id:'MAQ-060',n:'HORNO 1',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
   {id:'MAQ-061',n:'HORNO 2',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
   {id:'MAQ-062',n:'HORNO 3',t:'HORNO',f:'GPG',a:'HORNOS',c:''},
@@ -518,17 +518,17 @@ const MAQUINAS = [
   {id:'MAQ-078',n:'HORNO 19 (4TRUENO)',t:'HORNO',f:'GPG',a:'HORNOS',c:''},
   {id:'MAQ-079',n:'TALLADORA RELAMPAGO',t:'TALLADORA',f:'PORTICEL',a:'HORNOS',c:''},
   {id:'MAQ-080',n:'TALLADORA TRUENO',t:'TALLADORA',f:'AYMI',a:'',c:''},
-  {id:'MAQ-081',n:'TUNEL PREFRIO',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
-  {id:'MAQ-082',n:'TUNEL 1',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
-  {id:'MAQ-083',n:'TUNEL 2',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
-  {id:'MAQ-084',n:'TUNEL 3',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
-  {id:'MAQ-085',n:'TUNEL 4',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
-  {id:'MAQ-086',n:'TUNEL 5',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
-  {id:'MAQ-087',n:'TUNEL 6',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
-  {id:'MAQ-088',n:'TUNEL 7',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
-  {id:'MAQ-089',n:'TUNEL 8',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
-  {id:'MAQ-090',n:'TUNEL 9 (1 TRUENO)',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
-  {id:'MAQ-091',n:'TUNEL 10 (2 TRUENO)',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
+  {id:'MAQ-081',n:'TUNEL PREFRIO',t:'TUNEL PREFRIO',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-082',n:'TUNEL 1',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-083',n:'TUNEL 2',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-084',n:'TUNEL 3',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-085',n:'TUNEL 4',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-086',n:'TUNEL 5',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-087',n:'TUNEL 6',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-088',n:'TUNEL 7',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-089',n:'TUNEL 8',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-090',n:'TUNEL 9 (1 TRUENO)',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-091',n:'TUNEL 10 (2 TRUENO)',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
   {id:'MAQ-092',n:'MAQUINA DE CAJAS',t:'FORMADORA CAJAS',f:'TAVIL',a:'ENVASADO',c:''},
   {id:'MAQ-093',n:'FORMADORA-EMBOLSADORA',t:'FORMADORA CAJAS',f:'TAVIL',a:'ENVASADO',c:''},
   {id:'MAQ-094',n:'MAQUINA DE BOLSAS',t:'EMBOLSADORA',f:'PATTYN',a:'ENVASADO',c:''},
@@ -567,6 +567,27 @@ const MAQUINAS = [
   {id:'MAQ-127',n:'LEVADURA TANQUE 2',t:'LEVADURA',f:'',a:'OBRADOR',c:''},
   {id:'MAQ-128',n:'LEVADURA CUADRO GENERAL Y BOMBAS',t:'LEVADURA',f:'',a:'OBRADOR',c:''},
   {id:'MAQ-129',n:'LEVADURA CUADRO GLICOL',t:'LEVADURA',f:'',a:'OBRADOR',c:''},
+  // ── FRÍO / CLIMA ──────────────────────────────────────
+  {id:'MAQ-130',n:'CAMARA STOCK 1',t:'CAMARA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-131',n:'CAMARA STOCK 2',t:'CAMARA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-132',n:'CAMARA STOCK 3',t:'CAMARA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-133',n:'CAMARA STOCK 4',t:'CAMARA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-134',n:'CAMARA STOCK 5 (TRUENO)',t:'CAMARA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-135',n:'TANQUE 1',t:'AGUA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-136',n:'TANQUE 2',t:'AGUA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-137',n:'TANQUE 3',t:'AGUA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-138',n:'TANQUE 4',t:'AGUA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-139',n:'TANQUE 5 (TRUENO)',t:'AGUA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-140',n:'A/A OBRADOR',t:'A/A',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-141',n:'A/A VESTUARIO',t:'A/A',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-142',n:'A/A OFICINAS',t:'A/A',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-143',n:'TRANSFORMADOR',t:'A/A',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-144',n:'CONDENSADORES ELECTRICOS',t:'ELECTRICIDAD',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-145',n:'CUADROS GENERALES',t:'ELECTRICIDAD',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-146',n:'A/A MUELLE',t:'A/A',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-147',n:'EXTRACTORES RELAMPAGO',t:'EXTRACTORES',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-148',n:'EXTRACTORES TRUENO',t:'EXTRACTORES',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-149',n:'EVAPORATIVAS',t:'EVAPORATIVAS',f:'',a:'FRIO/CLIMA',c:''},
 ];
 
 // ══════════════════════════════════════════
