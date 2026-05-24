@@ -573,6 +573,11 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
     <div class="modal-title" id="bolsaModalTitle">Bolsa de días</div>
     <div class="modal-sub">Ajuste manual de valores</div>
     <div class="bolsa-edit-grid">
+      <div class="modal-field" style="grid-column:1/-1;background:rgba(46,204,113,0.07);border:1px solid rgba(46,204,113,0.2);border-radius:8px;padding:12px">
+        <label style="color:var(--green)">📌 Días pendientes (arrastre / acumulados)</label>
+        <input type="number" id="bEditPend" min="0" max="999">
+        <div style="font-size:0.68rem;color:rgba(255,255,255,0.28);margin-top:3px">Días del año anterior u otras acumulaciones pendientes de disfrutar</div>
+      </div>
       <div class="modal-field">
         <label>Vacaciones usadas</label>
         <input type="number" id="bEditVac" min="0" max="40">
@@ -683,7 +688,7 @@ let S = {
   }
 };
 function ensureBolsa(k){
-  if(!S.bolsas[k]) S.bolsas[k] = { vacacionesUsadas:0, asuntosUsados:0, sabadosExtra:0, diasLibreSabado:0 };
+  if(!S.bolsas[k]) S.bolsas[k] = { vacacionesUsadas:0, asuntosUsados:0, sabadosExtra:0, diasLibreSabado:0, diasPendientes:0 };
 }
 [1,2,3,4,5].forEach(i => ensureBolsa(String(i)));
 
@@ -1306,6 +1311,7 @@ function renderBolsas(){
     const aUs      = b.asuntosUsados    || 0;
     const sEx      = sabCounts[k];                      // conteo en tiempo real
     const sLi      = b.diasLibreSabado  || 0;
+    const dPend    = b.diasPendientes   || 0;
     const vRe      = Math.max(0, vacTot - vUs);
     const aRe      = Math.max(0, asuTot - aUs);
     // Parámetros por mecánico (editables desde el modal)
@@ -1340,6 +1346,7 @@ function renderBolsas(){
         <div class="bolsa-name">${mec?.nombre||'Mec '+k}${extraLabel}</div>
         <button class="bolsa-edit-btn" onclick="openBolsaModal('${k}')">✏️ Ajustar</button>
       </div>
+      ${dPend > 0 ? `<div class="bolsa-row" style="background:rgba(46,204,113,0.07);margin:-4px -6px 6px;padding:6px 6px;border-radius:6px;border-bottom:none"><span class="bolsa-lbl" style="color:var(--green);font-weight:700">📌 Días pendientes</span><span class="bolsa-val" style="color:var(--green);font-weight:900">${dPend}</span></div>` : ''}
       <div class="bolsa-row"><span class="bolsa-lbl">Vacaciones usadas</span><span class="bolsa-val">${vUs}/${vacTot}</span></div>
       <div class="bar-bg"><div class="bar-fill bar-gold" style="width:${vPct}%"></div></div>
       <div class="bolsa-row"><span class="bolsa-lbl">Restantes</span><span class="bolsa-val" style="color:var(--green)">${vRe} días</span></div>
@@ -1380,6 +1387,7 @@ function openBolsaModal(mecId){
   const mec = S.mecanicos[mecId];
   const b   = S.bolsas[mecId] || {};
   document.getElementById('bolsaModalTitle').textContent = mec?.nombre||'Mec '+mecId;
+  document.getElementById('bEditPend').value      = b.diasPendientes   || 0;
   document.getElementById('bEditVac').value       = b.vacacionesUsadas || 0;
   document.getElementById('bEditAsu').value       = b.asuntosUsados    || 0;
   document.getElementById('bEditSabLib').value    = b.diasLibreSabado  || 0;
@@ -1394,6 +1402,7 @@ function saveBolsaEdit(){
   if(!editBolsaMecId) return;
   const k = editBolsaMecId;
   ensureBolsa(k);
+  S.bolsas[k].diasPendientes   = +document.getElementById('bEditPend').value||0;
   S.bolsas[k].vacacionesUsadas = +document.getElementById('bEditVac').value||0;
   S.bolsas[k].asuntosUsados    = +document.getElementById('bEditAsu').value||0;
   S.bolsas[k].diasLibreSabado  = +document.getElementById('bEditSabLib').value||0;
