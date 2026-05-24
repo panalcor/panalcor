@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c9a227">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PANALCOR">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>Gestión de Averías</title>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -224,6 +231,13 @@ a{color:inherit;text-decoration:none}
 .btn-foto{background:rgba(52,152,219,0.15);border:1px dashed rgba(52,152,219,0.5);color:#74b9ff;border-radius:8px;padding:10px 16px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.9rem;display:flex;align-items:center;gap:8px;width:100%;justify-content:center;margin-bottom:10px}
 .btn-foto:active{background:rgba(52,152,219,0.25)}
 </style>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+</script>
 </head>
 <body>
 

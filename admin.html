@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c9a227">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PANALCOR">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -158,6 +165,13 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 .kpi-period-btn:hover{border-color:var(--gold);color:var(--gold)}
 .kpi-period-btn.active{background:var(--gold);border-color:var(--gold);color:#0d1b2a;font-weight:700}
 </style>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+</script>
 </head>
 <body>
 
@@ -233,6 +247,7 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
   <div class="tab" onclick="switchTab('int')"  id="tab-int">🔩 Integrales</div>
   <div class="tab" onclick="switchTab('cur')"  id="tab-cur">📚 Cursos</div>
   <div class="tab" onclick="switchTab('rec')"  id="tab-rec">🔔 Recordatorios</div>
+  <div class="tab" onclick="switchTab('est')"  id="tab-est">🟢 Estado</div>
 </div>
 
 <!-- ═══ DASHBOARD ═══ -->
@@ -392,6 +407,61 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
   <div class="card" id="cardSinFirma" style="margin-top:16px;max-width:732px">
     <div class="sec-title">📋 Órdenes sin firma de conformidad</div>
     <div id="sinFirmaBody">Cargando...</div>
+  </div>
+
+  <!-- ══ TIEMPO DE RESOLUCIÓN ══ -->
+  <div class="card" style="margin-top:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+      <div class="sec-title" style="margin-bottom:0">⏱ Tiempo de resolución de averías</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="kpi-period-btn active" id="trBtn30"  onclick="setTRPeriod(30)">30 días</button>
+        <button class="kpi-period-btn"        id="trBtn90"  onclick="setTRPeriod(90)">90 días</button>
+        <button class="kpi-period-btn"        id="trBtn365" onclick="setTRPeriod(365)">1 año</button>
+      </div>
+    </div>
+    <div id="trKpis" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:16px"></div>
+    <div style="overflow-x:auto">
+      <table class="data-table" id="tTiempoRes">
+        <thead><tr>
+          <th>Tipo de avería</th>
+          <th>Nº resueltas</th>
+          <th>Tiempo medio</th>
+          <th>Tiempo mín.</th>
+          <th>Tiempo máx.</th>
+        </tr></thead>
+        <tbody id="bTiempoRes"><tr><td colspan="5" class="no-data">Cargando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ COMPARATIVA DE TURNOS ══ -->
+  <div class="card" style="margin-top:16px">
+    <div class="sec-title">📊 Comparativa de turnos</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+      <button onclick="setCompTurnosVista('turno')"  id="ctBtnTurno"  class="kpi-period-btn active">Mañana/Tarde/Noche</button>
+      <button onclick="setCompTurnosVista('semana')" id="ctBtnSemana" class="kpi-period-btn">Por semana</button>
+      <button onclick="setCompTurnosVista('mes')"    id="ctBtnMes"    class="kpi-period-btn">Por mes</button>
+    </div>
+    <div id="ctContenido"></div>
+  </div>
+
+  <!-- ══ ALERTAS AVERÍAS REPETITIVAS ══ -->
+  <div class="card" style="margin-top:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+      <div class="sec-title" style="margin-bottom:0">🔁 Averías repetitivas</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <label style="font-size:0.75rem;color:rgba(255,255,255,0.5)">Alerta si supera</label>
+        <input type="number" id="umbralRep" min="2" max="20" value="3"
+          onchange="renderAlertasRepetitivas()"
+          style="width:56px;background:var(--navy-mid);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:7px;padding:5px 8px;font-family:Barlow,sans-serif;font-size:0.9rem;text-align:center">
+        <label style="font-size:0.75rem;color:rgba(255,255,255,0.5)">averías en</label>
+        <input type="number" id="diasRep" min="7" max="365" value="30"
+          onchange="renderAlertasRepetitivas()"
+          style="width:64px;background:var(--navy-mid);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:7px;padding:5px 8px;font-family:Barlow,sans-serif;font-size:0.9rem;text-align:center">
+        <label style="font-size:0.75rem;color:rgba(255,255,255,0.5)">días</label>
+      </div>
+    </div>
+    <div id="alertasRepBody"></div>
   </div>
 
 </div>
@@ -1163,6 +1233,9 @@ function initApp(){
   cargarAlertasStock();
   cargarSinFirma();
   renderResumenDia();
+  renderTiempoResolucion();
+  renderCompTurnos();
+  renderAlertasRepetitivas();
   // fechas por defecto para mecánicos e informes (último mes)
   const hoy = new Date();
   const hace30 = new Date(hoy); hace30.setDate(hoy.getDate()-30);
@@ -2649,6 +2722,7 @@ function switchTab(name){
   if(name==='rec') { cargarMecanicosParaRec(); cargarRecordatorios(); }
   if(name==='enc') cargarAvisosEncargados();
   if(name==='int') { cargarCatalogoRepuestos(); initIntegrales(); }
+  if(name==='est') initEstado();
   if(name==='cur') initCursos();
 }
 
@@ -3946,6 +4020,17 @@ function importarExcelRepuestos(input) {
 </div>
 
 <!-- ═══ CURSOS ═══ -->
+<!-- ═══ ESTADO MÁQUINAS ═══ -->
+<div class="panel" id="panel-est">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px">
+    <div>
+      <h2 style="font-size:1.15rem;font-weight:800;color:var(--gold)">🟢 Estado de máquinas en tiempo real</h2>
+      <p style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin-top:3px">Cambia el estado pulsando los botones. Se actualiza en todos los dispositivos al instante.</p>
+    </div>
+  </div>
+  <div id="estContenido"><div style="text-align:center;padding:40px;color:rgba(255,255,255,0.3)">⏳ Cargando...</div></div>
+</div>
+
 <div class="panel" id="panel-cur">
 
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px">
@@ -4864,6 +4949,380 @@ function borrarRecordatorio(id) {
   DB.ref('recordatorios/' + id).remove()
     .then(() => showToast('🗑 Recordatorio eliminado'))
     .catch(() => showToast('❌ Error al borrar'));
+}
+
+// ══════════════════════════════════════════════════
+// TIEMPO DE RESOLUCIÓN
+// ══════════════════════════════════════════════════
+var _trDias = 30;
+
+function setTRPeriod(d) {
+  _trDias = d;
+  ['30','90','365'].forEach(function(x) {
+    var b = document.getElementById('trBtn'+x);
+    if (b) b.classList.toggle('active', String(d)===x);
+  });
+  renderTiempoResolucion();
+}
+
+function minToStr(m) {
+  if (!m || m <= 0) return '—';
+  var h = Math.floor(m/60), mn = m%60;
+  return h ? h+'h '+(mn?mn+'min':'') : mn+'min';
+}
+
+function renderTiempoResolucion() {
+  var corte = Date.now() - _trDias*86400000;
+  var av = getAverias().filter(function(a) {
+    return a.estado === 'RESUELTA' && a.tiempoMin > 0 && a.ts >= corte;
+  });
+
+  // KPIs globales
+  var kpisEl = document.getElementById('trKpis');
+  if (!kpisEl) return;
+  if (!av.length) {
+    kpisEl.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:0.85rem">Sin datos de resolución en el período.</div>';
+    document.getElementById('bTiempoRes').innerHTML = '<tr><td colspan="5" class="no-data">Sin datos</td></tr>';
+    return;
+  }
+  var totalMin = av.reduce(function(s,a){ return s+(a.tiempoMin||0); }, 0);
+  var media = Math.round(totalMin/av.length);
+  var minVal = Math.min.apply(null, av.map(function(a){ return a.tiempoMin; }));
+  var maxVal = Math.max.apply(null, av.map(function(a){ return a.tiempoMin; }));
+  var rapidas = av.filter(function(a){ return a.tiempoMin <= 60; }).length;
+
+  kpisEl.innerHTML = [
+    ['Media resolución', minToStr(media), 'var(--gold)'],
+    ['Más rápida', minToStr(minVal), '#2ecc71'],
+    ['Más lenta', minToStr(maxVal), '#e74c3c'],
+    ['< 1 hora', rapidas + ' av.', '#3498db'],
+    ['Total analizadas', av.length + ' av.', 'rgba(255,255,255,0.5)']
+  ].map(function(r) {
+    return '<div style="background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px;text-align:center">'
+      + '<div style="font-size:1.6rem;font-weight:900;color:'+r[2]+'">'+r[1]+'</div>'
+      + '<div style="font-size:0.68rem;color:rgba(255,255,255,0.4);letter-spacing:0.1em;margin-top:4px;text-transform:uppercase">'+r[0]+'</div>'
+      + '</div>';
+  }).join('');
+
+  // Tabla por tipo
+  var porTipo = {};
+  av.forEach(function(a) {
+    var t = a.tipo || 'Sin tipo';
+    if (!porTipo[t]) porTipo[t] = [];
+    porTipo[t].push(a.tiempoMin);
+  });
+  var rows = Object.keys(porTipo).map(function(t) {
+    var mins = porTipo[t];
+    var med = Math.round(mins.reduce(function(s,v){ return s+v; },0)/mins.length);
+    return { tipo:t, cnt:mins.length, med:med, min:Math.min.apply(null,mins), max:Math.max.apply(null,mins) };
+  }).sort(function(a,b){ return b.cnt-a.cnt; });
+
+  document.getElementById('bTiempoRes').innerHTML = rows.map(function(r) {
+    return '<tr><td style="font-weight:600">'+escHtml(r.tipo)+'</td>'
+      +'<td style="text-align:center">'+r.cnt+'</td>'
+      +'<td style="text-align:center;color:var(--gold);font-weight:700">'+minToStr(r.med)+'</td>'
+      +'<td style="text-align:center;color:#2ecc71">'+minToStr(r.min)+'</td>'
+      +'<td style="text-align:center;color:#e74c3c">'+minToStr(r.max)+'</td></tr>';
+  }).join('') || '<tr><td colspan="5" class="no-data">Sin datos</td></tr>';
+}
+
+// ══════════════════════════════════════════════════
+// COMPARATIVA DE TURNOS
+// ══════════════════════════════════════════════════
+var _ctVista = 'turno';
+
+function setCompTurnosVista(v) {
+  _ctVista = v;
+  ['turno','semana','mes'].forEach(function(x) {
+    var b = document.getElementById('ctBtn'+x.charAt(0).toUpperCase()+x.slice(1));
+    if (b) b.classList.toggle('active', v===x);
+  });
+  renderCompTurnos();
+}
+
+function renderCompTurnos() {
+  var el = document.getElementById('ctContenido');
+  if (!el) return;
+  var av = getAverias();
+  if (!av.length) { el.innerHTML = '<div style="color:rgba(255,255,255,0.3);padding:20px 0;font-size:0.85rem">Sin datos suficientes.</div>'; return; }
+
+  if (_ctVista === 'turno') {
+    var t = { MAÑANA:{av:0,min:0}, TARDE:{av:0,min:0}, NOCHE:{av:0,min:0} };
+    av.forEach(function(a) {
+      var turno = a.turno || '';
+      if (t[turno]) { t[turno].av++; t[turno].min += (a.tiempoMin||0); }
+    });
+    var maxAv = Math.max.apply(null, Object.values(t).map(function(x){ return x.av; })) || 1;
+    var cols = { MAÑANA:'#f39c12', TARDE:'#3498db', NOCHE:'#9b59b6' };
+    el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">'
+      + Object.keys(t).map(function(k) {
+          var d = t[k]; var c = cols[k];
+          var pct = Math.round(d.av/maxAv*100);
+          return '<div style="background:var(--navy-mid);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:16px;text-align:center">'
+            + '<div style="font-size:1.1rem;font-weight:900;color:'+c+';margin-bottom:4px">'+k+'</div>'
+            + '<div style="font-size:2rem;font-weight:900;color:#fff">'+d.av+'</div>'
+            + '<div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-bottom:10px">averías</div>'
+            + '<div style="background:rgba(255,255,255,0.08);border-radius:4px;height:6px;overflow:hidden;margin-bottom:8px">'
+            + '<div style="height:100%;border-radius:4px;background:'+c+';width:'+pct+'%;transition:width .6s"></div></div>'
+            + '<div style="font-size:0.78rem;color:rgba(255,255,255,0.5)">Tiempo medio: <b style="color:'+c+'">'
+            + (d.av ? minToStr(Math.round(d.min/d.av)) : '—')+'</b></div>'
+            + '</div>';
+        }).join('')
+      + '</div>';
+  } else if (_ctVista === 'semana') {
+    var semanas = {};
+    av.forEach(function(a) {
+      if (!a.fecha) return;
+      var d = new Date(a.fecha+'T00:00:00');
+      var dow = d.getDay(); // 0=dom
+      var lunes = new Date(d); lunes.setDate(d.getDate() - (dow===0?6:dow-1));
+      var key = lunes.toISOString().slice(0,10);
+      if (!semanas[key]) semanas[key] = { MAÑANA:0, TARDE:0, NOCHE:0, total:0 };
+      semanas[key].total++;
+      var turno = a.turno || '';
+      if (semanas[key][turno] !== undefined) semanas[key][turno]++;
+    });
+    var keys = Object.keys(semanas).sort().slice(-12);
+    if (!keys.length) { el.innerHTML='<div style="color:rgba(255,255,255,0.3);padding:20px 0">Sin datos.</div>'; return; }
+    el.innerHTML = '<div style="overflow-x:auto"><table class="data-table"><thead><tr>'
+      +'<th>Semana del</th><th style="color:#f39c12">Mañana</th><th style="color:#3498db">Tarde</th><th style="color:#9b59b6">Noche</th><th>Total</th>'
+      +'</tr></thead><tbody>'
+      + keys.map(function(k) {
+          var d = semanas[k];
+          return '<tr><td style="font-size:0.82rem">'+k+'</td>'
+            +'<td style="text-align:center;color:#f39c12;font-weight:700">'+d.MAÑANA+'</td>'
+            +'<td style="text-align:center;color:#3498db;font-weight:700">'+d.TARDE+'</td>'
+            +'<td style="text-align:center;color:#9b59b6;font-weight:700">'+d.NOCHE+'</td>'
+            +'<td style="text-align:center;font-weight:800">'+d.total+'</td></tr>';
+        }).join('')
+      +'</tbody></table></div>';
+  } else {
+    var meses = {};
+    av.forEach(function(a) {
+      if (!a.fecha) return;
+      var key = a.fecha.slice(0,7);
+      if (!meses[key]) meses[key] = { MAÑANA:0, TARDE:0, NOCHE:0, total:0 };
+      meses[key].total++;
+      var turno = a.turno || '';
+      if (meses[key][turno] !== undefined) meses[key][turno]++;
+    });
+    var mkeys = Object.keys(meses).sort().slice(-12);
+    if (!mkeys.length) { el.innerHTML='<div style="color:rgba(255,255,255,0.3);padding:20px 0">Sin datos.</div>'; return; }
+    var mNom = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    el.innerHTML = '<div style="overflow-x:auto"><table class="data-table"><thead><tr>'
+      +'<th>Mes</th><th style="color:#f39c12">Mañana</th><th style="color:#3498db">Tarde</th><th style="color:#9b59b6">Noche</th><th>Total</th>'
+      +'</tr></thead><tbody>'
+      + mkeys.map(function(k) {
+          var d = meses[k]; var p = k.split('-');
+          var lbl = mNom[parseInt(p[1],10)-1] + ' ' + p[0];
+          return '<tr><td style="font-size:0.82rem">'+lbl+'</td>'
+            +'<td style="text-align:center;color:#f39c12;font-weight:700">'+d.MAÑANA+'</td>'
+            +'<td style="text-align:center;color:#3498db;font-weight:700">'+d.TARDE+'</td>'
+            +'<td style="text-align:center;color:#9b59b6;font-weight:700">'+d.NOCHE+'</td>'
+            +'<td style="text-align:center;font-weight:800">'+d.total+'</td></tr>';
+        }).join('')
+      +'</tbody></table></div>';
+  }
+}
+
+// ══════════════════════════════════════════════════
+// ALERTAS AVERÍAS REPETITIVAS
+// ══════════════════════════════════════════════════
+function renderAlertasRepetitivas() {
+  var el = document.getElementById('alertasRepBody');
+  if (!el) return;
+  var umbral = parseInt(document.getElementById('umbralRep').value, 10) || 3;
+  var dias   = parseInt(document.getElementById('diasRep').value, 10) || 30;
+  var corte  = Date.now() - dias*86400000;
+
+  var conteo = {};
+  getAverias().forEach(function(a) {
+    if (!a.maqId || !a.fecha) return;
+    var ts = a.ts || new Date(a.fecha+'T00:00:00').getTime();
+    if (ts < corte) return;
+    var key = a.maqId;
+    if (!conteo[key]) conteo[key] = { nom: a.maqNombre||a.maqId, cnt: 0, tipos: {} };
+    conteo[key].cnt++;
+    var tipo = a.tipo || 'Sin tipo';
+    conteo[key].tipos[tipo] = (conteo[key].tipos[tipo]||0)+1;
+  });
+
+  var alertas = Object.values(conteo).filter(function(x){ return x.cnt >= umbral; })
+    .sort(function(a,b){ return b.cnt-a.cnt; });
+
+  if (!alertas.length) {
+    el.innerHTML = '<div style="background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.25);border-radius:8px;padding:14px 18px;color:#2ecc71;font-size:0.88rem">'
+      + '✅ Ninguna máquina supera el umbral de '+umbral+' averías en los últimos '+dias+' días.</div>';
+    return;
+  }
+
+  el.innerHTML = alertas.map(function(a) {
+    var topTipo = Object.entries(a.tipos).sort(function(x,y){ return y[1]-x[1]; })[0];
+    var nivel = a.cnt >= umbral*2 ? 'rgba(231,76,60,0.15)' : 'rgba(243,156,18,0.1)';
+    var borde = a.cnt >= umbral*2 ? 'rgba(231,76,60,0.4)' : 'rgba(243,156,18,0.35)';
+    var colorN = a.cnt >= umbral*2 ? '#e74c3c' : '#f39c12';
+    return '<div style="background:'+nivel+';border:1px solid '+borde+';border-radius:8px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">'
+      + '<div style="font-size:1.6rem;font-weight:900;color:'+colorN+';min-width:40px;text-align:center">'+a.cnt+'</div>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="font-weight:700;color:#fff;font-size:0.92rem">'+escHtml(a.nom)+'</div>'
+      + '<div style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin-top:2px">'
+      + a.cnt + ' averías en los últimos '+dias+' días'
+      + (topTipo ? ' · Más frecuente: <b style="color:'+colorN+'">' + escHtml(topTipo[0]) + ' ('+topTipo[1]+'x)</b>' : '')
+      + '</div></div>'
+      + '<span style="background:'+nivel+';color:'+colorN+';border:1px solid '+borde+';border-radius:20px;padding:3px 10px;font-size:0.72rem;font-weight:700">'
+      + (a.cnt>=umbral*2?'🚨 CRÍTICO':'⚠️ ALERTA') + '</span>'
+      + '</div>';
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════
+// ESTADO DE MÁQUINAS EN TIEMPO REAL
+// ══════════════════════════════════════════════════
+var _estData       = {};   // {maqId: {estado, ts, nota}}
+var _estListenerOn = false;
+var _estFiltroArea = 'TODAS';
+var _estFiltroEst  = 'TODAS';
+var _estBusq       = '';
+
+var EST_CFG = {
+  OPERATIVA:    { color:'#2ecc71', bg:'rgba(46,204,113,0.15)',  icon:'🟢', label:'OPERATIVA'    },
+  AVERIA:       { color:'#e74c3c', bg:'rgba(231,76,60,0.15)',   icon:'🔴', label:'AVERÍA'       },
+  PARADA:       { color:'#f39c12', bg:'rgba(243,156,18,0.15)',  icon:'🟡', label:'PARADA'       },
+  MANTENIMIENTO:{ color:'#3498db', bg:'rgba(52,152,219,0.15)',  icon:'🔵', label:'MANT. PREV.'  }
+};
+
+function initEstado() {
+  if (!_estListenerOn) {
+    _estListenerOn = true;
+    DB.ref('estado_maquinas').on('value', function(snap) {
+      _estData = snap.val() || {};
+      renderEstado();
+    });
+  } else {
+    renderEstado();
+  }
+}
+
+function renderEstado() {
+  var todas = MAQUINAS_BASE_ADMIN.slice();
+  var areas = ['TODAS'];
+  todas.forEach(function(m) { if (m.a && areas.indexOf(m.a) === -1) areas.push(m.a); });
+
+  // Filtros
+  var busq = _estBusq.toLowerCase();
+  var lista = todas.filter(function(m) {
+    if (_estFiltroArea !== 'TODAS' && m.a !== _estFiltroArea) return false;
+    var est = (_estData[m.id] && _estData[m.id].estado) || 'OPERATIVA';
+    if (_estFiltroEst !== 'TODAS' && est !== _estFiltroEst) return false;
+    if (busq && !(m.n.toLowerCase().includes(busq) || m.id.toLowerCase().includes(busq))) return false;
+    return true;
+  });
+
+  // KPIs globales
+  var kpiCounts = { OPERATIVA:0, AVERIA:0, PARADA:0, MANTENIMIENTO:0 };
+  todas.forEach(function(m) {
+    var est = (_estData[m.id] && _estData[m.id].estado) || 'OPERATIVA';
+    kpiCounts[est] = (kpiCounts[est] || 0) + 1;
+  });
+
+  var html = '';
+
+  // KPIs
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:18px">';
+  Object.keys(EST_CFG).forEach(function(k) {
+    var c = EST_CFG[k];
+    html += '<div style="background:'+c.bg+';border:1px solid '+c.color+'40;border-radius:10px;padding:14px;text-align:center;cursor:pointer" onclick="filtrarEstado(\''+k+'\')">'
+          + '<div style="font-size:2rem;font-weight:900;color:'+c.color+'">' + (kpiCounts[k]||0) + '</div>'
+          + '<div style="font-size:0.7rem;color:'+c.color+';letter-spacing:0.1em;margin-top:4px">' + c.icon + ' ' + c.label + '</div>'
+          + '</div>';
+  });
+  html += '</div>';
+
+  // Controles
+  html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center">';
+  html += '<input type="text" id="estBusq" value="' + escHtml(_estBusq) + '" placeholder="Buscar máquina..." oninput="_estBusq=this.value;renderEstado()" '
+        + 'style="flex:1;min-width:180px;background:var(--navy-mid);border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:8px;padding:8px 12px;font-family:Barlow,sans-serif;font-size:0.88rem">';
+  html += '<select onchange="_estFiltroArea=this.value;renderEstado()" style="background:var(--navy-mid);border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:8px;padding:8px 12px;font-family:Barlow,sans-serif;font-size:0.85rem">';
+  areas.forEach(function(a) {
+    html += '<option value="'+a+'"'+(a===_estFiltroArea?' selected':'')+'>'+a+'</option>';
+  });
+  html += '</select>';
+  html += '<select onchange="_estFiltroEst=this.value;renderEstado()" style="background:var(--navy-mid);border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:8px;padding:8px 12px;font-family:Barlow,sans-serif;font-size:0.85rem">';
+  ['TODAS','OPERATIVA','AVERIA','PARADA','MANTENIMIENTO'].forEach(function(e) {
+    var lbl = e==='TODAS'?'Todos los estados':(EST_CFG[e]?EST_CFG[e].icon+' '+EST_CFG[e].label:e);
+    html += '<option value="'+e+'"'+(e===_estFiltroEst?' selected':'')+'>'+lbl+'</option>';
+  });
+  html += '</select>';
+  if (_estFiltroArea!=='TODAS'||_estFiltroEst!=='TODAS'||_estBusq) {
+    html += '<button onclick="_estFiltroArea=\'TODAS\';_estFiltroEst=\'TODAS\';_estBusq=\'\';renderEstado()" '
+          + 'style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);border-radius:8px;padding:8px 14px;cursor:pointer;font-size:0.82rem;font-family:Barlow,sans-serif">✕ Limpiar</button>';
+  }
+  html += '<span style="font-size:0.78rem;color:rgba(255,255,255,0.35);margin-left:auto">' + lista.length + ' / ' + todas.length + ' máquinas</span>';
+  html += '</div>';
+
+  // Grid de máquinas
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">';
+  if (!lista.length) {
+    html += '<div style="grid-column:1/-1;text-align:center;padding:40px;color:rgba(255,255,255,0.3)">Sin resultados</div>';
+  } else {
+    lista.forEach(function(m) {
+      var d = _estData[m.id] || {};
+      var est = d.estado || 'OPERATIVA';
+      var c = EST_CFG[est] || EST_CFG.OPERATIVA;
+      var ts = d.ts ? new Date(d.ts).toLocaleString('es-ES',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+      html += '<div style="background:var(--navy-mid);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px;border-left:3px solid '+c.color+'">'
+            + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+            + '<div>'
+            + '<div style="font-size:0.95rem;font-weight:700;color:#fff">' + escHtml(m.n) + '</div>'
+            + '<div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-top:2px">' + m.id + (m.a ? ' · ' + m.a : '') + '</div>'
+            + '</div>'
+            + '<span style="background:'+c.bg+';color:'+c.color+';border:1px solid '+c.color+'60;border-radius:20px;padding:3px 10px;font-size:0.72rem;font-weight:700;white-space:nowrap">'
+            + c.icon + ' ' + c.label + '</span>'
+            + '</div>'
+            + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">';
+      Object.keys(EST_CFG).forEach(function(e) {
+        var cf = EST_CFG[e];
+        var activo = est === e;
+        html += '<button onclick="cambiarEstMaq(\''+m.id+'\',\''+e+'\')" '
+              + 'style="border:1px solid '+cf.color+(activo?';background:'+cf.bg+';font-weight:800':';background:rgba(255,255,255,0.03)')+';'
+              + 'color:'+(activo?cf.color:'rgba(255,255,255,0.35)')+';border-radius:6px;padding:4px 10px;cursor:pointer;font-size:0.72rem;font-family:Barlow,sans-serif">'
+              + cf.icon + ' ' + cf.label + '</button>';
+      });
+      html += '</div>';
+      // Nota
+      html += '<div style="display:flex;gap:6px">'
+            + '<input type="text" id="nota_'+m.id+'" placeholder="Nota rápida..." value="'+escHtml(d.nota||'')+'" '
+            + 'style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;border-radius:6px;padding:5px 9px;font-family:Barlow,sans-serif;font-size:0.8rem">'
+            + '<button onclick="guardarNotaEst(\''+m.id+'\')" '
+            + 'style="background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.3);color:var(--gold);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:0.78rem;font-family:Barlow,sans-serif">💾</button>'
+            + '</div>';
+      if (ts) html += '<div style="font-size:0.68rem;color:rgba(255,255,255,0.25);margin-top:6px">Actualizado: ' + ts + '</div>';
+      html += '</div>';
+    });
+  }
+  html += '</div>';
+
+  document.getElementById('estContenido').innerHTML = html;
+}
+
+function filtrarEstado(est) {
+  _estFiltroEst = (_estFiltroEst === est) ? 'TODAS' : est;
+  renderEstado();
+}
+
+function cambiarEstMaq(id, est) {
+  var d = _estData[id] || {};
+  var nota = (document.getElementById('nota_'+id) || {}).value || d.nota || '';
+  DB.ref('estado_maquinas/'+id).set({ estado: est, ts: Date.now(), nota: nota })
+    .catch(function() { showToast('❌ Error al guardar'); });
+}
+
+function guardarNotaEst(id) {
+  var nota = (document.getElementById('nota_'+id) || {}).value || '';
+  var d = _estData[id] || {};
+  DB.ref('estado_maquinas/'+id).set({ estado: d.estado||'OPERATIVA', ts: Date.now(), nota: nota })
+    .then(function() { showToast('✅ Nota guardada'); })
+    .catch(function() { showToast('❌ Error'); });
 }
 </script>
 
