@@ -463,7 +463,7 @@ function renderQR() {
   rendered = [];
 
   filtered.forEach(maq => {
-    const url = `${getBase()}/landing.html?maq=${encodeURIComponent(maq.id)}`;
+    const url = `${getBase()}/maquina.html?id=${encodeURIComponent(maq.id)}`;
 
     // Crear card
     const card = document.createElement('div');
@@ -475,7 +475,7 @@ function renderQR() {
       <div class="qr-name">${escHtml(maq.n)}</div>
       <div class="qr-tipo">${escHtml(maq.t)} · ${maq.f}</div>
       <div class="qr-box" id="qr-${maq.id}"></div>
-      <div class="qr-scan-hint">Escanear para registrar avería</div>
+      <div class="qr-scan-hint">Escanear para declarar avería o solucionar</div>
     `;
     grid.appendChild(card);
 
