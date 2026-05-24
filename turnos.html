@@ -282,9 +282,10 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 <!-- ══ CALENDARIO ══ -->
 <div class="panel active" id="panel-calendario">
   <div class="month-nav">
-    <button class="nav-btn" onclick="prevMonth()">◀</button>
+    <button class="nav-btn" onclick="prevWeek()">◀</button>
+    <button class="nav-btn" onclick="goToToday()" style="font-size:0.78rem;padding:7px 12px;opacity:0.75">Hoy</button>
     <h2 id="monthTitle">—</h2>
-    <button class="nav-btn" onclick="nextMonth()">▶</button>
+    <button class="nav-btn" onclick="nextWeek()">▶</button>
   </div>
   <div class="alert-banner error" id="coverageAlert"></div>
   <div class="legend">
@@ -607,8 +608,7 @@ function ensureBolsa(k){
 }
 [1,2,3,4,5].forEach(i => ensureBolsa(String(i)));
 
-let curYear  = new Date().getFullYear();
-let curMonth = new Date().getMonth();
+let windowOffsetWeeks = 0;   // 0 = semana actual centrada (−2 / actual / +4)
 let editCell = null;
 let editBolsaMecId = null;
 let weekEditMecId  = null;
@@ -819,8 +819,16 @@ function toDS(d){
   const day = String(d.getDate()).padStart(2,'0');
   return `${y}-${m}-${day}`;
 }
-function prevMonth(){ if(--curMonth<0){ curMonth=11; curYear--; } renderCalendar(); }
-function nextMonth(){ if(++curMonth>11){ curMonth=0;  curYear++; } renderCalendar(); }
+function getWindowStart(){
+  // Monday de la semana actual, retrocedida 2 semanas + offset
+  const today = new Date(); today.setHours(0,0,0,0);
+  const mon = getWeekMonday(toDS(today));
+  mon.setDate(mon.getDate() - 14 + windowOffsetWeeks * 7);
+  return mon;
+}
+function prevWeek(){ windowOffsetWeeks--; renderCalendar(); }
+function nextWeek(){ windowOffsetWeeks++; renderCalendar(); }
+function goToToday(){ windowOffsetWeeks = 0; renderCalendar(); }
 function updateHeaders(){
   for(let i=1;i<=5;i++){
     const el = document.getElementById('th'+i);
@@ -837,26 +845,26 @@ function getWeekNumber(d){
 }
 
 function renderCalendar(){
-  document.getElementById('monthTitle').textContent = MONTHS[curMonth]+' '+curYear;
   updateHeaders();
 
-  const today    = new Date(); today.setHours(0,0,0,0);
-  const firstDay = new Date(curYear, curMonth, 1);
-  const lastDay  = new Date(curYear, curMonth+1, 0);
+  const today  = new Date(); today.setHours(0,0,0,0);
+  let wMon     = getWindowStart();   // Monday de la primera semana a mostrar
 
-  // Start from Monday of the week containing firstDay
-  let wMon = getWeekMonday(toDS(firstDay));
+  // Título: rango de las 7 semanas
+  const wLastSun = new Date(wMon); wLastSun.setDate(wMon.getDate() + 6*7 + 6);
+  const titleFrom = `${wMon.getDate()} ${MONTHS_SH[wMon.getMonth()]} ${wMon.getFullYear()}`;
+  const titleTo   = `${wLastSun.getDate()} ${MONTHS_SH[wLastSun.getMonth()]} ${wLastSun.getFullYear()}`;
+  document.getElementById('monthTitle').textContent = `${titleFrom} — ${titleTo}`;
+
   const tbody = document.getElementById('calBody');
   tbody.innerHTML = '';
   let badWeeks = 0;
 
-  while(wMon <= lastDay){
+  for(let w = 0; w < 7; w++){
     const wSun = new Date(wMon); wSun.setDate(wMon.getDate()+6);
     const shifts = getWeekShifts(wMon);
     const { count: rafaAbs } = getMec1Absences(wMon);
 
-    // Is any day of this week in current month?
-    const inMonth = wMon.getMonth()===curMonth || wSun.getMonth()===curMonth;
     // Is today in this week?
     const isCurrent = today >= wMon && today <= wSun;
 
@@ -906,7 +914,6 @@ function renderCalendar(){
     // ── Build row ──
     const tr = document.createElement('tr');
     if(isCurrent) tr.classList.add('is-current');
-    if(!inMonth)  tr.classList.add('is-partial');
 
     // Week label
     const wStartLbl = `${wMon.getDate()} ${MONTHS_SH[wMon.getMonth()]}`;
@@ -961,12 +968,12 @@ function renderCalendar(){
 
     tbody.appendChild(tr);
     wMon = new Date(wMon); wMon.setDate(wMon.getDate()+7);
-  }
+  } // end for weeks
 
   const banner = document.getElementById('coverageAlert');
   if(badWeeks>0){
     banner.style.display='block';
-    banner.textContent=`⚠️ ${badWeeks} semana(s) en ${MONTHS[curMonth]} sin cobertura de tarde o noche — revisar rotación / ausencias.`;
+    banner.textContent=`⚠️ ${badWeeks} semana(s) en la vista actual sin cobertura de tarde o noche — revisar rotación / ausencias.`;
   } else { banner.style.display='none'; }
 }
 
