@@ -99,6 +99,15 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
 .btn-guardar:hover{filter:brightness(1.1)}
 .btn-guardar:disabled{opacity:0.5;cursor:not-allowed}
 
+/* FIRMA CONFORMIDAD */
+.firma-pend-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.firma-canvas-enc{border:2px dashed rgba(255,255,255,0.3);border-radius:10px;background:rgba(255,255,255,0.05);touch-action:none;cursor:crosshair;display:block;width:100%;max-width:480px;height:120px}
+.firma-canvas-enc.firmado{border-color:#2ecc71;border-style:solid}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--navy-mid);border:1px solid rgba(155,89,182,0.4);border-radius:14px;padding:24px 20px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:1rem;font-weight:900;color:var(--purple-light);margin-bottom:16px}
+
 /* CONFIRMACIÓN */
 .confirm-wrap{display:none;text-align:center;padding:40px 20px}
 .confirm-ico{font-size:3.5rem;margin-bottom:14px}
@@ -125,6 +134,7 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
 <div class="topbar">
   <a href="panalcor_inicio.html" class="back-btn">← Inicio</a>
   <h1>👷 Encargados</h1>
+  <button onclick="verFirmasPendientes()" style="background:rgba(155,89,182,0.15);border:1px solid rgba(155,89,182,0.4);color:var(--purple-light);padding:7px 12px;border-radius:7px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.78rem;font-weight:700;letter-spacing:0.04em">✍️ Firmas</button>
 </div>
 
 <div class="wrap">
@@ -236,6 +246,34 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
     <button class="btn-otro" onclick="nuevoRegistro()">➕ Registrar otra avería</button>
   </div>
 
+</div>
+
+<!-- SECCIÓN FIRMAS PENDIENTES -->
+<div class="wrap" id="firmasPendWrap" style="display:none">
+  <div class="section-title" style="margin-top:0">✍️ Órdenes resueltas — pendientes de firma</div>
+  <div id="firmasPendList"><div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3)">Cargando...</div></div>
+  <button class="btn-otro" style="margin-top:10px;width:100%" onclick="document.getElementById('firmasPendWrap').style.display='none';document.getElementById('stepEnc').style.display='block'">← Volver al inicio</button>
+</div>
+
+<!-- MODAL FIRMA CONFORMIDAD -->
+<div class="modal-overlay" id="firmaModal">
+  <div class="modal-box">
+    <div class="modal-title">✍️ Firma de conformidad</div>
+    <div id="firmaModalInfo" style="font-size:0.82rem;color:rgba(255,255,255,0.55);margin-bottom:14px;line-height:1.6"></div>
+    <div class="field">
+      <label>Nombre del encargado</label>
+      <input type="text" id="firmaEncNombre" placeholder="Tu nombre">
+    </div>
+    <div class="field">
+      <label>Firma</label>
+      <canvas class="firma-canvas-enc" id="firmaCanvasEnc" width="480" height="120"></canvas>
+      <button type="button" onclick="borrarFirmaEnc()" style="background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);color:#e74c3c;padding:5px 12px;border-radius:6px;font-family:'Barlow',sans-serif;font-size:0.78rem;cursor:pointer;margin-top:6px">🗑️ Borrar firma</button>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:10px">
+      <button type="button" onclick="cerrarFirmaModal()" style="flex:1;padding:11px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);border-radius:8px;font-family:'Barlow',sans-serif;font-size:0.9rem;cursor:pointer">Cancelar</button>
+      <button type="button" id="btnConfirmarFirma" onclick="confirmarFirma()" style="flex:2;padding:11px;background:linear-gradient(135deg,var(--purple),#6c3483);border:none;color:#fff;border-radius:8px;font-family:'Barlow',sans-serif;font-size:0.9rem;font-weight:900;cursor:pointer">✅ Confirmar firma</button>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -540,6 +578,158 @@ function showToast(msg){
   t.classList.add('show');
   clearTimeout(_toastTimer);
   _toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 3000);
+}
+
+// ── FIRMAS PENDIENTES ────────────────────────────────────────
+var _firmaAvId = null;
+var _firmaEncData = null;
+
+function verFirmasPendientes(){
+  document.getElementById('stepEnc').style.display      = 'none';
+  document.getElementById('formWrap').style.display     = 'none';
+  document.getElementById('confirmWrap').style.display  = 'none';
+  document.getElementById('firmasPendWrap').style.display = 'block';
+  cargarFirmasPendientes();
+}
+
+function cargarFirmasPendientes(){
+  var el = document.getElementById('firmasPendList');
+  DB.ref('averias').once('value').then(function(snap){
+    var data = snap.val();
+    var pend = [];
+    if(data){
+      Object.values(data).forEach(function(a){
+        if(a && a.estado === 'RESUELTA' && !a.firmada) pend.push(a);
+      });
+    }
+    // Also from localStorage
+    var lsAv = [];
+    try{ lsAv = JSON.parse(localStorage.getItem('averias_v1')||'[]'); } catch(e){}
+    var fbIds = pend.map(function(a){ return a.id; });
+    lsAv.forEach(function(a){
+      if(a && a.estado==='RESUELTA' && !a.firmada && fbIds.indexOf(a.id)===-1) pend.push(a);
+    });
+    pend.sort(function(a,b){ return (b.fecha||'').localeCompare(a.fecha||''); });
+    if(!pend.length){
+      el.innerHTML='<div style="text-align:center;padding:20px;color:#2ecc71;font-size:0.9rem">✅ No hay órdenes pendientes de firma</div>';
+      return;
+    }
+    el.innerHTML = pend.map(function(a){
+      return '<div class="firma-pend-card">'
+        +'<div style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-bottom:4px">'+a.fecha+' · '+a.id+'</div>'
+        +'<div style="font-size:0.95rem;font-weight:700;margin-bottom:2px">'+(a.maqNombre||a.maqId||'—')+'</div>'
+        +'<div style="font-size:0.82rem;color:rgba(255,255,255,0.6);margin-bottom:8px">'
+          +a.descripcion
+          +(a.mecanicos&&a.mecanicos.length?' · 👷 '+a.mecanicos.join(', '):'')
+        +'</div>'
+        +'<button onclick="abrirFirmaModal(\''+a.id+'\',\''+encodeURIComponent(a.maqNombre||a.maqId||'')+'\')" '
+          +'style="background:rgba(155,89,182,0.2);border:1px solid rgba(155,89,182,0.45);color:var(--purple-light);'
+          +'border-radius:7px;padding:8px 16px;cursor:pointer;font-family:\'Barlow\',sans-serif;font-size:0.85rem;font-weight:700">'
+          +'✍️ Firmar conformidad'
+        +'</button>'
+        +'</div>';
+    }).join('');
+  }).catch(function(){
+    el.innerHTML='<div style="color:rgba(255,255,255,0.4);font-size:0.85rem;text-align:center;padding:20px">Error al cargar datos</div>';
+  });
+}
+
+function abrirFirmaModal(avId, maqEncoded){
+  _firmaAvId = avId;
+  _firmaEncData = null;
+  var modal = document.getElementById('firmaModal');
+  if(modal) modal.classList.add('open');
+  var info = document.getElementById('firmaModalInfo');
+  if(info) info.innerHTML = '<b>Avería:</b> '+avId+'<br><b>Máquina:</b> '+decodeURIComponent(maqEncoded);
+  var nombre = document.getElementById('firmaEncNombre');
+  if(nombre) nombre.value = encActual || '';
+  borrarFirmaEnc();
+  // Init canvas
+  initFirmaEncCanvas();
+}
+
+function cerrarFirmaModal(){
+  var modal = document.getElementById('firmaModal');
+  if(modal) modal.classList.remove('open');
+  _firmaAvId = null;
+  _firmaEncData = null;
+}
+
+var _firmaEncCanvas = null, _firmaEncCtx = null, _firmaEncDrawing = false;
+
+function initFirmaEncCanvas(){
+  _firmaEncCanvas = document.getElementById('firmaCanvasEnc');
+  if(!_firmaEncCanvas) return;
+  _firmaEncCtx = _firmaEncCanvas.getContext('2d');
+  _firmaEncCtx.strokeStyle = '#c39bd3';
+  _firmaEncCtx.lineWidth   = 2.5;
+  _firmaEncCtx.lineCap     = 'round';
+  _firmaEncCtx.lineJoin    = 'round';
+  _firmaEncCtx.clearRect(0,0,_firmaEncCanvas.width,_firmaEncCanvas.height);
+  _firmaEncCanvas.classList.remove('firmado');
+
+  function pos(e){
+    var r = _firmaEncCanvas.getBoundingClientRect();
+    var sx = _firmaEncCanvas.width / r.width;
+    var sy = _firmaEncCanvas.height / r.height;
+    var src = e.touches ? e.touches[0] : e;
+    return {x:(src.clientX-r.left)*sx, y:(src.clientY-r.top)*sy};
+  }
+  var lx, ly;
+  _firmaEncCanvas.onmousedown = _firmaEncCanvas.ontouchstart = function(e){
+    e.preventDefault(); _firmaEncDrawing=true; var p=pos(e); lx=p.x; ly=p.y;
+  };
+  _firmaEncCanvas.onmousemove = _firmaEncCanvas.ontouchmove = function(e){
+    e.preventDefault();
+    if(!_firmaEncDrawing) return;
+    var p=pos(e);
+    _firmaEncCtx.beginPath(); _firmaEncCtx.moveTo(lx,ly); _firmaEncCtx.lineTo(p.x,p.y); _firmaEncCtx.stroke();
+    lx=p.x; ly=p.y;
+    _firmaEncCanvas.classList.add('firmado');
+  };
+  document.onmouseup = document.ontouchend = function(){ _firmaEncDrawing=false; };
+}
+
+function borrarFirmaEnc(){
+  if(_firmaEncCtx && _firmaEncCanvas){
+    _firmaEncCtx.clearRect(0,0,_firmaEncCanvas.width,_firmaEncCanvas.height);
+    _firmaEncCanvas.classList.remove('firmado');
+  }
+  _firmaEncData = null;
+}
+
+function confirmarFirma(){
+  if(!_firmaAvId){ cerrarFirmaModal(); return; }
+  var nombre = (document.getElementById('firmaEncNombre').value||'').trim();
+  if(!nombre){ showToast('Indica tu nombre'); return; }
+  if(!_firmaEncCanvas || !_firmaEncCanvas.classList.contains('firmado')){ showToast('Firma el documento'); return; }
+  var firmaSrc = _firmaEncCanvas.toDataURL('image/png');
+  var hoy = new Date().toISOString().split('T')[0];
+
+  var update = {firmada:true, firmadaPor:nombre, firmadaFecha:hoy, firmadaFirma:firmaSrc};
+
+  // Update Firebase
+  DB.ref('averias/'+_firmaAvId).update(update).then(function(){
+    showToast('✅ Firma guardada en Firebase');
+  }).catch(function(){
+    showToast('⚠️ Sin conexión — guardado solo local');
+  });
+
+  // Update localStorage
+  try{
+    var lsAv = JSON.parse(localStorage.getItem('averias_v1')||'[]');
+    var idx = lsAv.findIndex(function(a){ return a.id === _firmaAvId; });
+    if(idx !== -1){
+      lsAv[idx].firmada      = true;
+      lsAv[idx].firmadaPor   = nombre;
+      lsAv[idx].firmadaFecha = hoy;
+      lsAv[idx].firmadaFirma = firmaSrc;
+      localStorage.setItem('averias_v1', JSON.stringify(lsAv));
+    }
+  } catch(e){}
+
+  cerrarFirmaModal();
+  setTimeout(cargarFirmasPendientes, 400);
 }
 </script>
 </body>

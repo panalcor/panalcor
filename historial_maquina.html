@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Historial Máquina — PANALCOR</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy-deep:#0d1b2a;--navy-mid:#1a2d42;--navy-light:#243d56;
+  --gold:#c9a227;--gold-light:#f0c040;--white:#f0f4f8;
+  --red:#e74c3c;--green:#2ecc71;--yellow:#f39c12;--blue:#3498db;
+  --purple:#9b59b6;--radius:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-serif;min-height:100vh}
+
+.topbar{background:linear-gradient(135deg,#0a1520,var(--navy-mid));border-bottom:2px solid var(--purple);
+  padding:14px 20px;display:flex;align-items:center;gap:14px}
+.topbar h1{font-size:1.2rem;font-weight:900;letter-spacing:0.06em;color:var(--gold-light);flex:1}
+.topbar .maq-sub{font-size:0.75rem;color:rgba(255,255,255,0.4)}
+.back-btn{background:rgba(155,89,182,0.15);border:1px solid rgba(155,89,182,0.4);
+  color:var(--purple);padding:8px 14px;border-radius:7px;cursor:pointer;
+  font-family:'Barlow',sans-serif;font-size:0.85rem;letter-spacing:0.06em}
+.back-btn:active{background:rgba(155,89,182,0.3)}
+
+.mec-badge{display:inline-flex;align-items:center;gap:6px;
+  background:rgba(201,162,39,0.1);border:1px solid rgba(201,162,39,0.3);
+  border-radius:20px;padding:4px 12px;font-size:0.78rem;color:var(--gold);
+  margin:14px 16px 4px}
+
+.wrap{padding:16px;max-width:900px}
+
+.sec-title{font-size:0.7rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:10px;padding-bottom:5px;
+  border-bottom:1px solid rgba(201,162,39,0.2)}
+
+.hist-card{border-radius:var(--radius);margin-bottom:10px;overflow:hidden;
+  background:var(--navy-mid);border:1px solid rgba(255,255,255,0.08)}
+.hist-card-averia{border-left:4px solid var(--red)}
+.hist-card-turno{border-left:4px solid var(--green)}
+
+.hist-head{padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hist-head:hover{background:rgba(255,255,255,0.03)}
+.hist-date{font-size:0.82rem;color:rgba(255,255,255,0.45);white-space:nowrap;flex-shrink:0}
+.hist-type-badge{font-size:0.7rem;letter-spacing:.08em;text-transform:uppercase;
+  padding:3px 8px;border-radius:4px;font-weight:700;flex-shrink:0}
+.badge-averia{background:rgba(231,76,60,0.2);color:var(--red)}
+.badge-turno{background:rgba(46,204,113,0.2);color:var(--green)}
+.hist-title{flex:1;font-size:0.9rem;font-weight:600;min-width:0}
+.hist-sub{font-size:0.78rem;color:rgba(255,255,255,0.45)}
+.hist-estado{font-size:0.75rem;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0}
+.estado-resuelta{background:rgba(46,204,113,0.2);color:var(--green)}
+.estado-curso{background:rgba(231,76,60,0.2);color:var(--red)}
+.estado-pend{background:rgba(243,156,18,0.2);color:var(--yellow)}
+
+.hist-body{display:none;padding:12px 16px;border-top:1px solid rgba(255,255,255,0.06)}
+.hist-body.open{display:block}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:10px}
+.di-label{font-size:0.68rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:2px}
+.di-val{font-size:0.9rem}
+
+.loading{text-align:center;padding:40px;color:rgba(255,255,255,0.35);font-size:0.9rem}
+.no-data{text-align:center;padding:40px;color:rgba(255,255,255,0.3)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back-btn" onclick="history.back()">← Volver</button>
+  <div>
+    <div class="topbar h1" id="topbarTitle" style="font-size:1.2rem;font-weight:900;color:var(--gold-light)">Historial</div>
+    <div class="topbar maq-sub" id="topbarSub"></div>
+  </div>
+</div>
+
+<div id="mecBadgeWrap"></div>
+
+<div class="wrap">
+  <div class="sec-title" id="histSectTitle">Cargando...</div>
+  <div id="histList"><div class="loading">⏳ Cargando historial...</div></div>
+</div>
+
+<script>
+var FB_CFG = {
+  apiKey:            "AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU",
+  authDomain:        "panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:       "https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:         "panalcor-mantenimiento",
+  storageBucket:     "panalcor-mantenimiento.firebasestorage.app",
+  messagingSenderId: "67593058609",
+  appId:             "1:67593058609:web:c33fa1fa4fce2932485810"
+};
+if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
+var DB = firebase.database();
+
+var params = new URLSearchParams(window.location.search);
+var maqId  = params.get('maq') || '';
+
+// Show mechanic badge
+var mecSesion = null;
+try { mecSesion = JSON.parse(localStorage.getItem('mecSesion')||'null'); } catch(e){}
+if(mecSesion && mecSesion.nombre){
+  var bw = document.getElementById('mecBadgeWrap');
+  if(bw) bw.innerHTML = '<div class="mec-badge">👷 ' + mecSesion.nombre + '</div>';
+}
+
+// Update topbar
+document.getElementById('topbarTitle').textContent = maqId ? ('Historial ' + maqId) : 'Historial';
+document.getElementById('topbarSub').textContent = maqId || '';
+
+function toggleHist(id){
+  var el = document.getElementById(id);
+  if(el) el.classList.toggle('open');
+}
+
+function renderHistorial(averias, turnos){
+  var el = document.getElementById('histList');
+  var title = document.getElementById('histSectTitle');
+
+  // Filter averias for this machine
+  var avMaq = averias.filter(function(a){
+    return a && (a.maqId === maqId || (a.maqNombre && a.maqNombre === maqId));
+  });
+
+  // Filter turnos for this machine
+  var turnosMaq = turnos.filter(function(t){
+    return t && (t.maqId === maqId || t.maquina === maqId
+      || (t.maquinas && t.maquinas.indexOf(maqId) !== -1));
+  });
+
+  var entries = [];
+  avMaq.forEach(function(a){ entries.push({tipo:'averia', fecha:a.fecha||'', ts:a.ts||0, data:a}); });
+  turnosMaq.forEach(function(t){ entries.push({tipo:'turno', fecha:t.fecha||'', ts:t.ts||Date.now(), data:t}); });
+
+  // Sort newest first
+  entries.sort(function(a,b){
+    if(b.fecha !== a.fecha) return b.fecha.localeCompare(a.fecha);
+    return b.ts - a.ts;
+  });
+
+  if(title) title.textContent = entries.length + ' registro' + (entries.length!==1?'s':'') + ' para ' + maqId;
+
+  if(!entries.length){
+    el.innerHTML = '<div class="no-data">No hay registros para esta máquina</div>';
+    return;
+  }
+
+  el.innerHTML = entries.map(function(e, i){
+    var id = 'hc' + i;
+    if(e.tipo === 'averia'){
+      var a = e.data;
+      var estadoCls = a.estado === 'RESUELTA' ? 'estado-resuelta' : a.estado === 'EN CURSO' ? 'estado-curso' : 'estado-pend';
+      var tStr = a.tiempoMin ? (Math.floor(a.tiempoMin/60)+'h '+((a.tiempoMin%60)+'').padStart(2,'0')+'min') : '—';
+      var fotoHtml = a.foto ? '<img src="'+a.foto+'" style="width:64px;height:64px;object-fit:cover;border-radius:7px;border:1px solid rgba(255,255,255,0.15);margin-top:8px">' : '';
+      var firmaHtml = a.estado==='RESUELTA'
+        ? (a.firmada
+            ? '<div style="font-size:0.78rem;color:#2ecc71;margin-top:6px">✅ Firmada por '+(a.firmadaPor||'—')+(a.firmadaFecha?' ('+a.firmadaFecha+')':'')+'</div>'
+            : '<div style="font-size:0.78rem;color:#f39c12;margin-top:6px">⏳ Pendiente de firma</div>')
+        : '';
+      return '<div class="hist-card hist-card-averia">'
+        +'<div class="hist-head" onclick="toggleHist(\''+id+'\')">'
+          +'<span class="hist-date">'+a.fecha+' '+( a.horaInicio||'')+'</span>'
+          +'<span class="hist-type-badge badge-averia">Avería</span>'
+          +'<div style="flex:1;min-width:0">'
+            +'<div class="hist-title">'+(a.parte?a.parte+' · ':'')+a.descripcion+'</div>'
+            +'<div class="hist-sub">'+(a.mecanicos&&a.mecanicos.length?'👷 '+a.mecanicos.join(', '):'')+' · '+a.tipo+'</div>'
+          +'</div>'
+          +(a.foto?'<img src="'+a.foto+'" style="width:32px;height:32px;object-fit:cover;border-radius:5px;flex-shrink:0">':'')
+          +'<span class="hist-estado '+estadoCls+'">'+a.estado+'</span>'
+        +'</div>'
+        +'<div class="hist-body" id="'+id+'">'
+          +'<div class="detail-grid">'
+            +'<div><div class="di-label">Tipo</div><div class="di-val">'+(a.tipo||'—')+'</div></div>'
+            +'<div><div class="di-label">Gravedad</div><div class="di-val">'+(a.gravedad||'—')+'</div></div>'
+            +'<div><div class="di-label">Turno</div><div class="di-val">'+(a.turno||'—')+'</div></div>'
+            +'<div><div class="di-label">Tiempo parada</div><div class="di-val">'+tStr+'</div></div>'
+          +'</div>'
+          +(a.descripcion?'<div style="margin-bottom:8px"><div class="di-label">Descripción</div><div style="font-size:0.9rem;margin-top:2px">'+a.descripcion+'</div></div>':'')
+          +(a.accion?'<div style="margin-bottom:8px"><div class="di-label">Acción correctiva</div><div style="font-size:0.9rem;margin-top:2px">'+a.accion+'</div></div>':'')
+          +fotoHtml
+          +firmaHtml
+        +'</div>'
+        +'</div>';
+    } else {
+      var t = e.data;
+      var done = t.done || 0;
+      var total = t.total || 0;
+      var pct = total > 0 ? Math.round(done/total*100) : 0;
+      return '<div class="hist-card hist-card-turno">'
+        +'<div class="hist-head" onclick="toggleHist(\''+id+'\')">'
+          +'<span class="hist-date">'+t.fecha+' '+(t.turno||'')+'</span>'
+          +'<span class="hist-type-badge badge-turno">Mantenimiento</span>'
+          +'<div style="flex:1;min-width:0">'
+            +'<div class="hist-title">Turno '+(t.turno||'—')+' · '+(t.mecanico||t.mecNombre||'—')+'</div>'
+            +'<div class="hist-sub">'+done+'/'+total+' tareas ('+pct+'%)</div>'
+          +'</div>'
+          +'<span style="font-size:0.78rem;color:'+(pct>=80?'#2ecc71':pct>=50?'#f39c12':'#e74c3c')+';font-weight:700">'+pct+'%</span>'
+        +'</div>'
+        +'<div class="hist-body" id="'+id+'">'
+          +'<div class="detail-grid">'
+            +'<div><div class="di-label">Mecánico</div><div class="di-val">'+(t.mecanico||t.mecNombre||'—')+'</div></div>'
+            +'<div><div class="di-label">Turno</div><div class="di-val">'+(t.turno||'—')+'</div></div>'
+            +'<div><div class="di-label">Tareas hechas</div><div class="di-val">'+done+'/'+total+'</div></div>'
+            +'<div><div class="di-label">Cumplimiento</div><div class="di-val">'+pct+'%</div></div>'
+          +'</div>'
+        +'</div>'
+        +'</div>';
+    }
+  }).join('');
+}
+
+// Load data
+var averiasAll = [];
+var turnosAll  = [];
+var loaded = 0;
+
+function checkDone(){
+  loaded++;
+  if(loaded >= 2) renderHistorial(averiasAll, turnosAll);
+}
+
+// Load from localStorage first
+var lsAv = [];
+try { lsAv = JSON.parse(localStorage.getItem('averias_v1')||'[]'); } catch(e){}
+averiasAll = lsAv;
+
+// Firebase averias
+DB.ref('averias').once('value').then(function(snap){
+  var data = snap.val();
+  if(data){
+    var fbAv = Object.values(data);
+    // Merge: FB wins, keep LS entries not in FB
+    var fbIds = fbAv.map(function(a){ return a.id; });
+    var lsOnly = lsAv.filter(function(a){ return fbIds.indexOf(a.id) === -1; });
+    averiasAll = fbAv.concat(lsOnly);
+  }
+  checkDone();
+}).catch(function(){
+  checkDone();
+});
+
+// Firebase registros_turno
+DB.ref('registros_turno').once('value').then(function(snap){
+  var data = snap.val();
+  if(data) turnosAll = Object.values(data);
+  checkDone();
+}).catch(function(){
+  checkDone();
+});
+</script>
+</body>
+</html>

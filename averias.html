@@ -218,6 +218,11 @@ a{color:inherit;text-decoration:none}
   background:rgba(255,255,255,0.05);touch-action:none;cursor:crosshair;
   display:block;width:100%;max-width:500px;height:130px}
 .firma-canvas.firmado{border-color:var(--green,#2ecc71);border-style:solid}
+.foto-preview{display:none;position:relative;margin:8px 0}
+.foto-preview img{width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid rgba(201,162,39,0.4)}
+.foto-preview .foto-del{position:absolute;top:-6px;left:66px;background:#e74c3c;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:0.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:900;line-height:1}
+.btn-foto{background:rgba(52,152,219,0.15);border:1px dashed rgba(52,152,219,0.5);color:#74b9ff;border-radius:8px;padding:10px 16px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.9rem;display:flex;align-items:center;gap:8px;width:100%;justify-content:center;margin-bottom:10px}
+.btn-foto:active{background:rgba(52,152,219,0.25)}
 </style>
 </head>
 <body>
@@ -464,6 +469,17 @@ a{color:inherit;text-decoration:none}
       </div>
 
       <div class="mat-list" id="matList" style="margin-top:12px"></div>
+    </div>
+
+    <!-- Foto -->
+    <div class="card">
+      <div class="sec-title">📷 Foto (opcional)</div>
+      <input type="file" id="fotoInput" accept="image/*" capture="environment" style="display:none" onchange="onFotoSelected(this)">
+      <button type="button" class="btn-foto" onclick="document.getElementById('fotoInput').click()">📷 Añadir foto</button>
+      <div class="foto-preview" id="fotoPreview">
+        <img id="fotoThumb" src="" alt="foto">
+        <button type="button" class="foto-del" onclick="quitarFoto()" title="Eliminar foto">✕</button>
+      </div>
     </div>
 
     <!-- Estado -->
@@ -1223,6 +1239,10 @@ function guardarAveria(){
     materiales: [...materialesForm],
     costeMateriales: parseFloat(document.getElementById('fCosteMat').value||'0')||0,
     firma: _firmaData || (avOriginal ? avOriginal.firma : null),
+    foto: _fotoData || (avOriginal ? avOriginal.foto : null),
+    firmada: avOriginal ? (avOriginal.firmada || false) : false,
+    firmadaPor: avOriginal ? (avOriginal.firmadaPor || null) : null,
+    firmadaFecha: avOriginal ? (avOriginal.firmadaFecha || null) : null,
     estado,
   };
   if (_editandoId) av.tsActualizado = Date.now();
@@ -1264,6 +1284,7 @@ function limpiarForm(){
   document.querySelectorAll('input[name=grav]').forEach(r=>r.checked=false);
   materialesForm=[];
   renderMatList();
+  quitarFoto();
   document.getElementById('alertRec').style.display='none';
   setFechaHoy();
   setTurnoAuto();
@@ -1306,6 +1327,7 @@ function renderHistorial(){
         <span class="averia-maq">${a.maqNombre} ${crit}</span>
         <span class="averia-desc">${a.parte?a.parte+' · ':''}${a.descripcion}</span>
         <span style="font-size:0.8rem;color:rgba(255,255,255,0.4);white-space:nowrap;margin-right:8px">${a.fecha} ${a.horaInicio}</span>
+        ${a.foto?`<img src="${a.foto}" style="width:32px;height:32px;object-fit:cover;border-radius:5px;flex-shrink:0;margin-right:4px">`:''}
         <span class="averia-badge ${badgeCls}"><span class="estado-dot ${dotCls}"></span>${a.estado}</span>
       </div>
       <div class="averia-body" id="av${i}">
@@ -1323,6 +1345,8 @@ function renderHistorial(){
         ${a.accion?`<div style="margin-top:10px"><div class="di-label">Acción correctiva</div><div style="margin-top:4px;font-size:0.95rem">${a.accion}</div></div>`:''}
         ${a.observaciones?`<div style="margin-top:10px"><div class="di-label">Observaciones</div><div style="margin-top:4px;font-size:0.95rem">${a.observaciones}</div></div>`:''}
         ${a.materiales&&a.materiales.length?`<div style="margin-top:10px"><div class="di-label">Material utilizado</div><div style="margin-top:4px;font-size:0.9rem">${a.materiales.map(m=>`${m.desc} (${m.ref}) × ${m.qty}`).join(' | ')}</div></div>`:''}
+        ${a.foto?`<div style="margin-top:10px"><div class="di-label">Foto</div><img src="${a.foto}" style="margin-top:4px;width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid rgba(201,162,39,0.4)"></div>`:''}
+        ${a.estado==='RESUELTA'?(a.firmada?`<div style="margin-top:10px;font-size:0.82rem;color:#2ecc71">✅ Firmada por ${a.firmadaPor||'—'}${a.firmadaFecha?' ('+a.firmadaFecha+')':''}</div>`:`<div style="margin-top:10px;font-size:0.82rem;color:#f39c12">⏳ Pendiente de firma</div>`):''}
         ${a.estado!=='RESUELTA'?`<div style="margin-top:14px"><button class="btn btn-gold" style="font-size:0.8rem;padding:7px 14px" onclick="retomarAveria('${a.id}')">🔄 Retomar avería</button></div>`:''}
 
       </div>
@@ -1670,6 +1694,49 @@ function mecLoginSubmit(){
     return;
   }
 })();
+
+// ══ FOTO ══════════════════════════════════════════
+var _fotoData = null;
+
+function comprimirFoto(file, cb) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      var MAX = 900;
+      var w = img.width, h = img.height;
+      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      cb(canvas.toDataURL('image/jpeg', 0.72));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function onFotoSelected(input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  comprimirFoto(file, function(b64) {
+    _fotoData = b64;
+    var thumb = document.getElementById('fotoThumb');
+    var preview = document.getElementById('fotoPreview');
+    if (thumb) thumb.src = b64;
+    if (preview) preview.style.display = 'block';
+  });
+}
+
+function quitarFoto() {
+  _fotoData = null;
+  var preview = document.getElementById('fotoPreview');
+  var input = document.getElementById('fotoInput');
+  var thumb = document.getElementById('fotoThumb');
+  if (preview) preview.style.display = 'none';
+  if (thumb) thumb.src = '';
+  if (input) input.value = '';
+}
 
 // ══ FIRMA DIGITAL ══════════════════════════════════
 var _firmaData = null;
