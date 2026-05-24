@@ -564,6 +564,16 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
         <label>Horas noche dom.</label>
         <input type="number" id="bEditHnd" min="0">
       </div>
+      <div class="modal-field">
+        <label>Umbral sáb. (no generan día)</label>
+        <input type="number" id="bEditSabUmbral" min="0" max="50">
+        <div style="font-size:0.68rem;color:rgba(255,255,255,0.28);margin-top:3px">Ej: 10 → los 10 primeros no cuentan</div>
+      </div>
+      <div class="modal-field">
+        <label>Días libres por sábado</label>
+        <input type="number" id="bEditSabMult" min="1" max="10" step="0.5">
+        <div style="font-size:0.68rem;color:rgba(255,255,255,0.28);margin-top:3px">Ej: 2 → cada sábado genera 2 días</div>
+      </div>
     </div>
     <div class="modal-info">Los sábados extra se calculan automáticamente.</div>
     <div class="modal-btns">
@@ -1245,16 +1255,23 @@ function renderBolsas(){
     const sLi      = b.diasLibreSabado  || 0;
     const vRe      = Math.max(0, vacTot - vUs);
     const aRe      = Math.max(0, asuTot - aUs);
-    // Regla: los primeros 10 sábados no generan días; a partir del 11.º, 1 día por sábado
-    const sabGen   = Math.max(0, sEx - 10);
-    const sabDisp  = Math.max(0, sabGen - sLi);
+    // Parámetros por mecánico (editables desde el modal)
+    const sabUmbral = mec?.sabUmbral ?? 10;   // sábados que no generan días
+    const sabMult   = mec?.sabMult   ?? 1;    // días libres por sábado a partir del umbral
+    const sabGen    = Math.max(0, sEx - sabUmbral) * sabMult;
+    const sabDisp   = Math.max(0, sabGen - sLi);
     const hnd      = S.horasNocheDom[k] || 0;
     const vPct     = Math.min(100, vacTot > 0 ? vUs/vacTot*100 : 0);
     const aPct     = Math.min(100, asuTot > 0 ? aUs/asuTot*100 : 0);
 
     // Hint de progreso hacia el primer día libre
-    const sabHint  = (sEx > 0 && sEx <= 10)
-      ? ` <span style="font-size:0.62rem;color:rgba(255,255,255,0.28)">(faltan ${10-sEx} para 1.º día)</span>`
+    const faltan   = Math.max(0, sabUmbral - sEx);
+    const sabHint  = (sEx < sabUmbral && sEx > 0)
+      ? ` <span style="font-size:0.62rem;color:rgba(255,255,255,0.28)">(faltan ${faltan} para 1.º día)</span>`
+      : '';
+    // Config del mecánico (se muestra si es distinto del estándar)
+    const cfgInfo  = (sabUmbral !== 10 || sabMult !== 1)
+      ? `<div class="bolsa-row" style="margin-top:4px"><span class="bolsa-lbl" style="font-size:0.65rem">Config sáb.</span><span style="font-size:0.68rem;color:rgba(255,255,255,0.4)">umbral ${sabUmbral} · ×${sabMult} días</span></div>`
       : '';
 
     // Mecánicos extra: tarjeta simplificada (sin vac/asu/horas noche)
@@ -1276,6 +1293,7 @@ function renderBolsas(){
         <button class="bolsa-edit-btn" onclick="openBolsaModal('${k}')">✏️ Ajustar</button>
       </div>
       ${vacAsuRows}
+      ${cfgInfo}
       <div class="bolsa-row" style="margin-top:${isExtra?'0':'6px'}">
         <span class="bolsa-lbl">Sáb. extra acumulados</span>
         <span class="bolsa-val">${sEx}</span>
@@ -1299,10 +1317,12 @@ function openBolsaModal(mecId){
   const mec = S.mecanicos[mecId];
   const b   = S.bolsas[mecId] || {};
   document.getElementById('bolsaModalTitle').textContent = mec?.nombre||'Mec '+mecId;
-  document.getElementById('bEditVac').value    = b.vacacionesUsadas || 0;
-  document.getElementById('bEditAsu').value    = b.asuntosUsados    || 0;
-  document.getElementById('bEditSabLib').value = b.diasLibreSabado  || 0;
-  document.getElementById('bEditHnd').value    = S.horasNocheDom[mecId] || 0;
+  document.getElementById('bEditVac').value       = b.vacacionesUsadas || 0;
+  document.getElementById('bEditAsu').value       = b.asuntosUsados    || 0;
+  document.getElementById('bEditSabLib').value    = b.diasLibreSabado  || 0;
+  document.getElementById('bEditHnd').value       = S.horasNocheDom[mecId] || 0;
+  document.getElementById('bEditSabUmbral').value = mec?.sabUmbral ?? 10;
+  document.getElementById('bEditSabMult').value   = mec?.sabMult   ?? 1;
   document.getElementById('bolsaModal').style.display = 'flex';
 }
 function saveBolsaEdit(){
@@ -1313,8 +1333,13 @@ function saveBolsaEdit(){
   S.bolsas[k].asuntosUsados    = +document.getElementById('bEditAsu').value||0;
   S.bolsas[k].diasLibreSabado  = +document.getElementById('bEditSabLib').value||0;
   S.horasNocheDom[k]           = +document.getElementById('bEditHnd').value||0;
+  // Parámetros sábados: se guardan en mecanicos (son config del mecánico)
+  if(!S.mecanicos[k]) S.mecanicos[k] = {};
+  S.mecanicos[k].sabUmbral = +document.getElementById('bEditSabUmbral').value ?? 10;
+  S.mecanicos[k].sabMult   = +document.getElementById('bEditSabMult').value   ?? 1;
   fbSet('bolsas', S.bolsas);
   fbSet('horasNocheDom', S.horasNocheDom);
+  fbSet('mecanicos', S.mecanicos);
   closeModal('bolsaModal');
   renderBolsas();
   showToast('Bolsa actualizada');
