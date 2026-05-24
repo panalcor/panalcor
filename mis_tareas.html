@@ -122,8 +122,14 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
     <div class="ico">🔧</div>
     <h2>PANALCOR S.L.</h2>
     <div class="sub">Mantenimiento Preventivo</div>
+    <select id="mecLoginNombreSel" style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:9px;padding:13px 16px;font-family:'Barlow',sans-serif;font-size:1rem;margin-bottom:12px;display:block;box-sizing:border-box">
+      <option value="">— Selecciona tu nombre —</option>
+    </select>
     <input type="password" id="pwInput" placeholder="Contraseña" autocomplete="off"
            onkeydown="if(event.key==='Enter') doLogin()">
+    <label style="display:flex;align-items:center;gap:10px;margin:10px 0 14px;cursor:pointer;justify-content:center;font-size:0.85rem;color:rgba(255,255,255,0.6)">
+      <input type="checkbox" id="loginMiTel" style="width:18px;height:18px;cursor:pointer;accent-color:#c9a227;flex-shrink:0"> Es mi tel&eacute;fono (sesi&oacute;n indefinida)
+    </label>
     <button class="login-btn" onclick="doLogin()">ENTRAR</button>
     <div class="login-err" id="loginErr"></div>
   </div>
@@ -239,40 +245,69 @@ if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
 var DB = firebase.database();
 
 /* ══ ESTADO ══ */
-var SESSION_KEY = 'mecAuth_prev';
-var MEC_KEY     = 'mecSeleccionado';
-var PW_DEFAULT  = 'panalcor';
+var MEC_SESION_KEY = 'mecSesion';
+var mecActual      = null;
+var mesActual      = '';       // YYYY-MM
+var asigs          = {};       // { pushId: {tarea,mecanico,hecho,...} }
+var dbListener     = null;     // referencia para detach
 
-var mecActual   = null;
-var mesActual   = '';       // YYYY-MM
-var asigs       = {};       // { pushId: {tarea,mecanico,hecho,...} }
-var dbListener  = null;     // referencia para detach
+/* ══ SESION ══ */
+function _mecSesionValida(){
+  try {
+    var s = JSON.parse(localStorage.getItem(MEC_SESION_KEY) || 'null');
+    if(!s || !s.nombre) return false;
+    if(s.expires !== null && Date.now() > s.expires){ localStorage.removeItem(MEC_SESION_KEY); return false; }
+    return s.nombre;
+  } catch(e){ return false; }
+}
 
 /* ══ LOGIN ══ */
-function getMecPwd(cb){
-  DB.ref('config/mecanicoPwd').once('value')
-    .then(function(s){ cb(s.val() || PW_DEFAULT); })
-    .catch(function(){ cb(localStorage.getItem('mecanicoPwd') || PW_DEFAULT); });
-}
+(function cargarMecLoginMT(){
+  var sel = document.getElementById('mecLoginNombreSel');
+  if(!sel) return;
+  var fb = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO'];
+  function poblar(lista){ lista.forEach(function(n){ var o=document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o); }); }
+  DB.ref('config/mecanicos').once('value')
+    .then(function(s){ var v=s.val(); poblar(v&&v.length?v:fb); })
+    .catch(function(){ poblar(fb); });
+})();
 
 function doLogin(){
-  var val = document.getElementById('pwInput').value;
-  var err = document.getElementById('loginErr');
-  if(!val){ err.textContent = '⚠️ Introduce la contraseña'; return; }
-  getMecPwd(function(pwd){
-    if(val === pwd){
-      sessionStorage.setItem(SESSION_KEY, '1');
-      document.getElementById('loginScreen').style.display = 'none';
-      mostrarSelectorMecanico();
-    } else {
-      err.textContent = '❌ Contraseña incorrecta';
+  var nombre  = document.getElementById('mecLoginNombreSel').value;
+  var pw      = document.getElementById('pwInput').value;
+  var err     = document.getElementById('loginErr');
+  var esMiTel = document.getElementById('loginMiTel').checked;
+  err.textContent = '';
+  if(!nombre){ err.textContent = '⚠️ Selecciona tu nombre'; return; }
+  if(!pw)    { err.textContent = '⚠️ Introduce la contrasena'; return; }
+  DB.ref('config/mecanicos_pwd').once('value').then(function(snap){
+    var pwsObj = snap.val() || {};
+    var pwEsperada = pwsObj[nombre] || null;
+    if(!pwEsperada){ err.textContent = '❌ Sin contrasena asignada. Contacta con el responsable.'; return; }
+    if(pw !== pwEsperada){
+      err.textContent = '❌ Contrasena incorrecta';
       document.getElementById('pwInput').value = '';
       document.getElementById('pwInput').focus();
+      return;
     }
-  });
+    DB.ref('config/mecSessionHoras').once('value').then(function(snap2){
+      var horas = snap2.val() || 8;
+      var expires = esMiTel ? null : (Date.now() + horas * 3600 * 1000);
+      localStorage.setItem(MEC_SESION_KEY, JSON.stringify({nombre:nombre, expires:expires}));
+      mecActual = nombre;
+      document.getElementById('loginScreen').style.display = 'none';
+      arrancarApp();
+    }).catch(function(){
+      var expires = esMiTel ? null : (Date.now() + 8 * 3600 * 1000);
+      localStorage.setItem(MEC_SESION_KEY, JSON.stringify({nombre:nombre, expires:expires}));
+      mecActual = nombre;
+      document.getElementById('loginScreen').style.display = 'none';
+      arrancarApp();
+    });
+  }).catch(function(){ err.textContent = '❌ Error de conexion. Intentalo de nuevo.'; });
 }
 
-/* ══ SELECTOR MECÁNICO ══ */
+/* ══ SELECTOR MECANICO (solo admin bypass) ══ */
 function getMecanicos(cb){
   DB.ref('config/mecanicos').once('value')
     .then(function(s){
@@ -283,12 +318,6 @@ function getMecanicos(cb){
 }
 
 function mostrarSelectorMecanico(){
-  var guardado = sessionStorage.getItem(MEC_KEY);
-  if(guardado){
-    mecActual = guardado;
-    arrancarApp();
-    return;
-  }
   getMecanicos(function(mecanicos){
     var div = document.getElementById('mecBtnList');
     div.innerHTML = mecanicos.map(function(m){
@@ -301,17 +330,22 @@ function mostrarSelectorMecanico(){
 
 function seleccionarMecanico(nombre){
   mecActual = nombre;
-  sessionStorage.setItem(MEC_KEY, nombre);
   document.getElementById('mecSelector').style.display = 'none';
   arrancarApp();
 }
 
 function cambiarMecanico(){
-  sessionStorage.removeItem(MEC_KEY);
+  localStorage.removeItem(MEC_SESION_KEY);
   mecActual = null;
   if(dbListener){ dbListener.off(); dbListener = null; }
   document.getElementById('app').style.display = 'none';
-  mostrarSelectorMecanico();
+  if(_adminSessionValida()){
+    mostrarSelectorMecanico();
+  } else {
+    document.getElementById('loginErr').textContent = '';
+    document.getElementById('pwInput').value = '';
+    document.getElementById('loginScreen').style.display = 'flex';
+  }
 }
 
 /* ══ HELPERS MES ══ */
@@ -633,7 +667,14 @@ function _adminSessionValida(){
   return t > 0 && (Date.now() - t) < 8 * 3600 * 1000;
 }
 (function(){
-  if(sessionStorage.getItem(SESSION_KEY) === '1' || _adminSessionValida()){
+  var nombre = _mecSesionValida();
+  if(nombre){
+    mecActual = nombre;
+    document.getElementById('loginScreen').style.display = 'none';
+    arrancarApp();
+    return;
+  }
+  if(_adminSessionValida()){
     document.getElementById('loginScreen').style.display = 'none';
     mostrarSelectorMecanico();
   }
