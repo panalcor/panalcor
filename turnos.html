@@ -491,6 +491,7 @@ function getPwd(){ return localStorage.getItem(PW_KEY) || 'admin'; }
 function login(){
   const v = document.getElementById('pwInput').value;
   if(v === getPwd()){
+    sessionStorage.setItem('turnosAuth','1');
     document.getElementById('loginScreen').style.display = 'none';
     initApp();
   } else {
@@ -727,7 +728,13 @@ const MONTHS_SH = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','
 const DAYS_SH   = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const DAYS_LONG = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 
-function toDS(d){ return d.toISOString().slice(0,10); }
+function toDS(d){
+  // Usar hora local, no UTC, para evitar desfases de zona horaria
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
 function prevMonth(){ if(--curMonth<0){ curMonth=11; curYear--; } renderCalendar(); }
 function nextMonth(){ if(++curMonth>11){ curMonth=0;  curYear++; } renderCalendar(); }
 function updateHeaders(){
@@ -1226,7 +1233,15 @@ function bgClose(e,id){ if(e.target.classList.contains('modal-bg')) closeModal(i
 let toastT;
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2500); }
 
-window.addEventListener('DOMContentLoaded',()=>{ document.getElementById('pwInput').focus?.(); });
+window.addEventListener('DOMContentLoaded',()=>{
+  // Si viene desde admin (sessionStorage) o desde inicio.html, saltar el login
+  if(sessionStorage.getItem('turnosAuth')==='1'){
+    document.getElementById('loginScreen').style.display='none';
+    initApp();
+  } else {
+    document.getElementById('pwInput').focus?.();
+  }
+});
 </script>
 </body>
 </html>
