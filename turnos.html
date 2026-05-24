@@ -160,6 +160,8 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 .sab-item-fest{border-color:rgba(255,165,0,0.35);background:rgba(255,140,0,0.06)}
 .fest-item{border-color:rgba(255,165,0,0.25);background:rgba(255,140,0,0.05)}
 .fest-badge{font-size:0.6rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;background:rgba(255,165,0,0.18);color:#ffb347;border:1px solid rgba(255,165,0,0.35);padding:2px 6px;border-radius:4px;margin-left:8px}
+.dom-badge{background:rgba(52,152,219,0.18);color:#74b9ff;border-color:rgba(52,152,219,0.35)}
+.fest-item-dom{border-color:rgba(52,152,219,0.28);background:rgba(52,152,219,0.04)}
 
 /* ── HORAS NOCHE DOM ── */
 .hnd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
@@ -415,12 +417,12 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
   </div>
   <div id="sabList"><div class="empty">Sin sábados registrados</div></div>
 
-  <div class="sec-title" style="margin-top:26px">Festivos trabajados — resumen</div>
+  <div class="sec-title" style="margin-top:26px">Festivos y Domingos trabajados — resumen</div>
   <div class="sab-count-grid" id="festCountGrid"></div>
-  <div class="sec-title">Registrar festivo trabajado</div>
+  <div class="sec-title">Registrar festivo / domingo trabajado</div>
   <div class="sab-form">
     <div class="form-field" style="flex:0 0 170px">
-      <label>Fecha festivo</label>
+      <label>Fecha (festivo o domingo)</label>
       <input type="date" id="festFecha">
     </div>
     <div class="form-field" style="flex:1;min-width:260px">
@@ -430,10 +432,10 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
     <button class="btn btn-add" onclick="addFestivo()" style="align-self:flex-end;white-space:nowrap">+ Añadir</button>
   </div>
   <div style="font-size:0.74rem;color:rgba(255,255,255,0.32);margin-bottom:10px;line-height:1.5">
-    Si el festivo cae en sábado, ese sábado quedará excluido del conteo de sábados extra.
-    Alberto genera 3 días libres por festivo (configurable en ✏️ Ajustar de cada mecánico). El resto cobra el festivo.
+    Domingos y festivos tienen el mismo tratamiento: si el día cae en sábado queda excluido del conteo de sábados extra.
+    Alberto genera días libres por cada uno (configurable en ✏️ Ajustar). El resto cobra el día trabajado.
   </div>
-  <div id="festList"><div class="empty">Sin festivos registrados</div></div>
+  <div id="festList"><div class="empty">Sin festivos/domingos registrados</div></div>
 </div>
 
 <!-- ══ HORAS NOCHE DOM ══ -->
@@ -598,14 +600,14 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
         <div style="font-size:0.68rem;color:rgba(255,255,255,0.28);margin-top:3px">Ej: 2 → cada sábado genera 2 días</div>
       </div>
       <div class="modal-field">
-        <label>Días libres por festivo</label>
+        <label>Días libres por festivo/domingo</label>
         <input type="number" id="bEditFestDias" min="0" max="10" step="0.5">
-        <div style="font-size:0.68rem;color:rgba(255,255,255,0.28);margin-top:3px">0 = cobra festivo · 3 = 3 días libres (ej. Alberto)</div>
+        <div style="font-size:0.68rem;color:rgba(255,255,255,0.28);margin-top:3px">0 = cobra el día · 3 = 3 días libres (ej. Alberto)</div>
       </div>
       <div class="modal-field">
-        <label>Libres festivo disfrutados</label>
+        <label>Libres fest./dom. disfrutados</label>
         <input type="number" id="bEditFestDisf" min="0">
-        <div style="font-size:0.68rem;color:rgba(255,255,255,0.28);margin-top:3px">Días de festivo ya usados</div>
+        <div style="font-size:0.68rem;color:rgba(255,255,255,0.28);margin-top:3px">Días ya disfrutados de festivos/dom.</div>
       </div>
     </div>
     <div class="modal-info">Los sábados y festivos se calculan automáticamente.</div>
@@ -1361,12 +1363,12 @@ function renderBolsas(){
       ${festEx > 0 || festivosDias > 0 ? `
       <div style="border-top:1px solid rgba(255,165,0,0.18);margin:8px 0 6px"></div>
       ${festivosDias > 0 ? `
-      <div class="bolsa-row"><span class="bolsa-lbl">Festivos trabajados</span><span class="bolsa-val">${festEx}</span></div>
-      <div class="bolsa-row"><span class="bolsa-lbl">Días libres generados</span><span class="bolsa-val" style="${festGen>0?'color:var(--gold)':''}">${festGen} <span style="font-size:0.62rem;color:rgba(255,255,255,0.28)">(×${festivosDias}/fest.)</span></span></div>
-      <div class="bolsa-row"><span class="bolsa-lbl">Libres fest. disfrutados</span><span class="bolsa-val">${festDisf}</span></div>
-      <div class="bolsa-row"><span class="bolsa-lbl" style="color:var(--orange)">Disponibles festivos</span><span class="bolsa-val" style="color:var(--orange)">${festDisp}${festDisp>0?' 🎯':''}</span></div>
+      <div class="bolsa-row"><span class="bolsa-lbl">Festivos/Dom. trabajados</span><span class="bolsa-val">${festEx}</span></div>
+      <div class="bolsa-row"><span class="bolsa-lbl">Días libres generados</span><span class="bolsa-val" style="${festGen>0?'color:var(--gold)':''}">${festGen} <span style="font-size:0.62rem;color:rgba(255,255,255,0.28)">(×${festivosDias}/día)</span></span></div>
+      <div class="bolsa-row"><span class="bolsa-lbl">Libres fest./dom. disfrutados</span><span class="bolsa-val">${festDisf}</span></div>
+      <div class="bolsa-row"><span class="bolsa-lbl" style="color:var(--orange)">Disponibles fest./dom.</span><span class="bolsa-val" style="color:var(--orange)">${festDisp}${festDisp>0?' 🎯':''}</span></div>
       ` : `
-      <div class="bolsa-row"><span class="bolsa-lbl">Festivos cobrados</span><span class="bolsa-val" style="color:var(--green)">${festEx} 💰</span></div>
+      <div class="bolsa-row"><span class="bolsa-lbl">Festivos/Dom. cobrados</span><span class="bolsa-val" style="color:var(--green)">${festEx} 💰</span></div>
       `}` : ''}
       <div class="bolsa-row" style="margin-top:6px"><span class="bolsa-lbl">Horas noche dom.</span><span class="bolsa-val" style="color:var(--purple)">${hnd}h</span></div>
     </div>`;
@@ -1541,7 +1543,7 @@ function renderSabados(){
     }).join('');
   }
 
-  // ── Festivos count grid ──
+  // ── Festivos/Domingos count grid ──
   const festGrid = document.getElementById('festCountGrid');
   if(festGrid){
     const cf = {};
@@ -1550,14 +1552,14 @@ function renderSabados(){
       (s.mecanicos||[]).forEach(m => { const k=String(m); if(cf[k]!==undefined) cf[k]++; })
     );
     if(!Object.keys(S.festivos).length){
-      festGrid.innerHTML = '<div class="empty" style="width:100%;padding:10px 0">Sin festivos registrados</div>';
+      festGrid.innerHTML = '<div class="empty" style="width:100%;padding:10px 0">Sin festivos/domingos registrados</div>';
     } else {
       festGrid.innerHTML = getAllMecIds().map(k=>{
         const nom = S.mecanicos[k]?.nombre||'Mec '+k;
         const cnt = cf[k]||0;
         const fDias = S.mecanicos[k]?.festivosDias ?? 0;
         const isExtra = +k>5;
-        const lbl = fDias > 0 ? `→ ${cnt*fDias} días lib.` : (cnt > 0 ? 'cobrados' : 'festivos');
+        const lbl = fDias > 0 ? `→ ${cnt*fDias} días lib.` : (cnt > 0 ? 'cobrados' : 'fest./dom.');
         return `<div class="sab-count-card${isExtra?' sab-count-extra':''}">
           <div class="sab-count-name" title="${nom}">${nom}</div>
           <div class="sab-count-val" style="${fDias>0&&cnt>0?'color:var(--gold)':''}${fDias===0&&cnt>0?'color:var(--green)':''}">${cnt}</div>
@@ -1567,22 +1569,27 @@ function renderSabados(){
     }
   }
 
-  // ── Festivos list ──
+  // ── Festivos/Domingos list ──
   const festList = document.getElementById('festList');
   if(festList){
     const fEntries = Object.entries(S.festivos).sort((a,b)=>b[0].localeCompare(a[0]));
-    if(!fEntries.length){ festList.innerHTML='<div class="empty">Sin festivos registrados</div>'; }
+    if(!fEntries.length){ festList.innerHTML='<div class="empty">Sin festivos/domingos registrados</div>'; }
     else {
       festList.innerHTML = fEntries.map(([fecha,data])=>{
         const d = new Date(fecha+'T12:00:00');
         const dow = d.getDay();
+        const esDom = dow === 0;
         const esSab = dow === 6;
         const enSabs = esSab && !!S.sabados[fecha];
         const tags = (data.mecanicos||[]).map(m=>`<span class="sab-mec-tag">${S.mecanicos[String(m)]?.nombre||'Mec '+m}</span>`).join('') || '<span style="color:rgba(255,255,255,0.28);font-size:0.78rem">Sin mecánicos</span>';
         const DAYS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+        const icono = esDom ? '☀️' : '🎌';
+        const tipoBadge = esDom
+          ? '<span class="fest-badge dom-badge">DOMINGO</span>'
+          : '<span class="fest-badge">FESTIVO</span>';
         const sabNote = enSabs ? '<span class="fest-badge">Sáb. excluido del conteo</span>' : '';
-        return `<div class="sab-item fest-item">
-          <div class="sab-date">🎌 ${DAYS[dow]} ${d.getDate()} ${MONTHS_SH[d.getMonth()]} ${d.getFullYear()}${sabNote}</div>
+        return `<div class="sab-item fest-item${esDom?' fest-item-dom':''}">
+          <div class="sab-date">${icono} ${DAYS[dow]} ${d.getDate()} ${MONTHS_SH[d.getMonth()]} ${d.getFullYear()}${tipoBadge}${sabNote}</div>
           <div class="sab-mecs">${tags}</div>
           <button class="sab-del" onclick="deleteFestivo('${fecha}')">✕</button>
         </div>`;
