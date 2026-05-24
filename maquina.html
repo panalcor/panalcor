@@ -501,20 +501,9 @@ function renderMaquina(estData){
       + '</div>';
 
   } else {
-    // Sin avería — botón declarar
-    html += '<button class="btn-averia" onclick="mostrarFormAveria()">🔴 DECLARAR AVERÍA</button>';
+    // Sin avería — un solo toque, registro inmediato
+    html += '<button class="btn-averia" onclick="this.disabled=true;this.textContent=\'⏳ Registrando...\';confirmarAveria()">🔴 DECLARAR AVERÍA</button>';
     html += '<button class="btn-sec" onclick="verEnHistorial()">📋 Ver historial de esta máquina</button>';
-
-    // Form avería (oculto)
-    html += '<div class="form-section" id="formAveria" style="display:none">'
-      + '<h3>🔴 Declarar avería</h3>'
-      + '<div class="field"><label>¿Qué falla? (opcional)</label>'
-      + '<textarea id="fDescAv" placeholder="Describe el problema brevemente..."></textarea></div>'
-      + '<div class="field"><label>Hora de inicio (auto)</label>'
-      + '<input type="time" id="fHoraIni" value="'+horaStr()+'"></div>'
-      + '<button class="btn-averia" onclick="confirmarAveria()">🔴 REGISTRAR AVERÍA AHORA</button>'
-      + '<button class="btn-sec" onclick="document.getElementById(\'formAveria\').style.display=\'none\'">Cancelar</button>'
-      + '</div>';
   }
 
   // Confirmación (oculta)
@@ -530,19 +519,14 @@ function renderMaquina(estData){
 /* ══════════════════════════════════════════════════
    ACCIONES
    ══════════════════════════════════════════════════ */
-function mostrarFormAveria(){
-  var f = document.getElementById('formAveria');
-  if(f){ f.style.display='block'; f.scrollIntoView({behavior:'smooth',block:'start'}); }
-}
-
 function mostrarFormSolucion(){
   var f = document.getElementById('formSolucion');
   if(f){ f.style.display='block'; f.scrollIntoView({behavior:'smooth',block:'start'}); }
 }
 
 function confirmarAveria(){
-  var desc = (document.getElementById('fDescAv')||{}).value || '';
-  var horaIni = (document.getElementById('fHoraIni')||{}).value || horaStr();
+  var desc = '';
+  var horaIni = horaStr();
   var d = getFechaTurno();
   var av = {
     id: 'AVR-'+Date.now(),
@@ -578,16 +562,14 @@ function confirmarAveria(){
 
   // Guardar en Firebase
   DB.ref('averias/'+av.id).set(av);
-  // Actualizar estado máquina
   DB.ref('estado_maquinas/'+maq.id).set({estado:'AVERIA', ts:Date.now(), nota:''});
-  // Sync localStorage para cuando abran averias.html
   try {
     var avs = JSON.parse(localStorage.getItem('averias_v1')||'[]');
     avs.unshift(av);
     localStorage.setItem('averias_v1', JSON.stringify(avs));
   } catch(e){}
 
-  mostrarConfirmacion('🔴','AVERÍA REGISTRADA','Se ha notificado a todos los dispositivos. El siguiente mecánico que escanee el QR verá esta avería.');
+  mostrarConfirmacion('🔴','AVERÍA REGISTRADA','Notificado. Añade los detalles desde el parte cuando puedas.', true);
 }
 
 function confirmarSolucion(){
@@ -629,22 +611,25 @@ function confirmarSolucion(){
   mostrarConfirmacion('✅','AVERÍA CERRADA','Gracias '+(mecActual||'')+'. La reparación ha sido registrada.');
 }
 
-function mostrarConfirmacion(icon, msg, sub){
+function mostrarConfirmacion(icon, msg, sub, conEnlaceParte){
   var b = document.getElementById('confirmBox');
   if(!b) return;
   document.getElementById('cfIcon').textContent = icon;
   document.getElementById('cfMsg').textContent = msg;
-  document.getElementById('cfSub').textContent = sub;
+  var subEl = document.getElementById('cfSub');
+  subEl.textContent = sub;
+  if(conEnlaceParte){
+    subEl.innerHTML = sub + '<br><br><a href="averias.html" style="color:#c9a227;font-weight:700">📋 Abrir historial para añadir detalles →</a>';
+  }
   b.style.display = 'block';
   b.scrollIntoView({behavior:'smooth',block:'center'});
-  // Ocultar botones de acción
   ['formAveria','formSolucion'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.style.display='none';
   });
   var btnAv = document.querySelector('.btn-averia');
-  var btnSol = document.querySelector('.btn-solucionado');
+  var btnSol = document.querySelector('.btn-solucionado:not(#formSolucion .btn-solucionado)');
   if(btnAv) btnAv.style.display='none';
-  if(btnSol) btnSol.style.display='none';
+  document.querySelectorAll('.btn-solucionado').forEach(function(b){ b.style.display='none'; });
 }
 
 function verEnHistorial(){
