@@ -1339,12 +1339,18 @@ function deleteSabado(fecha){
 function renderSabados(){
   initSabForm();
 
-  // ── Count grid ──
+  // ── Count grid — calculado en tiempo real desde S.sabados ──
   const countGrid = document.getElementById('sabCountGrid');
   if(countGrid){
+    // Contar directamente desde los registros (no depende de bolsas cacheadas)
+    const c = {};
+    getAllMecIds().forEach(k => { c[k] = 0; });
+    Object.values(S.sabados).forEach(s =>
+      (s.mecanicos||[]).forEach(m => { const k=String(m); if(c[k]!==undefined) c[k]++; })
+    );
     countGrid.innerHTML = getAllMecIds().map(k=>{
       const nom = S.mecanicos[k]?.nombre||'Mec '+k;
-      const cnt = S.bolsas[k]?.sabadosExtra||0;
+      const cnt = c[k]||0;
       const isExtra = +k>5;
       return `<div class="sab-count-card${isExtra?' sab-count-extra':''}">
         <div class="sab-count-name" title="${nom}">${nom}</div>
