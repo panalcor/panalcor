@@ -868,7 +868,8 @@ function fbCargarAverias(callback) {
 let averias = JSON.parse(localStorage.getItem('averias_v1') || '[]');
 let repuestosData = [];
 let materialesForm = [];
-let _editandoId    = null; // null = nueva avería | string = retomando existente
+let _editandoId       = null;  // null = nueva avería | string = retomando existente
+let _editandoResuelta = false; // true cuando se retoma una RESUELTA para añadir info
 let charts = {};
 
 // ══════════════════════════════════════════════
@@ -1336,6 +1337,10 @@ function guardarAveria(){
     estado,
   };
   if (_editandoId) av.tsActualizado = Date.now();
+  // tsCierre: se registra la primera vez que pasa a RESUELTA y no cambia si ya existe
+  av.tsCierre = (estado === 'RESUELTA')
+    ? (avOriginal && avOriginal.tsCierre ? avOriginal.tsCierre : Date.now())
+    : (avOriginal ? (avOriginal.tsCierre || null) : null);
 
   if (_editandoId) {
     const editIdx = averias.findIndex(function(a){return a.id===_editandoId;});
@@ -1358,6 +1363,8 @@ function guardarAveria(){
 
 function limpiarForm(){
   _editandoId = null;
+  _editandoResuelta = false;
+  document.getElementById('fEstado').disabled = false;
   var banner = document.getElementById('retomandoBanner');
   if (banner) banner.style.display = 'none';
   document.getElementById('fMaquina').value='';
@@ -1437,7 +1444,17 @@ function renderHistorial(){
         ${a.materiales&&a.materiales.length?`<div style="margin-top:10px"><div class="di-label">Material utilizado</div><div style="margin-top:4px;font-size:0.9rem">${a.materiales.map(m=>`${m.desc} (${m.ref}) × ${m.qty}`).join(' | ')}</div></div>`:''}
         ${a.foto?`<div style="margin-top:10px"><div class="di-label">Foto</div><img src="${a.foto}" style="margin-top:4px;width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid rgba(201,162,39,0.4)"></div>`:''}
         ${a.estado==='RESUELTA'?(a.firmada?`<div style="margin-top:10px;font-size:0.82rem;color:#2ecc71">✅ Firmada por ${a.firmadaPor||'—'}${a.firmadaFecha?' ('+a.firmadaFecha+')':''}</div>`:`<div style="margin-top:10px;font-size:0.82rem;color:#f39c12">⏳ Pendiente de firma</div>`):''}
-        ${a.estado!=='RESUELTA'?`<div style="margin-top:14px"><button class="btn btn-gold" style="font-size:0.8rem;padding:7px 14px" onclick="retomarAveria('${a.id}')">🔄 Retomar avería</button></div>`:''}
+        ${a.estado!=='RESUELTA'
+          ? `<div style="margin-top:14px"><button class="btn btn-gold" style="font-size:0.8rem;padding:7px 14px" onclick="retomarAveria('${a.id}')">🔄 Retomar avería</button></div>`
+          : (()=>{
+              const mecN = typeof _mecSesionValida==='function' ? _mecSesionValida() : false;
+              const dentroPlazo = a.tsCierre && (Date.now()-a.tsCierre)<28800000;
+              const involucrado = mecN && a.mecanicos && a.mecanicos.indexOf(mecN)!==-1;
+              return (dentroPlazo && involucrado)
+                ? `<div style="margin-top:14px"><button class="btn btn-gold" style="font-size:0.8rem;padding:7px 14px;background:rgba(46,204,113,0.15);border-color:rgba(46,204,113,0.5);color:#2ecc71" onclick="retomarAveria('${a.id}')">✏️ Añadir información</button></div>`
+                : '';
+            })()
+        }
 
       </div>
     </div>`;
@@ -1494,8 +1511,22 @@ function retomarAveria(id){
       id + ' · ' + (av.maqNombre||'') + ' · ' + (av.estado||'');
   }
 
+  // Modo edición RESUELTA: solo añadir, no cambiar estado ni borrar
+  _editandoResuelta = (av.estado === 'RESUELTA');
+  if(_editandoResuelta){
+    document.getElementById('fEstado').disabled = true;
+    var bannerRes = document.getElementById('retomandoBanner');
+    if(bannerRes){
+      bannerRes.style.display = 'flex';
+      bannerRes.style.borderColor = 'rgba(46,204,113,0.4)';
+      bannerRes.style.background  = 'rgba(46,204,113,0.08)';
+      document.getElementById('retomandoInfo').textContent =
+        '✏️ Avería RESUELTA — Puedes añadir información (no se puede borrar ni reabrir)';
+    }
+  }
+
   switchTab('nueva');
-  showToast('📋 Avería cargada — complétala y guarda');
+  showToast(_editandoResuelta ? '✏️ Avería resuelta — añade información' : '📋 Avería cargada — complétala y guarda');
   window.scrollTo({top:0, behavior:'smooth'});
 }
 

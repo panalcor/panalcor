@@ -213,6 +213,9 @@ if('serviceWorker' in navigator){
     <!-- Averías pendientes del mecánico -->
     <div id="avPendWrap"></div>
 
+    <!-- Averías resueltas recientes editables (ventana 8h) -->
+    <div id="avResueltasWrap"></div>
+
     <div class="banner-done" id="bannerDone">
       <h3>🎉 ¡Todo completado!</h3>
       <p>Has terminado todas tus tareas de este período.</p>
@@ -418,6 +421,7 @@ function arrancarApp(){
 
   cargarMes(mesActual);
   renderAvPendientes();
+  cargarAvRecientsDB();
   cargarRecordatoriosMec();
   cargarIntegralesMec();
 }
@@ -822,6 +826,84 @@ function marcarRecordatorioHecho(id) {
   }).catch(function() {
     showToast('❌ Error al actualizar');
   });
+}
+
+// ══════════════════════════════════════════════════════
+// AVERÍAS RESUELTAS RECIENTES — ventana editable 8h
+// ══════════════════════════════════════════════════════
+var _avCache = [];
+
+function cargarAvRecientsDB(){
+  // Inmediato: desde localStorage (puede estar algo desactualizado)
+  try { _avCache = JSON.parse(localStorage.getItem('averias_v1') || '[]'); } catch(e){ _avCache = []; }
+  renderAvResueltasRecientes();
+
+  // Fondo: refrescar desde Firebase las cerradas en la última ventana + margen
+  var desde = Date.now() - 9 * 3600 * 1000;
+  DB.ref('averias').orderByChild('tsCierre').startAt(desde).once('value')
+    .then(function(snap){
+      var data = snap.val();
+      if(!data) return;
+      Object.values(data).forEach(function(av){
+        if(!av || !av.id) return;
+        var idx = -1;
+        for(var i=0; i<_avCache.length; i++){ if(_avCache[i].id===av.id){ idx=i; break; } }
+        if(idx!==-1) _avCache[idx]=av; else _avCache.push(av);
+      });
+      renderAvResueltasRecientes();
+    }).catch(function(){});
+}
+
+function renderAvResueltasRecientes(){
+  var wrap = document.getElementById('avResueltasWrap');
+  if(!wrap || !mecActual) return;
+
+  var ahora  = Date.now();
+  var ventana = 8 * 3600 * 1000;
+
+  var mias = _avCache.filter(function(a){
+    return a.estado === 'RESUELTA'
+        && a.tsCierre
+        && (ahora - a.tsCierre) < ventana
+        && a.mecanicos && a.mecanicos.indexOf(mecActual) !== -1;
+  });
+
+  if(!mias.length){ wrap.innerHTML = ''; return; }
+
+  mias.sort(function(a,b){ return (b.tsCierre||0) - (a.tsCierre||0); });
+
+  var items = mias.map(function(a){
+    var restMs  = ventana - (ahora - a.tsCierre);
+    var hRest   = Math.floor(restMs / 3600000);
+    var mRest   = Math.floor((restMs % 3600000) / 60000);
+    var restTxt = hRest > 0 ? (hRest + 'h ' + mRest + 'min') : (mRest + ' min');
+    return '<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;'
+         + 'border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;transition:background .15s"'
+         + ' onclick="window.location=\'averias.html?retomar=' + a.id + '\'"'
+         + ' onmouseover="this.style.background=\'rgba(255,255,255,0.04)\'"'
+         + ' onmouseout="this.style.background=\'\'">'
+         + '<span style="font-size:1.1rem">✅</span>'
+         + '<div style="flex:1;min-width:0">'
+           + '<div style="font-size:0.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'
+               + escHtmlMec(a.maqNombre||'') + '</div>'
+           + '<div style="font-size:0.75rem;color:rgba(255,255,255,0.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'
+               + escHtmlMec((a.descripcion||'').substring(0,60)) + '</div>'
+         + '</div>'
+         + '<div style="text-align:right;flex-shrink:0">'
+           + '<div style="font-size:0.72rem;color:#2ecc71;font-weight:700">✏️ Editable</div>'
+           + '<div style="font-size:0.65rem;color:rgba(255,255,255,0.3);margin-top:2px">⏱ ' + restTxt + '</div>'
+         + '</div>'
+         + '</div>';
+  }).join('');
+
+  wrap.innerHTML = '<div style="background:rgba(46,204,113,0.06);border:1px solid rgba(46,204,113,0.25);'
+    + 'border-radius:12px;margin-bottom:14px;overflow:hidden">'
+    + '<div style="padding:10px 14px;border-bottom:1px solid rgba(46,204,113,0.15);'
+      + 'font-size:0.7rem;letter-spacing:.12em;text-transform:uppercase;color:#2ecc71;font-weight:700">'
+      + '✏️ Cerradas recientemente (' + mias.length + ') — puedes añadir información'
+    + '</div>'
+    + items
+    + '</div>';
 }
 </script>
 </body>
