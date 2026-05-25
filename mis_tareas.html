@@ -119,6 +119,39 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
 .banner-done{background:linear-gradient(135deg,rgba(46,204,113,0.2),rgba(39,174,96,0.1));border:1px solid rgba(46,204,113,0.4);border-radius:12px;padding:20px;text-align:center;margin-bottom:14px;display:none}
 .banner-done h3{font-size:1.1rem;font-weight:900;color:var(--green);margin-bottom:4px}
 .banner-done p{font-size:0.85rem;color:rgba(255,255,255,0.5)}
+
+/* ── VISTA TOGGLE ── */
+.vista-tabs{display:flex;gap:6px;margin-bottom:10px}
+.vtab{flex:1;padding:9px 4px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:9px;color:rgba(255,255,255,0.55);font-family:'Barlow',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;text-align:center;transition:all .2s;letter-spacing:0.03em}
+.vtab.active{background:rgba(201,162,39,0.18);border-color:rgba(201,162,39,0.5);color:var(--gold-light)}
+
+/* ── AVERÍAS LIST ── */
+.av-filtro{display:flex;gap:8px;margin-bottom:12px;align-items:center}
+.av-filtro select{flex:1;background:var(--navy-light);color:var(--white);border:1px solid rgba(201,162,39,0.3);border-radius:7px;padding:8px 10px;font-family:'Barlow',sans-serif;font-size:0.85rem;font-weight:600}
+.av-filtro select:focus{outline:none;border-color:var(--gold)}
+.av-count{font-size:0.72rem;color:rgba(255,255,255,0.35);white-space:nowrap}
+.av-item{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.08);border-radius:11px;margin-bottom:10px;overflow:hidden;transition:border-color .2s}
+.av-item.resuelta{border-left:3px solid var(--green)}
+.av-item.en-curso{border-left:3px solid var(--red)}
+.av-item.pendiente{border-left:3px solid var(--yellow)}
+.av-head{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.av-head:active{background:rgba(255,255,255,0.03)}
+.av-badge{font-size:0.65rem;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+.av-badge.b-res{background:rgba(46,204,113,0.2);color:var(--green);border:1px solid rgba(46,204,113,0.3)}
+.av-badge.b-cur{background:rgba(231,76,60,0.2);color:var(--red);border:1px solid rgba(231,76,60,0.3)}
+.av-badge.b-pend{background:rgba(243,156,18,0.2);color:var(--yellow);border:1px solid rgba(243,156,18,0.3)}
+.av-info{flex:1;min-width:0}
+.av-maq{font-size:0.9rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.av-desc{font-size:0.75rem;color:rgba(255,255,255,0.42);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.av-meta{font-size:0.68rem;color:rgba(255,255,255,0.28);white-space:nowrap;flex-shrink:0;text-align:right}
+.av-detail{display:none;padding:0 14px 14px;border-top:1px solid rgba(255,255,255,0.06)}
+.av-detail.open{display:block}
+.av-dl{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;margin-top:12px}
+.av-dl-item .lbl{font-size:0.67rem;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:.08em}
+.av-dl-item .val{font-size:0.85rem;color:var(--white);margin-top:1px}
+.av-accion-btn{display:inline-block;margin-top:12px;padding:8px 16px;border-radius:8px;font-family:'Barlow',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;border:none;transition:all .2s}
+.av-accion-btn.retomar{background:rgba(201,162,39,0.18);border:1px solid rgba(201,162,39,0.4);color:var(--gold-light)}
+.av-accion-btn.editar{background:rgba(46,204,113,0.15);border:1px solid rgba(46,204,113,0.4);color:var(--green)}
 </style>
 <script>
 if('serviceWorker' in navigator){
@@ -195,32 +228,55 @@ if('serviceWorker' in navigator){
         <button class="header-back" onclick="cambiarMecanico()">Cambiar</button>
       </div>
     </div>
-    <div class="mes-row">
-      <label>MES</label>
-      <select id="mesSelect" onchange="cambiarMes()"></select>
+    <div class="vista-tabs">
+      <button class="vtab active" id="vtab-tareas"  onclick="switchVista('tareas')">📋 Mis Tareas</button>
+      <button class="vtab"        id="vtab-averias" onclick="switchVista('averias')">🔧 Mis Averías</button>
     </div>
-    <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
-    <div class="progress-label"><span id="progressTxt">0 de 0 tareas</span><b id="progressPct">0%</b></div>
+    <div id="mesWrap">
+      <div class="mes-row">
+        <label>MES</label>
+        <select id="mesSelect" onchange="cambiarMes()"></select>
+      </div>
+      <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+      <div class="progress-label"><span id="progressTxt">0 de 0 tareas</span><b id="progressPct">0%</b></div>
+    </div>
   </div>
 
   <div class="content">
-    <!-- Mantenimientos integrales próximos -->
-    <div id="integralesWrap"></div>
 
-    <!-- Recordatorios asignados al mecánico -->
-    <div id="recordatoriosWrap"></div>
-
-    <!-- Averías pendientes del mecánico -->
-    <div id="avPendWrap"></div>
-
-    <!-- Averías resueltas recientes editables (ventana 8h) -->
-    <div id="avResueltasWrap"></div>
-
-    <div class="banner-done" id="bannerDone">
-      <h3>🎉 ¡Todo completado!</h3>
-      <p>Has terminado todas tus tareas de este período.</p>
+    <!-- ── PANEL TAREAS ── -->
+    <div id="panelTareas">
+      <!-- Mantenimientos integrales próximos -->
+      <div id="integralesWrap"></div>
+      <!-- Recordatorios asignados al mecánico -->
+      <div id="recordatoriosWrap"></div>
+      <!-- Averías pendientes del mecánico -->
+      <div id="avPendWrap"></div>
+      <!-- Averías resueltas recientes editables (ventana 8h) -->
+      <div id="avResueltasWrap"></div>
+      <div class="banner-done" id="bannerDone">
+        <h3>🎉 ¡Todo completado!</h3>
+        <p>Has terminado todas tus tareas de este período.</p>
+      </div>
+      <div id="tareasWrap"></div>
     </div>
-    <div id="tareasWrap"></div>
+
+    <!-- ── PANEL MIS AVERÍAS ── -->
+    <div id="panelAverias" style="display:none">
+      <div class="av-filtro">
+        <select id="avFiltroEst" onchange="renderMisAverias()">
+          <option value="">Todos los estados</option>
+          <option value="EN CURSO">🔴 En curso</option>
+          <option value="PENDIENTE REPUESTO">🟡 Pendiente repuesto</option>
+          <option value="RESUELTA">🟢 Resuelta</option>
+        </select>
+        <span class="av-count" id="avCount">—</span>
+      </div>
+      <div id="misAvList">
+        <div class="empty-state"><div class="ico">⏳</div><p>Cargando...</p></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -354,6 +410,8 @@ function seleccionarMecanico(nombre){
 function cambiarMecanico(){
   localStorage.removeItem(MEC_SESION_KEY);
   mecActual = null;
+  _misAverias = []; _misAvCargadas = false;
+  _vistaActual = 'tareas';
   if(dbListener){ dbListener.off(); dbListener = null; }
   document.getElementById('app').style.display = 'none';
   if(_adminSessionValida()){
@@ -829,6 +887,21 @@ function marcarRecordatorioHecho(id) {
 }
 
 // ══════════════════════════════════════════════════════
+// VISTA TOGGLE — Tareas / Mis Averías
+// ══════════════════════════════════════════════════════
+var _vistaActual = 'tareas';
+
+function switchVista(v){
+  _vistaActual = v;
+  document.getElementById('vtab-tareas').classList.toggle('active',  v === 'tareas');
+  document.getElementById('vtab-averias').classList.toggle('active', v === 'averias');
+  document.getElementById('panelTareas').style.display  = v === 'tareas'  ? '' : 'none';
+  document.getElementById('panelAverias').style.display = v === 'averias' ? '' : 'none';
+  document.getElementById('mesWrap').style.display      = v === 'tareas'  ? '' : 'none';
+  if(v === 'averias') cargarMisAverias();
+}
+
+// ══════════════════════════════════════════════════════
 // AVERÍAS RESUELTAS RECIENTES — ventana editable 8h
 // ══════════════════════════════════════════════════════
 var _avCache = [];
@@ -904,6 +977,105 @@ function renderAvResueltasRecientes(){
     + '</div>'
     + items
     + '</div>';
+}
+
+// ══════════════════════════════════════════════════════
+// MIS AVERÍAS — historial completo del mecánico
+// ══════════════════════════════════════════════════════
+var _misAverias    = [];
+var _misAvCargadas = false;
+
+function cargarMisAverias(){
+  if(_misAvCargadas) { renderMisAverias(); return; }
+  document.getElementById('misAvList').innerHTML =
+    '<div class="empty-state"><div class="ico">⏳</div><p>Cargando averías...</p></div>';
+  DB.ref('averias').once('value').then(function(snap){
+    var data = snap.val() || {};
+    _misAverias = Object.values(data).filter(function(a){
+      return a && a.id && a.mecanicos && a.mecanicos.indexOf(mecActual) !== -1;
+    });
+    _misAverias.sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+    _misAvCargadas = true;
+    renderMisAverias();
+  }).catch(function(){
+    document.getElementById('misAvList').innerHTML =
+      '<div class="empty-state"><div class="ico">❌</div><p>Error de conexión.<br>Comprueba que tienes internet.</p></div>';
+  });
+}
+
+function renderMisAverias(){
+  var filtroEst = document.getElementById('avFiltroEst').value;
+  var ahora = Date.now();
+  var ventana = 8 * 3600 * 1000;
+
+  var lista = _misAverias.filter(function(a){
+    return !filtroEst || a.estado === filtroEst;
+  });
+
+  document.getElementById('avCount').textContent = lista.length + ' avería' + (lista.length !== 1 ? 's' : '');
+
+  if(!lista.length){
+    document.getElementById('misAvList').innerHTML =
+      '<div class="empty-state"><div class="ico">🔧</div><p>No hay averías' + (filtroEst ? ' con ese estado' : '') + '.</p></div>';
+    return;
+  }
+
+  var html = lista.map(function(a, i){
+    var est = a.estado || '—';
+    var badgeCls = est === 'RESUELTA' ? 'b-res' : est === 'EN CURSO' ? 'b-cur' : 'b-pend';
+    var itemCls  = est === 'RESUELTA' ? 'resuelta' : est === 'EN CURSO' ? 'en-curso' : 'pendiente';
+    var tStr = a.tiempoMin ? (Math.floor(a.tiempoMin/60) + 'h ' + ((a.tiempoMin%60)+'').padStart(2,'0') + 'min') : '—';
+    var fechaStr = a.fecha || '—';
+    if(a.horaInicio) fechaStr += ' ' + a.horaInicio;
+
+    // Botón de acción
+    var btnHtml = '';
+    if(est !== 'RESUELTA'){
+      btnHtml = '<button class="av-accion-btn retomar" onclick="window.location=\'averias.html?retomar='+a.id+'\'">🔄 Retomar avería</button>';
+    } else {
+      var dentroVentana = a.tsCierre && (ahora - a.tsCierre) < ventana;
+      if(dentroVentana){
+        var restMs  = ventana - (ahora - a.tsCierre);
+        var hR = Math.floor(restMs/3600000);
+        var mR = Math.floor((restMs%3600000)/60000);
+        var restTxt = hR > 0 ? (hR+'h '+mR+'min') : (mR+' min');
+        btnHtml = '<button class="av-accion-btn editar" onclick="window.location=\'averias.html?retomar='+a.id+'\'">✏️ Añadir información <span style="font-size:0.7rem;opacity:.7">('+restTxt+')</span></button>';
+      }
+    }
+
+    return '<div class="av-item ' + itemCls + '">'
+      + '<div class="av-head" onclick="toggleAvItem(\'avd'+i+'\')">'
+        + '<div class="av-info">'
+          + '<div class="av-maq">' + escHtmlMec(a.maqNombre||a.maqId||'—') + '</div>'
+          + '<div class="av-desc">' + escHtmlMec((a.parte?a.parte+' · ':'')+((a.descripcion||'').substring(0,55))) + '</div>'
+        + '</div>'
+        + '<div class="av-meta">'
+          + '<div><span class="av-badge ' + badgeCls + '">' + est + '</span></div>'
+          + '<div style="margin-top:4px">' + fechaStr + '</div>'
+        + '</div>'
+      + '</div>'
+      + '<div class="av-detail" id="avd'+i+'">'
+        + '<div class="av-dl">'
+          + '<div class="av-dl-item"><div class="lbl">Turno</div><div class="val">' + escHtmlMec(a.turno||'—') + '</div></div>'
+          + '<div class="av-dl-item"><div class="lbl">Tipo</div><div class="val">' + escHtmlMec(a.tipo||'—') + '</div></div>'
+          + '<div class="av-dl-item"><div class="lbl">Gravedad</div><div class="val">' + escHtmlMec(a.gravedad||'—') + '</div></div>'
+          + '<div class="av-dl-item"><div class="lbl">Tiempo</div><div class="val">' + tStr + '</div></div>'
+          + '<div class="av-dl-item"><div class="lbl">Causa</div><div class="val">' + escHtmlMec(a.causa||'—') + '</div></div>'
+          + '<div class="av-dl-item"><div class="lbl">ID</div><div class="val" style="font-size:0.72rem">' + escHtmlMec(a.id||'—') + '</div></div>'
+        + '</div>'
+        + (a.accion ? '<div style="margin-top:10px"><div class="av-dl-item"><div class="lbl">Acción correctiva</div><div class="val" style="font-size:0.85rem;margin-top:3px">'+escHtmlMec(a.accion)+'</div></div></div>' : '')
+        + (a.observaciones ? '<div style="margin-top:8px"><div class="av-dl-item"><div class="lbl">Observaciones</div><div class="val" style="font-size:0.85rem;margin-top:3px">'+escHtmlMec(a.observaciones)+'</div></div></div>' : '')
+        + (btnHtml ? '<div>' + btnHtml + '</div>' : '')
+      + '</div>'
+    + '</div>';
+  }).join('');
+
+  document.getElementById('misAvList').innerHTML = html;
+}
+
+function toggleAvItem(id){
+  var el = document.getElementById(id);
+  if(el) el.classList.toggle('open');
 }
 </script>
 </body>
