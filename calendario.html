@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c9a227">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PANALCOR">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Calendario Preventivo — PANALCOR</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0d1b2a;--navy-mid:#1a2d42;--navy-light:#243d56;
+  --gold:#c9a227;--gold-light:#f0c040;
+  --white:#f0f4f8;--green:#2ecc71;--red:#e74c3c;--yellow:#f39c12;--blue:#3498db;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;min-height:100vh;padding-bottom:40px}
+
+/* ── TOPBAR ── */
+.topbar{background:linear-gradient(135deg,#0a1520,var(--navy-mid));border-bottom:2px solid var(--gold);padding:12px 16px;position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.tb-left{display:flex;align-items:center;gap:10px}
+.tb-title{font-size:1rem;font-weight:900;color:var(--gold-light);letter-spacing:.04em}
+.tb-back{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);text-decoration:none;font-size:.95rem}
+
+/* ── NAVEGACIÓN MES ── */
+.nav-bar{background:var(--navy-mid);border-bottom:1px solid rgba(255,255,255,.07);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.nav-mes{display:flex;align-items:center;gap:10px}
+.nav-btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:var(--white);padding:7px 14px;border-radius:7px;font-family:'Barlow',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;transition:background .15s}
+.nav-btn:hover{background:rgba(255,255,255,.13)}
+.nav-label{font-size:1.1rem;font-weight:900;color:var(--gold-light);min-width:180px;text-align:center;letter-spacing:.03em}
+.nav-filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.nav-filters select{background:var(--navy-light);color:var(--white);border:1px solid rgba(201,162,39,.3);border-radius:7px;padding:6px 10px;font-family:'Barlow',sans-serif;font-size:.83rem;font-weight:600;cursor:pointer}
+.nav-filters select:focus{outline:none;border-color:var(--gold)}
+.btn-hoy{background:rgba(201,162,39,.15);border:1px solid rgba(201,162,39,.35);color:var(--gold-light);padding:7px 12px;border-radius:7px;font-family:'Barlow',sans-serif;font-size:.83rem;font-weight:700;cursor:pointer;transition:background .15s}
+.btn-hoy:hover{background:rgba(201,162,39,.25)}
+
+/* ── STATS STRIP ── */
+.stats-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;padding:12px 16px;background:rgba(255,255,255,.02);border-bottom:1px solid rgba(255,255,255,.06)}
+.stat-box{text-align:center;padding:10px 8px;background:var(--navy-mid);border-radius:9px;border:1px solid rgba(255,255,255,.07)}
+.stat-num{font-size:1.5rem;font-weight:900;line-height:1}
+.stat-lbl{font-size:.65rem;color:rgba(255,255,255,.38);text-transform:uppercase;letter-spacing:.08em;margin-top:4px}
+.stat-box.s-total  .stat-num{color:var(--gold-light)}
+.stat-box.s-done   .stat-num{color:var(--green)}
+.stat-box.s-pend   .stat-num{color:var(--yellow)}
+.stat-box.s-pct    .stat-num{color:var(--blue)}
+.progress-bar-wrap{grid-column:1/-1;background:rgba(255,255,255,.07);border-radius:6px;height:8px;overflow:hidden}
+.progress-bar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--green),#27ae60);transition:width .5s}
+
+/* ── CALENDARIO GRID ── */
+.cal-wrap{padding:14px 16px}
+.cal-head{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
+.cal-head-cell{text-align:center;font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);padding:4px 0}
+.cal-head-cell.weekend{color:rgba(243,156,18,.5)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+
+/* ── DÍA CELL ── */
+.day-cell{min-height:80px;background:var(--navy-mid);border:1px solid rgba(255,255,255,.07);border-radius:9px;padding:6px 7px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.day-cell:hover{border-color:rgba(201,162,39,.4);background:rgba(201,162,39,.05)}
+.day-cell.other-month{opacity:.3;pointer-events:none}
+.day-cell.today{border-color:rgba(201,162,39,.6);background:rgba(201,162,39,.07)}
+.day-cell.selected{border-color:var(--gold);box-shadow:0 0 0 2px rgba(201,162,39,.3)}
+.day-cell.has-done{border-left:3px solid var(--green)}
+.day-cell.all-done{background:rgba(46,204,113,.07)}
+.day-cell.weekend .day-num{color:rgba(243,156,18,.7)}
+.day-num{font-size:.82rem;font-weight:700;margin-bottom:5px;line-height:1}
+.day-num.today-label{color:var(--gold-light)}
+.day-dots{display:flex;flex-wrap:wrap;gap:3px}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-done{background:var(--green)}
+.dot-pend{background:rgba(243,156,18,.7)}
+.day-count{font-size:.62rem;color:rgba(255,255,255,.32);margin-top:4px;line-height:1.2}
+
+/* ── PANEL LATERAL / DETALLE ── */
+.page-layout{display:flex;gap:0;align-items:flex-start}
+.cal-main{flex:1;min-width:0}
+.detail-panel{width:320px;flex-shrink:0;padding:14px 14px 14px 0;position:sticky;top:120px}
+.detail-card{background:var(--navy-mid);border:1px solid rgba(255,255,255,.09);border-radius:12px;overflow:hidden}
+.detail-header{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.07);font-size:.82rem;font-weight:700;color:var(--gold-light);letter-spacing:.04em}
+.detail-body{padding:12px 14px;max-height:calc(100vh - 260px);overflow-y:auto}
+.det-empty{text-align:center;padding:30px 16px;color:rgba(255,255,255,.25);font-size:.88rem}
+.task-item{padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.task-item:last-child{border-bottom:none}
+.task-top{display:flex;align-items:flex-start;gap:8px}
+.task-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.task-info{flex:1;min-width:0}
+.task-name{font-size:.85rem;font-weight:600;line-height:1.3}
+.task-meta{font-size:.72rem;color:rgba(255,255,255,.38);margin-top:2px;line-height:1.4}
+.task-done-info{font-size:.7rem;color:var(--green);margin-top:2px}
+.freq-badge{font-size:.62rem;font-weight:700;padding:1px 7px;border-radius:20px;background:rgba(52,152,219,.2);color:var(--blue);border:1px solid rgba(52,152,219,.3);white-space:nowrap;flex-shrink:0}
+
+/* ── PANEL PENDIENTES (debajo del calendario) ── */
+.pending-section{padding:0 16px 20px}
+.pend-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;cursor:pointer;padding:10px 0}
+.pend-header h3{font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45)}
+.pend-toggle{font-size:.75rem;color:rgba(255,255,255,.3);transition:transform .2s}
+.pend-toggle.open{transform:rotate(180deg)}
+.pend-grid{display:none;gap:8px}
+.pend-grid.open{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.pend-card{background:var(--navy-mid);border:1px solid rgba(255,255,255,.08);border-left:3px solid var(--yellow);border-radius:9px;padding:11px 13px}
+.pend-card .pc-maq{font-size:.88rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pend-card .pc-tarea{font-size:.78rem;color:rgba(255,255,255,.5);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pend-card .pc-meta{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap}
+.pend-card .pc-mec{font-size:.68rem;color:rgba(255,255,255,.35)}
+
+/* ── LEYENDA ── */
+.legend{display:flex;align-items:center;gap:14px;padding:0 16px 10px;flex-wrap:wrap}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:.72rem;color:rgba(255,255,255,.4)}
+.leg-dot{width:10px;height:10px;border-radius:50%}
+
+/* ── LOADING ── */
+.loading{text-align:center;padding:60px 20px;color:rgba(255,255,255,.3)}
+.loading .ico{font-size:2.5rem;margin-bottom:12px;animation:spin 1.5s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--navy-mid);border:1px solid rgba(201,162,39,.4);border-radius:10px;padding:11px 22px;font-size:.9rem;font-weight:600;z-index:9999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* responsive */
+@media(max-width:900px){
+  .detail-panel{display:none}
+  .day-cell{min-height:60px}
+}
+@media(max-width:500px){
+  .day-cell{min-height:48px;padding:4px 5px}
+  .day-num{font-size:.75rem}
+  .dot{width:6px;height:6px}
+}
+</style>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+</script>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-left">
+    <a href="admin.html" class="tb-back" title="Panel">←</a>
+    <span class="tb-title">📅 Calendario Preventivo</span>
+  </div>
+</div>
+
+<!-- NAV MES -->
+<div class="nav-bar">
+  <div class="nav-mes">
+    <button class="nav-btn" onclick="cambiarMes(-1)">&#9664;</button>
+    <div class="nav-label" id="navLabel">—</div>
+    <button class="nav-btn" onclick="cambiarMes(+1)">&#9654;</button>
+    <button class="btn-hoy" onclick="irHoy()">Hoy</button>
+  </div>
+  <div class="nav-filters">
+    <select id="filtMec" onchange="aplicarFiltro()">
+      <option value="">Todos los mecánicos</option>
+    </select>
+    <select id="filtFreq" onchange="aplicarFiltro()">
+      <option value="">Todas las frecuencias</option>
+      <option>DIARIO</option><option>SEMANAL</option><option>QUINCENAL</option>
+      <option>MENSUAL</option><option>TRIMESTRAL</option><option>SEMESTRAL</option><option>ANUAL</option>
+    </select>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-strip" id="statsStrip">
+  <div class="stat-box s-total"><div class="stat-num" id="stTotal">—</div><div class="stat-lbl">Total</div></div>
+  <div class="stat-box s-done" ><div class="stat-num" id="stDone">—</div><div class="stat-lbl">Hechas</div></div>
+  <div class="stat-box s-pend" ><div class="stat-num" id="stPend">—</div><div class="stat-lbl">Pendientes</div></div>
+  <div class="stat-box s-pct"  ><div class="stat-num" id="stPct">—</div><div class="stat-lbl">Completado</div></div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
+</div>
+
+<!-- LAYOUT -->
+<div class="page-layout">
+
+  <!-- CALENDARIO -->
+  <div class="cal-main">
+    <div class="cal-wrap">
+      <!-- Cabecera días semana -->
+      <div class="cal-head">
+        <div class="cal-head-cell">Lun</div>
+        <div class="cal-head-cell">Mar</div>
+        <div class="cal-head-cell">Mié</div>
+        <div class="cal-head-cell">Jue</div>
+        <div class="cal-head-cell">Vie</div>
+        <div class="cal-head-cell weekend">Sáb</div>
+        <div class="cal-head-cell weekend">Dom</div>
+      </div>
+      <!-- Grid días -->
+      <div class="cal-grid" id="calGrid">
+        <div class="loading"><div class="ico">⏳</div><p>Cargando...</p></div>
+      </div>
+    </div>
+
+    <!-- Leyenda -->
+    <div class="legend">
+      <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div> Tarea completada</div>
+      <div class="leg-item"><div class="leg-dot" style="background:rgba(243,156,18,.7)"></div> Tarea pendiente</div>
+      <div class="leg-item"><div class="leg-dot" style="background:rgba(201,162,39,.6);border:1px solid var(--gold)"></div> Hoy</div>
+    </div>
+
+    <!-- Pendientes -->
+    <div class="pending-section">
+      <div class="pend-header" onclick="togglePendientes()">
+        <h3>⏳ Tareas pendientes del mes (<span id="pendCount">0</span>)</h3>
+        <span class="pend-toggle" id="pendToggle">▼</span>
+      </div>
+      <div class="pend-grid" id="pendGrid"></div>
+    </div>
+  </div>
+
+  <!-- PANEL DETALLE -->
+  <div class="detail-panel">
+    <div class="detail-card">
+      <div class="detail-header" id="detailHeader">Selecciona un día</div>
+      <div class="detail-body" id="detailBody">
+        <div class="det-empty">Pulsa sobre cualquier día del calendario para ver sus tareas.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══ FIREBASE ══ */
+var FB_CFG = {
+  apiKey:"AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU",
+  authDomain:"panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:"https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"panalcor-mantenimiento",
+  storageBucket:"panalcor-mantenimiento.firebasestorage.app",
+  messagingSenderId:"67593058609",
+  appId:"1:67593058609:web:c33fa1fa4fce2932485810"
+};
+if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
+var DB = firebase.database();
+
+/* ══ ESTADO ══ */
+var _mesActual   = '';   // YYYY-MM
+var _tareas      = [];   // todas las tareas del mes (filtradas)
+var _tareasRaw   = [];   // sin filtrar
+var _selDay      = null; // ISO date seleccionado
+var _pendOpen    = false;
+var _MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+var _DIAS_FREQ   = {DIARIO:'Todos los días',SEMANAL:'Semanal',QUINCENAL:'Quincenal',MENSUAL:'Mensual',TRIMESTRAL:'Trimestral',SEMESTRAL:'Semestral',ANUAL:'Anual'};
+
+/* ══ INIT ══ */
+(function init(){
+  var hoy = new Date();
+  _mesActual = hoy.getFullYear()+'-'+String(hoy.getMonth()+1).padStart(2,'0');
+  cargarMecanicos();
+  cargarMes();
+})();
+
+function cargarMecanicos(){
+  var sel = document.getElementById('filtMec');
+  var fb  = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE'];
+  DB.ref('config/mecanicos').once('value').then(function(s){
+    var v = s.val();
+    var lista = (v&&v.length) ? v : fb;
+    lista.forEach(function(m){
+      var o = document.createElement('option');
+      o.value = m; o.textContent = '👷 '+m;
+      sel.appendChild(o);
+    });
+  }).catch(function(){
+    fb.forEach(function(m){
+      var o = document.createElement('option');
+      o.value = m; o.textContent = '👷 '+m;
+      sel.appendChild(o);
+    });
+  });
+}
+
+/* ══ CARGAR MES ══ */
+function cargarMes(){
+  var parts = _mesActual.split('-');
+  document.getElementById('navLabel').textContent = _MESES[parseInt(parts[1])-1]+' '+parts[0];
+
+  document.getElementById('calGrid').innerHTML =
+    '<div class="loading" style="grid-column:1/-1"><div class="ico">⏳</div><p>Cargando tareas...</p></div>';
+
+  DB.ref('asignaciones/'+_mesActual).once('value').then(function(snap){
+    var val = snap.val() || {};
+    _tareasRaw = Object.keys(val).map(function(k){
+      return Object.assign({_id:k}, val[k]);
+    });
+    aplicarFiltro();
+  }).catch(function(){
+    document.getElementById('calGrid').innerHTML =
+      '<div style="grid-column:1/-1;text-align:center;padding:40px;color:rgba(255,255,255,.3)">❌ Error al cargar datos</div>';
+  });
+}
+
+/* ══ FILTRO ══ */
+function aplicarFiltro(){
+  var mec  = document.getElementById('filtMec').value;
+  var freq = document.getElementById('filtFreq').value;
+  _tareas = _tareasRaw.filter(function(t){
+    if(mec  && t.mecanico !== mec)    return false;
+    if(freq && t.frecuencia !== freq) return false;
+    return true;
+  });
+  actualizarStats();
+  renderCalendario();
+  renderPendientes();
+  if(_selDay) mostrarDia(_selDay);
+}
+
+/* ══ STATS ══ */
+function actualizarStats(){
+  var total  = _tareas.length;
+  var hechas = _tareas.filter(function(t){ return t.hecho; }).length;
+  var pend   = total - hechas;
+  var pct    = total ? Math.round(hechas/total*100) : 0;
+  document.getElementById('stTotal').textContent = total;
+  document.getElementById('stDone').textContent  = hechas;
+  document.getElementById('stPend').textContent  = pend;
+  document.getElementById('stPct').textContent   = pct+'%';
+  document.getElementById('progressFill').style.width = pct+'%';
+  document.getElementById('pendCount').textContent = pend;
+}
+
+/* ══ RENDER CALENDARIO ══ */
+function renderCalendario(){
+  var parts   = _mesActual.split('-');
+  var yr      = parseInt(parts[0]);
+  var mo      = parseInt(parts[1]);
+  var primer  = new Date(yr, mo-1, 1);
+  var ultimo  = new Date(yr, mo, 0);
+  var hoy     = new Date();
+  var hoyISO  = isoDate(hoy);
+
+  // Agrupar tareas por día en que se hicieron
+  var donePorDia  = {}; // {ISO: [tareas]}
+  var pendPorDia  = {}; // por frecuencia distribuidas
+
+  _tareas.forEach(function(t){
+    if(t.hecho && t.hechoEn){
+      var d = t.hechoEn.substring(0,10); // YYYY-MM-DD
+      if(!donePorDia[d]) donePorDia[d] = [];
+      donePorDia[d].push(t);
+    }
+  });
+
+  // Distribuir pendientes por días según frecuencia
+  var pendientes = _tareas.filter(function(t){ return !t.hecho; });
+  pendientes.forEach(function(t){
+    var dias = diasPorFrecuencia(t.frecuencia, yr, mo);
+    dias.forEach(function(iso){
+      if(!pendPorDia[iso]) pendPorDia[iso] = [];
+      pendPorDia[iso].push(t);
+    });
+  });
+
+  // Generar celdas
+  var startDow = primer.getDay() === 0 ? 6 : primer.getDay()-1; // lunes=0
+  var cells = '';
+
+  // Celdas vacías antes del primer día
+  for(var i=0; i<startDow; i++){
+    cells += '<div class="day-cell other-month"></div>';
+  }
+
+  for(var d=1; d<=ultimo.getDate(); d++){
+    var iso  = yr+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    var dow  = new Date(yr,mo-1,d).getDay(); // 0=dom,6=sab
+    var isWE = (dow===0||dow===6);
+    var isHoy = iso===hoyISO;
+    var done  = donePorDia[iso]||[];
+    var pend  = pendPorDia[iso]||[];
+    var total = done.length+pend.length;
+
+    var cls = 'day-cell';
+    if(isWE) cls += ' weekend';
+    if(isHoy) cls += ' today';
+    if(done.length>0) cls += ' has-done';
+    if(done.length>0 && pend.length===0 && total>0) cls += ' all-done';
+
+    // Puntos (máx 8)
+    var dots = '';
+    var shown = 0;
+    done.slice(0,5).forEach(function(){ if(shown<8){dots+='<div class="dot dot-done"></div>';shown++;} });
+    pend.slice(0,5).forEach(function(){ if(shown<8){dots+='<div class="dot dot-pend"></div>';shown++;} });
+    var extra = total-shown;
+
+    var countTxt = '';
+    if(done.length) countTxt += done.length+' ✓ ';
+    if(pend.length) countTxt += pend.length+' pendiente'+(pend.length>1?'s':'');
+
+    cells += '<div class="'+cls+'" onclick="mostrarDia(\''+iso+'\',this)">'
+      +'<div class="day-num'+(isHoy?' today-label':'')+'">'+d+(isHoy?' ●':'')+'</div>'
+      +'<div class="day-dots">'+dots+(extra>0?'<span style="font-size:.6rem;color:rgba(255,255,255,.3)">+'+extra+'</span>':'')+'</div>'
+      +(total>0?'<div class="day-count">'+countTxt.trim()+'</div>':'')
+      +'</div>';
+  }
+
+  // Rellenar hasta completar la última fila
+  var total_cells = startDow + ultimo.getDate();
+  var rem = total_cells % 7 === 0 ? 0 : 7 - (total_cells%7);
+  for(var i=0; i<rem; i++) cells += '<div class="day-cell other-month"></div>';
+
+  document.getElementById('calGrid').innerHTML = cells;
+}
+
+/* ══ FRECUENCIA → DÍAS ══
+   Devuelve array de ISO dates dentro del mes dadas para esa frecuencia */
+function diasPorFrecuencia(freq, yr, mo){
+  var ultimo = new Date(yr, mo, 0).getDate();
+  var days   = [];
+
+  if(freq === 'DIARIO'){
+    for(var d=1; d<=ultimo; d++){
+      var dow = new Date(yr,mo-1,d).getDay();
+      // Solo días laborables (lun-sab)
+      if(dow!==0) days.push(mkISO(yr,mo,d));
+    }
+  } else if(freq === 'SEMANAL'){
+    // Primer lunes de cada semana del mes
+    for(var d=1; d<=ultimo; d++){
+      var dow = new Date(yr,mo-1,d).getDay();
+      if(dow===1) days.push(mkISO(yr,mo,d)); // cada lunes
+    }
+    if(!days.length) days.push(mkISO(yr,mo,1)); // fallback
+  } else if(freq === 'QUINCENAL'){
+    days.push(mkISO(yr,mo,1));
+    days.push(mkISO(yr,mo,Math.min(16,ultimo)));
+  } else if(freq === 'MENSUAL'){
+    // Primer día laborable del mes
+    for(var d=1; d<=ultimo; d++){
+      var dow = new Date(yr,mo-1,d).getDay();
+      if(dow!==0&&dow!==6){ days.push(mkISO(yr,mo,d)); break; }
+    }
+    if(!days.length) days.push(mkISO(yr,mo,1));
+  } else {
+    // TRIMESTRAL, SEMESTRAL, ANUAL → primer día del mes
+    days.push(mkISO(yr,mo,1));
+  }
+  return days;
+}
+
+function mkISO(yr,mo,d){
+  return yr+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+}
+
+/* ══ MOSTRAR DÍA ══ */
+function mostrarDia(iso, cellEl){
+  _selDay = iso;
+
+  // Marcar seleccionado
+  document.querySelectorAll('.day-cell.selected').forEach(function(c){ c.classList.remove('selected'); });
+  if(cellEl) cellEl.classList.add('selected');
+  else {
+    var d = parseInt(iso.split('-')[2]);
+    var cells = document.querySelectorAll('.cal-grid .day-cell:not(.other-month)');
+    if(cells[d-1]) cells[d-1].classList.add('selected');
+  }
+
+  var parts = iso.split('-');
+  var fecha = parts[2]+'/'+parts[1]+'/'+parts[0];
+  document.getElementById('detailHeader').textContent = '📅 '+fecha;
+
+  // Tareas completadas ese día
+  var done = _tareas.filter(function(t){
+    return t.hecho && t.hechoEn && t.hechoEn.substring(0,10)===iso;
+  });
+  // Tareas pendientes cuya frecuencia cae en ese día
+  var yr = parseInt(parts[0]), mo = parseInt(parts[1]);
+  var pend = _tareas.filter(function(t){
+    if(t.hecho) return false;
+    return diasPorFrecuencia(t.frecuencia, yr, mo).indexOf(iso)!==-1;
+  });
+
+  var html = '';
+
+  if(done.length){
+    html += '<div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--green);margin-bottom:8px">✅ Completadas ('+done.length+')</div>';
+    html += done.map(function(t){
+      var hora = t.hechoEn ? t.hechoEn.substring(11,16) : '';
+      var turnoIco = {MANANA:'🌅',TARDE:'🌇',NOCHE:'🌙'}[t.turno]||'';
+      return '<div class="task-item">'
+        +'<div class="task-top">'
+          +'<div class="task-dot" style="background:var(--green)"></div>'
+          +'<div class="task-info">'
+            +'<div class="task-name">'+esc(t.instancia||t.maquina||'—')+'</div>'
+            +'<div class="task-meta">'+esc(t.tarea||'—')+'</div>'
+            +'<div class="task-done-info">'+turnoIco+' '+esc(t.turno||'')+(hora?' · '+hora:'')+(t.mecanico?' · '+esc(t.mecanico):'')+'</div>'
+          +'</div>'
+          +'<span class="freq-badge">'+esc(_DIAS_FREQ[t.frecuencia]||t.frecuencia||'')+'</span>'
+        +'</div>'
+        +(t.notas?'<div style="font-size:.72rem;color:rgba(255,255,255,.35);margin-top:4px;padding-left:17px">📝 '+esc(t.notas)+'</div>':'')
+      +'</div>';
+    }).join('');
+  }
+
+  if(pend.length){
+    html += '<div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--yellow);margin-top:12px;margin-bottom:8px">⏳ Previstas ('+pend.length+')</div>';
+    html += pend.map(function(t){
+      return '<div class="task-item">'
+        +'<div class="task-top">'
+          +'<div class="task-dot" style="background:rgba(243,156,18,.7)"></div>'
+          +'<div class="task-info">'
+            +'<div class="task-name">'+esc(t.instancia||t.maquina||'—')+'</div>'
+            +'<div class="task-meta">'+esc(t.tarea||'—')+(t.mecanico?' · 👷 '+esc(t.mecanico):'')+'</div>'
+          +'</div>'
+          +'<span class="freq-badge">'+esc(_DIAS_FREQ[t.frecuencia]||t.frecuencia||'')+'</span>'
+        +'</div>'
+      +'</div>';
+    }).join('');
+  }
+
+  if(!done.length && !pend.length){
+    html = '<div class="det-empty">Sin tareas este día.</div>';
+  }
+
+  document.getElementById('detailBody').innerHTML = html;
+}
+
+/* ══ PENDIENTES ══ */
+function renderPendientes(){
+  var pend = _tareas.filter(function(t){ return !t.hecho; });
+  document.getElementById('pendCount').textContent = pend.length;
+  if(!pend.length){ document.getElementById('pendGrid').innerHTML=''; return; }
+
+  // Ordenar: DIARIO primero, luego por frecuencia, luego por mecánico
+  var orden = {DIARIO:0,SEMANAL:1,QUINCENAL:2,MENSUAL:3,TRIMESTRAL:4,SEMESTRAL:5,ANUAL:6};
+  pend.sort(function(a,b){
+    return (orden[a.frecuencia]||9)-(orden[b.frecuencia]||9)
+        || (a.mecanico||'').localeCompare(b.mecanico||'')
+        || (a.instancia||a.maquina||'').localeCompare(b.instancia||b.maquina||'');
+  });
+
+  document.getElementById('pendGrid').innerHTML = pend.map(function(t){
+    return '<div class="pend-card">'
+      +'<div class="pc-maq">'+esc(t.instancia||t.maquina||'—')+'</div>'
+      +'<div class="pc-tarea">'+esc(t.tarea||'—')+'</div>'
+      +'<div class="pc-meta">'
+        +'<span class="freq-badge">'+esc(_DIAS_FREQ[t.frecuencia]||t.frecuencia||'')+'</span>'
+        +(t.mecanico?'<span class="pc-mec">👷 '+esc(t.mecanico)+'</span>':'')
+        +(t.subtipo?'<span class="pc-mec">'+esc(t.subtipo)+'</span>':'')
+      +'</div>'
+    +'</div>';
+  }).join('');
+}
+
+function togglePendientes(){
+  _pendOpen = !_pendOpen;
+  document.getElementById('pendGrid').classList.toggle('open', _pendOpen);
+  document.getElementById('pendToggle').classList.toggle('open', _pendOpen);
+}
+
+/* ══ NAVEGACIÓN ══ */
+function cambiarMes(delta){
+  var parts = _mesActual.split('-');
+  var d = new Date(parseInt(parts[0]), parseInt(parts[1])-1+delta, 1);
+  _mesActual = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  _selDay = null;
+  document.getElementById('detailHeader').textContent = 'Selecciona un día';
+  document.getElementById('detailBody').innerHTML = '<div class="det-empty">Pulsa sobre cualquier día del calendario para ver sus tareas.</div>';
+  cargarMes();
+}
+
+function irHoy(){
+  var hoy = new Date();
+  _mesActual = hoy.getFullYear()+'-'+String(hoy.getMonth()+1).padStart(2,'0');
+  _selDay = null;
+  cargarMes();
+}
+
+/* ══ HELPERS ══ */
+function isoDate(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function esc(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+var _toastT;
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(_toastT);
+  _toastT=setTimeout(function(){ t.classList.remove('show'); },2500);
+}
+</script>
+</body>
+</html>
