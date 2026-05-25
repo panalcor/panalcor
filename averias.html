@@ -910,18 +910,55 @@ function init(){
   const retId = params.get('retomar');
   if(retId){ setTimeout(function(){ retomarAveria(retId); }, 300); }
 
-  // ?maq=MAQ-001  → pre-seleccionar máquina desde QR
-  const maqQR  = params.get('maq');
+  // ?maq=MAQ-001  → abrir avería desde QR con todo auto-relleno
+  const maqQR = params.get('maq');
   if(maqQR){
-    const sel = document.getElementById('fMaquina');
-    if(sel) {
+    setTimeout(function(){
+      var sel = document.getElementById('fMaquina');
+      if(!sel) return;
       sel.value = maqQR;
       onMaquinaChange();
-      sel.style.transition = 'box-shadow 0.4s';
-      sel.style.boxShadow  = '0 0 0 3px rgba(201,162,39,0.6)';
-      setTimeout(() => sel.style.boxShadow = '', 2500);
-      showToast('📱 Máquina pre-seleccionada desde QR');
-    }
+
+      // Auto-rellenar fecha y hora actual
+      var ahora = new Date();
+      // Fecha con lógica de turno
+      var d = new Date(ahora);
+      var umbral = d.getDay()===0 ? 21 : 22;
+      if(ahora.getHours() >= umbral) d.setDate(d.getDate()+1);
+      var yyyy = d.getFullYear();
+      var mm   = String(d.getMonth()+1).padStart(2,'0');
+      var dd   = String(d.getDate()).padStart(2,'0');
+      document.getElementById('fFecha').value = yyyy+'-'+mm+'-'+dd;
+
+      var hh = String(ahora.getHours()).padStart(2,'0');
+      var min = String(ahora.getMinutes()).padStart(2,'0');
+      document.getElementById('fHoraInicio').value = hh+':'+min;
+      syncTurnoConHora();
+
+      // Marcar el mecánico logueado
+      var mecNom = _mecSesionValida();
+      if(mecNom){
+        document.querySelectorAll('.mec-check').forEach(function(c){
+          if(c.value.toUpperCase() === mecNom.toUpperCase()) c.checked = true;
+        });
+      }
+
+      // Banner informativo
+      var maqObj = MAQUINAS.find(function(m){ return m.id === maqQR; });
+      if(maqObj){
+        var banner = document.getElementById('retomandoBanner');
+        if(banner){
+          banner.style.display = 'flex';
+          banner.style.borderColor = 'rgba(231,76,60,0.4)';
+          banner.style.background  = 'rgba(231,76,60,0.08)';
+          document.getElementById('retomandoInfo').textContent = '📱 QR · ' + maqObj.n + ' — Rellena y guarda como EN CURSO o RESUELTA';
+        }
+      }
+
+      switchTab('nueva');
+      showToast('📱 ' + (maqObj ? maqObj.n : maqQR) + ' — Registra la avería');
+      setTimeout(function(){ window.scrollTo({top:0, behavior:'smooth'}); }, 100);
+    }, 400);
   }
 }
 
@@ -1224,12 +1261,23 @@ function guardarAveria(){
   const tipo = document.querySelector('input[name=tipo]:checked');
   const grav = document.querySelector('input[name=grav]:checked');
 
+  const parteVal = document.getElementById('fParte').value;
+  const causaVal = document.getElementById('fCausa').value;
+  const turnoVal = document.getElementById('fTurno').value;
+  const mecsChecked = [...document.querySelectorAll('.mec-check:checked')];
+  const accionVal = document.getElementById('fAccion').value.trim();
+
   if(!maqId){showToast('⚠️ Selecciona la máquina');return;}
+  if(!parteVal){showToast('⚠️ Selecciona el parte / componente afectado');return;}
   if(!fecha||!horaIni){showToast('⚠️ Indica la fecha y hora');return;}
+  if(!turnoVal){showToast('⚠️ Selecciona el turno');return;}
   if(!tipo){showToast('⚠️ Selecciona el tipo de avería');return;}
   if(!grav){showToast('⚠️ Selecciona la gravedad');return;}
+  if(!causaVal){showToast('⚠️ Selecciona la causa raíz');return;}
+  if(mecsChecked.length === 0){showToast('⚠️ Selecciona al menos un mecánico');return;}
   if(!desc){showToast('⚠️ Escribe una descripción');return;}
   if(!estado){showToast('\u26a0\ufe0f Indica el estado final');return;}
+  if(estado === 'RESUELTA' && !accionVal){showToast('⚠️ Escribe la acción correctiva realizada');return;}
   if(estado === 'RESUELTA' && !_firmaData){
     showToast('\u270d\ufe0f Firma requerida para marcar como RESUELTA');
     document.getElementById('firmaWrap').classList.add('visible');
@@ -1426,6 +1474,13 @@ function retomarAveria(id){
   document.querySelectorAll('input[name=tipo]').forEach(function(r){r.checked=(r.value===av.tipo);});
   document.querySelectorAll('input[name=grav]').forEach(function(r){r.checked=(r.value===av.gravedad);});
   document.querySelectorAll('.mec-check').forEach(function(c){c.checked=!!(av.mecanicos&&av.mecanicos.includes(c.value));});
+  // Si hay mecanico logado y es distinto al que abrió la avería, marcarlo también
+  var mecActualRet = _mecSesionValida();
+  if(mecActualRet){
+    document.querySelectorAll('.mec-check').forEach(function(c){
+      if(c.value.toUpperCase() === mecActualRet.toUpperCase()) c.checked = true;
+    });
+  }
 
   materialesForm = av.materiales ? av.materiales.map(function(m){return Object.assign({},m);}) : [];
   renderMatList();
