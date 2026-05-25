@@ -478,25 +478,27 @@ function renderMaquina(estData){
       + (av.descripcion?'<div class="av-desc">«'+escHtml(av.descripcion)+'»</div>':'')
       + '</div>';
 
-    // Botón solucionado
-    html += '<button class="btn-solucionado" onclick="mostrarFormSolucion()">✅ MARCAR COMO RESUELTA</button>';
-    html += '<button class="btn-sec" onclick="verEnHistorial()">📋 Ver en historial completo</button>';
-
-    // Form solución (oculto)
+    // Botón solucionado — un solo toque
+    html += '<button class="btn-solucionado" onclick="this.disabled=true;this.textContent=\'⏳ Cerrando...\';confirmarSolucion()">✅ MARCAR COMO RESUELTA</button>';
+    // Botón detalles opcionales
     var partes = PARTES[maq.t] || ['MECANICO','ELECTRICO','CUADRO','AJUSTE','OTROS'];
+    html += '<button class="btn-sec" onclick="mostrarFormSolucion()">📋 Añadir detalles de la reparación</button>';
+    html += '<button class="btn-sec" onclick="verEnHistorial()">🔗 Ver en historial completo</button>';
+
+    // Form detalles (oculto, completamente opcional)
     html += '<div class="form-section" id="formSolucion" style="display:none">'
-      + '<h3>✅ Datos de la reparación</h3>'
+      + '<h3>📋 Detalles opcionales</h3>'
       + '<div class="field"><label>Tipo de avería</label>'
-      + '<select id="fTipo"><option value="MECANICA">MECANICA</option><option value="ELECTRICA">ELECTRICA</option><option value="NEUMATICA">NEUMATICA</option><option value="HIDRAULICA">HIDRAULICA</option><option value="FRIO">FRIO</option><option value="OTROS">OTROS</option></select></div>'
+      + '<select id="fTipo"><option value="">— Sin especificar —</option><option value="MECANICA">MECANICA</option><option value="ELECTRICA">ELECTRICA</option><option value="NEUMATICA">NEUMATICA</option><option value="HIDRAULICA">HIDRAULICA</option><option value="FRIO">FRIO</option><option value="OTROS">OTROS</option></select></div>'
       + '<div class="field"><label>Parte afectada</label>'
-      + '<select id="fParte"><option value="">— Selecciona —</option>'
+      + '<select id="fParte"><option value="">— Sin especificar —</option>'
       + partes.map(function(p){ return '<option>'+escHtml(p)+'</option>'; }).join('')
       + '</select></div>'
       + '<div class="field"><label>Descripción de la reparación</label>'
       + '<textarea id="fDesc" placeholder="¿Qué se ha hecho?"></textarea></div>'
-      + '<div class="field"><label>Hora fin (auto)</label>'
+      + '<div class="field"><label>Hora fin</label>'
       + '<input type="time" id="fHoraFin" value="'+horaStr()+'"></div>'
-      + '<button class="btn-solucionado" onclick="confirmarSolucion()">✅ CONFIRMAR Y CERRAR AVERÍA</button>'
+      + '<button class="btn-solucionado" onclick="confirmarSolucion()">✅ GUARDAR Y CERRAR AVERÍA</button>'
       + '<button class="btn-sec" onclick="document.getElementById(\'formSolucion\').style.display=\'none\'">Cancelar</button>'
       + '</div>';
 
