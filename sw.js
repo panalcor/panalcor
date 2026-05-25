@@ -13,6 +13,7 @@ const SHELL = [
   'turnos.html',
   'historial_maquina.html',
   'qr_maquinas.html',
+  'parte_trabajo.html',
   'manifest.json',
   'icons/icon-192.png',
   'icons/icon-512.png'
