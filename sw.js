@@ -15,6 +15,7 @@ const SHELL = [
   'qr_maquinas.html',
   'parte_trabajo.html',
   'calendario.html',
+  'manual.html',
   'manifest.json',
   'icons/icon-192.png',
   'icons/icon-512.png'
