@@ -122,6 +122,16 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:'Bar
 }
 .btn-back:active{background:rgba(255,255,255,0.05)}
 
+.home-icon-btn{
+  display:flex;align-items:center;justify-content:center;
+  width:44px;height:44px;border-radius:12px;
+  background:linear-gradient(135deg,rgba(201,162,39,0.18),rgba(201,162,39,0.08));
+  border:1.5px solid rgba(201,162,39,0.4);
+  cursor:pointer;transition:all .2s;
+  margin-bottom:18px;align-self:flex-start;
+}
+.home-icon-btn:active{background:rgba(201,162,39,0.32);transform:scale(.93)}
+
 .btn-docs{
   background:linear-gradient(135deg,rgba(52,152,219,0.2),rgba(41,128,185,0.12));
   border:2px solid rgba(52,152,219,0.45);color:var(--white);
@@ -182,8 +192,19 @@ if('serviceWorker' in navigator){
 <!-- ══ PANTALLA 3: ELECCIÓN ══ -->
 <div class="screen hidden" id="screenChoice">
   <div class="choice-wrap">
-    <h2>¿Qué quieres hacer?</h2>
-    <div class="who" id="choiceWho"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <button class="home-icon-btn" onclick="mostrar('screenLogin')" title="Inicio">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z" fill="rgba(201,162,39,0.25)" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M9 21V15H15V21" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div style="text-align:right">
+        <div style="font-size:1.15rem;font-weight:900;color:var(--gold-light)">¿Qué quieres hacer?</div>
+        <div class="who" id="choiceWho" style="margin-bottom:0"></div>
+      </div>
+    </div>
+    <div style="height:16px"></div>
 
     <button class="choice-btn btn-averia" onclick="irA('averia')">
       <div class="ch-ico">🔴</div>
