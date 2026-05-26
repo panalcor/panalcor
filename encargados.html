@@ -24,6 +24,18 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;min-height:100vh}
 
+/* ── LOGIN ENCARGADOS ── */
+#encLoginScreen{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px}
+#encLoginScreen .box{background:var(--navy-mid);border:1px solid rgba(155,89,182,0.4);border-radius:18px;padding:36px 28px;width:100%;max-width:340px;text-align:center}
+#encLoginScreen .ico{font-size:2.8rem;margin-bottom:10px}
+#encLoginScreen h2{font-size:1.3rem;font-weight:900;color:var(--purple-light);margin-bottom:4px}
+#encLoginScreen .sub{font-size:0.75rem;color:rgba(255,255,255,0.35);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:26px}
+#encLoginScreen input{width:100%;background:var(--navy);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:9px;padding:14px;font-family:'Barlow',sans-serif;font-size:1.2rem;text-align:center;letter-spacing:0.25em;margin-bottom:14px}
+#encLoginScreen input:focus{outline:none;border-color:var(--purple)}
+#encLoginScreen .btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--purple),#7d3c98);color:#fff;border:none;border-radius:9px;font-family:'Barlow',sans-serif;font-size:1rem;font-weight:900;letter-spacing:0.1em;cursor:pointer}
+#encLoginScreen .err{color:var(--red);font-size:0.85rem;margin-top:10px;min-height:18px}
+#encLoginScreen .home-link{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;background:rgba(201,162,39,0.12);border:1.5px solid rgba(201,162,39,0.4);margin-bottom:12px}
+
 /* TOPBAR */
 .topbar{background:linear-gradient(135deg,#0a1520,var(--navy-mid));border-bottom:2px solid var(--purple);
   padding:14px 20px;display:flex;align-items:center;gap:14px}
@@ -144,6 +156,22 @@ if('serviceWorker' in navigator){
 </script>
 </head>
 <body>
+
+<!-- ══ LOGIN ENCARGADOS ══ -->
+<div id="encLoginScreen">
+  <div class="box">
+    <a href="panalcor_inicio.html" class="home-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z" fill="rgba(201,162,39,0.25)" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 21V15H15V21" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/></svg></a>
+    <div class="ico">👷</div>
+    <h2>ENCARGADOS</h2>
+    <div class="sub">PANALCOR S.L. &middot; Acceso restringido</div>
+    <input type="password" id="encPwInput" placeholder="Contraseña" autocomplete="off"
+           onkeydown="if(event.key==='Enter') encLoginCheck()">
+    <button class="btn" onclick="encLoginCheck()">ENTRAR</button>
+    <div class="err" id="encLoginErr"></div>
+  </div>
+</div>
+
+<div id="encApp" style="display:none">
 
 <div class="topbar">
   <a href="panalcor_inicio.html" class="back-btn">← Inicio</a>
@@ -745,6 +773,33 @@ function confirmarFirma(){
   cerrarFirmaModal();
   setTimeout(cargarFirmasPendientes, 400);
 }
+
+// ── LOGIN ENCARGADOS ─────────────────────────────────────────────
+var ENC_PW = 'encargados2025';
+var ENC_SESSION_KEY = 'enc_session';
+
+function encLoginCheck(){
+  var pw = document.getElementById('encPwInput').value;
+  var err = document.getElementById('encLoginErr');
+  if(pw === ENC_PW){
+    sessionStorage.setItem(ENC_SESSION_KEY, '1');
+    document.getElementById('encLoginScreen').style.display = 'none';
+    document.getElementById('encApp').style.display = 'block';
+    err.textContent = '';
+  } else {
+    err.textContent = 'Contraseña incorrecta';
+    document.getElementById('encPwInput').value = '';
+    document.getElementById('encPwInput').focus();
+  }
+}
+
+(function(){
+  if(sessionStorage.getItem(ENC_SESSION_KEY) === '1'){
+    document.getElementById('encLoginScreen').style.display = 'none';
+    document.getElementById('encApp').style.display = 'block';
+  }
+})();
 </script>
+</div><!-- /encApp -->
 </body>
 </html>
