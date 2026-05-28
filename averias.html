@@ -1325,15 +1325,21 @@ function guardarAveria(){
     averias.unshift(av);
   }
   localStorage.setItem('averias_v1', JSON.stringify(averias));
-
-  // ── Guardar en Firebase (funciona desde cualquier red) ──
-  fbSet(av.id, av).then(() => {
-    console.log('✅ Avería sincronizada con Firebase');
-  });
-
-  showToast(_fbOnline ? '✅ Avería guardada y sincronizada ☁️' : '✅ Avería guardada (se sincronizará cuando haya conexión)');
   limpiarForm();
   switchTab('historial');
+
+  // Toast basado en resultado real de Firebase (no en _fbOnline)
+  var _tsShown = false;
+  var _tsFallback = setTimeout(function(){
+    if(!_tsShown){ _tsShown=true; showToast('✅ Avería guardada'); }
+  }, 2500);
+  fbSet(av.id, av).then(function(){
+    clearTimeout(_tsFallback);
+    if(!_tsShown){ _tsShown=true; showToast('✅ Avería guardada y sincronizada ☁️'); }
+  }).catch(function(){
+    clearTimeout(_tsFallback);
+    if(!_tsShown){ _tsShown=true; showToast('✅ Avería guardada localmente'); }
+  });
 }
 
 function limpiarForm(){

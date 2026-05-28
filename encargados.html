@@ -667,14 +667,17 @@ function cargarFirmasPendientes(){
   DB.ref('averias').once('value').then(function(snap){
     var data = snap.val();
     var pend = [];
-    if(data){
-      Object.values(data).forEach(function(a){
-        if(a && a.estado === 'RESUELTA' && !a.firmada) pend.push(a);
-      });
-    }
-    // Also from localStorage
+    // IDs que el encargado ya ha firmado localmente (aunque Firebase aun no lo sepa)
     var lsAv = [];
     try{ lsAv = JSON.parse(localStorage.getItem('averias_v1')||'[]'); } catch(e){}
+    var localFirmadas = {};
+    lsAv.forEach(function(a){ if(a && a.firmada) localFirmadas[a.id] = true; });
+    if(data){
+      Object.values(data).forEach(function(a){
+        if(a && a.estado === 'RESUELTA' && !a.firmada && !localFirmadas[a.id]) pend.push(a);
+      });
+    }
+    // Averias solo en localStorage (no estan en Firebase)
     var fbIds = pend.map(function(a){ return a.id; });
     lsAv.forEach(function(a){
       if(a && a.estado==='RESUELTA' && !a.firmada && fbIds.indexOf(a.id)===-1) pend.push(a);
@@ -799,7 +802,7 @@ function confirmarFirma(){
   } catch(e){}
 
   cerrarFirmaModal();
-  setTimeout(cargarFirmasPendientes, 400);
+  setTimeout(cargarFirmasPendientes, 1500);
 }
 
 // ── VISTA ADMIN: columnas de avisos por encargado ─────────────
