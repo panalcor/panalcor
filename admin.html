@@ -1244,6 +1244,9 @@ function initApp(){
   const fmt = d => d.toISOString().split('T')[0];
   ['mecDesde','infDesde'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=fmt(hace30); });
   ['mecHasta','infHasta'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=fmt(hoy); });
+  // Navegar a tab por hash URL (ej: admin.html#maq)
+  var _hash = window.location.hash.replace('#','');
+  if(_hash) setTimeout(function(){ switchTab(_hash); }, 100);
   // Pre-fill mes actual en informe mensual
   const expMesEl = document.getElementById('expMes');
   if(expMesEl) expMesEl.value = hoy.toISOString().substring(0,7);
