@@ -889,7 +889,7 @@ if('serviceWorker' in navigator){
   <div class="card config-section" style="margin-top:0">
     <div class="sec-title">💾 Copias de seguridad</div>
     <p style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:16px;line-height:1.6">
-      Descarga una copia de todos los datos en un fichero <b>.json</b>. Guárdalo en un lugar seguro (pendrive, correo, Drive…). Si alguna vez se pierden datos, puedes restaurarlos desde ese fichero.
+      Descarga una copia <b>completa</b> de todos los datos (averías, asignaciones, mecánicos, repuestos, turnos, encargados…) en un fichero <b>.json</b>. Guárdalo en un lugar seguro (pendrive, correo, Drive…). Si alguna vez se pierden datos, puedes restaurarlos desde ese fichero.
     </p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
       <button class="btn-export btn-green" onclick="descargarBackup()">⬇️ Descargar copia de seguridad</button>
@@ -2379,30 +2379,29 @@ function renderEstadoDatos(){
 // COPIAS DE SEGURIDAD
 // ══════════════════════════════════════════════════
 function descargarBackup(){
-  showToast('⏳ Preparando copia de seguridad...');
-  // Leer todo de Firebase
-  Promise.all([
-    DB.ref('averias').once('value'),
-    DB.ref('maquinas_extra').once('value')
-  ]).then(([snapAv, snapMaq])=>{
-    const backup = {
-      _version:   1,
-      _fecha:     new Date().toISOString(),
-      _app:       'PANALCOR Mantenimiento',
-      averias:    snapAv.val()    || {},
-      maquinas_extra: snapMaq.val() || {}
-    };
-    const json = JSON.stringify(backup, null, 2);
-    const blob = new Blob([json], {type:'application/json'});
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    const fecha = new Date().toISOString().split('T')[0];
+  showToast('⏳ Preparando copia de seguridad completa...');
+  var paths = [
+    'averias','asignaciones','config','estado_maquinas','maquinas',
+    'maquinas_extra','avisos_encargados','turnos','registros_turno',
+    'tareas_diarias','recordatorios','repuestos_base','repuestos_base_ts',
+    'repuestos_catalogo','repuestos_docs','catalogo','cursos','integrales'
+  ];
+  Promise.all(paths.map(function(p){ return DB.ref(p).once('value'); }))
+  .then(function(snaps){
+    var backup = { _version:2, _fecha:new Date().toISOString(), _app:'PANALCOR Mantenimiento' };
+    paths.forEach(function(p,i){ backup[p] = snaps[i].val() || {}; });
+    var json  = JSON.stringify(backup, null, 2);
+    var blob  = new Blob([json], {type:'application/json'});
+    var url   = URL.createObjectURL(blob);
+    var a     = document.createElement('a');
+    var fecha = new Date().toISOString().split('T')[0];
     a.href     = url;
-    a.download = `panalcor_backup_${fecha}.json`;
+    a.download = 'panalcor_backup_completo_' + fecha + '.json';
     a.click();
     URL.revokeObjectURL(url);
-    showToast('✅ Copia de seguridad descargada');
-  }).catch(()=>{
+    var total = Object.keys(backup.averias||{}).length;
+    showToast('✅ Backup completo descargado (' + total + ' averias, ' + paths.length + ' colecciones)');
+  }).catch(function(){
     showToast('❌ Error al conectar con la nube. ¿Tienes internet?');
   });
 }
