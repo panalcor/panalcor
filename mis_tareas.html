@@ -753,6 +753,25 @@ function _adminSessionValida(){
   var t = parseInt(localStorage.getItem('adminSession') || 0);
   return t > 0 && (Date.now() - t) < 8 * 3600 * 1000;
 }
+
+// ── SESION UNIFICADA ──────────────────────────────
+(function(){
+  var ps=null;
+  try{ps=JSON.parse(localStorage.getItem('panalcor_session')||'null');}catch(e){}
+  if(ps&&(ps.rol==='mecanico'||ps.rol==='admin')&&Date.now()<ps.expires){
+    if(ps.rol==='mecanico'){
+      try{
+        var ms=JSON.parse(localStorage.getItem(MEC_SESION_KEY)||'null');
+        if(!ms||ms.nombre!==ps.nombre){
+          localStorage.setItem(MEC_SESION_KEY,JSON.stringify({nombre:ps.nombre,expires:null}));
+        }
+      }catch(e){ localStorage.setItem(MEC_SESION_KEY,JSON.stringify({nombre:ps.nombre,expires:null})); }
+    }
+  } else {
+    window.location.replace('panalcor_inicio.html?back='+encodeURIComponent(window.location.href));
+  }
+})();
+
 (function(){
   var nombre = _mecSesionValida();
   if(nombre){

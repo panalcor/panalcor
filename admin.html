@@ -1182,6 +1182,20 @@ const FB_CFG = {
 if (!firebase.apps.length) firebase.initializeApp(FB_CFG);
 const DB = firebase.database();
 
+// ── SESION UNIFICADA ──────────────────────────────
+(function(){
+  var ps=null;
+  try{ps=JSON.parse(localStorage.getItem('panalcor_session')||'null');}catch(e){}
+  if(ps&&ps.rol==='admin'&&Date.now()<ps.expires){
+    localStorage.setItem('adminSession',String(Date.now()));
+    var loginEl=document.getElementById('loginScreen');
+    var appEl=document.getElementById('app');
+    if(loginEl) loginEl.style.display='none';
+    if(appEl)   appEl.style.display='block';
+    try{initApp();}catch(e){}
+  }
+})();
+
 // Escucha en tiempo real: cuando llega una avería nueva desde el móvil,
 // el panel del admin se actualiza automáticamente sin recargar
 DB.ref('averias').on('value', snap => {

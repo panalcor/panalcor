@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PANALCOR S.L. — Sistema de Mantenimiento</title>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -378,6 +380,31 @@
     .btn-icon svg { width: 22px; height: 22px; }
     .btn-label { font-size: 0.9rem; }
   }
+
+  /* ── Login ── */
+  .login-inp {
+    width: 100%; padding: 14px 16px;
+    background: rgba(255,255,255,0.06);
+    border: 1.5px solid rgba(255,255,255,0.15);
+    border-radius: 8px; color: #fff;
+    font-family: 'Barlow', sans-serif; font-size: 1rem;
+    letter-spacing: 0.05em; outline: none;
+    text-transform: uppercase; transition: border-color .2s;
+  }
+  .login-inp::placeholder { text-transform: none; color: rgba(255,255,255,0.3); }
+  .login-inp:focus { border-color: rgba(201,162,39,0.65); }
+  #loginPwd { letter-spacing: 0.2em; text-transform: none; }
+  .login-err { color: #e74c3c; font-size: 0.82rem; letter-spacing: 0.06em; text-align: center; min-height: 18px; }
+  .login-btn {
+    width: 100%; padding: 14px;
+    background: rgba(201,162,39,0.15);
+    border: 1.5px solid rgba(201,162,39,0.5); border-radius: 8px;
+    color: var(--gold); font-family: 'Oswald', sans-serif; font-size: 1.05rem;
+    font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase;
+    cursor: pointer; transition: all .2s;
+  }
+  .login-btn:hover { background: rgba(201,162,39,0.28); box-shadow: 0 4px 20px rgba(201,162,39,0.2); }
+  .login-btn:disabled { opacity: .5; cursor: default; }
 </style>
 </head>
 <body>
@@ -496,86 +523,39 @@
 
   <div class="divider"></div>
 
-  <div class="access-label">Selecciona tu acceso</div>
-
-  <div class="btns">
-
-    <!-- Mecánicos Mantenimientos -->
-    <a class="btn btn-mec" href="mecanicos.html">
-      <div class="btn-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.77 3.77z"/>
-        </svg>
-      </div>
-      <div class="btn-label">Mecánicos</div>
-      <div class="btn-sublabel">Mantenimientos</div>
-    </a>
-
-    <!-- Administrador -->
-    <a class="btn btn-admin" href="admin.html">
-      <div class="btn-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          <path d="M9 12l2 2 4-4"/>
-        </svg>
-      </div>
-      <div class="btn-label">Administrador</div>
-      <div class="btn-sublabel">Panel Control</div>
-    </a>
-
-
-    <!-- Preventivo — Mecánico -->
-    <a class="btn btn-prev" href="mis_tareas.html" style="grid-column:1/-1;flex-direction:row;padding:1.2rem 1.5rem;gap:16px;justify-content:center;border-color:rgba(52,152,219,0.3)">
-      <div class="btn-icon" style="width:40px;height:40px;color:#3498db">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-          <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
-        </svg>
-      </div>
-      <div>
-        <div class="btn-label" style="color:#74b9ff">Mis Tareas</div>
-        <div class="btn-sublabel" style="color:rgba(52,152,219,0.6)">Ver tareas asignadas — Mecánico</div>
-      </div>
-    </a>
-
-    <!-- Encargados -->
-    <a class="btn" href="encargados.html" style="grid-column:1/-1;flex-direction:row;padding:1.2rem 1.5rem;gap:16px;justify-content:center;border-color:rgba(155,89,182,0.3);background:rgba(155,89,182,0.07)">
-      <div class="btn-icon" style="width:40px;height:40px;color:#9b59b6">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-      </div>
-      <div>
-        <div class="btn-label" style="color:#c39bd3">Encargados</div>
-        <div class="btn-sublabel" style="color:rgba(155,89,182,0.6)">Avisar de una avería — Encargado</div>
-      </div>
-    </a>
-
-    <!-- Averías -->
-    <a class="btn btn-averia" href="averias.html" style="position:relative">
-      <div class="btn-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-          <line x1="12" y1="9" x2="12" y2="13"/>
-          <line x1="12" y1="17" x2="12.01" y2="17"/>
-        </svg>
-      </div>
-      <div>
-        <div class="btn-label">Averías</div>
-        <div class="btn-sublabel">Registro de incidencias</div>
-      </div>
-      <span id="badgeAverias" style="display:none;position:absolute;top:8px;right:8px;
-        background:#e74c3c;color:#fff;border-radius:50%;width:22px;height:22px;
-        font-size:0.72rem;font-weight:900;line-height:22px;text-align:center;
-        font-family:'Barlow',sans-serif"></span>
-    </a>
-
+  <!-- ══ LOGIN ══ -->
+  <div id="loginBox" style="width:100%;animation:fadeUp 0.8s 0.45s ease both">
+    <div class="access-label">Accede con tu cuenta</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <input id="loginNombre" class="login-inp" type="text" autocomplete="name"
+        placeholder="Tu nombre"
+        oninput="this.value=this.value.toUpperCase()"
+        onkeydown="if(event.key==='Enter')document.getElementById('loginPwd').focus()">
+      <input id="loginPwd" class="login-inp" type="password" autocomplete="current-password"
+        placeholder="Contraseña"
+        onkeydown="if(event.key==='Enter')doLogin()">
+      <div id="loginErr" class="login-err"></div>
+      <button id="loginBtn" class="login-btn" onclick="doLogin()">ENTRAR</button>
+    </div>
   </div>
 
-  <!-- Estado base de datos -->
+  <!-- ══ PORTAL ══ -->
+  <div id="portalBox" style="width:100%;display:none;animation:fadeUp 0.5s ease both">
+    <div style="text-align:center;margin-bottom:1.5rem">
+      <div style="font-size:0.65rem;letter-spacing:0.2em;color:rgba(255,255,255,0.35);text-transform:uppercase;margin-bottom:4px">Sesion activa</div>
+      <div id="portalNombre" style="font-family:'Oswald',sans-serif;font-size:1.8rem;font-weight:700;color:var(--gold-light);letter-spacing:0.08em"></div>
+      <div id="portalRol" style="font-size:0.68rem;letter-spacing:0.18em;color:rgba(201,162,39,0.5);text-transform:uppercase;margin-top:3px"></div>
+    </div>
+    <div class="btns" id="portalBtns"></div>
+    <button onclick="doLogout()"
+      style="width:100%;margin-top:1.2rem;padding:11px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:rgba(255,255,255,0.25);font-family:'Barlow',sans-serif;font-size:0.8rem;letter-spacing:0.12em;cursor:pointer;transition:all .2s"
+      onmouseover="this.style.background='rgba(255,255,255,0.05)';this.style.color='rgba(255,255,255,0.55)'"
+      onmouseout="this.style.background='transparent';this.style.color='rgba(255,255,255,0.25)'">
+      ↩ Cerrar sesion
+    </button>
+  </div>
+
+  <!-- Estado base de datos (solo admin) -->
   <div id="dbStatus" style="margin-top:1.8rem;width:100%;display:flex;flex-direction:column;gap:8px;animation:fadeUp 0.8s 0.55s ease both"></div>
 
   <input type="file" id="repFileInput" accept=".xlsx,.xls" style="display:none" onchange="cargarArchivoRep(this.files[0])">
@@ -587,70 +567,237 @@
 </div>
 
 <script>
-// ── CARGA AUTOMÁTICA DE BASE DE DATOS ──────────────────────────
+// ── FIREBASE ─────────────────────────────────────────────────
+var FB_CFG = {
+  apiKey:"AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU",
+  authDomain:"panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:"https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"panalcor-mantenimiento",
+  storageBucket:"panalcor-mantenimiento.firebasestorage.app",
+  messagingSenderId:"67593058609",
+  appId:"1:67593058609:web:c33fa1fa4fce2932485810"
+};
+firebase.initializeApp(FB_CFG);
+var DB = firebase.database();
+
+// ── CREDENCIALES ─────────────────────────────────────────────
+var ENC_PWD = {
+  'PINILLA':'321567','MAGER':'888666','LUISMI':'456123',
+  'SERGIO':'555222','COSTI':'299456','IVAN':'444234'
+};
+var ADMIN_PWD = 'admin1234';
+var PS_KEY    = 'panalcor_session';
+var mecPwdCache = null;
+
+// Precargar passwords mecanicos para respuesta rapida
+DB.ref('config/mecanicos_pwd').once('value')
+  .then(function(snap){ mecPwdCache = snap.val() || {}; })
+  .catch(function(){});
+
+// ── SESSION ───────────────────────────────────────────────────
+function getSession(){
+  try{
+    var s = JSON.parse(localStorage.getItem(PS_KEY) || 'null');
+    return (s && Date.now() < s.expires) ? s : null;
+  }catch(e){ return null; }
+}
+
+function saveSession(nombre, rol){
+  var expires = Date.now() + 30 * 24 * 3600 * 1000;
+  localStorage.setItem(PS_KEY, JSON.stringify({nombre:nombre, rol:rol, expires:expires}));
+  if(rol === 'mecanico'){
+    localStorage.setItem('mecSesion', JSON.stringify({nombre:nombre, expires:null}));
+  } else if(rol === 'admin'){
+    localStorage.setItem('adminSession', String(Date.now()));
+  } else if(rol === 'encargado'){
+    sessionStorage.setItem('enc_session', '1');
+  }
+}
+
+function clearSession(){
+  localStorage.removeItem(PS_KEY);
+  localStorage.removeItem('mecSesion');
+  localStorage.removeItem('adminSession');
+  sessionStorage.removeItem('enc_session');
+}
+
+// ── ARRANQUE ──────────────────────────────────────────────────
 (function(){
-  const cached = localStorage.getItem('repuestosCache');
+  var s = getSession();
+  if(s){
+    var params = new URLSearchParams(window.location.search);
+    var back = params.get('back');
+    if(back){
+      window.location.replace(decodeURIComponent(back));
+      return;
+    }
+    mostrarPortal(s);
+  }
+})();
+
+// ── LOGIN ─────────────────────────────────────────────────────
+function doLogin(){
+  var nombre = (document.getElementById('loginNombre').value || '').trim().toUpperCase();
+  var pwd    = document.getElementById('loginPwd').value;
+  var err    = document.getElementById('loginErr');
+  err.textContent = '';
+  if(!nombre){ err.textContent = 'Introduce tu nombre'; return; }
+  if(!pwd)   { err.textContent = 'Introduce tu contrasena'; return; }
+  if(nombre === 'ADMIN' && pwd === ADMIN_PWD){
+    saveSession('ADMIN','admin'); mostrarPortal({nombre:'ADMIN',rol:'admin'}); return;
+  }
+  if(ENC_PWD[nombre] !== undefined && ENC_PWD[nombre] === pwd){
+    saveSession(nombre,'encargado'); mostrarPortal({nombre:nombre,rol:'encargado'}); return;
+  }
+  if(mecPwdCache){
+    _checkMec(nombre, pwd);
+  } else {
+    var btn = document.getElementById('loginBtn');
+    btn.textContent = 'Verificando...'; btn.disabled = true;
+    DB.ref('config/mecanicos_pwd').once('value').then(function(snap){
+      mecPwdCache = snap.val() || {};
+      btn.textContent = 'ENTRAR'; btn.disabled = false;
+      _checkMec(nombre, pwd);
+    }).catch(function(){
+      btn.textContent = 'ENTRAR'; btn.disabled = false;
+      err.textContent = 'Error de conexion. Intentalo de nuevo.';
+    });
+  }
+}
+
+function _checkMec(nombre, pwd){
+  var err = document.getElementById('loginErr');
+  if(mecPwdCache[nombre] && mecPwdCache[nombre] === pwd){
+    saveSession(nombre,'mecanico'); mostrarPortal({nombre:nombre,rol:'mecanico'});
+  } else {
+    err.textContent = 'Nombre o contrasena incorrectos';
+  }
+}
+
+// ── LOGOUT ────────────────────────────────────────────────────
+function doLogout(){
+  clearSession();
+  document.getElementById('portalBox').style.display = 'none';
+  document.getElementById('loginBox').style.display  = 'block';
+  document.getElementById('loginNombre').value = '';
+  document.getElementById('loginPwd').value    = '';
+  document.getElementById('loginErr').textContent = '';
+  document.getElementById('dbStatus').innerHTML = '';
+}
+
+// ── PORTAL ────────────────────────────────────────────────────
+var _SVGS = {
+  wrench:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.77 3.77z"/></svg>',
+  shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>',
+  task:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>',
+  group: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+};
+
+function mostrarPortal(s){
+  document.getElementById('loginBox').style.display  = 'none';
+  document.getElementById('portalBox').style.display = 'block';
+  document.getElementById('portalNombre').textContent = s.nombre;
+  var roles = {mecanico:'Mecanico',encargado:'Encargado',admin:'Administrador'};
+  document.getElementById('portalRol').textContent = roles[s.rol] || s.rol;
+  document.getElementById('portalBtns').innerHTML = _buildBtns(s.rol);
+  DB.ref('averias').once('value').then(function(snap){
+    var data = snap.val() || {};
+    var n = Object.keys(data).filter(function(k){
+      return data[k].estado === 'EN CURSO' || data[k].estado === 'PENDIENTE REPUESTO';
+    }).length;
+    if(n > 0){
+      var b = document.getElementById('badgeAverias');
+      if(b){ b.style.display = 'block'; b.textContent = n > 9 ? '9+' : String(n); }
+    }
+  }).catch(function(){});
+  if(s.rol === 'admin') _checkRepuestos();
+}
+
+function _buildBtns(rol){
+  var h = '';
+  var adm = (rol === 'admin');
+  var badge = '<span id="badgeAverias" style="display:none;position:absolute;top:8px;right:8px;background:#e74c3c;color:#fff;border-radius:50%;width:22px;height:22px;font-size:0.72rem;font-weight:900;line-height:22px;text-align:center;font-family:Barlow,sans-serif"></span>';
+  if(rol === 'mecanico' || adm){
+    h += '<a class="btn btn-mec" href="landing.html">'
+       + '<div class="btn-icon">'+_SVGS.wrench+'</div>'
+       + '<div class="btn-label">Mecanicos</div><div class="btn-sublabel">Mantenimientos</div></a>';
+  }
+  if(adm){
+    h += '<a class="btn btn-admin" href="admin.html">'
+       + '<div class="btn-icon">'+_SVGS.shield+'</div>'
+       + '<div class="btn-label">Administrador</div><div class="btn-sublabel">Panel Control</div></a>';
+  }
+  if(rol === 'mecanico' || adm){
+    h += '<a class="btn btn-prev" href="mis_tareas.html" style="grid-column:1/-1;flex-direction:row;padding:1.2rem 1.5rem;gap:16px;justify-content:center;border-color:rgba(52,152,219,0.3)">'
+       + '<div class="btn-icon" style="width:40px;height:40px;color:#3498db">'+_SVGS.task+'</div>'
+       + '<div><div class="btn-label" style="color:#74b9ff">Mis Tareas</div>'
+       + '<div class="btn-sublabel" style="color:rgba(52,152,219,0.6)">Ver tareas asignadas</div></div></a>';
+  }
+  if(rol === 'encargado' || adm){
+    h += '<a class="btn" href="encargados.html" style="grid-column:1/-1;flex-direction:row;padding:1.2rem 1.5rem;gap:16px;justify-content:center;border-color:rgba(155,89,182,0.3);background:rgba(155,89,182,0.07)">'
+       + '<div class="btn-icon" style="width:40px;height:40px;color:#9b59b6">'+_SVGS.group+'</div>'
+       + '<div><div class="btn-label" style="color:#c39bd3">Encargados</div>'
+       + '<div class="btn-sublabel" style="color:rgba(155,89,182,0.6)">Panel de encargados</div></div></a>';
+  }
+  h += '<a class="btn btn-averia" href="averias.html" style="position:relative">'
+     + '<div class="btn-icon">'+_SVGS.alert+'</div>'
+     + '<div><div class="btn-label">Averias</div>'
+     + '<div class="btn-sublabel">Registro de incidencias</div></div>'
+     + badge + '</a>';
+  return h;
+}
+
+// ── REPUESTOS (solo admin) ────────────────────────────────────
+function _checkRepuestos(){
+  var cached = localStorage.getItem('repuestosCache');
   if(cached){
     try{
-      const data = JSON.parse(cached);
-      mostrarEstado('✅ Base de datos de repuestos cargada — '+data.length+' artículos disponibles', '#2ecc71', false);
+      var data = JSON.parse(cached);
+      mostrarEstado('✅ Repuestos cargados — '+data.length+' articulos disponibles','#2ecc71',false);
       return;
     }catch(e){}
   }
-  // No hay caché → intentar fetch primero, si falla mostrar botón
   fetch('./repuestos.xlsx',{cache:'no-store'})
-    .then(r=>r.ok?r.arrayBuffer():Promise.reject())
-    .then(buf=>{ procesarRepuestos(buf); })
-    .catch(()=>{
-      mostrarEstado('⚠️ Base de datos no cargada — pulsa el botón para cargarla', 'rgba(243,156,18,0.9)', true);
+    .then(function(r){ return r.ok ? r.arrayBuffer() : Promise.reject(); })
+    .then(function(buf){ procesarRepuestos(buf); })
+    .catch(function(){
+      mostrarEstado('⚠️ Base de datos no cargada — pulsa para cargarla','rgba(243,156,18,0.9)',true);
     });
-})();
+}
 
 function mostrarEstado(msg, color, boton){
-  const el = document.getElementById('dbStatus');
-  el.innerHTML = `<div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 16px;flex-wrap:wrap">
-    <span style="font-size:0.82rem;letter-spacing:0.08em;color:${color};flex:1">${msg}</span>
-    ${boton?`<button onclick="document.getElementById('repFileInput').click()" style="background:rgba(201,162,39,0.2);border:1px solid rgba(201,162,39,0.5);color:#c9a227;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:0.06em;white-space:nowrap">📂 Cargar repuestos.xlsx</button>`:''}
-  </div>`;
+  var el = document.getElementById('dbStatus');
+  if(!el) return;
+  el.innerHTML = '<div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 16px;flex-wrap:wrap">'
+    +'<span style="font-size:0.82rem;letter-spacing:0.08em;color:'+color+';flex:1">'+msg+'</span>'
+    +(boton ? '<button onclick="document.getElementById(\'repFileInput\').click()" style="background:rgba(201,162,39,0.2);border:1px solid rgba(201,162,39,0.5);color:#c9a227;padding:7px 16px;border-radius:6px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:0.06em;white-space:nowrap">📂 Cargar repuestos.xlsx</button>' : '')
+    +'</div>';
 }
 
 function cargarArchivoRep(file){
   if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e => procesarRepuestos(e.target.result);
+  var reader = new FileReader();
+  reader.onload = function(e){ procesarRepuestos(e.target.result); };
   reader.readAsArrayBuffer(file);
 }
 
 function procesarRepuestos(buf){
   try{
-    const wb = XLSX.read(buf,{type:'array'});
-    const ws = wb.Sheets['Tabla1']||wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(ws,{header:1});
-    const data = [];
-    for(let i=1;i<rows.length;i++){
-      const r=rows[i];
+    var wb = XLSX.read(buf,{type:'array'});
+    var ws = wb.Sheets['Tabla1'] || wb.Sheets[wb.SheetNames[0]];
+    var rows = XLSX.utils.sheet_to_json(ws,{header:1});
+    var data = [];
+    for(var i=1;i<rows.length;i++){
+      var r = rows[i];
       if(r[2]) data.push({ubicacion:String(r[0]||'').trim(),ref:String(r[1]||'').trim(),desc:String(r[2]||'').trim()});
     }
     localStorage.setItem('repuestosCache', JSON.stringify(data));
-    mostrarEstado('✅ Base de datos cargada y guardada — '+data.length+' repuestos disponibles en todas las páginas', '#2ecc71', false);
+    mostrarEstado('✅ '+data.length+' repuestos disponibles en todas las paginas','#2ecc71',false);
   }catch(e){
-    mostrarEstado('❌ Error al leer el archivo. Comprueba que es el repuestos.xlsx correcto.', '#e74c3c', true);
+    mostrarEstado('❌ Error al leer el archivo. Comprueba que es el repuestos.xlsx correcto.','#e74c3c',true);
   }
 }
-
-// Badge averías pendientes
-(function(){
-  try {
-    var av = JSON.parse(localStorage.getItem('averias_v1') || '[]');
-    var n  = av.filter(function(a){
-      return a.estado === 'EN CURSO' || a.estado === 'PENDIENTE REPUESTO';
-    }).length;
-    if(n > 0){
-      var b = document.getElementById('badgeAverias');
-      if(b){ b.style.display = 'block'; b.textContent = n > 9 ? '9+' : n; }
-    }
-  } catch(e){}
-})();
 </script>
 </body>
 </html>

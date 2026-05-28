@@ -794,9 +794,15 @@ function encLoginCheck(){
 }
 
 (function(){
-  if(sessionStorage.getItem(ENC_SESSION_KEY) === '1'){
+  var ps=null;
+  try{ps=JSON.parse(localStorage.getItem('panalcor_session')||'null');}catch(e){}
+  var ok = (ps&&(ps.rol==='encargado'||ps.rol==='admin')&&Date.now()<ps.expires)
+         || sessionStorage.getItem(ENC_SESSION_KEY) === '1';
+  if(ok){
     document.getElementById('encLoginScreen').style.display = 'none';
     document.getElementById('encApp').style.display = 'block';
+  } else {
+    window.location.replace('panalcor_inicio.html?back='+encodeURIComponent(window.location.href));
   }
 })();
 </script>

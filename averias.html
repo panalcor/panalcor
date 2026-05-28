@@ -1788,6 +1788,24 @@ function mecLoginSubmit(){
   }).catch(function(){ err.textContent = '❌ Error de conexion. Intentalo de nuevo.'; });
 }
 
+// ── SESION UNIFICADA ──────────────────────────────
+(function(){
+  var ps=null;
+  try{ps=JSON.parse(localStorage.getItem('panalcor_session')||'null');}catch(e){}
+  if(ps&&(ps.rol==='mecanico'||ps.rol==='encargado'||ps.rol==='admin')&&Date.now()<ps.expires){
+    if(ps.rol==='mecanico'){
+      try{
+        var ms=JSON.parse(localStorage.getItem(MEC_SESION_KEY)||'null');
+        if(!ms||ms.nombre!==ps.nombre){
+          localStorage.setItem(MEC_SESION_KEY,JSON.stringify({nombre:ps.nombre,expires:null}));
+        }
+      }catch(e){ localStorage.setItem(MEC_SESION_KEY,JSON.stringify({nombre:ps.nombre,expires:null})); }
+    }
+  } else {
+    window.location.replace('panalcor_inicio.html?back='+encodeURIComponent(window.location.href));
+  }
+})();
+
 (function checkMecSession(){
   var nombre = _mecSesionValida();
   if(nombre){ _aplicarSesionAverias(nombre); return; }
@@ -1795,6 +1813,13 @@ function mecLoginSubmit(){
     document.getElementById('mecLogin').style.display   = 'none';
     document.getElementById('appAverias').style.display = 'block';
     return;
+  }
+  // Encargado: permitir acceso sin nombre de mecanico
+  var ps2=null;
+  try{ps2=JSON.parse(localStorage.getItem('panalcor_session')||'null');}catch(e){}
+  if(ps2&&(ps2.rol==='encargado')&&Date.now()<ps2.expires){
+    document.getElementById('mecLogin').style.display   = 'none';
+    document.getElementById('appAverias').style.display = 'block';
   }
 })();
 
