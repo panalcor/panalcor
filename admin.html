@@ -1192,7 +1192,8 @@ const DB = firebase.database();
     var appEl=document.getElementById('app');
     if(loginEl) loginEl.style.display='none';
     if(appEl)   appEl.style.display='block';
-    try{initApp();}catch(e){}
+    // Diferir initApp para que let/const del script esten inicializados
+    setTimeout(function(){ try{initApp();}catch(e){console.error('initApp:',e);} }, 0);
   }
 })();
 
