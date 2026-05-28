@@ -801,6 +801,10 @@ function encLoginCheck(){
   if(ok){
     document.getElementById('encLoginScreen').style.display = 'none';
     document.getElementById('encApp').style.display = 'block';
+    // Si viene de sesion unificada como encargado, auto-seleccionar su nombre
+    if(ps&&ps.rol==='encargado'&&ps.nombre&&Date.now()<ps.expires){
+      selEnc(ps.nombre);
+    }
   } else {
     window.location.replace('panalcor_inicio.html?back='+encodeURIComponent(window.location.href));
   }
