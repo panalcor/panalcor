@@ -16,6 +16,7 @@
 <title>Administrador — PANALCOR</title>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -723,6 +724,33 @@ if('serviceWorker' in navigator){
       </table>
     </div>
   </div>
+
+  <!-- ══ GENERADOR DE CÓDIGOS QR ══ -->
+  <div class="card" style="margin-top:16px">
+    <div class="sec-title">📱 Códigos QR por máquina</div>
+    <p style="font-size:0.82rem;color:rgba(255,255,255,0.45);margin-bottom:16px;line-height:1.6">
+      Selecciona una máquina para generar su QR. Al escanearlo, cada usuario es redirigido automáticamente:<br>
+      <span style="color:#c9a227">Mecánico</span> → Registro de avería &nbsp;·&nbsp;
+      <span style="color:#9b59b6">Encargado</span> → Panel de encargado &nbsp;·&nbsp;
+      <span style="color:#3498db">Admin</span> → Esta sección
+    </p>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+      <select id="qrMaqSel" onchange="generarQRMaquina()"
+        style="flex:1;min-width:200px;background:var(--navy-deep,#0d1b2a);color:#f0f4f8;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 14px;font-family:Barlow,sans-serif;font-size:0.95rem">
+        <option value="">— Selecciona una máquina —</option>
+      </select>
+    </div>
+    <div id="qrWrap" style="display:none;flex-direction:column;align-items:center;gap:14px">
+      <div id="qrCanvas" style="background:#0d1b2a;padding:16px;border-radius:12px;border:2px solid rgba(201,162,39,0.35)"></div>
+      <div id="qrMaqLabel" style="font-size:1rem;font-weight:700;letter-spacing:0.06em;color:#f0f4f8;text-align:center"></div>
+      <div id="qrUrl" style="font-size:0.7rem;color:rgba(255,255,255,0.3);word-break:break-all;text-align:center;max-width:320px"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+        <button onclick="imprimirQR()" style="background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.4);color:#c9a227;padding:9px 20px;border-radius:8px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.85rem;font-weight:700">🖨️ Imprimir</button>
+        <button onclick="descargarQR()" style="background:rgba(52,152,219,0.15);border:1px solid rgba(52,152,219,0.4);color:#74b9ff;padding:9px 20px;border-radius:8px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.85rem;font-weight:700">⬇️ Descargar PNG</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- ═══ REPUESTOS ═══ -->
@@ -2705,6 +2733,84 @@ function ejecutarRenombradoHistorial(){
 }
 
 // ══════════════════════════════════════════════════
+// QR POR MAQUINA
+// ══════════════════════════════════════════════════
+var _qrInstance = null;
+
+function poblarQRSel(){
+  var sel = document.getElementById('qrMaqSel');
+  if(!sel || sel.options.length > 1) return;
+  var todas = MAQUINAS_BASE_ADMIN.concat(maquinasExtra).sort(function(a,b){ return a.n.localeCompare(b.n); });
+  todas.forEach(function(m){
+    var o = document.createElement('option');
+    o.value = m.id;
+    o.textContent = m.n + ' (' + m.id + ')';
+    sel.appendChild(o);
+  });
+}
+
+function generarQRMaquina(){
+  var sel = document.getElementById('qrMaqSel');
+  if(!sel || !sel.value) return;
+  var maqId     = sel.value;
+  var maqNombre = sel.options[sel.selectedIndex].textContent.replace(/\s*\(MAQ-\d+\)$/, '');
+  var url = 'https://panalcor.github.io/panalcor/maquina.html?id=' + encodeURIComponent(maqId)
+          + '&n=' + encodeURIComponent(maqNombre);
+
+  var container = document.getElementById('qrCanvas');
+  container.innerHTML = '';
+  _qrInstance = null;
+
+  try{
+    _qrInstance = new QRCode(container, {
+      text:         url,
+      width:        260,
+      height:       260,
+      colorDark:    '#c9a227',
+      colorLight:   '#0d1b2a',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  } catch(e){ container.innerHTML = '<div style="color:#e74c3c;font-size:0.85rem">Error generando QR</div>'; return; }
+
+  document.getElementById('qrMaqLabel').textContent = maqNombre;
+  document.getElementById('qrUrl').textContent = url;
+  var wrap = document.getElementById('qrWrap');
+  wrap.style.display = 'flex';
+}
+
+function imprimirQR(){
+  var canvas = document.querySelector('#qrCanvas canvas');
+  if(!canvas) return;
+  var label = document.getElementById('qrMaqLabel').textContent;
+  var img = canvas.toDataURL('image/png');
+  var w = window.open('','_blank');
+  w.document.write('<html><head><title>QR ' + label + '</title>'
+    + '<style>body{margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:#fff;font-family:Arial,sans-serif}'
+    + 'img{width:280px;height:280px} h2{margin-top:16px;font-size:1.3rem;letter-spacing:0.08em}'
+    + '.sub{font-size:0.8rem;color:#666;margin-top:4px;margin-bottom:20px}</style></head><body>'
+    + '<img src="' + img + '"><h2>PANALCOR — ' + label + '</h2>'
+    + '<div class="sub">Escanea para registrar averia o abrir ficha</div>'
+    + '<script>window.onload=function(){window.print();window.close();}<\/script>'
+    + '</body></html>');
+  w.document.close();
+}
+
+function descargarQR(){
+  var canvas = document.querySelector('#qrCanvas canvas');
+  if(!canvas) return;
+  var label = document.getElementById('qrMaqLabel').textContent.replace(/\s+/g,'_');
+  var a = document.createElement('a');
+  a.download = 'QR_' + label + '.png';
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+}
+
+// Poblar selector de QR cuando se abre la pestaña Maquinas
+document.addEventListener('DOMContentLoaded', function(){
+  setTimeout(poblarQRSel, 500);
+});
+
+// ══════════════════════════════════════════════════
 // TABS
 // ══════════════════════════════════════════════════
 function switchTab(name){
@@ -2717,7 +2823,7 @@ function switchTab(name){
   document.getElementById('tab-'+name).classList.add('active');
   if(name==='mec') { renderMecanicos(); loadPersonal(renderPersonal); }
   if(name==='inf') renderInformes();
-  if(name==='maq') { loadMaquinasExtra(renderMaquinas); }
+  if(name==='maq') { loadMaquinasExtra(renderMaquinas); poblarQRSel(); }
   if(name==='rep') { cargarCatalogoRepuestos(); }
   if(name==='cfg') cargarTareasDiariasAdmin();
   if(name==='cfg') cargarFechasRealizacion();

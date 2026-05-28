@@ -476,6 +476,12 @@ function poblarMaquinas(){
     });
     sel.appendChild(grp);
   });
+  // Pre-seleccionar maquina desde QR (?maq=MAQ-001)
+  var maqParam = new URLSearchParams(window.location.search).get('maq');
+  if(maqParam){
+    var mFound = MAQUINAS_ENC.find(function(m){ return m.id === maqParam; });
+    if(mFound) sel.value = mFound.n || mFound.id;
+  }
 }
 
 // ── Cargar mecánicos desde Firebase ──────────────────────────
