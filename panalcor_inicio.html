@@ -524,7 +524,7 @@
   <div class="divider"></div>
 
   <!-- ══ LOGIN ══ -->
-  <div id="loginBox" style="width:100%;animation:fadeUp 0.8s 0.45s ease both">
+  <div id="loginBox" style="width:100%">
     <div class="access-label">Accede con tu cuenta</div>
     <div style="display:flex;flex-direction:column;gap:12px">
       <input id="loginNombre" class="login-inp" type="text" autocomplete="name"
@@ -677,12 +677,7 @@ function _checkMec(nombre, pwd){
 // ── LOGOUT ────────────────────────────────────────────────────
 function doLogout(){
   clearSession();
-  document.getElementById('portalBox').style.display = 'none';
-  document.getElementById('loginBox').style.display  = 'block';
-  document.getElementById('loginNombre').value = '';
-  document.getElementById('loginPwd').value    = '';
-  document.getElementById('loginErr').textContent = '';
-  document.getElementById('dbStatus').innerHTML = '';
+  window.location.replace('panalcor_inicio.html');
 }
 
 // ── PORTAL ────────────────────────────────────────────────────
