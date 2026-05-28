@@ -1424,7 +1424,13 @@ function renderHistorial(){
         ${a.observaciones?`<div style="margin-top:10px"><div class="di-label">Observaciones</div><div style="margin-top:4px;font-size:0.95rem">${a.observaciones}</div></div>`:''}
         ${a.materiales&&a.materiales.length?`<div style="margin-top:10px"><div class="di-label">Material utilizado</div><div style="margin-top:4px;font-size:0.9rem">${a.materiales.map(m=>`${m.desc} (${m.ref}) × ${m.qty}`).join(' | ')}</div></div>`:''}
         ${a.foto?`<div style="margin-top:10px"><div class="di-label">Foto</div><img src="${a.foto}" style="margin-top:4px;width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid rgba(201,162,39,0.4)"></div>`:''}
-        ${a.estado==='RESUELTA'?(a.firmada?`<div style="margin-top:10px;font-size:0.82rem;color:#2ecc71">✅ Firmada por ${a.firmadaPor||'—'}${a.firmadaFecha?' ('+a.firmadaFecha+')':''}</div>`:`<div style="margin-top:10px;font-size:0.82rem;color:#f39c12">⏳ Pendiente de firma</div>`):''}
+        ${a.estado==='RESUELTA'
+          ? (a.firmada
+              ? `<div style="margin-top:10px;font-size:0.82rem;color:#2ecc71">✅ Firmado · Conforme encargado: ${a.firmadaPor||'—'}${a.firmadaFecha?' ('+a.firmadaFecha+')':''}</div>`
+              : a.firma
+                ? `<div style="margin-top:10px;font-size:0.82rem;color:#2ecc71">✍️ Firmado por mecánico</div>`
+                : `<div style="margin-top:10px;font-size:0.82rem;color:#f39c12">⏳ Pendiente de firma</div>`)
+          : ''}
         ${a.estado!=='RESUELTA'
           ? `<div style="margin-top:14px"><button class="btn btn-gold" style="font-size:0.8rem;padding:7px 14px" onclick="retomarAveria('${a.id}')">🔄 Retomar avería</button></div>`
           : (()=>{
