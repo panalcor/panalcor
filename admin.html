@@ -372,12 +372,6 @@ if('serviceWorker' in navigator){
     <div id="resumenDiaBody">Cargando...</div>
   </div>
 
-  <!-- ══ ALERTAS STOCK MÍNIMO ══ -->
-  <div class="card" id="cardStockAlertas" style="margin-top:16px;max-width:732px">
-    <div class="sec-title">⚠️ Alertas de stock mínimo</div>
-    <div id="stockAlertasBody">Cargando...</div>
-  </div>
-
   <!-- ══ ÓRDENES SIN FIRMA ══ -->
   <div class="card" id="cardSinFirma" style="margin-top:16px;max-width:732px">
     <div class="sec-title">📋 Órdenes sin firma de conformidad</div>
@@ -1239,7 +1233,6 @@ function initApp(){
   renderDashboard();
   cargarMecanicosParaRec();
   cargarRecordatorios();
-  cargarAlertasStock();
   cargarSinFirma();
   renderResumenDia();
   renderTiempoResolucion();
