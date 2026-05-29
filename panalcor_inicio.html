@@ -736,11 +736,13 @@ function _buildBtns(rol){
        + '<div><div class="btn-label" style="color:#c39bd3">Encargados</div>'
        + '<div class="btn-sublabel" style="color:rgba(155,89,182,0.6)">Panel de encargados</div></div></a>';
   }
-  h += '<a class="btn btn-averia" href="averias.html" style="position:relative">'
-     + '<div class="btn-icon">'+_SVGS.alert+'</div>'
-     + '<div><div class="btn-label">Averias</div>'
-     + '<div class="btn-sublabel">Registro de incidencias</div></div>'
-     + badge + '</a>';
+  if(rol === 'mecanico' || adm){
+    h += '<a class="btn btn-averia" href="averias.html" style="position:relative">'
+       + '<div class="btn-icon">'+_SVGS.alert+'</div>'
+       + '<div><div class="btn-label">Averias</div>'
+       + '<div class="btn-sublabel">Registro de incidencias</div></div>'
+       + badge + '</a>';
+  }
   return h;
 }
 
