@@ -1184,62 +1184,54 @@ function cargarAdminView(){
 var ENC_PW = 'encargados2025';
 var ENC_SESSION_KEY = 'enc_session';
 
+function _arrancaEncApp(esAdmin, nombreEnc){
+  document.getElementById('encLoginScreen').style.display = 'none';
+  document.getElementById('encApp').style.display = 'block';
+  document.getElementById('encTabs').style.display = 'flex';
+
+  var tR = document.getElementById('tab-registrar');
+  var tE = document.getElementById('tab-encargados');
+
+  if(esAdmin){
+    if(tR) tR.style.display = 'none';
+    if(tE) tE.style.display = 'block';
+  } else {
+    if(tR) tR.style.display = 'block';
+    if(tE) tE.style.display = 'none';
+    if(nombreEnc) selEnc(nombreEnc);
+  }
+
+  document.getElementById('mainWrap').style.display     = 'none';
+  document.getElementById('adminViewEnc').style.display = 'none';
+  document.getElementById('plantaView').style.display   = 'block';
+  iniciarPlanta();
+}
+
 function encLoginCheck(){
-  var pw = document.getElementById('encPwInput').value;
+  var pw  = document.getElementById('encPwInput').value;
   var err = document.getElementById('encLoginErr');
   if(pw === ENC_PW){
     sessionStorage.setItem(ENC_SESSION_KEY, '1');
-    document.getElementById('encLoginScreen').style.display = 'none';
-    document.getElementById('encApp').style.display = 'block';
     err.textContent = '';
+    _arrancaEncApp(false, null);
   } else {
-    err.textContent = 'Contraseña incorrecta';
+    err.textContent = 'Contrasena incorrecta';
     document.getElementById('encPwInput').value = '';
     document.getElementById('encPwInput').focus();
   }
 }
 
 (function(){
-  var ps=null;
-  try{ps=JSON.parse(localStorage.getItem('panalcor_session')||'null');}catch(e){}
-  var ok = (ps&&(ps.rol==='encargado'||ps.rol==='admin')&&Date.now()<ps.expires)
+  var ps = null;
+  try{ ps = JSON.parse(localStorage.getItem('panalcor_session') || 'null'); } catch(e){}
+  var ok = (ps && (ps.rol === 'encargado' || ps.rol === 'admin') && Date.now() < ps.expires)
          || sessionStorage.getItem(ENC_SESSION_KEY) === '1';
   if(ok){
-    document.getElementById('encLoginScreen').style.display = 'none';
-    document.getElementById('encApp').style.display = 'block';
-
-    var tabs = document.getElementById('encTabs');
-    if(tabs) tabs.style.display = 'flex';
-
-    if(ps&&ps.rol==='admin'&&Date.now()<ps.expires){
-      // Admin: tabs Planta + Encargados
-      var tR = document.getElementById('tab-registrar');
-      var tE = document.getElementById('tab-encargados');
-      if(tR) tR.style.display = 'none';
-      if(tE) tE.style.display = 'block';
-      // Arrancar en Planta
-      document.getElementById('mainWrap').style.display     = 'none';
-      document.getElementById('adminViewEnc').style.display = 'none';
-      document.getElementById('plantaView').style.display   = 'block';
-      iniciarPlanta();
-    } else {
-      // Encargado: tabs Planta + Registrar
-      var tR2 = document.getElementById('tab-registrar');
-      var tE2 = document.getElementById('tab-encargados');
-      if(tR2) tR2.style.display = 'block';
-      if(tE2) tE2.style.display = 'none';
-      // Pre-cargar formulario si hay sesión con nombre
-      if(ps&&ps.rol==='encargado'&&ps.nombre&&Date.now()<ps.expires){
-        selEnc(ps.nombre);
-      }
-      // Arrancar en Planta
-      document.getElementById('mainWrap').style.display     = 'none';
-      document.getElementById('adminViewEnc').style.display = 'none';
-      document.getElementById('plantaView').style.display   = 'block';
-      iniciarPlanta();
-    }
+    var esAdmin  = ps && ps.rol === 'admin'    && Date.now() < ps.expires;
+    var nombre   = ps && ps.rol === 'encargado' && ps.nombre && Date.now() < ps.expires ? ps.nombre : null;
+    _arrancaEncApp(esAdmin, nombre);
   } else {
-    window.location.replace('panalcor_inicio.html?back='+encodeURIComponent(window.location.href));
+    window.location.replace('panalcor_inicio.html?back=' + encodeURIComponent(window.location.href));
   }
 })();
 </script>
