@@ -1,5 +1,5 @@
 // Service Worker — PANALCOR v4
-const CACHE = 'panalcor-v4';
+const CACHE = 'panalcor-v5';
 const SHELL = [
   'panalcor_inicio.html',
   'maquina.html',
