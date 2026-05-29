@@ -234,7 +234,11 @@ a{color:inherit;text-decoration:none}
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load',function(){
-    navigator.serviceWorker.register('sw.js').catch(function(){});
+    navigator.serviceWorker.register('sw.js').then(function(reg){
+      navigator.serviceWorker.addEventListener('message', function(e){
+        if(e.data && e.data.type === 'SW_UPDATED') window.location.reload();
+      });
+    }).catch(function(){});
   });
 }
 </script>

@@ -1,5 +1,5 @@
-// Service Worker — PANALCOR v4
-const CACHE = 'panalcor-v5';
+// Service Worker — PANALCOR v6
+const CACHE = 'panalcor-v6';
 const SHELL = [
   'panalcor_inicio.html',
   'maquina.html',
@@ -31,9 +31,15 @@ self.addEventListener('activate', function(e) {
   e.waitUntil(
     caches.keys().then(function(keys) {
       return Promise.all(keys.filter(function(k){ return k !== CACHE; }).map(function(k){ return caches.delete(k); }));
+    }).then(function(){
+      return self.clients.claim();
+    }).then(function(){
+      // Avisar a todas las pestañas para que recarguen con el nuevo código
+      return self.clients.matchAll({ type: 'window' }).then(function(clients){
+        clients.forEach(function(client){ client.postMessage({ type: 'SW_UPDATED' }); });
+      });
     })
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', function(e) {

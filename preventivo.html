@@ -659,7 +659,11 @@ tbody td:last-child  { border-radius: 0 8px 8px 0; }
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load',function(){
-    navigator.serviceWorker.register('sw.js').catch(function(){});
+    navigator.serviceWorker.register('sw.js').then(function(reg){
+      navigator.serviceWorker.addEventListener('message', function(e){
+        if(e.data && e.data.type === 'SW_UPDATED') window.location.reload();
+      });
+    }).catch(function(){});
   });
 }
 </script>
