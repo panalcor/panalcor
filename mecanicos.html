@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c9a227">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PANALCOR">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>PANALCOR S.L. — Panel Mecánicos</title>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -229,9 +236,51 @@ tbody td{padding:9px 8px;vertical-align:middle}
   .col-desc{max-width:160px}
   .summary-bar{gap:6px}
 }
+
+/* ── Login mecánico overlay ── */
+#mecLoginOverlay{position:fixed;inset:0;background:rgba(10,21,32,0.98);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
+.mec-ov-box{background:#1a2a3a;border:1px solid rgba(201,162,39,0.35);border-radius:18px;padding:32px 28px;width:100%;max-width:360px;text-align:center}
+.mec-ov-box .logo{font-size:2.8rem;margin-bottom:10px}
+.mec-ov-box h2{font-size:1.4rem;font-weight:900;color:#e8c14e;letter-spacing:0.06em;margin-bottom:4px;font-family:'Oswald',sans-serif}
+.mec-ov-box .sub{font-size:0.78rem;color:rgba(255,255,255,0.35);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:20px}
+.mec-ov-sel,.mec-ov-pw{width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:9px;padding:13px 16px;font-family:'Barlow',sans-serif;font-size:1rem;margin-bottom:12px;display:block;box-sizing:border-box}
+.mec-ov-sel:focus,.mec-ov-pw:focus{outline:none;border-color:#c9a227}
+.mec-ov-pw{text-align:center;letter-spacing:0.2em;font-size:1.1rem}
+.mec-ov-check{display:flex;align-items:center;gap:10px;margin-bottom:16px;cursor:pointer;justify-content:center;font-size:0.85rem;color:rgba(255,255,255,0.6)}
+.mec-ov-check input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:#c9a227;flex-shrink:0}
+.mec-ov-btn{width:100%;padding:14px;background:linear-gradient(135deg,#c9a227,#a07d1a);color:#0d1b2a;border:none;border-radius:9px;font-family:'Barlow',sans-serif;font-size:1.05rem;font-weight:900;letter-spacing:0.1em;cursor:pointer;transition:all .2s}
+.mec-ov-btn:hover{background:linear-gradient(135deg,#e8c14e,#c9a227)}
+.mec-ov-err{color:#e74c3c;font-size:0.88rem;margin-top:10px;min-height:20px}
 </style>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+</script>
 </head>
 <body>
+
+<!-- ══ LOGIN MECÁNICO ══ -->
+<div id="mecLoginOverlay">
+  <div class="mec-ov-box">
+    <a href="panalcor_inicio.html" title="Inicio" style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;background:rgba(201,162,39,0.12);border:1.5px solid rgba(201,162,39,0.4);margin-bottom:10px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z" fill="rgba(201,162,39,0.25)" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 21V15H15V21" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/></svg></a>
+    <div class="logo">🔧</div>
+    <h2>PANALCOR S.L.</h2>
+    <div class="sub">Panel Mecánicos &middot; Acceso</div>
+    <select id="mecOvSel" class="mec-ov-sel">
+      <option value="">— Selecciona tu nombre —</option>
+    </select>
+    <input type="password" id="mecOvPw" class="mec-ov-pw" placeholder="Contraseña" autocomplete="off"
+           onkeydown="if(event.key==='Enter') mecOvLogin()">
+    <label class="mec-ov-check">
+      <input type="checkbox" id="mecOvMiTel"> Es mi teléfono (sesión indefinida)
+    </label>
+    <button class="mec-ov-btn" onclick="mecOvLogin()">ENTRAR</button>
+    <div class="mec-ov-err" id="mecOvErr"></div>
+  </div>
+</div>
 
 <!-- TOP BAR -->
 <div class="topbar">
@@ -248,10 +297,11 @@ tbody td{padding:9px 8px;vertical-align:middle}
     <div>
       <div class="topbar-title">PANALCOR <span>S.L.</span></div>
       <div style="font-size:0.65rem;color:rgba(255,255,255,0.4);letter-spacing:0.08em">PANEL MECÁNICOS</div>
+      <div id="mecNomTopbar" style="font-size:0.9rem;color:#2ecc71;font-weight:700;letter-spacing:0.04em;margin-top:3px;display:none"></div>
     </div>
   </div>
   <div class="topbar-date" id="fechaHora"></div>
-  <a href="panalcor_inicio.html" style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:#fff;text-decoration:none;font-size:0.8rem;font-weight:600;white-space:nowrap">🏠 Inicio</a>
+  <a href="panalcor_inicio.html" title="Inicio" style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;flex-shrink:0;background:rgba(201,162,39,0.12);border:1.5px solid rgba(201,162,39,0.4);transition:all .2s" onmouseover="this.style.background='rgba(201,162,39,0.28)'" onmouseout="this.style.background='rgba(201,162,39,0.12)'"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z" fill="rgba(201,162,39,0.25)" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 21V15H15V21" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/></svg></a>
 </div>
 
 <!-- TABS -->
@@ -588,8 +638,17 @@ function buscar(){
 let checks = {};
 let adminUnlocked = false;
 
+// Devuelve la fecha del turno: si >= 22h es el día siguiente.
+// Excepción domingo: el turno de noche empieza a las 21h → desde las 21h ya es lunes.
+function getFechaTurno(){
+  var d = new Date();
+  var h = d.getHours();
+  var umbral = (d.getDay() === 0) ? 21 : 22; // 0 = domingo
+  if(h >= umbral) d.setDate(d.getDate() + 1);
+  return d;
+}
 function getTodayKey(){
-  const d = new Date();
+  const d = getFechaTurno();
   return d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0');
 }
 
@@ -718,9 +777,11 @@ function resetChecks(){
 }
 
 function getTurnoActual(){
-  const h = new Date().getHours();
+  var d = new Date();
+  var h = d.getHours();
+  var nocheInicio = (d.getDay() === 0) ? 21 : 22; // domingo desde las 21h
   if(h>=6&&h<14) return 'MAÑANA';
-  if(h>=14&&h<22) return 'TARDE';
+  if(h>=14&&h<nocheInicio) return 'TARDE';
   return 'NOCHE';
 }
 
@@ -818,7 +879,27 @@ function guardarChecks(){
     tareas: tareasActivas.map(t=>({ id:t.id, tarea:t.tarea, ok:!!checks[t.id], info:getSavedInfo(t.id) }))
   };
 
-  localStorage.setItem('turno_'+fecha+'_'+Date.now(), JSON.stringify(registro));
+  const tsNow = Date.now();
+  localStorage.setItem('turno_'+fecha+'_'+tsNow, JSON.stringify(registro));
+
+  // Sync to Firebase so admin can generate reports from any device
+  try {
+    var DB2 = firebase.database();
+    var fbKey = fecha+'_'+turno.replace(/[^A-Z0-9]/g,'_')+'_'+mec.replace(/[^A-Za-z0-9]/g,'_')+'_'+tsNow;
+    // If admin edit: remove previous Firebase record for same fecha+turno first
+    if(adminUnlocked){
+      DB2.ref('registros_turno').orderByChild('fecha_turno').equalTo(fecha+'|'+turno)
+        .once('value').then(function(snap){
+          var updates = {};
+          snap.forEach(function(ch){ updates[ch.key] = null; });
+          updates[fbKey] = Object.assign({}, registro, { fecha_turno: fecha+'|'+turno });
+          DB2.ref('registros_turno').update(updates);
+        });
+    } else {
+      DB2.ref('registros_turno/'+fbKey).set(Object.assign({}, registro, { fecha_turno: fecha+'|'+turno }));
+    }
+  } catch(e){ /* Firebase sync optional — localStorage is primary */ }
+
   showAlert(adminUnlocked ? '✏️ Turno modificado por admin: '+done+'/'+total : '✅ Turno guardado: '+done+'/'+total+' tareas');
   adminUnlocked = false;
   document.getElementById('unlockBadge').style.display='none';
@@ -976,6 +1057,112 @@ function _ytIdMec(url) {
 function escF(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ══════════════════════════════════════
+// LOGIN MECANICO — sesion persistente
+// ══════════════════════════════════════
+var MEC_SESION_KEY = 'mecSesion';
+
+function _mecSesionValida(){
+  try {
+    var s = JSON.parse(localStorage.getItem(MEC_SESION_KEY) || 'null');
+    if(!s || !s.nombre) return false;
+    if(s.expires !== null && Date.now() > s.expires){ localStorage.removeItem(MEC_SESION_KEY); return false; }
+    return s.nombre;
+  } catch(e){ return false; }
+}
+
+function _adminSesionValida(){
+  var t = parseInt(localStorage.getItem('adminSession') || 0);
+  return t > 0 && (Date.now() - t) < 8 * 3600 * 1000;
+}
+
+function _aplicarSesionMec(nombre){
+  document.getElementById('mecLoginOverlay').style.display = 'none';
+  var el = document.getElementById('mecNomTopbar');
+  if(el){ el.textContent = '\u{1F477} ' + nombre; el.style.display = 'block'; }
+  var sel = document.getElementById('mecSelect');
+  if(sel){
+    Array.from(sel.options).forEach(function(o){
+      if(o.value && o.value.toUpperCase() === nombre.toUpperCase()) sel.value = o.value;
+    });
+  }
+}
+
+(function cargarMecOvSel(){
+  var sel = document.getElementById('mecOvSel');
+  if(!sel) return;
+  function poblar(lista){
+    lista.forEach(function(n){
+      var o = document.createElement('option');
+      o.value = n; o.textContent = n; sel.appendChild(o);
+    });
+  }
+  if(typeof _DB_MEC !== 'undefined'){
+    _DB_MEC.ref('config/mecanicos').once('value')
+      .then(function(snap){ var v=snap.val(); poblar(v&&v.length?v:_MEC_FALLBACK); })
+      .catch(function(){ poblar(_MEC_FALLBACK); });
+  } else { poblar(_MEC_FALLBACK); }
+})();
+
+function mecOvLogin(){
+  var nombre  = document.getElementById('mecOvSel').value;
+  var pw      = document.getElementById('mecOvPw').value;
+  var err     = document.getElementById('mecOvErr');
+  var esMiTel = document.getElementById('mecOvMiTel').checked;
+  err.textContent = '';
+  if(!nombre){ err.textContent = '⚠️ Selecciona tu nombre'; return; }
+  if(!pw)    { err.textContent = '⚠️ Introduce la contrasena'; return; }
+  _DB_MEC.ref('config/mecanicos_pwd').once('value').then(function(snap){
+    var pwsObj = snap.val() || {};
+    var pwEsperada = pwsObj[nombre] || null;
+    if(!pwEsperada){ err.textContent = '❌ Sin contrasena asignada. Contacta con el responsable.'; return; }
+    if(pw !== pwEsperada){
+      err.textContent = '❌ Contrasena incorrecta';
+      document.getElementById('mecOvPw').value = '';
+      document.getElementById('mecOvPw').focus();
+      return;
+    }
+    _DB_MEC.ref('config/mecSessionHoras').once('value').then(function(snap2){
+      var horas = snap2.val() || 8;
+      var expires = esMiTel ? null : (Date.now() + horas * 3600 * 1000);
+      localStorage.setItem(MEC_SESION_KEY, JSON.stringify({nombre:nombre, expires:expires}));
+      _aplicarSesionMec(nombre);
+    }).catch(function(){
+      var expires = esMiTel ? null : (Date.now() + 8 * 3600 * 1000);
+      localStorage.setItem(MEC_SESION_KEY, JSON.stringify({nombre:nombre, expires:expires}));
+      _aplicarSesionMec(nombre);
+    });
+  }).catch(function(){ err.textContent = '❌ Error de conexion. Intentalo de nuevo.'; });
+}
+
+// ── SESION UNIFICADA ──────────────────────────────
+(function(){
+  var ps=null;
+  try{ps=JSON.parse(localStorage.getItem('panalcor_session')||'null');}catch(e){}
+  if(ps&&(ps.rol==='mecanico'||ps.rol==='admin')&&Date.now()<ps.expires){
+    if(ps.rol==='mecanico'){
+      try{
+        var ms=JSON.parse(localStorage.getItem(MEC_SESION_KEY)||'null');
+        if(!ms||ms.nombre!==ps.nombre){
+          localStorage.setItem(MEC_SESION_KEY,JSON.stringify({nombre:ps.nombre,expires:null}));
+        }
+      }catch(e){ localStorage.setItem(MEC_SESION_KEY,JSON.stringify({nombre:ps.nombre,expires:null})); }
+    }
+  } else {
+    window.location.replace('panalcor_inicio.html?back='+encodeURIComponent(window.location.href));
+  }
+})();
+
+(function checkMecSesionInicio(){
+  var nombre = _mecSesionValida();
+  if(nombre){ _aplicarSesionMec(nombre); return; }
+  if(_adminSesionValida()){
+    document.getElementById('mecLoginOverlay').style.display = 'none';
+    return;
+  }
+  document.getElementById('mecLoginOverlay').style.display = 'flex';
+})();
 </script>
 </body>
 </html>

@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c9a227">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PANALCOR">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>Turnos — PANALCOR</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -269,6 +276,13 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
   .panel{padding:14px}
 }
 </style>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+</script>
 </head>
 <body>
 
@@ -651,6 +665,7 @@ function login(){
   const v = document.getElementById('pwInput').value;
   if(v === getPwd()){
     sessionStorage.setItem('turnosAuth','1');
+    localStorage.setItem('adminSession', Date.now());
     document.getElementById('loginScreen').style.display = 'none';
     initApp();
   } else {
@@ -1959,9 +1974,12 @@ function bgClose(e,id){ if(e.target.classList.contains('modal-bg')) closeModal(i
 let toastT;
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2500); }
 
+function _adminSessionValida(){
+  var t = parseInt(localStorage.getItem('adminSession') || 0);
+  return t > 0 && (Date.now() - t) < 8 * 3600 * 1000;
+}
 window.addEventListener('DOMContentLoaded',()=>{
-  // Si viene desde admin (sessionStorage) o desde inicio.html, saltar el login
-  if(sessionStorage.getItem('turnosAuth')==='1'){
+  if(sessionStorage.getItem('turnosAuth')==='1' || _adminSessionValida()){
     document.getElementById('loginScreen').style.display='none';
     initApp();
   } else {

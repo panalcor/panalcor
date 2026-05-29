@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c9a227">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PANALCOR">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>PANALCOR — Acceso rápido</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -115,6 +122,16 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:'Bar
 }
 .btn-back:active{background:rgba(255,255,255,0.05)}
 
+.home-icon-btn{
+  display:flex;align-items:center;justify-content:center;
+  width:44px;height:44px;border-radius:12px;
+  background:linear-gradient(135deg,rgba(201,162,39,0.18),rgba(201,162,39,0.08));
+  border:1.5px solid rgba(201,162,39,0.4);
+  cursor:pointer;transition:all .2s;
+  margin-bottom:18px;align-self:flex-start;
+}
+.home-icon-btn:active{background:rgba(201,162,39,0.32);transform:scale(.93)}
+
 .btn-docs{
   background:linear-gradient(135deg,rgba(52,152,219,0.2),rgba(41,128,185,0.12));
   border:2px solid rgba(52,152,219,0.45);color:var(--white);
@@ -132,8 +149,21 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:'Bar
 }
 .doc-card:active{background:rgba(201,162,39,0.1);border-color:var(--gold)}
 </style>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+</script>
 </head>
 <body>
+
+<!-- Barra mecánico (visible en choice y docs) -->
+<div id="mecTopBar" style="display:none;position:fixed;top:0;left:0;right:0;background:rgba(13,27,42,0.96);border-bottom:1px solid rgba(46,204,113,0.3);padding:9px 16px;z-index:200;backdrop-filter:blur(6px)">
+  <span style="font-size:0.9rem;font-weight:700;color:#2ecc71">&#x1F477; <span id="mecTopBarName"></span></span>
+  <span style="font-size:0.72rem;color:rgba(255,255,255,0.3);margin-left:10px" id="mecTopBarMaq"></span>
+</div>
 
 <!-- ══ PANTALLA 1: LOGIN ══ -->
 <div class="screen" id="screenLogin">
@@ -146,30 +176,35 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:'Bar
     <div class="ico">🔧</div>
     <h2>PANALCOR S.L.</h2>
     <div class="sub">Mantenimiento</div>
+    <select id="mecNombreSel" style="width:100%;background:var(--navy);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:9px;padding:13px 14px;font-family:'Barlow',sans-serif;font-size:1rem;margin-bottom:12px;display:block;box-sizing:border-box">
+      <option value="">&#8212; Selecciona tu nombre &#8212;</option>
+    </select>
     <input type="password" id="pwInput" placeholder="Contraseña" autocomplete="off"
            onkeydown="if(event.key==='Enter') doLogin()">
+    <label style="display:flex;align-items:center;gap:10px;margin:10px 0 14px;cursor:pointer;justify-content:center;font-size:0.85rem;color:rgba(255,255,255,0.6)">
+      <input type="checkbox" id="mecMiTel" style="width:18px;height:18px;cursor:pointer;accent-color:var(--gold);flex-shrink:0"> Es mi tel&eacute;fono (sesi&oacute;n permanente)
+    </label>
     <button class="btn-gold" onclick="doLogin()">ENTRAR</button>
     <div class="err" id="loginErr"></div>
-  </div>
-</div>
-
-<!-- ══ PANTALLA 2: MECÁNICO ══ -->
-<div class="screen hidden" id="screenMec">
-  <div class="maq-banner" id="maqBanner2" style="display:none">
-    <div class="maq-id" id="maqId2"></div>
-    <div class="maq-name" id="maqName2"></div>
-  </div>
-  <div class="mec-list">
-    <h2>👷 ¿Quién eres?</h2>
-    <div id="mecBtnList"></div>
   </div>
 </div>
 
 <!-- ══ PANTALLA 3: ELECCIÓN ══ -->
 <div class="screen hidden" id="screenChoice">
   <div class="choice-wrap">
-    <h2>¿Qué quieres hacer?</h2>
-    <div class="who" id="choiceWho"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <button class="home-icon-btn" onclick="mostrar('screenLogin')" title="Inicio">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z" fill="rgba(201,162,39,0.25)" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M9 21V15H15V21" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div style="text-align:right">
+        <div style="font-size:1.15rem;font-weight:900;color:var(--gold-light)">¿Qué quieres hacer?</div>
+        <div class="who" id="choiceWho" style="margin-bottom:0"></div>
+      </div>
+    </div>
+    <div style="height:16px"></div>
 
     <button class="choice-btn btn-averia" onclick="irA('averia')">
       <div class="ch-ico">🔴</div>
@@ -195,7 +230,23 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:'Bar
       </div>
     </button>
 
-    <button class="btn-back" onclick="volverAMec()">← Cambiar mecánico</button>
+    <button class="choice-btn" style="background:linear-gradient(135deg,rgba(155,89,182,0.2),rgba(142,68,173,0.12));border:2px solid rgba(155,89,182,0.45);color:var(--white);box-shadow:0 4px 20px rgba(155,89,182,0.12)" onclick="irA('historial')">
+      <div class="ch-ico">📋</div>
+      <div class="ch-body">
+        <div class="ch-title">Historial</div>
+        <div class="ch-sub">Averías y mantenimientos de esta máquina</div>
+      </div>
+    </button>
+
+    <button class="choice-btn" style="background:linear-gradient(135deg,rgba(52,152,219,0.18),rgba(41,128,185,0.08));border:2px solid rgba(52,152,219,0.4);color:var(--white);box-shadow:0 4px 20px rgba(52,152,219,0.1)" onclick="window.open('manual.html','_blank')">
+      <div class="ch-ico">📖</div>
+      <div class="ch-body">
+        <div class="ch-title">Manual de uso</div>
+        <div class="ch-sub">Guia paso a paso para mecanicos</div>
+      </div>
+    </button>
+
+    <button class="btn-back" onclick="cambiarMecanico()">← Cambiar mecánico</button>
   </div>
 </div>
 
@@ -363,9 +414,37 @@ var MAQUINAS = [
 ];
 
 /* ── ESTADO ── */
-var PW_DEFAULT   = 'panalcor';
-var mecActual    = null;
-var maqActual    = null;   // objeto máquina o null
+var MEC_SESION_KEY = 'mecSesion';
+var mecActual      = null;
+var maqActual      = null;
+
+/* ── SESION ── */
+function _mecSesionValida(){
+  try {
+    var s = JSON.parse(localStorage.getItem(MEC_SESION_KEY) || 'null');
+    if(!s || !s.nombre) return false;
+    if(s.expires !== null && Date.now() > s.expires){ localStorage.removeItem(MEC_SESION_KEY); return false; }
+    return s.nombre;
+  } catch(e){ return false; }
+}
+
+/* ── SESION UNIFICADA ── */
+(function(){
+  var ps=null;
+  try{ps=JSON.parse(localStorage.getItem('panalcor_session')||'null');}catch(e){}
+  if(ps&&(ps.rol==='mecanico'||ps.rol==='admin')&&Date.now()<ps.expires){
+    if(ps.rol==='mecanico'){
+      try{
+        var ms=JSON.parse(localStorage.getItem(MEC_SESION_KEY)||'null');
+        if(!ms||ms.nombre!==ps.nombre){
+          localStorage.setItem(MEC_SESION_KEY,JSON.stringify({nombre:ps.nombre,expires:null}));
+        }
+      }catch(e){ localStorage.setItem(MEC_SESION_KEY,JSON.stringify({nombre:ps.nombre,expires:null})); }
+    }
+  } else {
+    window.location.replace('panalcor_inicio.html?back='+encodeURIComponent(window.location.href));
+  }
+})();
 
 /* ── ARRANQUE ── */
 (function init(){
@@ -373,13 +452,17 @@ var maqActual    = null;   // objeto máquina o null
   var maqId  = params.get('maq');
   if(maqId){
     maqActual = MAQUINAS.find(function(m){ return m.id === maqId; }) || {id:maqId, n:maqId, t:'', a:''};
-    /* Mostrar banner en pantalla 1 y 2 */
-    mostrarBanner('maqBanner',  'maqId',  'maqName', null);
-    mostrarBanner('maqBanner2', 'maqId2', 'maqName2', null);
+    mostrarBanner('maqBanner', 'maqId', 'maqName', null);
+  }
+  // Si ya hay sesion valida, saltar directamente a la eleccion
+  var nombre = _mecSesionValida();
+  if(nombre){
+    mecActual = nombre;
+    mostrarChoice();
   }
 })();
 
-// Cargar máquinas extra de Firebase (para máquinas añadidas desde admin)
+// Cargar máquinas extra de Firebase
 DB.ref('maquinas_extra').once('value').then(function(snap){
   var val = snap.val();
   if(!val) return;
@@ -388,118 +471,123 @@ DB.ref('maquinas_extra').once('value').then(function(snap){
       MAQUINAS.push({id: m.id, n: m.n, t: m.t||'', a: m.a||''});
     }
   });
-  // Si maqActual era fallback (nombre = id), actualizar con datos reales
   if(maqActual && maqActual.n === maqActual.id){
     var encontrada = MAQUINAS.find(function(m){ return m.id === maqActual.id; });
-    if(encontrada){
-      maqActual = encontrada;
-      mostrarBanner('maqBanner',  'maqId',  'maqName', null);
-      mostrarBanner('maqBanner2', 'maqId2', 'maqName2', null);
-    }
+    if(encontrada){ maqActual = encontrada; mostrarBanner('maqBanner', 'maqId', 'maqName', null); }
   }
 }).catch(function(){});
+
+// Cargar lista de mecanicos en el selector del login
+(function cargarMecListLogin(){
+  var sel = document.getElementById('mecNombreSel');
+  if(!sel) return;
+  var fb = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO'];
+  function poblar(lista){ lista.forEach(function(n){ var o=document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o); }); }
+  DB.ref('config/mecanicos').once('value')
+    .then(function(s){ var v=s.val(); poblar(v&&v.length?v:fb); })
+    .catch(function(){ poblar(fb); });
+})();
 
 function mostrarBanner(bannerId, idEl, nameEl, subEl){
   if(!maqActual) return;
   var b = document.getElementById(bannerId);
   b.style.display = 'block';
-  document.getElementById(idEl).textContent  = maqActual.id;
+  document.getElementById(idEl).textContent   = maqActual.id;
   document.getElementById(nameEl).textContent = maqActual.n;
   if(subEl) document.getElementById(subEl).textContent = maqActual.t + (maqActual.a ? ' · '+maqActual.a : '');
 }
 
 /* ── PANTALLAS ── */
 function mostrar(id){
-  ['screenLogin','screenMec','screenChoice','screenDocs'].forEach(function(s){
+  ['screenLogin','screenChoice','screenDocs'].forEach(function(s){
     var el = document.getElementById(s);
-    if(s === id){
-      el.classList.remove('hidden');
-    } else {
-      el.classList.add('hidden');
-    }
+    if(el) el.classList.toggle('hidden', s !== id);
   });
+}
+
+function mostrarChoice(){
+  document.getElementById('choiceWho').textContent = maqActual ? '\u{1F3ED} ' + maqActual.n : '';
+  var bar  = document.getElementById('mecTopBar');
+  var name = document.getElementById('mecTopBarName');
+  var maq  = document.getElementById('mecTopBarMaq');
+  if(bar)  bar.style.display  = 'block';
+  if(name) name.textContent   = mecActual;
+  if(maq)  maq.textContent    = maqActual ? maqActual.n : '';
+  // Dar espacio para la barra fija
+  ['screenChoice','screenDocs'].forEach(function(s){
+    var el = document.getElementById(s);
+    if(el) el.style.paddingTop = '50px';
+  });
+  mostrar('screenChoice');
 }
 
 /* ── LOGIN ── */
 function doLogin(){
-  var val = document.getElementById('pwInput').value;
-  var err = document.getElementById('loginErr');
-  if(!val){ err.textContent = '⚠️ Introduce la contraseña'; return; }
+  var nombre  = document.getElementById('mecNombreSel').value;
+  var pw      = document.getElementById('pwInput').value;
+  var err     = document.getElementById('loginErr');
+  var esMiTel = document.getElementById('mecMiTel').checked;
+  err.textContent = '';
+  if(!nombre){ err.textContent = '⚠️ Selecciona tu nombre'; return; }
+  if(!pw)    { err.textContent = '⚠️ Introduce la contrasena'; return; }
   err.textContent = 'Verificando...';
-
-  DB.ref('config/mecanicoPwd').once('value')
-    .then(function(s){ return s.val() || PW_DEFAULT; })
-    .catch(function(){ return localStorage.getItem('mecanicoPwd') || PW_DEFAULT; })
-    .then(function(pwd){
-      if(val === pwd){
-        err.textContent = '';
-        cargarMecanicos();
-      } else {
-        err.textContent = '❌ Contraseña incorrecta';
-        document.getElementById('pwInput').value = '';
-        document.getElementById('pwInput').focus();
-      }
+  DB.ref('config/mecanicos_pwd').once('value').then(function(snap){
+    var pwsObj = snap.val() || {};
+    var pwEsperada = pwsObj[nombre] || null;
+    if(!pwEsperada){ err.textContent = '❌ Sin contrasena asignada. Contacta con el responsable.'; return; }
+    if(pw !== pwEsperada){
+      err.textContent = '❌ Contrasena incorrecta';
+      document.getElementById('pwInput').value = '';
+      document.getElementById('pwInput').focus();
+      return;
+    }
+    DB.ref('config/mecSessionHoras').once('value').then(function(snap2){
+      var horas = snap2.val() || 8;
+      var expires = esMiTel ? null : (Date.now() + horas * 3600 * 1000);
+      localStorage.setItem(MEC_SESION_KEY, JSON.stringify({nombre:nombre, expires:expires}));
+      mecActual = nombre;
+      mostrarChoice();
+    }).catch(function(){
+      var expires = esMiTel ? null : (Date.now() + 8 * 3600 * 1000);
+      localStorage.setItem(MEC_SESION_KEY, JSON.stringify({nombre:nombre, expires:expires}));
+      mecActual = nombre;
+      mostrarChoice();
     });
+  }).catch(function(){ err.textContent = '❌ Error de conexion. Intentalo de nuevo.'; });
 }
 
-/* ── MECÁNICOS ── */
-function cargarMecanicos(){
-  DB.ref('config/mecanicos').once('value')
-    .then(function(s){
-      var val = s.val();
-      return (val && val.length) ? val : ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO'];
-    })
-    .catch(function(){ return ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO']; })
-    .then(function(lista){
-      var div = document.getElementById('mecBtnList');
-      div.innerHTML = '';
-      lista.forEach(function(m){
-        var btn = document.createElement('button');
-        btn.className = 'mec-btn';
-        btn.innerHTML = '<span style="font-size:1.4rem">👷</span><span>'+m+'</span>';
-        btn.onclick = function(){ seleccionarMecanico(m); };
-        div.appendChild(btn);
-      });
-      mostrar('screenMec');
-    });
-}
-
-function seleccionarMecanico(nombre){
-  mecActual = nombre;
-  document.getElementById('choiceWho').textContent = '👷 ' + nombre
-    + (maqActual ? '  ·  🏭 ' + maqActual.n : '');
-  mostrar('screenChoice');
-}
-
-function volverAMec(){
+function cambiarMecanico(){
+  localStorage.removeItem(MEC_SESION_KEY);
   mecActual = null;
-  mostrar('screenMec');
+  document.getElementById('loginErr').textContent = '';
+  document.getElementById('pwInput').value = '';
+  var bar = document.getElementById('mecTopBar');
+  if(bar) bar.style.display = 'none';
+  mostrar('screenLogin');
 }
 
 /* ── DESTINO ── */
 function irA(destino){
-  if(destino === 'docs'){
-    verDocs();
-    return;
-  }
-
+  if(destino === 'docs'){ verDocs(); return; }
   if(!mecActual) return;
-
+  // mecSesion ya esta guardado en localStorage — las paginas destino lo leen
   if(destino === 'averia'){
-    sessionStorage.setItem('mecAuth', '1');
     var url = 'averias.html';
     if(maqActual) url += '?maq=' + encodeURIComponent(maqActual.id);
     window.location.href = url;
-
+  } else if(destino === 'historial'){
+    var url2 = 'historial_maquina.html';
+    if(maqActual) url2 += '?maq=' + encodeURIComponent(maqActual.id);
+    window.location.href = url2;
   } else {
-    sessionStorage.setItem('mecAuth_prev', '1');
-    sessionStorage.setItem('mecSeleccionado', mecActual);
     window.location.href = 'mis_tareas.html';
   }
 }
 
 function volverAChoice(){
   mostrar('screenChoice');
+  var bar = document.getElementById('mecTopBar');
+  if(bar) bar.style.display = 'block';
 }
 
 function verDocs(){

@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c9a227">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PANALCOR">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Parte de Trabajo — PANALCOR</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+/* ══ VARIABLES ══ */
+:root{
+  --navy:#0d1b2a; --navy-mid:#1a2d42; --navy-light:#243d56;
+  --gold:#c9a227; --gold-light:#f0c040;
+  --white:#f0f4f8; --green:#2ecc71; --red:#e74c3c; --yellow:#f39c12;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;min-height:100vh;padding-bottom:60px}
+
+/* ══ TOPBAR ══ */
+.topbar{background:linear-gradient(135deg,#0a1520,var(--navy-mid));border-bottom:2px solid var(--gold);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-left{display:flex;align-items:center;gap:14px}
+.topbar h1{font-size:1.1rem;font-weight:900;color:var(--gold-light);letter-spacing:.04em}
+.topbar-sub{font-size:0.72rem;color:rgba(255,255,255,0.4);letter-spacing:.1em;text-transform:uppercase}
+.topbar-btns{display:flex;gap:8px}
+.btn{padding:9px 18px;border-radius:8px;font-family:'Barlow',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;border:none;transition:all .2s;letter-spacing:.03em}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a}
+.btn-gold:hover{filter:brightness(1.1)}
+.btn-outline{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.7)}
+.btn-outline:hover{background:rgba(255,255,255,0.12)}
+.btn-print{background:rgba(46,204,113,0.18);border:1px solid rgba(46,204,113,0.45);color:var(--green);display:none}
+.btn-print:hover{background:rgba(46,204,113,0.28)}
+
+/* ══ LAYOUT ══ */
+.page{display:flex;gap:0;min-height:calc(100vh - 56px)}
+.sidebar{width:300px;flex-shrink:0;background:var(--navy-mid);border-right:1px solid rgba(255,255,255,0.08);padding:20px 16px;overflow-y:auto}
+.main{flex:1;padding:20px;overflow-x:auto}
+
+/* ══ FILTROS ══ */
+.sec-title{font-size:0.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:10px;margin-top:18px}
+.sec-title:first-child{margin-top:0}
+.periodo-tabs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.ptab{flex:1 1 calc(50% - 3px);padding:8px 4px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:7px;color:rgba(255,255,255,0.5);font-family:'Barlow',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;text-align:center;transition:all .2s;min-width:60px}
+.ptab.active{background:rgba(201,162,39,0.2);border-color:rgba(201,162,39,0.5);color:var(--gold-light)}
+.date-inputs{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.date-inputs label{font-size:0.73rem;color:rgba(255,255,255,0.4)}
+.date-inputs input,.date-inputs select{background:var(--navy-light);color:var(--white);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:8px 10px;font-family:'Barlow',sans-serif;font-size:0.88rem;width:100%}
+.date-inputs input:focus,.date-inputs select:focus{outline:none;border-color:var(--gold)}
+.check-group{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
+.check-item{display:flex;align-items:center;gap:9px;cursor:pointer;padding:6px 8px;border-radius:7px;transition:background .15s}
+.check-item:hover{background:rgba(255,255,255,0.05)}
+.check-item input[type=checkbox]{width:16px;height:16px;accent-color:var(--gold);cursor:pointer;flex-shrink:0}
+.check-item span{font-size:0.88rem;font-weight:600}
+.btn-generar{width:100%;padding:12px;background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a;border:none;border-radius:9px;font-family:'Barlow',sans-serif;font-size:0.95rem;font-weight:900;cursor:pointer;margin-top:6px;letter-spacing:.04em;transition:filter .2s}
+.btn-generar:hover{filter:brightness(1.1)}
+.btn-generar:active{filter:brightness(.95)}
+.divider{border:none;border-top:1px solid rgba(255,255,255,0.08);margin:14px 0}
+.agrup-row{display:flex;align-items:center;gap:9px;margin-bottom:14px;cursor:pointer}
+.agrup-row input{width:16px;height:16px;accent-color:var(--gold);cursor:pointer}
+.agrup-row span{font-size:0.85rem;font-weight:600;color:rgba(255,255,255,0.7)}
+
+/* ══ ESTADO VACÍO ══ */
+.empty{text-align:center;padding:80px 20px;color:rgba(255,255,255,0.25)}
+.empty .ico{font-size:3.5rem;margin-bottom:16px}
+.empty p{font-size:1rem;line-height:1.7}
+
+/* ══ INFORME PANTALLA ══ */
+.report-wrap{display:none}
+.report-header-screen{background:var(--navy-mid);border:1px solid rgba(201,162,39,0.3);border-radius:12px;padding:18px 22px;margin-bottom:18px}
+.rh-empresa{font-size:1.3rem;font-weight:900;color:var(--gold-light);letter-spacing:.06em}
+.rh-titulo{font-size:1rem;font-weight:700;color:rgba(255,255,255,.7);margin-top:2px;text-transform:uppercase;letter-spacing:.08em}
+.rh-periodo{font-size:0.85rem;color:rgba(255,255,255,.5);margin-top:6px}
+.rh-filtros{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.tag{font-size:0.7rem;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.3);color:var(--gold-light)}
+
+/* ══ RESUMEN ══ */
+.resumen-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:18px}
+.res-card{background:var(--navy-mid);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px 16px;text-align:center}
+.res-card .num{font-size:1.8rem;font-weight:900;line-height:1}
+.res-card .lbl{font-size:0.7rem;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em;margin-top:5px}
+.res-card.c-total .num{color:var(--gold-light)}
+.res-card.c-res   .num{color:var(--green)}
+.res-card.c-cur   .num{color:var(--red)}
+.res-card.c-time  .num{font-size:1.3rem;color:#3498db}
+
+/* ══ TABLA SCREEN ══ */
+.av-group-title{font-size:0.88rem;font-weight:900;color:var(--gold-light);letter-spacing:.05em;padding:10px 0 6px;border-bottom:1px solid rgba(201,162,39,0.25);margin-bottom:10px;text-transform:uppercase}
+.av-table-wrap{overflow-x:auto;margin-bottom:24px}
+table.av-table{width:100%;border-collapse:collapse;font-size:0.82rem;min-width:700px}
+table.av-table th{background:rgba(201,162,39,0.12);color:var(--gold-light);font-size:0.68rem;letter-spacing:.1em;text-transform:uppercase;padding:8px 10px;text-align:left;border-bottom:1px solid rgba(201,162,39,0.25);white-space:nowrap}
+table.av-table td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:top;line-height:1.35}
+table.av-table tr:last-child td{border-bottom:none}
+table.av-table tr:hover td{background:rgba(255,255,255,.03)}
+.badge{font-size:0.65rem;font-weight:700;padding:2px 7px;border-radius:20px;white-space:nowrap}
+.badge-res{background:rgba(46,204,113,.2);color:var(--green);border:1px solid rgba(46,204,113,.3)}
+.badge-cur{background:rgba(231,76,60,.2);color:var(--red);border:1px solid rgba(231,76,60,.3)}
+.badge-pend{background:rgba(243,156,18,.2);color:var(--yellow);border:1px solid rgba(243,156,18,.3)}
+.td-maq{font-weight:700}
+.td-desc{max-width:200px;word-break:break-word}
+.td-mec{color:rgba(255,255,255,.65)}
+
+/* ══ TOAST ══ */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--navy-mid);border:1px solid rgba(201,162,39,.4);border-radius:10px;padding:11px 22px;font-size:.9rem;font-weight:600;z-index:9999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ══════════════════════════════════════════
+   ESTILOS DE IMPRESIÓN
+══════════════════════════════════════════ */
+@media print {
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .no-print { display: none !important; }
+  body { background: #fff !important; color: #111 !important; font-family: Arial, sans-serif; font-size: 10pt; padding: 0; }
+  .topbar,.sidebar { display: none !important; }
+  .main { padding: 0; }
+  .report-wrap { display: block !important; }
+  .report-header-screen { display: none !important; }
+
+  /* Cabecera impresa */
+  .print-header { display: block !important; border-bottom: 2px solid #111; padding-bottom: 10px; margin-bottom: 14px; }
+  .ph-empresa { font-size: 15pt; font-weight: 900; letter-spacing: .06em; }
+  .ph-titulo { font-size: 11pt; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-top: 2px; }
+  .ph-meta { font-size: 8.5pt; color: #444; margin-top: 5px; }
+  .ph-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .ph-tag { font-size: 7.5pt; border: 1px solid #999; padding: 1px 7px; border-radius: 20px; }
+
+  /* Resumen */
+  .resumen-grid { grid-template-columns: repeat(4,1fr); gap: 6px; margin-bottom: 12px; }
+  .res-card { border: 1px solid #ccc; border-radius: 6px; padding: 8px 10px; background: #f7f7f7 !important; }
+  .res-card .num { font-size: 1.5rem; color: #111 !important; }
+  .res-card .lbl { color: #555 !important; }
+
+  /* Título de grupo */
+  .av-group-title { color: #111 !important; border-bottom: 1px solid #999; font-size: 9pt; margin-top: 16px; }
+
+  /* Tabla */
+  .av-table-wrap { overflow: visible; margin-bottom: 14px; }
+  table.av-table { width: 100%; min-width: 0; font-size: 8pt; }
+  table.av-table th { background: #e8e8e8 !important; color: #111 !important; padding: 5px 6px; border: 1px solid #bbb; font-size: 7pt; }
+  table.av-table td { padding: 5px 6px; border: 1px solid #ddd; vertical-align: top; color: #111; }
+  table.av-table tr:hover td { background: transparent !important; }
+  .badge { border: 1px solid #888 !important; color: #111 !important; background: #eee !important; font-size: 6.5pt; }
+  .td-mec { color: #333 !important; }
+
+  /* Salto de página entre grupos */
+  .page-break { page-break-before: always; }
+
+  /* Pie */
+  .print-footer { display: block !important; border-top: 1px solid #bbb; margin-top: 20px; padding-top: 6px; font-size: 7.5pt; color: #666; display: flex; justify-content: space-between; }
+}
+
+/* Elementos solo visibles al imprimir */
+.print-header, .print-footer { display: none; }
+</style>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+</script>
+</head>
+<body>
+
+<!-- ══ TOPBAR ══ -->
+<div class="topbar no-print">
+  <div class="topbar-left">
+    <a href="admin.html" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:7px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);text-decoration:none;font-size:1rem" title="Volver al panel">←</a>
+    <div>
+      <div class="topbar h1" style="display:inline;font-size:1.1rem;font-weight:900;color:#f0c040;letter-spacing:.04em">📄 Parte de Trabajo</div>
+      <div class="topbar-sub">PANALCOR S.L. — Informe de averías</div>
+    </div>
+  </div>
+  <div class="topbar-btns">
+    <button class="btn btn-print" id="btnPrint" onclick="imprimirParte()">🖨️ Imprimir / PDF</button>
+    <button class="btn btn-outline" onclick="window.location='admin.html'">← Panel</button>
+  </div>
+</div>
+
+<!-- ══ LAYOUT ══ -->
+<div class="page">
+
+  <!-- ── SIDEBAR FILTROS ── -->
+  <div class="sidebar no-print">
+
+    <div class="sec-title">Período</div>
+    <div class="periodo-tabs">
+      <button class="ptab active" id="pt-dia"    onclick="setPeriodo('dia')">📅 Día</button>
+      <button class="ptab"        id="pt-semana" onclick="setPeriodo('semana')">📆 Semana</button>
+      <button class="ptab"        id="pt-mes"    onclick="setPeriodo('mes')">🗓 Mes</button>
+      <button class="ptab"        id="pt-rango"  onclick="setPeriodo('rango')">↔ Rango</button>
+    </div>
+
+    <!-- Inputs dinámicos según período -->
+    <div class="date-inputs" id="inputDia">
+      <label>Día</label>
+      <input type="date" id="fDia">
+    </div>
+    <div class="date-inputs" id="inputSemana" style="display:none">
+      <label>Cualquier día de la semana</label>
+      <input type="date" id="fSemana">
+    </div>
+    <div class="date-inputs" id="inputMes" style="display:none">
+      <label>Mes</label>
+      <input type="month" id="fMes">
+    </div>
+    <div class="date-inputs" id="inputRango" style="display:none">
+      <label>Desde</label>
+      <input type="date" id="fRangoDesde">
+      <label>Hasta</label>
+      <input type="date" id="fRangoHasta">
+    </div>
+
+    <hr class="divider">
+
+    <div class="sec-title">Turno</div>
+    <div class="check-group" id="turnoChecks">
+      <label class="check-item"><input type="checkbox" value="MANANA" checked><span>🌅 Mañana</span></label>
+      <label class="check-item"><input type="checkbox" value="TARDE"  checked><span>🌇 Tarde</span></label>
+      <label class="check-item"><input type="checkbox" value="NOCHE"  checked><span>🌙 Noche</span></label>
+    </div>
+
+    <hr class="divider">
+
+    <div class="sec-title">Mecánico</div>
+    <div class="check-group" id="mecChecks">
+      <div style="font-size:0.78rem;color:rgba(255,255,255,0.3)">Cargando...</div>
+    </div>
+
+    <hr class="divider">
+
+    <label class="agrup-row">
+      <input type="checkbox" id="chkAgrup">
+      <span>Agrupar por mecánico</span>
+    </label>
+
+    <button class="btn-generar" onclick="generarInforme()">🔎 Generar informe</button>
+  </div>
+
+  <!-- ── MAIN ── -->
+  <div class="main">
+
+    <!-- Vacío inicial -->
+    <div class="empty" id="emptyState">
+      <div class="ico">📄</div>
+      <p>Selecciona los filtros y pulsa<br><b>Generar informe</b></p>
+    </div>
+
+    <!-- Informe -->
+    <div class="report-wrap" id="reportWrap">
+
+      <!-- Cabecera pantalla -->
+      <div class="report-header-screen">
+        <div class="rh-empresa">PANALCOR S.L.</div>
+        <div class="rh-titulo">Parte de Trabajo — Averías</div>
+        <div class="rh-periodo" id="rhPeriodo">—</div>
+        <div class="rh-filtros" id="rhFiltros"></div>
+      </div>
+
+      <!-- Cabecera impresión -->
+      <div class="print-header">
+        <div class="ph-empresa">PANALCOR S.L.</div>
+        <div class="ph-titulo">Parte de Trabajo — Averías</div>
+        <div class="ph-meta" id="phMeta">—</div>
+        <div class="ph-tags" id="phTags"></div>
+      </div>
+
+      <!-- Resumen -->
+      <div class="resumen-grid" id="resumenGrid"></div>
+
+      <!-- Cuerpo del informe -->
+      <div id="reportBody"></div>
+
+      <!-- Pie impresión -->
+      <div class="print-footer">
+        <span id="pfGenerado">—</span>
+        <span>PANALCOR S.L. — Confidencial</span>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══ FIREBASE ══ */
+var FB_CFG = {
+  apiKey:"AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU",
+  authDomain:"panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:"https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"panalcor-mantenimiento",
+  storageBucket:"panalcor-mantenimiento.firebasestorage.app",
+  messagingSenderId:"67593058609",
+  appId:"1:67593058609:web:c33fa1fa4fce2932485810"
+};
+if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
+var DB = firebase.database();
+
+/* ══ ESTADO ══ */
+var _averias    = [];
+var _mecanicos  = [];
+var _periodoTipo = 'dia';
+
+/* ══ INIT ══ */
+(function init(){
+  // Fecha por defecto = hoy
+  var hoy = new Date();
+  var yyyy = hoy.getFullYear();
+  var mm   = String(hoy.getMonth()+1).padStart(2,'0');
+  var dd   = String(hoy.getDate()).padStart(2,'0');
+  var hoyStr = yyyy+'-'+mm+'-'+dd;
+  document.getElementById('fDia').value        = hoyStr;
+  document.getElementById('fSemana').value     = hoyStr;
+  document.getElementById('fMes').value        = yyyy+'-'+mm;
+  document.getElementById('fRangoDesde').value = hoyStr;
+  document.getElementById('fRangoHasta').value = hoyStr;
+
+  // Cargar mecánicos
+  var fallback = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE'];
+  DB.ref('config/mecanicos').once('value').then(function(s){
+    var v = s.val();
+    _mecanicos = (v && v.length) ? v : fallback;
+    renderMecChecks();
+  }).catch(function(){ _mecanicos = fallback; renderMecChecks(); });
+
+  // Cargar averías
+  DB.ref('averias').once('value').then(function(s){
+    var data = s.val() || {};
+    _averias = Object.values(data).filter(function(a){ return a && a.id; });
+    _averias.sort(function(a,b){ return (a.fecha||'').localeCompare(b.fecha||'') || (a.horaInicio||'').localeCompare(b.horaInicio||''); });
+  }).catch(function(){
+    // Fallback a localStorage
+    try { _averias = JSON.parse(localStorage.getItem('averias_v1')||'[]'); } catch(e){ _averias=[]; }
+  });
+})();
+
+function renderMecChecks(){
+  var wrap = document.getElementById('mecChecks');
+  wrap.innerHTML = _mecanicos.map(function(m){
+    return '<label class="check-item"><input type="checkbox" value="'+esc(m)+'" checked><span>👷 '+esc(m)+'</span></label>';
+  }).join('');
+}
+
+/* ══ PERÍODO ══ */
+function setPeriodo(tipo){
+  _periodoTipo = tipo;
+  ['dia','semana','mes','rango'].forEach(function(t){
+    document.getElementById('pt-'+t).classList.toggle('active', t===tipo);
+    document.getElementById('input'+cap(t)).style.display = t===tipo ? '' : 'none';
+  });
+}
+function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+/* ══ CALCULAR RANGO DE FECHAS ══ */
+function calcRango(){
+  if(_periodoTipo === 'dia'){
+    var d = document.getElementById('fDia').value;
+    return {desde:d, hasta:d, label:'Día '+fmtDate(d)};
+  }
+  if(_periodoTipo === 'semana'){
+    var ref  = new Date(document.getElementById('fSemana').value+'T12:00:00');
+    var dow  = ref.getDay() === 0 ? 6 : ref.getDay()-1; // lunes=0
+    var lun  = new Date(ref); lun.setDate(ref.getDate()-dow);
+    var dom  = new Date(lun); dom.setDate(lun.getDate()+6);
+    var desde = isoDate(lun); var hasta = isoDate(dom);
+    return {desde:desde, hasta:hasta, label:'Semana del '+fmtDate(desde)+' al '+fmtDate(hasta)};
+  }
+  if(_periodoTipo === 'mes'){
+    var ym   = document.getElementById('fMes').value; // YYYY-MM
+    var parts = ym.split('-');
+    var yr   = parseInt(parts[0]); var mo = parseInt(parts[1]);
+    var ultimo = new Date(yr, mo, 0).getDate();
+    var desde = ym+'-01'; var hasta = ym+'-'+String(ultimo).padStart(2,'0');
+    var meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    return {desde:desde, hasta:hasta, label:'Mes de '+meses[mo-1]+' '+yr};
+  }
+  // rango
+  var d1 = document.getElementById('fRangoDesde').value;
+  var d2 = document.getElementById('fRangoHasta').value;
+  if(d2 < d1) d2 = d1;
+  return {desde:d1, hasta:d2, label:'Del '+fmtDate(d1)+' al '+fmtDate(d2)};
+}
+
+function isoDate(d){
+  var mm = String(d.getMonth()+1).padStart(2,'0');
+  var dd = String(d.getDate()).padStart(2,'0');
+  return d.getFullYear()+'-'+mm+'-'+dd;
+}
+function fmtDate(iso){
+  if(!iso) return '—';
+  var p = iso.split('-');
+  return p[2]+'/'+p[1]+'/'+p[0];
+}
+
+/* ══ OBTENER FILTROS ══ */
+function getTurnos(){
+  return [...document.querySelectorAll('#turnoChecks input:checked')].map(function(c){ return c.value; });
+}
+function getMecsSelec(){
+  return [...document.querySelectorAll('#mecChecks input:checked')].map(function(c){ return c.value; });
+}
+
+/* ══ FILTRAR ══ */
+function filtrar(rango, turnos, mecs){
+  return _averias.filter(function(a){
+    if(!a.fecha || a.fecha < rango.desde || a.fecha > rango.hasta) return false;
+    if(turnos.length && a.turno && !turnos.includes(a.turno)) return false;
+    if(mecs.length){
+      var involucrado = (a.mecanicos||[]).some(function(m){ return mecs.includes(m); });
+      if(!involucrado) return false;
+    }
+    return true;
+  });
+}
+
+/* ══ GENERAR INFORME ══ */
+function generarInforme(){
+  if(!_averias.length){
+    showToast('⏳ Cargando datos desde Firebase...');
+    DB.ref('averias').once('value').then(function(s){
+      var data = s.val()||{};
+      _averias = Object.values(data).filter(function(a){ return a&&a.id; });
+      _averias.sort(function(a,b){ return (a.fecha||'').localeCompare(b.fecha||'') || (a.horaInicio||'').localeCompare(b.horaInicio||''); });
+      generarInforme();
+    }).catch(function(){ showToast('❌ Error al cargar datos'); });
+    return;
+  }
+
+  var rango  = calcRango();
+  var turnos = getTurnos();
+  var mecs   = getMecsSelec();
+  var agrup  = document.getElementById('chkAgrup').checked;
+
+  if(!turnos.length){ showToast('⚠️ Selecciona al menos un turno'); return; }
+  if(!mecs.length)  { showToast('⚠️ Selecciona al menos un mecánico'); return; }
+
+  var lista = filtrar(rango, turnos, mecs);
+
+  // Actualizar cabecera
+  var turnoLabel = turnos.length === 3 ? 'Todos los turnos'
+    : turnos.map(function(t){ return ({MANANA:'Mañana',TARDE:'Tarde',NOCHE:'Noche'})[t]||t; }).join(' + ');
+  var mecLabel = mecs.length === _mecanicos.length ? 'Todos los mecánicos'
+    : mecs.join(', ');
+
+  document.getElementById('rhPeriodo').textContent  = rango.label;
+  document.getElementById('phMeta').textContent     = rango.label;
+  setTags([turnoLabel, mecLabel]);
+
+  // Resumen
+  renderResumen(lista);
+
+  // Cuerpo
+  renderBody(lista, agrup, mecs);
+
+  // Pie impresión
+  var now = new Date();
+  document.getElementById('pfGenerado').textContent =
+    'Generado el '+String(now.getDate()).padStart(2,'0')+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+now.getFullYear()
+    +' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+
+  // Mostrar
+  document.getElementById('emptyState').style.display  = 'none';
+  document.getElementById('reportWrap').style.display  = 'block';
+  document.getElementById('reportWrap').style.display  = '';
+  document.querySelector('.report-wrap').style.display = 'block';
+  document.getElementById('btnPrint').style.display    = 'inline-block';
+}
+
+function setTags(labels){
+  var tags = labels.map(function(l){
+    return '<span class="tag">'+esc(l)+'</span>';
+  }).join('');
+  document.getElementById('rhFiltros').innerHTML = tags;
+  document.getElementById('phTags').innerHTML = labels.map(function(l){
+    return '<span class="ph-tag">'+esc(l)+'</span>';
+  }).join('');
+}
+
+/* ══ RESUMEN ══ */
+function renderResumen(lista){
+  var total    = lista.length;
+  var resueltas = lista.filter(function(a){ return a.estado==='RESUELTA'; }).length;
+  var activas   = total - resueltas;
+  var tiempoMin = lista.reduce(function(acc,a){ return acc+(a.tiempoMin||0); }, 0);
+  var tiempoStr = tiempoMin ? Math.floor(tiempoMin/60)+'h '+((tiempoMin%60)+'').padStart(2,'0')+'min' : '—';
+
+  document.getElementById('resumenGrid').innerHTML =
+    '<div class="res-card c-total"><div class="num">'+total+'</div><div class="lbl">Total averías</div></div>'
+   +'<div class="res-card c-res"><div class="num">'+resueltas+'</div><div class="lbl">Resueltas</div></div>'
+   +'<div class="res-card c-cur"><div class="num">'+activas+'</div><div class="lbl">Activas</div></div>'
+   +'<div class="res-card c-time"><div class="num">'+tiempoStr+'</div><div class="lbl">Tiempo parada total</div></div>';
+}
+
+/* ══ CUERPO ══ */
+function renderBody(lista, agrup, mecs){
+  var wrap = document.getElementById('reportBody');
+  if(!lista.length){
+    wrap.innerHTML = '<div class="empty" style="padding:40px 20px"><div class="ico">🔍</div><p>No hay averías con los filtros seleccionados.</p></div>';
+    return;
+  }
+
+  if(agrup){
+    // Agrupar por mecánico
+    var html = '';
+    var primero = true;
+    mecs.forEach(function(mec){
+      var subLista = lista.filter(function(a){ return (a.mecanicos||[]).includes(mec); });
+      if(!subLista.length) return;
+      html += (primero?'':'<div class="page-break"></div>')
+            + '<div class="av-group-title">👷 '+esc(mec)+' — '+subLista.length+' avería'+(subLista.length!==1?'s':'')+'</div>'
+            + buildTable(subLista);
+      primero = false;
+    });
+    wrap.innerHTML = html || '<div class="empty" style="padding:40px 20px"><div class="ico">🔍</div><p>Sin resultados.</p></div>';
+  } else {
+    wrap.innerHTML = buildTable(lista);
+  }
+}
+
+function buildTable(lista){
+  var rows = lista.map(function(a){
+    var est = a.estado||'—';
+    var badgeCls = est==='RESUELTA'?'badge-res':est==='EN CURSO'?'badge-cur':'badge-pend';
+    var tStr = a.tiempoMin ? Math.floor(a.tiempoMin/60)+'h '+((a.tiempoMin%60)+'').padStart(2,'0')+'m' : '—';
+    var horaStr = (a.horaInicio||'—') + (a.horaFin?' - '+a.horaFin:'');
+    var turnoIco = {MANANA:'🌅',TARDE:'🌇',NOCHE:'🌙'}[a.turno]||'';
+    return '<tr>'
+      +'<td style="white-space:nowrap;font-size:0.78rem;color:rgba(255,255,255,.45)">'+esc(a.fecha||'—')+'<br>'+esc(horaStr)+'</td>'
+      +'<td style="white-space:nowrap">'+turnoIco+' '+esc(a.turno||'—')+'</td>'
+      +'<td class="td-maq">'+esc(a.maqNombre||a.maqId||'—')+'</td>'
+      +'<td>'+esc(a.parte||'—')+'</td>'
+      +'<td style="font-size:0.78rem">'+esc(a.tipo||'—')+'<br><span style="color:rgba(255,255,255,.45)">'+esc(a.gravedad||'')+'</span></td>'
+      +'<td class="td-desc">'+esc((a.descripcion||'').substring(0,80)+(a.descripcion&&a.descripcion.length>80?'…':''))+'</td>'
+      +'<td class="td-desc" style="font-size:0.78rem">'+esc((a.accion||'—').substring(0,80)+(a.accion&&a.accion.length>80?'…':''))+'</td>'
+      +'<td class="td-mec" style="white-space:nowrap;font-size:0.78rem">'+(a.mecanicos||[]).join('<br>')+'</td>'
+      +'<td style="white-space:nowrap;font-size:0.8rem">'+tStr+'</td>'
+      +'<td><span class="badge '+badgeCls+'">'+esc(est)+'</span></td>'
+      +'</tr>';
+  }).join('');
+
+  return '<div class="av-table-wrap"><table class="av-table">'
+    +'<thead><tr>'
+    +'<th>Fecha / Hora</th><th>Turno</th><th>Máquina</th><th>Parte</th>'
+    +'<th>Tipo / Grav.</th><th>Descripción</th><th>Acción correctiva</th>'
+    +'<th>Mecánicos</th><th>Tiempo</th><th>Estado</th>'
+    +'</tr></thead>'
+    +'<tbody>'+rows+'</tbody>'
+    +'</table></div>';
+}
+
+/* ══ IMPRIMIR ══ */
+function imprimirParte(){
+  window.print();
+}
+
+/* ══ HELPERS ══ */
+function esc(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+var _toastT;
+function showToast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(_toastT);
+  _toastT = setTimeout(function(){ t.classList.remove('show'); },2600);
+}
+</script>
+</body>
+</html>

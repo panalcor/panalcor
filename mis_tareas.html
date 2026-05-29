@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c9a227">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PANALCOR">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>Mis Tareas — PANALCOR</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -112,18 +119,65 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
 .banner-done{background:linear-gradient(135deg,rgba(46,204,113,0.2),rgba(39,174,96,0.1));border:1px solid rgba(46,204,113,0.4);border-radius:12px;padding:20px;text-align:center;margin-bottom:14px;display:none}
 .banner-done h3{font-size:1.1rem;font-weight:900;color:var(--green);margin-bottom:4px}
 .banner-done p{font-size:0.85rem;color:rgba(255,255,255,0.5)}
+
+/* ── VISTA TOGGLE ── */
+.vista-tabs{display:flex;gap:6px;margin-bottom:10px}
+.vtab{flex:1;padding:9px 4px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:9px;color:rgba(255,255,255,0.55);font-family:'Barlow',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;text-align:center;transition:all .2s;letter-spacing:0.03em}
+.vtab.active{background:rgba(201,162,39,0.18);border-color:rgba(201,162,39,0.5);color:var(--gold-light)}
+
+/* ── AVERÍAS LIST ── */
+.av-filtro{display:flex;gap:8px;margin-bottom:12px;align-items:center}
+.av-filtro select{flex:1;background:var(--navy-light);color:var(--white);border:1px solid rgba(201,162,39,0.3);border-radius:7px;padding:8px 10px;font-family:'Barlow',sans-serif;font-size:0.85rem;font-weight:600}
+.av-filtro select:focus{outline:none;border-color:var(--gold)}
+.av-count{font-size:0.72rem;color:rgba(255,255,255,0.35);white-space:nowrap}
+.av-item{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.08);border-radius:11px;margin-bottom:10px;overflow:hidden;transition:border-color .2s}
+.av-item.resuelta{border-left:3px solid var(--green)}
+.av-item.en-curso{border-left:3px solid var(--red)}
+.av-item.pendiente{border-left:3px solid var(--yellow)}
+.av-head{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.av-head:active{background:rgba(255,255,255,0.03)}
+.av-badge{font-size:0.65rem;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+.av-badge.b-res{background:rgba(46,204,113,0.2);color:var(--green);border:1px solid rgba(46,204,113,0.3)}
+.av-badge.b-cur{background:rgba(231,76,60,0.2);color:var(--red);border:1px solid rgba(231,76,60,0.3)}
+.av-badge.b-pend{background:rgba(243,156,18,0.2);color:var(--yellow);border:1px solid rgba(243,156,18,0.3)}
+.av-info{flex:1;min-width:0}
+.av-maq{font-size:0.9rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.av-desc{font-size:0.75rem;color:rgba(255,255,255,0.42);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.av-meta{font-size:0.68rem;color:rgba(255,255,255,0.28);white-space:nowrap;flex-shrink:0;text-align:right}
+.av-detail{display:none;padding:0 14px 14px;border-top:1px solid rgba(255,255,255,0.06)}
+.av-detail.open{display:block}
+.av-dl{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;margin-top:12px}
+.av-dl-item .lbl{font-size:0.67rem;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:.08em}
+.av-dl-item .val{font-size:0.85rem;color:var(--white);margin-top:1px}
+.av-accion-btn{display:inline-block;margin-top:12px;padding:8px 16px;border-radius:8px;font-family:'Barlow',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;border:none;transition:all .2s}
+.av-accion-btn.retomar{background:rgba(201,162,39,0.18);border:1px solid rgba(201,162,39,0.4);color:var(--gold-light)}
+.av-accion-btn.editar{background:rgba(46,204,113,0.15);border:1px solid rgba(46,204,113,0.4);color:var(--green)}
 </style>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+</script>
 </head>
 <body>
 
 <!-- ══ LOGIN ══ -->
 <div class="login" id="loginScreen">
   <div class="login-box">
+    <a href="panalcor_inicio.html" title="Inicio" style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;background:rgba(201,162,39,0.12);border:1.5px solid rgba(201,162,39,0.4);margin-bottom:10px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z" fill="rgba(201,162,39,0.25)" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 21V15H15V21" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/></svg></a>
     <div class="ico">🔧</div>
     <h2>PANALCOR S.L.</h2>
     <div class="sub">Mantenimiento Preventivo</div>
+    <select id="mecLoginNombreSel" style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:9px;padding:13px 16px;font-family:'Barlow',sans-serif;font-size:1rem;margin-bottom:12px;display:block;box-sizing:border-box">
+      <option value="">— Selecciona tu nombre —</option>
+    </select>
     <input type="password" id="pwInput" placeholder="Contraseña" autocomplete="off"
            onkeydown="if(event.key==='Enter') doLogin()">
+    <label style="display:flex;align-items:center;gap:10px;margin:10px 0 14px;cursor:pointer;justify-content:center;font-size:0.85rem;color:rgba(255,255,255,0.6)">
+      <input type="checkbox" id="loginMiTel" style="width:18px;height:18px;cursor:pointer;accent-color:#c9a227;flex-shrink:0"> Es mi tel&eacute;fono (sesi&oacute;n indefinida)
+    </label>
     <button class="login-btn" onclick="doLogin()">ENTRAR</button>
     <div class="login-err" id="loginErr"></div>
   </div>
@@ -131,6 +185,7 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
 
 <!-- ══ SELECTOR MECÁNICO ══ -->
 <div class="mec-selector" id="mecSelector" style="display:none">
+  <a href="panalcor_inicio.html" title="Inicio" style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;background:rgba(201,162,39,0.12);border:1.5px solid rgba(201,162,39,0.4);margin-bottom:4px;align-self:flex-start"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z" fill="rgba(201,162,39,0.25)" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 21V15H15V21" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/></svg></a>
   <h2>👷 ¿Quién eres?</h2>
   <div id="mecBtnList"></div>
 </div>
@@ -172,32 +227,59 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
   <circle cx="20" cy="24" r="7.5" fill="#c9a227"/>
   <circle cx="20" cy="24" r="3"   fill="#0d1b2a"/>
 </svg></a>
+        <a href="panalcor_inicio.html" title="Inicio" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:9px;flex-shrink:0;background:rgba(201,162,39,0.12);border:1.5px solid rgba(201,162,39,0.4);transition:all .2s" onmouseover="this.style.background='rgba(201,162,39,0.28)'" onmouseout="this.style.background='rgba(201,162,39,0.12)'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z" fill="rgba(201,162,39,0.25)" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 21V15H15V21" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/></svg></a>
         <button class="header-back" onclick="cambiarMecanico()">Cambiar</button>
       </div>
     </div>
-    <div class="mes-row">
-      <label>MES</label>
-      <select id="mesSelect" onchange="cambiarMes()"></select>
+    <div class="vista-tabs">
+      <button class="vtab active" id="vtab-tareas"  onclick="switchVista('tareas')">📋 Mis Tareas</button>
+      <button class="vtab"        id="vtab-averias" onclick="switchVista('averias')">🔧 Mis Averías</button>
     </div>
-    <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
-    <div class="progress-label"><span id="progressTxt">0 de 0 tareas</span><b id="progressPct">0%</b></div>
+    <div id="mesWrap">
+      <div class="mes-row">
+        <label>MES</label>
+        <select id="mesSelect" onchange="cambiarMes()"></select>
+      </div>
+      <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+      <div class="progress-label"><span id="progressTxt">0 de 0 tareas</span><b id="progressPct">0%</b></div>
+    </div>
   </div>
 
   <div class="content">
-    <!-- Mantenimientos integrales próximos -->
-    <div id="integralesWrap"></div>
 
-    <!-- Recordatorios asignados al mecánico -->
-    <div id="recordatoriosWrap"></div>
-
-    <!-- Averías pendientes del mecánico -->
-    <div id="avPendWrap"></div>
-
-    <div class="banner-done" id="bannerDone">
-      <h3>🎉 ¡Todo completado!</h3>
-      <p>Has terminado todas tus tareas de este período.</p>
+    <!-- ── PANEL TAREAS ── -->
+    <div id="panelTareas">
+      <!-- Mantenimientos integrales próximos -->
+      <div id="integralesWrap"></div>
+      <!-- Recordatorios asignados al mecánico -->
+      <div id="recordatoriosWrap"></div>
+      <!-- Averías pendientes del mecánico -->
+      <div id="avPendWrap"></div>
+      <!-- Averías resueltas recientes editables (ventana 8h) -->
+      <div id="avResueltasWrap"></div>
+      <div class="banner-done" id="bannerDone">
+        <h3>🎉 ¡Todo completado!</h3>
+        <p>Has terminado todas tus tareas de este período.</p>
+      </div>
+      <div id="tareasWrap"></div>
     </div>
-    <div id="tareasWrap"></div>
+
+    <!-- ── PANEL MIS AVERÍAS ── -->
+    <div id="panelAverias" style="display:none">
+      <div class="av-filtro">
+        <select id="avFiltroEst" onchange="renderMisAverias()">
+          <option value="">Todos los estados</option>
+          <option value="EN CURSO">🔴 En curso</option>
+          <option value="PENDIENTE REPUESTO">🟡 Pendiente repuesto</option>
+          <option value="RESUELTA">🟢 Resuelta</option>
+        </select>
+        <span class="av-count" id="avCount">—</span>
+      </div>
+      <div id="misAvList">
+        <div class="empty-state"><div class="ico">⏳</div><p>Cargando...</p></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -239,40 +321,69 @@ if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
 var DB = firebase.database();
 
 /* ══ ESTADO ══ */
-var SESSION_KEY = 'mecAuth_prev';
-var MEC_KEY     = 'mecSeleccionado';
-var PW_DEFAULT  = 'panalcor';
+var MEC_SESION_KEY = 'mecSesion';
+var mecActual      = null;
+var mesActual      = '';       // YYYY-MM
+var asigs          = {};       // { pushId: {tarea,mecanico,hecho,...} }
+var dbListener     = null;     // referencia para detach
 
-var mecActual   = null;
-var mesActual   = '';       // YYYY-MM
-var asigs       = {};       // { pushId: {tarea,mecanico,hecho,...} }
-var dbListener  = null;     // referencia para detach
+/* ══ SESION ══ */
+function _mecSesionValida(){
+  try {
+    var s = JSON.parse(localStorage.getItem(MEC_SESION_KEY) || 'null');
+    if(!s || !s.nombre) return false;
+    if(s.expires !== null && Date.now() > s.expires){ localStorage.removeItem(MEC_SESION_KEY); return false; }
+    return s.nombre;
+  } catch(e){ return false; }
+}
 
 /* ══ LOGIN ══ */
-function getMecPwd(cb){
-  DB.ref('config/mecanicoPwd').once('value')
-    .then(function(s){ cb(s.val() || PW_DEFAULT); })
-    .catch(function(){ cb(localStorage.getItem('mecanicoPwd') || PW_DEFAULT); });
-}
+(function cargarMecLoginMT(){
+  var sel = document.getElementById('mecLoginNombreSel');
+  if(!sel) return;
+  var fb = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO'];
+  function poblar(lista){ lista.forEach(function(n){ var o=document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o); }); }
+  DB.ref('config/mecanicos').once('value')
+    .then(function(s){ var v=s.val(); poblar(v&&v.length?v:fb); })
+    .catch(function(){ poblar(fb); });
+})();
 
 function doLogin(){
-  var val = document.getElementById('pwInput').value;
-  var err = document.getElementById('loginErr');
-  if(!val){ err.textContent = '⚠️ Introduce la contraseña'; return; }
-  getMecPwd(function(pwd){
-    if(val === pwd){
-      sessionStorage.setItem(SESSION_KEY, '1');
-      document.getElementById('loginScreen').style.display = 'none';
-      mostrarSelectorMecanico();
-    } else {
-      err.textContent = '❌ Contraseña incorrecta';
+  var nombre  = document.getElementById('mecLoginNombreSel').value;
+  var pw      = document.getElementById('pwInput').value;
+  var err     = document.getElementById('loginErr');
+  var esMiTel = document.getElementById('loginMiTel').checked;
+  err.textContent = '';
+  if(!nombre){ err.textContent = '⚠️ Selecciona tu nombre'; return; }
+  if(!pw)    { err.textContent = '⚠️ Introduce la contrasena'; return; }
+  DB.ref('config/mecanicos_pwd').once('value').then(function(snap){
+    var pwsObj = snap.val() || {};
+    var pwEsperada = pwsObj[nombre] || null;
+    if(!pwEsperada){ err.textContent = '❌ Sin contrasena asignada. Contacta con el responsable.'; return; }
+    if(pw !== pwEsperada){
+      err.textContent = '❌ Contrasena incorrecta';
       document.getElementById('pwInput').value = '';
       document.getElementById('pwInput').focus();
+      return;
     }
-  });
+    DB.ref('config/mecSessionHoras').once('value').then(function(snap2){
+      var horas = snap2.val() || 8;
+      var expires = esMiTel ? null : (Date.now() + horas * 3600 * 1000);
+      localStorage.setItem(MEC_SESION_KEY, JSON.stringify({nombre:nombre, expires:expires}));
+      mecActual = nombre;
+      document.getElementById('loginScreen').style.display = 'none';
+      arrancarApp();
+    }).catch(function(){
+      var expires = esMiTel ? null : (Date.now() + 8 * 3600 * 1000);
+      localStorage.setItem(MEC_SESION_KEY, JSON.stringify({nombre:nombre, expires:expires}));
+      mecActual = nombre;
+      document.getElementById('loginScreen').style.display = 'none';
+      arrancarApp();
+    });
+  }).catch(function(){ err.textContent = '❌ Error de conexion. Intentalo de nuevo.'; });
 }
 
-/* ══ SELECTOR MECÁNICO ══ */
+/* ══ SELECTOR MECANICO (solo admin bypass) ══ */
 function getMecanicos(cb){
   DB.ref('config/mecanicos').once('value')
     .then(function(s){
@@ -283,12 +394,6 @@ function getMecanicos(cb){
 }
 
 function mostrarSelectorMecanico(){
-  var guardado = sessionStorage.getItem(MEC_KEY);
-  if(guardado){
-    mecActual = guardado;
-    arrancarApp();
-    return;
-  }
   getMecanicos(function(mecanicos){
     var div = document.getElementById('mecBtnList');
     div.innerHTML = mecanicos.map(function(m){
@@ -301,22 +406,37 @@ function mostrarSelectorMecanico(){
 
 function seleccionarMecanico(nombre){
   mecActual = nombre;
-  sessionStorage.setItem(MEC_KEY, nombre);
   document.getElementById('mecSelector').style.display = 'none';
   arrancarApp();
 }
 
 function cambiarMecanico(){
-  sessionStorage.removeItem(MEC_KEY);
+  localStorage.removeItem(MEC_SESION_KEY);
   mecActual = null;
+  _misAverias = []; _misAvCargadas = false;
+  _vistaActual = 'tareas';
   if(dbListener){ dbListener.off(); dbListener = null; }
   document.getElementById('app').style.display = 'none';
-  mostrarSelectorMecanico();
+  if(_adminSessionValida()){
+    mostrarSelectorMecanico();
+  } else {
+    document.getElementById('loginErr').textContent = '';
+    document.getElementById('pwInput').value = '';
+    document.getElementById('loginScreen').style.display = 'flex';
+  }
 }
 
 /* ══ HELPERS MES ══ */
-function mesActualISO(){
+// Fecha ajustada al turno: desde las 22h (21h domingo) ya es el día siguiente
+function getFechaTurno(){
   var d = new Date();
+  var h = d.getHours();
+  var umbral = (d.getDay() === 0) ? 21 : 22;
+  if(h >= umbral) d.setDate(d.getDate() + 1);
+  return d;
+}
+function mesActualISO(){
+  var d = getFechaTurno();
   var m = d.getMonth()+1;
   return d.getFullYear() + '-' + (m<10?'0'+m:m);
 }
@@ -362,6 +482,7 @@ function arrancarApp(){
 
   cargarMes(mesActual);
   renderAvPendientes();
+  cargarAvRecientsDB();
   cargarRecordatoriosMec();
   cargarIntegralesMec();
 }
@@ -628,8 +749,38 @@ function showToast(msg){
 }
 
 /* ══ ARRANQUE ══ */
+function _adminSessionValida(){
+  var t = parseInt(localStorage.getItem('adminSession') || 0);
+  return t > 0 && (Date.now() - t) < 8 * 3600 * 1000;
+}
+
+// ── SESION UNIFICADA ──────────────────────────────
 (function(){
-  if(sessionStorage.getItem(SESSION_KEY) === '1'){
+  var ps=null;
+  try{ps=JSON.parse(localStorage.getItem('panalcor_session')||'null');}catch(e){}
+  if(ps&&(ps.rol==='mecanico'||ps.rol==='admin')&&Date.now()<ps.expires){
+    if(ps.rol==='mecanico'){
+      try{
+        var ms=JSON.parse(localStorage.getItem(MEC_SESION_KEY)||'null');
+        if(!ms||ms.nombre!==ps.nombre){
+          localStorage.setItem(MEC_SESION_KEY,JSON.stringify({nombre:ps.nombre,expires:null}));
+        }
+      }catch(e){ localStorage.setItem(MEC_SESION_KEY,JSON.stringify({nombre:ps.nombre,expires:null})); }
+    }
+  } else {
+    window.location.replace('panalcor_inicio.html?back='+encodeURIComponent(window.location.href));
+  }
+})();
+
+(function(){
+  var nombre = _mecSesionValida();
+  if(nombre){
+    mecActual = nombre;
+    document.getElementById('loginScreen').style.display = 'none';
+    arrancarApp();
+    return;
+  }
+  if(_adminSessionValida()){
     document.getElementById('loginScreen').style.display = 'none';
     mostrarSelectorMecanico();
   }
@@ -665,7 +816,7 @@ function renderIntegralesMec(lista) {
   if (!lista.length) { wrap.innerHTML = ''; return; }
 
   var html = '<div style="margin-bottom:14px">'
-    + '<div style="font-size:0.7rem;font-weight:700;letter-spacing:0.12em;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:10px;padding-left:2px">🔩 Mantenimientos integrales previstos</div>'
+    + '<div style="font-size:1.05rem;font-weight:700;font-style:italic;letter-spacing:0.04em;color:#f39c12;margin-bottom:10px;padding-left:2px;text-shadow:0 0 12px rgba(243,156,18,0.4)">🔩 Mantenimientos integrales previstos &mdash; Sin asignaci&oacute;n</div>'
     + '<div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch">';
 
   lista.forEach(function(it) {
@@ -755,6 +906,198 @@ function marcarRecordatorioHecho(id) {
   }).catch(function() {
     showToast('❌ Error al actualizar');
   });
+}
+
+// ══════════════════════════════════════════════════════
+// VISTA TOGGLE — Tareas / Mis Averías
+// ══════════════════════════════════════════════════════
+var _vistaActual = 'tareas';
+
+function switchVista(v){
+  _vistaActual = v;
+  document.getElementById('vtab-tareas').classList.toggle('active',  v === 'tareas');
+  document.getElementById('vtab-averias').classList.toggle('active', v === 'averias');
+  document.getElementById('panelTareas').style.display  = v === 'tareas'  ? '' : 'none';
+  document.getElementById('panelAverias').style.display = v === 'averias' ? '' : 'none';
+  document.getElementById('mesWrap').style.display      = v === 'tareas'  ? '' : 'none';
+  if(v === 'averias') cargarMisAverias();
+}
+
+// ══════════════════════════════════════════════════════
+// AVERÍAS RESUELTAS RECIENTES — ventana editable 8h
+// ══════════════════════════════════════════════════════
+var _avCache = [];
+
+function cargarAvRecientsDB(){
+  // Inmediato: desde localStorage (puede estar algo desactualizado)
+  try { _avCache = JSON.parse(localStorage.getItem('averias_v1') || '[]'); } catch(e){ _avCache = []; }
+  renderAvResueltasRecientes();
+
+  // Fondo: refrescar desde Firebase las cerradas en la última ventana + margen
+  var desde = Date.now() - 9 * 3600 * 1000;
+  DB.ref('averias').orderByChild('tsCierre').startAt(desde).once('value')
+    .then(function(snap){
+      var data = snap.val();
+      if(!data) return;
+      Object.values(data).forEach(function(av){
+        if(!av || !av.id) return;
+        var idx = -1;
+        for(var i=0; i<_avCache.length; i++){ if(_avCache[i].id===av.id){ idx=i; break; } }
+        if(idx!==-1) _avCache[idx]=av; else _avCache.push(av);
+      });
+      renderAvResueltasRecientes();
+    }).catch(function(){});
+}
+
+function renderAvResueltasRecientes(){
+  var wrap = document.getElementById('avResueltasWrap');
+  if(!wrap || !mecActual) return;
+
+  var ahora  = Date.now();
+  var ventana = 8 * 3600 * 1000;
+
+  var mias = _avCache.filter(function(a){
+    return a.estado === 'RESUELTA'
+        && a.tsCierre
+        && (ahora - a.tsCierre) < ventana
+        && a.mecanicos && a.mecanicos.indexOf(mecActual) !== -1;
+  });
+
+  if(!mias.length){ wrap.innerHTML = ''; return; }
+
+  mias.sort(function(a,b){ return (b.tsCierre||0) - (a.tsCierre||0); });
+
+  var items = mias.map(function(a){
+    var restMs  = ventana - (ahora - a.tsCierre);
+    var hRest   = Math.floor(restMs / 3600000);
+    var mRest   = Math.floor((restMs % 3600000) / 60000);
+    var restTxt = hRest > 0 ? (hRest + 'h ' + mRest + 'min') : (mRest + ' min');
+    return '<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;'
+         + 'border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;transition:background .15s"'
+         + ' onclick="window.location=\'averias.html?retomar=' + a.id + '\'"'
+         + ' onmouseover="this.style.background=\'rgba(255,255,255,0.04)\'"'
+         + ' onmouseout="this.style.background=\'\'">'
+         + '<span style="font-size:1.1rem">✅</span>'
+         + '<div style="flex:1;min-width:0">'
+           + '<div style="font-size:0.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'
+               + escHtmlMec(a.maqNombre||'') + '</div>'
+           + '<div style="font-size:0.75rem;color:rgba(255,255,255,0.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'
+               + escHtmlMec((a.descripcion||'').substring(0,60)) + '</div>'
+         + '</div>'
+         + '<div style="text-align:right;flex-shrink:0">'
+           + '<div style="font-size:0.72rem;color:#2ecc71;font-weight:700">✏️ Editable</div>'
+           + '<div style="font-size:0.65rem;color:rgba(255,255,255,0.3);margin-top:2px">⏱ ' + restTxt + '</div>'
+         + '</div>'
+         + '</div>';
+  }).join('');
+
+  wrap.innerHTML = '<div style="background:rgba(46,204,113,0.06);border:1px solid rgba(46,204,113,0.25);'
+    + 'border-radius:12px;margin-bottom:14px;overflow:hidden">'
+    + '<div style="padding:10px 14px;border-bottom:1px solid rgba(46,204,113,0.15);'
+      + 'font-size:0.7rem;letter-spacing:.12em;text-transform:uppercase;color:#2ecc71;font-weight:700">'
+      + '✏️ Cerradas recientemente (' + mias.length + ') — puedes añadir información'
+    + '</div>'
+    + items
+    + '</div>';
+}
+
+// ══════════════════════════════════════════════════════
+// MIS AVERÍAS — historial completo del mecánico
+// ══════════════════════════════════════════════════════
+var _misAverias    = [];
+var _misAvCargadas = false;
+
+function cargarMisAverias(){
+  if(_misAvCargadas) { renderMisAverias(); return; }
+  document.getElementById('misAvList').innerHTML =
+    '<div class="empty-state"><div class="ico">⏳</div><p>Cargando averías...</p></div>';
+  DB.ref('averias').once('value').then(function(snap){
+    var data = snap.val() || {};
+    _misAverias = Object.values(data).filter(function(a){
+      return a && a.id && a.mecanicos && a.mecanicos.indexOf(mecActual) !== -1;
+    });
+    _misAverias.sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+    _misAvCargadas = true;
+    renderMisAverias();
+  }).catch(function(){
+    document.getElementById('misAvList').innerHTML =
+      '<div class="empty-state"><div class="ico">❌</div><p>Error de conexión.<br>Comprueba que tienes internet.</p></div>';
+  });
+}
+
+function renderMisAverias(){
+  var filtroEst = document.getElementById('avFiltroEst').value;
+  var ahora = Date.now();
+  var ventana = 8 * 3600 * 1000;
+
+  var lista = _misAverias.filter(function(a){
+    return !filtroEst || a.estado === filtroEst;
+  });
+
+  document.getElementById('avCount').textContent = lista.length + ' avería' + (lista.length !== 1 ? 's' : '');
+
+  if(!lista.length){
+    document.getElementById('misAvList').innerHTML =
+      '<div class="empty-state"><div class="ico">🔧</div><p>No hay averías' + (filtroEst ? ' con ese estado' : '') + '.</p></div>';
+    return;
+  }
+
+  var html = lista.map(function(a, i){
+    var est = a.estado || '—';
+    var badgeCls = est === 'RESUELTA' ? 'b-res' : est === 'EN CURSO' ? 'b-cur' : 'b-pend';
+    var itemCls  = est === 'RESUELTA' ? 'resuelta' : est === 'EN CURSO' ? 'en-curso' : 'pendiente';
+    var tStr = a.tiempoMin ? (Math.floor(a.tiempoMin/60) + 'h ' + ((a.tiempoMin%60)+'').padStart(2,'0') + 'min') : '—';
+    var fechaStr = a.fecha || '—';
+    if(a.horaInicio) fechaStr += ' ' + a.horaInicio;
+
+    // Botón de acción
+    var btnHtml = '';
+    if(est !== 'RESUELTA'){
+      btnHtml = '<button class="av-accion-btn retomar" onclick="window.location=\'averias.html?retomar='+a.id+'\'">🔄 Retomar avería</button>';
+    } else {
+      var dentroVentana = a.tsCierre && (ahora - a.tsCierre) < ventana;
+      if(dentroVentana){
+        var restMs  = ventana - (ahora - a.tsCierre);
+        var hR = Math.floor(restMs/3600000);
+        var mR = Math.floor((restMs%3600000)/60000);
+        var restTxt = hR > 0 ? (hR+'h '+mR+'min') : (mR+' min');
+        btnHtml = '<button class="av-accion-btn editar" onclick="window.location=\'averias.html?retomar='+a.id+'\'">✏️ Añadir información <span style="font-size:0.7rem;opacity:.7">('+restTxt+')</span></button>';
+      }
+    }
+
+    return '<div class="av-item ' + itemCls + '">'
+      + '<div class="av-head" onclick="toggleAvItem(\'avd'+i+'\')">'
+        + '<div class="av-info">'
+          + '<div class="av-maq">' + escHtmlMec(a.maqNombre||a.maqId||'—') + '</div>'
+          + '<div class="av-desc">' + escHtmlMec((a.parte?a.parte+' · ':'')+((a.descripcion||'').substring(0,55))) + '</div>'
+        + '</div>'
+        + '<div class="av-meta">'
+          + '<div><span class="av-badge ' + badgeCls + '">' + est + '</span></div>'
+          + '<div style="margin-top:4px">' + fechaStr + '</div>'
+        + '</div>'
+      + '</div>'
+      + '<div class="av-detail" id="avd'+i+'">'
+        + '<div class="av-dl">'
+          + '<div class="av-dl-item"><div class="lbl">Turno</div><div class="val">' + escHtmlMec(a.turno||'—') + '</div></div>'
+          + '<div class="av-dl-item"><div class="lbl">Tipo</div><div class="val">' + escHtmlMec(a.tipo||'—') + '</div></div>'
+          + '<div class="av-dl-item"><div class="lbl">Gravedad</div><div class="val">' + escHtmlMec(a.gravedad||'—') + '</div></div>'
+          + '<div class="av-dl-item"><div class="lbl">Tiempo</div><div class="val">' + tStr + '</div></div>'
+          + '<div class="av-dl-item"><div class="lbl">Causa</div><div class="val">' + escHtmlMec(a.causa||'—') + '</div></div>'
+          + '<div class="av-dl-item"><div class="lbl">ID</div><div class="val" style="font-size:0.72rem">' + escHtmlMec(a.id||'—') + '</div></div>'
+        + '</div>'
+        + (a.accion ? '<div style="margin-top:10px"><div class="av-dl-item"><div class="lbl">Acción correctiva</div><div class="val" style="font-size:0.85rem;margin-top:3px">'+escHtmlMec(a.accion)+'</div></div></div>' : '')
+        + (a.observaciones ? '<div style="margin-top:8px"><div class="av-dl-item"><div class="lbl">Observaciones</div><div class="val" style="font-size:0.85rem;margin-top:3px">'+escHtmlMec(a.observaciones)+'</div></div></div>' : '')
+        + (btnHtml ? '<div>' + btnHtml + '</div>' : '')
+      + '</div>'
+    + '</div>';
+  }).join('');
+
+  document.getElementById('misAvList').innerHTML = html;
+}
+
+function toggleAvItem(id){
+  var el = document.getElementById(id);
+  if(el) el.classList.toggle('open');
 }
 </script>
 </body>

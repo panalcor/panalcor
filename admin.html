@@ -3,12 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c9a227">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PANALCOR">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>Administrador — PANALCOR</title>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -121,7 +129,7 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 .btn-red:hover{background:rgba(231,76,60,0.35)}
 
 /* ── CONFIG ── */
-.config-section{max-width:480px}
+.config-section{width:50%;min-width:320px;max-width:50%;overflow:hidden;box-sizing:border-box}
 .field{margin-bottom:16px}
 .field label{display:block;font-size:0.78rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
 .field input{width:100%;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:11px 14px;font-family:'Barlow',sans-serif;font-size:1rem}
@@ -158,6 +166,13 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 .kpi-period-btn:hover{border-color:var(--gold);color:var(--gold)}
 .kpi-period-btn.active{background:var(--gold);border-color:var(--gold);color:#0d1b2a;font-weight:700}
 </style>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+</script>
 </head>
 <body>
 
@@ -186,34 +201,7 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 <div id="app" style="display:none">
 
 <div class="topbar">
-  <a href="panalcor_inicio.html" title="Inicio — PANALCOR S.L." style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;flex-shrink:0;background:rgba(201,162,39,0.1);border:1px solid rgba(201,162,39,0.3);transition:all .2s" onmouseover="this.style.background='rgba(201,162,39,0.25)'" onmouseout="this.style.background='rgba(201,162,39,0.1)'"><svg viewBox="0 0 40 40" width="32" height="32" xmlns="http://www.w3.org/2000/svg">
-  <!-- Espiga superior -->
-  <line x1="20" y1="15" x2="20" y2="6" stroke="#c9a227" stroke-width="1.5" stroke-linecap="round"/>
-  <ellipse cx="20" cy="4"   rx="2" ry="4"   fill="#c9a227"/>
-  <ellipse cx="16.5" cy="6.5" rx="1.6" ry="3.2" fill="#c9a227" transform="rotate(-15 16.5 6.5)"/>
-  <ellipse cx="23.5" cy="6.5" rx="1.6" ry="3.2" fill="#c9a227" transform="rotate(15 23.5 6.5)"/>
-  <!-- Espiga izquierda -->
-  <line x1="13.5" cy="21" x1="13.5" y1="21" x2="6" y2="13" stroke="#c9a227" stroke-width="1.5" stroke-linecap="round"/>
-  <ellipse cx="4.5" cy="10.5" rx="2" ry="4" fill="#c9a227" transform="rotate(-30 4.5 10.5)"/>
-  <ellipse cx="8"   cy="8"   rx="1.6" ry="3.2" fill="#c9a227" transform="rotate(-20 8 8)"/>
-  <!-- Espiga derecha -->
-  <line x1="26.5" y1="21" x2="34" y2="13" stroke="#c9a227" stroke-width="1.5" stroke-linecap="round"/>
-  <ellipse cx="35.5" cy="10.5" rx="2" ry="4" fill="#c9a227" transform="rotate(30 35.5 10.5)"/>
-  <ellipse cx="32"  cy="8"   rx="1.6" ry="3.2" fill="#c9a227" transform="rotate(20 32 8)"/>
-  <!-- Dientes engranaje (8) -->
-  <rect x="18.5" y="13" width="3" height="4.5" rx="1" fill="#c9a227"/>
-  <rect x="18.5" y="13" width="3" height="4.5" rx="1" fill="#c9a227" transform="rotate(45  20 24)"/>
-  <rect x="18.5" y="13" width="3" height="4.5" rx="1" fill="#c9a227" transform="rotate(90  20 24)"/>
-  <rect x="18.5" y="13" width="3" height="4.5" rx="1" fill="#c9a227" transform="rotate(135 20 24)"/>
-  <rect x="18.5" y="13" width="3" height="4.5" rx="1" fill="#c9a227" transform="rotate(180 20 24)"/>
-  <rect x="18.5" y="13" width="3" height="4.5" rx="1" fill="#c9a227" transform="rotate(225 20 24)"/>
-  <rect x="18.5" y="13" width="3" height="4.5" rx="1" fill="#c9a227" transform="rotate(270 20 24)"/>
-  <rect x="18.5" y="13" width="3" height="4.5" rx="1" fill="#c9a227" transform="rotate(315 20 24)"/>
-  <!-- Cuerpo engranaje -->
-  <circle cx="20" cy="24" r="7.5" fill="#c9a227"/>
-  <circle cx="20" cy="24" r="3"   fill="#0d1b2a"/>
-</svg></a>
-  <button class="back-btn" onclick="history.back()">← Volver</button>
+  <a href="panalcor_inicio.html" title="Inicio" style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;flex-shrink:0;background:rgba(201,162,39,0.12);border:1.5px solid rgba(201,162,39,0.4);transition:all .2s" onmouseover="this.style.background='rgba(201,162,39,0.28)'" onmouseout="this.style.background='rgba(201,162,39,0.12)'"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z" fill="rgba(201,162,39,0.25)" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 21V15H15V21" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/></svg></a>
   <div>
     <div class="sub">PANALCOR S.L. · ADMINISTRACIÓN</div>
     <h1>🛡️ PANEL DE ADMINISTRADOR</h1>
@@ -233,6 +221,9 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
   <div class="tab" onclick="switchTab('int')"  id="tab-int">🔩 Integrales</div>
   <div class="tab" onclick="switchTab('cur')"  id="tab-cur">📚 Cursos</div>
   <div class="tab" onclick="switchTab('rec')"  id="tab-rec">🔔 Recordatorios</div>
+  <div class="tab" onclick="switchTab('est')"  id="tab-est">🟢 Estado</div>
+  <a href="calendario.html" target="_blank" class="tab" style="text-decoration:none">📅 Calendario</a>
+  <a href="manual.html" target="_blank" class="tab" style="text-decoration:none">📖 Manual</a>
 </div>
 
 <!-- ═══ DASHBOARD ═══ -->
@@ -376,6 +367,73 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
     </div>
   </div>
 
+  <!-- ══ RESUMEN DEL DÍA ══ -->
+  <div class="card" id="cardResumenDia" style="margin-top:16px;max-width:732px">
+    <div class="sec-title">📅 Resumen del día</div>
+    <div id="resumenDiaBody">Cargando...</div>
+  </div>
+
+  <!-- ══ ÓRDENES SIN FIRMA ══ -->
+  <div class="card" id="cardSinFirma" style="margin-top:16px;max-width:732px">
+    <div class="sec-title">📋 Órdenes sin firma de conformidad</div>
+    <div id="sinFirmaBody">Cargando...</div>
+  </div>
+
+  <!-- ══ TIEMPO DE RESOLUCIÓN ══ -->
+  <div class="card" style="margin-top:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+      <div class="sec-title" style="margin-bottom:0">⏱ Tiempo de resolución de averías</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="kpi-period-btn active" id="trBtn30"  onclick="setTRPeriod(30)">30 días</button>
+        <button class="kpi-period-btn"        id="trBtn90"  onclick="setTRPeriod(90)">90 días</button>
+        <button class="kpi-period-btn"        id="trBtn365" onclick="setTRPeriod(365)">1 año</button>
+      </div>
+    </div>
+    <div id="trKpis" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:16px"></div>
+    <div style="overflow-x:auto">
+      <table class="data-table" id="tTiempoRes">
+        <thead><tr>
+          <th>Tipo de avería</th>
+          <th>Nº resueltas</th>
+          <th>Tiempo medio</th>
+          <th>Tiempo mín.</th>
+          <th>Tiempo máx.</th>
+        </tr></thead>
+        <tbody id="bTiempoRes"><tr><td colspan="5" class="no-data">Cargando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ COMPARATIVA DE TURNOS ══ -->
+  <div class="card" style="margin-top:16px">
+    <div class="sec-title">📊 Comparativa de turnos</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+      <button onclick="setCompTurnosVista('turno')"  id="ctBtnTurno"  class="kpi-period-btn active">Mañana/Tarde/Noche</button>
+      <button onclick="setCompTurnosVista('semana')" id="ctBtnSemana" class="kpi-period-btn">Por semana</button>
+      <button onclick="setCompTurnosVista('mes')"    id="ctBtnMes"    class="kpi-period-btn">Por mes</button>
+    </div>
+    <div id="ctContenido"></div>
+  </div>
+
+  <!-- ══ ALERTAS AVERÍAS REPETITIVAS ══ -->
+  <div class="card" style="margin-top:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+      <div class="sec-title" style="margin-bottom:0">🔁 Averías repetitivas</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <label style="font-size:0.75rem;color:rgba(255,255,255,0.5)">Alerta si supera</label>
+        <input type="number" id="umbralRep" min="2" max="20" value="3"
+          onchange="renderAlertasRepetitivas()"
+          style="width:56px;background:var(--navy-mid);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:7px;padding:5px 8px;font-family:Barlow,sans-serif;font-size:0.9rem;text-align:center">
+        <label style="font-size:0.75rem;color:rgba(255,255,255,0.5)">averías en</label>
+        <input type="number" id="diasRep" min="7" max="365" value="30"
+          onchange="renderAlertasRepetitivas()"
+          style="width:64px;background:var(--navy-mid);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:7px;padding:5px 8px;font-family:Barlow,sans-serif;font-size:0.9rem;text-align:center">
+        <label style="font-size:0.75rem;color:rgba(255,255,255,0.5)">días</label>
+      </div>
+    </div>
+    <div id="alertasRepBody"></div>
+  </div>
+
 </div>
 
 <!-- ═══ MECÁNICOS ═══ -->
@@ -481,6 +539,25 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 
 <!-- ═══ INFORMES ═══ -->
 <div class="panel" id="panel-inf">
+
+  <!-- ═══ PARTE DE TRABAJO ═══ -->
+  <div class="card" style="margin-bottom:16px;background:linear-gradient(135deg,rgba(201,162,39,0.08),rgba(201,162,39,0.04));border-color:rgba(201,162,39,0.35)">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px">
+      <div>
+        <div class="sec-title" style="margin-bottom:4px;color:var(--gold-light)">📄 Parte de Trabajo — Averías</div>
+        <div style="font-size:0.85rem;color:rgba(255,255,255,0.5);line-height:1.5">
+          Filtra por <b>día, semana, mes o rango</b> y combina <b>turnos</b> y <b>mecánicos</b>.<br>
+          Genera el informe y envíalo a imprimir o exporta como PDF.
+        </div>
+      </div>
+      <a href="parte_trabajo.html" target="_blank"
+         style="display:inline-block;padding:12px 24px;background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a;border-radius:9px;font-family:Barlow,sans-serif;font-size:0.95rem;font-weight:900;text-decoration:none;letter-spacing:.04em;white-space:nowrap;transition:filter .2s"
+         onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">
+        🖨️ Abrir Parte de Trabajo
+      </a>
+    </div>
+  </div>
+
   <!-- ═══ INFORME SEMANAL ═══ -->
   <div class="card" id="cardInformeSemanal" style="margin-bottom:16px">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
@@ -647,6 +724,58 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
       </table>
     </div>
   </div>
+
+  <!-- ══ ESTADO DE MÁQUINA ══ -->
+  <div class="card" style="margin-top:16px">
+    <div class="sec-title">🔍 Estado de máquina</div>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+      <select id="estadoMaqSel" onchange="cargarEstadoMaquina()"
+        style="flex:1;min-width:200px;background:var(--navy-deep,#0d1b2a);color:#f0f4f8;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 14px;font-family:Barlow,sans-serif;font-size:0.95rem">
+        <option value="">— Selecciona una máquina —</option>
+      </select>
+    </div>
+    <div id="estadoMaqWrap" style="display:none">
+      <!-- cabecera maquina -->
+      <div id="estadoMaqHdr" style="display:flex;align-items:center;gap:14px;padding:12px 14px;background:rgba(255,255,255,0.04);border-radius:8px;margin-bottom:12px">
+        <div>
+          <div id="estadoMaqNombre" style="font-size:1.05rem;font-weight:700;color:#f0f4f8;letter-spacing:0.04em"></div>
+          <div id="estadoMaqMeta" style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-top:2px"></div>
+        </div>
+        <div id="estadoMaqBadge" style="margin-left:auto;padding:5px 14px;border-radius:20px;font-size:0.8rem;font-weight:700;letter-spacing:0.06em"></div>
+      </div>
+      <!-- averias abiertas -->
+      <div id="estadoMaqAbiertas"></div>
+      <!-- ultimas resueltas -->
+      <div id="estadoMaqResueltas"></div>
+    </div>
+  </div>
+
+  <!-- ══ GENERADOR DE CÓDIGOS QR ══ -->
+  <div class="card" style="margin-top:16px">
+    <div class="sec-title">📱 Códigos QR por máquina</div>
+    <p style="font-size:0.82rem;color:rgba(255,255,255,0.45);margin-bottom:16px;line-height:1.6">
+      Selecciona una máquina para generar su QR. Al escanearlo, cada usuario es redirigido automáticamente:<br>
+      <span style="color:#c9a227">Mecánico</span> → Registro de avería &nbsp;·&nbsp;
+      <span style="color:#9b59b6">Encargado</span> → Panel de encargado &nbsp;·&nbsp;
+      <span style="color:#3498db">Admin</span> → Esta sección
+    </p>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+      <select id="qrMaqSel" onchange="generarQRMaquina()"
+        style="flex:1;min-width:200px;background:var(--navy-deep,#0d1b2a);color:#f0f4f8;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 14px;font-family:Barlow,sans-serif;font-size:0.95rem">
+        <option value="">— Selecciona una máquina —</option>
+      </select>
+    </div>
+    <div id="qrWrap" style="display:none;flex-direction:column;align-items:center;gap:14px">
+      <div id="qrCanvas" style="background:#0d1b2a;padding:16px;border-radius:12px;border:2px solid rgba(201,162,39,0.35)"></div>
+      <div id="qrMaqLabel" style="font-size:1rem;font-weight:700;letter-spacing:0.06em;color:#f0f4f8;text-align:center"></div>
+      <div id="qrUrl" style="font-size:0.7rem;color:rgba(255,255,255,0.3);word-break:break-all;text-align:center;max-width:320px"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+        <button onclick="imprimirQR()" style="background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.4);color:#c9a227;padding:9px 20px;border-radius:8px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.85rem;font-weight:700">🖨️ Imprimir</button>
+        <button onclick="descargarQR()" style="background:rgba(52,152,219,0.15);border:1px solid rgba(52,152,219,0.4);color:#74b9ff;padding:9px 20px;border-radius:8px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.85rem;font-weight:700">⬇️ Descargar PNG</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- ═══ REPUESTOS ═══ -->
@@ -771,15 +900,15 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
   </div>
 
   <div class="card config-section">
-    <div class="sec-title">🔧 Contraseña de mecánicos</div>
+    <div class="sec-title">🔑 Contraseñas individuales de mecánicos</div>
     <p style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:16px;line-height:1.6">
-      Esta es la contraseña que pide el formulario de averías cuando un mecánico escanea un QR. Compártela solo con tu equipo.
+      Cada mecánico tiene su propia contraseña. Gestiónalas en la pestaña <b>👷 Mecánicos</b> — columna <b>Contraseña</b>. Al guardar un mecánico se sincronizan automáticamente con Firebase.
     </p>
     <div class="field">
-      <label>Nueva contraseña de mecánicos</label>
-      <input type="text" id="cfgMecPw" placeholder="Contraseña actual: panalcor" autocomplete="off">
+      <label>Duración de sesión en dispositivos compartidos (horas)</label>
+      <input type="number" id="cfgMecSessionHoras" min="1" max="8760" placeholder="Por defecto: 8 horas" autocomplete="off">
     </div>
-    <button class="btn-export btn-gold" onclick="cambiarPwMecanicos()">💾 Guardar contraseña de mecánicos</button>
+    <button class="btn-export btn-gold" onclick="guardarSesionConfig()">💾 Guardar duración de sesión</button>
   </div>
 
   <div class="card config-section">
@@ -807,7 +936,7 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
   <div class="card config-section" style="margin-top:0">
     <div class="sec-title">💾 Copias de seguridad</div>
     <p style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:16px;line-height:1.6">
-      Descarga una copia de todos los datos en un fichero <b>.json</b>. Guárdalo en un lugar seguro (pendrive, correo, Drive…). Si alguna vez se pierden datos, puedes restaurarlos desde ese fichero.
+      Descarga una copia <b>completa</b> de todos los datos (averías, asignaciones, mecánicos, repuestos, turnos, encargados…) en un fichero <b>.json</b>. Guárdalo en un lugar seguro (pendrive, correo, Drive…). Si alguna vez se pierden datos, puedes restaurarlos desde ese fichero.
     </p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
       <button class="btn-export btn-green" onclick="descargarBackup()">⬇️ Descargar copia de seguridad</button>
@@ -1046,6 +1175,7 @@ function login(){
   try {
     const val = document.getElementById('pwInput').value;
     if(val === getPwd()){
+      localStorage.setItem('adminSession', Date.now());
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('app').style.display = 'block';
       try { initApp(); } catch(e2) {
@@ -1063,6 +1193,7 @@ function login(){
 }
 
 function logout(){
+  localStorage.removeItem('adminSession');
   document.getElementById('app').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('pwInput').value = '';
@@ -1097,6 +1228,21 @@ const FB_CFG = {
 };
 if (!firebase.apps.length) firebase.initializeApp(FB_CFG);
 const DB = firebase.database();
+
+// ── SESION UNIFICADA ──────────────────────────────
+(function(){
+  var ps=null;
+  try{ps=JSON.parse(localStorage.getItem('panalcor_session')||'null');}catch(e){}
+  if(ps&&ps.rol==='admin'&&Date.now()<ps.expires){
+    localStorage.setItem('adminSession',String(Date.now()));
+    var loginEl=document.getElementById('loginScreen');
+    var appEl=document.getElementById('app');
+    if(loginEl) loginEl.style.display='none';
+    if(appEl)   appEl.style.display='block';
+    // Diferir initApp para que let/const del script esten inicializados
+    setTimeout(function(){ try{initApp();}catch(e){console.error('initApp:',e);} }, 0);
+  }
+})();
 
 // Escucha en tiempo real: cuando llega una avería nueva desde el móvil,
 // el panel del admin se actualiza automáticamente sin recargar
@@ -1140,15 +1286,29 @@ function initApp(){
   renderDashboard();
   cargarMecanicosParaRec();
   cargarRecordatorios();
+  cargarSinFirma();
+  renderResumenDia();
+  renderTiempoResolucion();
+  renderCompTurnos();
+  renderAlertasRepetitivas();
   // fechas por defecto para mecánicos e informes (último mes)
   const hoy = new Date();
   const hace30 = new Date(hoy); hace30.setDate(hoy.getDate()-30);
   const fmt = d => d.toISOString().split('T')[0];
   ['mecDesde','infDesde'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=fmt(hace30); });
   ['mecHasta','infHasta'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=fmt(hoy); });
+  // Navegar a tab por hash URL (ej: admin.html#maq)
+  var _hash = window.location.hash.replace('#','');
+  if(_hash) setTimeout(function(){ switchTab(_hash); }, 100);
   // Pre-fill mes actual en informe mensual
   const expMesEl = document.getElementById('expMes');
   if(expMesEl) expMesEl.value = hoy.toISOString().substring(0,7);
+  // Cargar duración de sesión configurada
+  DB.ref('config/mecSessionHoras').once('value').then(snap=>{
+    const h = snap.val();
+    const el = document.getElementById('cfgMecSessionHoras');
+    if(el && h) el.value = h;
+  }).catch(()=>{});
   renderEstadoDatos();
 }
 
@@ -1231,6 +1391,178 @@ function renderAlertasDash(av){
     <div class="ai-icon">${a.icon}</div>
     <div class="ai-text"><div class="ai-title">${a.title}</div>${a.text}</div>
   </div>`).join('');
+}
+
+// ══ ALERTAS STOCK MÍNIMO ══════════════════════════════════════
+function cargarAlertasStock(){
+  var el = document.getElementById('stockAlertasBody');
+  if(!el) return;
+  DB.ref('repuestos_base').once('value').then(function(snap){
+    var data = snap.val();
+    if(!data){ el.innerHTML='<div style="color:rgba(255,255,255,0.4);font-size:0.85rem">No hay datos de repuestos en Firebase.</div>'; return; }
+    var items = Object.values(data).filter(function(r){
+      return (r.stockMin||0) > 0 && (r.stock||0) <= (r.stockMin||0);
+    });
+    if(!items.length){
+      el.innerHTML='<div style="color:#2ecc71;font-size:0.88rem;padding:8px 0">✅ Todo el stock en niveles correctos</div>';
+      return;
+    }
+    var rows = items.map(function(r){
+      var rowStyle = (r.stock||0)===0 ? 'background:rgba(231,76,60,0.12)' : 'background:rgba(243,156,18,0.08)';
+      var stockColor = (r.stock||0)===0 ? 'color:#e74c3c;font-weight:700' : 'color:#f39c12;font-weight:700';
+      return '<tr style="'+rowStyle+'">'
+        +'<td style="padding:7px 10px;font-size:0.82rem">'+(r.ref||r.CODIGO||'—')+'</td>'
+        +'<td style="padding:7px 10px;font-size:0.82rem">'+(r.desc||'—')+'</td>'
+        +'<td style="padding:7px 10px;font-size:0.82rem">'+(r.ubicacion||'—')+'</td>'
+        +'<td style="padding:7px 10px;font-size:0.82rem;text-align:center;'+stockColor+'">'+(r.stock||0)+'</td>'
+        +'<td style="padding:7px 10px;font-size:0.82rem;text-align:center;color:rgba(255,255,255,0.5)">'+(r.stockMin||0)+'</td>'
+        +'</tr>';
+    }).join('');
+    el.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+      +'<thead><tr style="border-bottom:1px solid rgba(255,255,255,0.1)">'
+      +'<th style="padding:6px 10px;font-size:0.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);text-align:left">Ref</th>'
+      +'<th style="padding:6px 10px;font-size:0.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);text-align:left">Descripción</th>'
+      +'<th style="padding:6px 10px;font-size:0.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);text-align:left">Ubicación</th>'
+      +'<th style="padding:6px 10px;font-size:0.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);text-align:center">Stock actual</th>'
+      +'<th style="padding:6px 10px;font-size:0.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);text-align:center">Stock mín.</th>'
+      +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
+  }).catch(function(err){
+    el.innerHTML='<div style="color:rgba(255,255,255,0.4);font-size:0.85rem">Error al cargar repuestos: '+err.message+'</div>';
+  });
+}
+
+// ══ ÓRDENES SIN FIRMA ════════════════════════════════════════
+function cargarSinFirma(){
+  var el = document.getElementById('sinFirmaBody');
+  if(!el) return;
+  DB.ref('averias').once('value').then(function(snap){
+    var data = snap.val();
+    var pendFirma = [];
+    if(data){
+      Object.values(data).forEach(function(a){
+        if(a && a.estado === 'RESUELTA' && !a.firmada) pendFirma.push(a);
+      });
+    }
+    // Also from localStorage
+    var lsAv = JSON.parse(localStorage.getItem('averias_v1')||'[]');
+    var lsIds = pendFirma.map(function(a){ return a.id; });
+    lsAv.forEach(function(a){
+      if(a && a.estado === 'RESUELTA' && !a.firmada && lsIds.indexOf(a.id)===-1) pendFirma.push(a);
+    });
+    pendFirma.sort(function(a,b){ return (b.fecha||'').localeCompare(a.fecha||''); });
+    if(!pendFirma.length){
+      el.innerHTML='<div style="color:#2ecc71;font-size:0.88rem;padding:8px 0">✅ Todas las órdenes resueltas tienen firma de conformidad</div>';
+      return;
+    }
+    var badge = '<span style="display:inline-block;background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.4);color:#e74c3c;border-radius:12px;padding:2px 10px;font-size:0.78rem;font-weight:700;margin-bottom:10px">'+pendFirma.length+' pendientes</span>';
+    var rows = pendFirma.map(function(a){
+      return '<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">'
+        +'<td style="padding:7px 10px;font-size:0.8rem">'+a.id+'</td>'
+        +'<td style="padding:7px 10px;font-size:0.8rem">'+(a.maqNombre||'—')+'</td>'
+        +'<td style="padding:7px 10px;font-size:0.8rem">'+(a.fecha||'—')+'</td>'
+        +'<td style="padding:7px 10px;font-size:0.8rem">'+(a.mecanicos&&a.mecanicos.length?a.mecanicos.join(', '):'—')+'</td>'
+        +'</tr>';
+    }).join('');
+    el.innerHTML=badge+'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+      +'<thead><tr style="border-bottom:1px solid rgba(255,255,255,0.1)">'
+      +'<th style="padding:6px 10px;font-size:0.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);text-align:left">ID</th>'
+      +'<th style="padding:6px 10px;font-size:0.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);text-align:left">Máquina</th>'
+      +'<th style="padding:6px 10px;font-size:0.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);text-align:left">Fecha</th>'
+      +'<th style="padding:6px 10px;font-size:0.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);text-align:left">Mecánico</th>'
+      +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
+  }).catch(function(){
+    // fallback to localStorage only
+    var lsAv = JSON.parse(localStorage.getItem('averias_v1')||'[]');
+    var pendFirma = lsAv.filter(function(a){ return a && a.estado==='RESUELTA' && !a.firmada; });
+    var el2 = document.getElementById('sinFirmaBody');
+    if(!el2) return;
+    if(!pendFirma.length){
+      el2.innerHTML='<div style="color:#2ecc71;font-size:0.88rem;padding:8px 0">✅ Todas las órdenes resueltas tienen firma de conformidad</div>';
+    } else {
+      el2.innerHTML='<div style="color:rgba(255,255,255,0.5);font-size:0.82rem">'+pendFirma.length+' pendientes (sin conexión Firebase)</div>';
+    }
+  });
+}
+
+// ══ RESUMEN DEL DÍA ═══════════════════════════════════════════
+function renderResumenDia(){
+  var el = document.getElementById('resumenDiaBody');
+  if(!el) return;
+  var hoy = new Date().toISOString().split('T')[0];
+  var av = getAverias();
+  var avHoy = av.filter(function(a){ return a.fecha === hoy; });
+  var avResHoy = avHoy.filter(function(a){ return a.estado === 'RESUELTA'; });
+  var avPendHoy = avHoy.filter(function(a){ return a.estado !== 'RESUELTA'; });
+
+  DB.ref('registros_turno').once('value').then(function(snap){
+    var data = snap.val();
+    var turnosHoy = [];
+    if(data){
+      Object.values(data).forEach(function(t){
+        if(t && t.fecha === hoy) turnosHoy.push(t);
+      });
+    }
+    // Also from localStorage
+    var lsTurnos = getTurnos().filter(function(t){ return t.fecha === hoy; });
+    var lsIds = turnosHoy.map(function(t){ return t.id; });
+    lsTurnos.forEach(function(t){
+      if(t && lsIds.indexOf(t.id) === -1) turnosHoy.push(t);
+    });
+
+    var avgPct = 0;
+    if(turnosHoy.length){
+      var suma = turnosHoy.reduce(function(s,t){ return s + (t.total>0 ? Math.round(t.done/t.total*100) : 0); }, 0);
+      avgPct = Math.round(suma / turnosHoy.length);
+    }
+    var resumen = 'Hoy se han registrado ' + avHoy.length + ' avería' + (avHoy.length!==1?'s':'')
+      + ' (' + avResHoy.length + ' resuelta' + (avResHoy.length!==1?'s':'') + ', '
+      + avPendHoy.length + ' pendiente' + (avPendHoy.length!==1?'s':'') + '). '
+      + (turnosHoy.length ? 'Se han completado ' + turnosHoy.length + ' turno' + (turnosHoy.length!==1?'s':'')
+        + ' de mantenimiento con una media del ' + avgPct + '% de tareas realizadas.'
+        : 'No se han registrado turnos de mantenimiento hoy.');
+
+    var exportData = {fecha:hoy, averias_total:avHoy.length, averias_resueltas:avResHoy.length, averias_pendientes:avPendHoy.length, turnos:turnosHoy.length, cumplimiento_medio:avgPct+'%'};
+
+    el.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:14px">'
+      +'<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px;text-align:center">'
+        +'<div style="font-size:1.6rem;font-weight:900;color:var(--blue)">'+avHoy.length+'</div>'
+        +'<div style="font-size:0.72rem;color:rgba(255,255,255,0.5);margin-top:2px">Averías hoy</div></div>'
+      +'<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px;text-align:center">'
+        +'<div style="font-size:1.6rem;font-weight:900;color:var(--green)">'+avResHoy.length+'</div>'
+        +'<div style="font-size:0.72rem;color:rgba(255,255,255,0.5);margin-top:2px">Resueltas</div></div>'
+      +'<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px;text-align:center">'
+        +'<div style="font-size:1.6rem;font-weight:900;color:var(--red)">'+avPendHoy.length+'</div>'
+        +'<div style="font-size:0.72rem;color:rgba(255,255,255,0.5);margin-top:2px">Pendientes</div></div>'
+      +'<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px;text-align:center">'
+        +'<div style="font-size:1.6rem;font-weight:900;color:var(--gold)">'+turnosHoy.length+'</div>'
+        +'<div style="font-size:0.72rem;color:rgba(255,255,255,0.5);margin-top:2px">Turnos mant.</div></div>'
+      +'<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px;text-align:center">'
+        +'<div style="font-size:1.6rem;font-weight:900;color:var(--green)">'+avgPct+'%</div>'
+        +'<div style="font-size:0.72rem;color:rgba(255,255,255,0.5);margin-top:2px">Media tareas</div></div>'
+      +'</div>'
+      +'<div style="font-size:0.88rem;color:rgba(255,255,255,0.65);line-height:1.6;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:12px">'+resumen+'</div>'
+      +'<button onclick="exportarResumenDia('+JSON.stringify(exportData).replace(/"/g,'&quot;')+')" style="background:rgba(52,152,219,0.15);border:1px solid rgba(52,152,219,0.4);color:#74b9ff;border-radius:7px;padding:8px 16px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.82rem">📄 Exportar resumen del día</button>';
+  }).catch(function(){
+    el.innerHTML='<div style="color:rgba(255,255,255,0.4);font-size:0.85rem">Error al cargar datos de Firebase.</div>';
+  });
+}
+
+function exportarResumenDia(data){
+  var txt = 'RESUMEN DEL DÍA — PANALCOR\n'
+    + '==============================\n'
+    + 'Fecha: ' + data.fecha + '\n'
+    + 'Averías registradas: ' + data.averias_total + '\n'
+    + '  · Resueltas: ' + data.averias_resueltas + '\n'
+    + '  · Pendientes: ' + data.averias_pendientes + '\n'
+    + 'Turnos de mantenimiento: ' + data.turnos + '\n'
+    + 'Cumplimiento medio: ' + data.cumplimiento_medio + '\n';
+  var blob = new Blob([txt], {type:'text/plain'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'resumen_' + data.fecha + '.txt';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function renderChartTendencia(av){
@@ -2065,15 +2397,17 @@ function _generarExcelMensual(mes, mesLabel, turnos, tareasMap){
 // ══════════════════════════════════════════════════
 // CONFIGURACIÓN
 // ══════════════════════════════════════════════════
-function cambiarPwMecanicos(){
-  const nueva = document.getElementById('cfgMecPw').value.trim();
-  if(!nueva){ showToast('⚠️ Escribe la nueva contraseña'); return; }
-  if(nueva.length < 3){ showToast('⚠️ Mínimo 3 caracteres'); return; }
-  DB.ref('config/mecanicoPwd').set(nueva).then(()=>{
-    localStorage.setItem('mecanicoPwd', nueva);
-    document.getElementById('cfgMecPw').value = '';
-    showToast('✅ Contraseña de mecánicos actualizada');
+function guardarSesionConfig(){
+  const h = parseInt(document.getElementById('cfgMecSessionHoras').value) || 0;
+  if(!h || h < 1){ showToast('⚠️ Introduce un número de horas válido (mín. 1)'); return; }
+  DB.ref('config/mecSessionHoras').set(h).then(()=>{
+    showToast('✅ Duración de sesión: '+h+' hora'+(h!==1?'s':'')+' en dispositivos compartidos');
   }).catch(()=>{ showToast('❌ Error al guardar. Comprueba la conexión.'); });
+}
+
+function cambiarPwMecanicos(){
+  // Mantenida por compatibilidad — ahora las contraseñas son por mecánico (pestaña Mecánicos)
+  showToast('ℹ️ Las contraseñas ahora son individuales. Edítalas en la pestaña Mecánicos.');
 }
 
 function cambiarPassword(){
@@ -2109,30 +2443,29 @@ function renderEstadoDatos(){
 // COPIAS DE SEGURIDAD
 // ══════════════════════════════════════════════════
 function descargarBackup(){
-  showToast('⏳ Preparando copia de seguridad...');
-  // Leer todo de Firebase
-  Promise.all([
-    DB.ref('averias').once('value'),
-    DB.ref('maquinas_extra').once('value')
-  ]).then(([snapAv, snapMaq])=>{
-    const backup = {
-      _version:   1,
-      _fecha:     new Date().toISOString(),
-      _app:       'PANALCOR Mantenimiento',
-      averias:    snapAv.val()    || {},
-      maquinas_extra: snapMaq.val() || {}
-    };
-    const json = JSON.stringify(backup, null, 2);
-    const blob = new Blob([json], {type:'application/json'});
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    const fecha = new Date().toISOString().split('T')[0];
+  showToast('⏳ Preparando copia de seguridad completa...');
+  var paths = [
+    'averias','asignaciones','config','estado_maquinas','maquinas',
+    'maquinas_extra','avisos_encargados','turnos','registros_turno',
+    'tareas_diarias','recordatorios','repuestos_base','repuestos_base_ts',
+    'repuestos_catalogo','repuestos_docs','catalogo','cursos','integrales'
+  ];
+  Promise.all(paths.map(function(p){ return DB.ref(p).once('value'); }))
+  .then(function(snaps){
+    var backup = { _version:2, _fecha:new Date().toISOString(), _app:'PANALCOR Mantenimiento' };
+    paths.forEach(function(p,i){ backup[p] = snaps[i].val() || {}; });
+    var json  = JSON.stringify(backup, null, 2);
+    var blob  = new Blob([json], {type:'application/json'});
+    var url   = URL.createObjectURL(blob);
+    var a     = document.createElement('a');
+    var fecha = new Date().toISOString().split('T')[0];
     a.href     = url;
-    a.download = `panalcor_backup_${fecha}.json`;
+    a.download = 'panalcor_backup_completo_' + fecha + '.json';
     a.click();
     URL.revokeObjectURL(url);
-    showToast('✅ Copia de seguridad descargada');
-  }).catch(()=>{
+    var total = Object.keys(backup.averias||{}).length;
+    showToast('✅ Backup completo descargado (' + total + ' averias, ' + paths.length + ' colecciones)');
+  }).catch(function(){
     showToast('❌ Error al conectar con la nube. ¿Tienes internet?');
   });
 }
@@ -2226,8 +2559,8 @@ function saveMaquinasExtra(){
 
 function renderMaquinas(){
   // Rellenar datalists con tipos y áreas de las máquinas base
-  const BASE_TIPOS = ['AMASADORA','FORMADORA-ENTABLADORA','CARRUSEL','VOLCADOR','REPARTIDOR','DIVISORAS','CAMARA REPOSO','EMBOLADORA','FERMENTADORA','HORNO','TALLADORA','TUNEL','FORMADORA CAJAS','EMBOLSADORA','CARGADOR/DESCARGADOR','DESMOLDEO','CONTADORA','IMPRESORA','C. RODILLOS','PRECINTADORA','M. PEGATINAS','ROBOT','ENFARDADORA','SILOS HARINA','ADITIVOS','LEVADURA'];
-  const BASE_AREAS = ['OBRADOR','HORNOS','TUNELES','ENVASADO','SILOS','FERMENTADORA','TRUENO-FERMENTADORA'];
+  const BASE_TIPOS = ['AMASADORA','FORMADORA-ENTABLADORA','CARRUSEL','VOLCADOR','REPARTIDOR','DIVISORAS','CAMARA REPOSO','EMBOLADORA','FERMENTADORA','HORNO','TALLADORA','TUNEL CONGELACION','TUNEL PREFRIO','FORMADORA CAJAS','EMBOLSADORA','CARGADOR/DESCARGADOR','DESMOLDEO','CONTADORA','IMPRESORA','C. RODILLOS','PRECINTADORA','M. PEGATINAS','ROBOT','ENFARDADORA','SILOS HARINA','ADITIVOS','LEVADURA','CAMARA','AGUA','A/A','EXTRACTORES','EVAPORATIVAS','ELECTRICIDAD','OTROS'];
+  const BASE_AREAS = ['OBRADOR','HORNOS','FRIO/CLIMA','ENVASADO','SILOS','SALA COMPRESORES','EXPEDICION'];
   document.getElementById('maqTiposList').innerHTML = BASE_TIPOS.map(t=>`<option value="${t}">`).join('');
   document.getElementById('maqAreasList').innerHTML = BASE_AREAS.map(a=>`<option value="${a}">`).join('');
 
@@ -2376,7 +2709,16 @@ var MAQUINAS_BASE_ADMIN = [
   {id:'MAQ-119',n:'TOLVA 1'},{id:'MAQ-120',n:'TOLVA 2'},{id:'MAQ-121',n:'TOLVA 3'},
   {id:'MAQ-122',n:'TOLVA 4'},{id:'MAQ-123',n:'TOLVA 5'},{id:'MAQ-124',n:'TOLVA 6'},
   {id:'MAQ-125',n:'TOLVA 7'},{id:'MAQ-126',n:'LEVADURA TANQUE 1'},{id:'MAQ-127',n:'LEVADURA TANQUE 2'},
-  {id:'MAQ-128',n:'LEVADURA CUADRO GENERAL Y BOMBAS'},{id:'MAQ-129',n:'LEVADURA CUADRO GLICOL'}
+  {id:'MAQ-128',n:'LEVADURA CUADRO GENERAL Y BOMBAS'},{id:'MAQ-129',n:'LEVADURA CUADRO GLICOL'},
+  {id:'MAQ-130',n:'CAMARA STOCK 1'},{id:'MAQ-131',n:'CAMARA STOCK 2'},{id:'MAQ-132',n:'CAMARA STOCK 3'},
+  {id:'MAQ-133',n:'CAMARA STOCK 4'},{id:'MAQ-134',n:'CAMARA STOCK 5 (TRUENO)'},
+  {id:'MAQ-135',n:'TANQUE 1'},{id:'MAQ-136',n:'TANQUE 2'},{id:'MAQ-137',n:'TANQUE 3'},
+  {id:'MAQ-138',n:'TANQUE 4'},{id:'MAQ-139',n:'TANQUE 5 (TRUENO)'},
+  {id:'MAQ-140',n:'A/A OBRADOR'},{id:'MAQ-141',n:'A/A VESTUARIO'},{id:'MAQ-142',n:'A/A OFICINAS'},
+  {id:'MAQ-143',n:'TRANSFORMADOR'},{id:'MAQ-144',n:'CONDENSADORES ELECTRICOS'},
+  {id:'MAQ-145',n:'CUADROS GENERALES'},{id:'MAQ-146',n:'A/A MUELLE'},
+  {id:'MAQ-147',n:'EXTRACTORES RELAMPAGO'},{id:'MAQ-148',n:'EXTRACTORES TRUENO'},
+  {id:'MAQ-149',n:'EVAPORATIVAS'}
 ];
 
 function poblarSelectorRenombrar(){
@@ -2416,6 +2758,434 @@ function ejecutarRenombradoHistorial(){
 }
 
 // ══════════════════════════════════════════════════
+// QR POR MAQUINA
+// ══════════════════════════════════════════════════
+var _qrInstance = null;
+var _qrCardCanvas = null;
+
+// Datos completos de maquinas para tarjeta QR {a:area, t:tipo, f:fabricante}
+var MAQUINAS_FULL_DATA = {
+  'MAQ-001':{a:'OBRADOR',t:'AMASADORA',f:'NEOTECH'},
+  'MAQ-002':{a:'OBRADOR',t:'AMASADORA',f:'NEOTECH'},
+  'MAQ-003':{a:'OBRADOR',t:'AMASADORA',f:'NEOTECH'},
+  'MAQ-004':{a:'OBRADOR',t:'AMASADORA',f:'NEOTECH'},
+  'MAQ-005':{a:'OBRADOR',t:'AMASADORA',f:'NEOTECH'},
+  'MAQ-006':{a:'OBRADOR',t:'AMASADORA',f:'NEOTECH'},
+  'MAQ-007':{a:'OBRADOR',t:'AMASADORA',f:'NEOTECH'},
+  'MAQ-008':{a:'OBRADOR',t:'AMASADORA',f:'MAGER'},
+  'MAQ-009':{a:'OBRADOR',t:'AMASADORA',f:'KEMPER'},
+  'MAQ-010':{a:'OBRADOR',t:'FORMADORA-ENTABLADORA',f:'TECKMAPA'},
+  'MAQ-011':{a:'OBRADOR',t:'FORMADORA-ENTABLADORA',f:'TECKMAPA'},
+  'MAQ-012':{a:'OBRADOR',t:'FORMADORA-ENTABLADORA',f:'TECKMAPA'},
+  'MAQ-013':{a:'OBRADOR',t:'FORMADORA-ENTABLADORA',f:'TECKMAPA'},
+  'MAQ-014':{a:'OBRADOR',t:'FORMADORA-ENTABLADORA',f:'TECKMAPA'},
+  'MAQ-015':{a:'OBRADOR',t:'FORMADORA-ENTABLADORA',f:'BEOR'},
+  'MAQ-016':{a:'OBRADOR',t:'FORMADORA-ENTABLADORA',f:'TECKMAPA'},
+  'MAQ-017':{a:'OBRADOR',t:'CARRUSEL',f:'SABATECNO'},
+  'MAQ-018':{a:'OBRADOR',t:'CARRUSEL',f:'SABATECNO'},
+  'MAQ-019':{a:'OBRADOR',t:'CARRUSEL',f:'SABATECNO'},
+  'MAQ-020':{a:'OBRADOR',t:'CARRUSEL',f:'SABATECNO'},
+  'MAQ-021':{a:'OBRADOR',t:'CARRUSEL',f:'SABATECNO'},
+  'MAQ-022':{a:'OBRADOR',t:'CARRUSEL',f:'SABATECNO'},
+  'MAQ-023':{a:'OBRADOR',t:'VOLCADOR',f:''},
+  'MAQ-024':{a:'OBRADOR',t:'VOLCADOR',f:''},
+  'MAQ-025':{a:'OBRADOR',t:'VOLCADOR',f:''},
+  'MAQ-026':{a:'OBRADOR',t:'VOLCADOR',f:''},
+  'MAQ-027':{a:'OBRADOR',t:'VOLCADOR',f:''},
+  'MAQ-028':{a:'OBRADOR',t:'VOLCADOR',f:''},
+  'MAQ-029':{a:'OBRADOR',t:'VOLCADOR',f:''},
+  'MAQ-030':{a:'OBRADOR',t:'REPARTIDOR',f:''},
+  'MAQ-031':{a:'OBRADOR',t:'REPARTIDOR',f:''},
+  'MAQ-032':{a:'OBRADOR',t:'REPARTIDOR',f:''},
+  'MAQ-033':{a:'OBRADOR',t:'DIVISORAS',f:'SUBAL'},
+  'MAQ-034':{a:'OBRADOR',t:'DIVISORAS',f:'SUBAL'},
+  'MAQ-035':{a:'OBRADOR',t:'DIVISORAS',f:'SUBAL'},
+  'MAQ-036':{a:'OBRADOR',t:'DIVISORAS',f:'SUBAL'},
+  'MAQ-037':{a:'OBRADOR',t:'DIVISORAS',f:'SUBAL'},
+  'MAQ-038':{a:'OBRADOR',t:'DIVISORAS',f:'SUBAL'},
+  'MAQ-039':{a:'OBRADOR',t:'DIVISORAS',f:'SUBAL'},
+  'MAQ-040':{a:'OBRADOR',t:'DIVISORAS',f:'SUBAL'},
+  'MAQ-041':{a:'OBRADOR',t:'DIVISORAS',f:'SUBAL'},
+  'MAQ-042':{a:'OBRADOR',t:'CAMARA REPOSO',f:'ZELAIETA'},
+  'MAQ-043':{a:'OBRADOR',t:'CAMARA REPOSO',f:'ZELAIETA'},
+  'MAQ-044':{a:'OBRADOR',t:'CAMARA REPOSO',f:'ZELAIETA'},
+  'MAQ-045':{a:'OBRADOR',t:'CAMARA REPOSO',f:'ZELAIETA'},
+  'MAQ-046':{a:'OBRADOR',t:'CAMARA REPOSO',f:'ZELAIETA'},
+  'MAQ-047':{a:'OBRADOR',t:'CAMARA REPOSO',f:'ZELAIETA'},
+  'MAQ-048':{a:'OBRADOR',t:'CAMARA REPOSO',f:'ZELAIETA'},
+  'MAQ-049':{a:'OBRADOR',t:'EMBOLADORA',f:''},
+  'MAQ-050':{a:'OBRADOR',t:'EMBOLADORA',f:''},
+  'MAQ-051':{a:'OBRADOR',t:'EMBOLADORA',f:''},
+  'MAQ-052':{a:'OBRADOR',t:'EMBOLADORA',f:''},
+  'MAQ-053':{a:'OBRADOR',t:'EMBOLADORA',f:''},
+  'MAQ-054':{a:'OBRADOR',t:'EMBOLADORA',f:''},
+  'MAQ-055':{a:'OBRADOR',t:'EMBOLADORA',f:''},
+  'MAQ-056':{a:'OBRADOR',t:'EMBOLADORA',f:''},
+  'MAQ-057':{a:'OBRADOR',t:'EMBOLADORA',f:''},
+  'MAQ-058':{a:'FRIO/CLIMA',t:'FERMENTADORA',f:'INFRISA'},
+  'MAQ-059':{a:'FRIO/CLIMA',t:'FERMENTADORA',f:'INFRISA'},
+  'MAQ-060':{a:'HORNOS',t:'HORNO',f:'BEGESA'},
+  'MAQ-061':{a:'HORNOS',t:'HORNO',f:'GPG'},
+  'MAQ-062':{a:'HORNOS',t:'HORNO',f:'GPG'},
+  'MAQ-063':{a:'HORNOS',t:'HORNO',f:'GPG'},
+  'MAQ-064':{a:'HORNOS',t:'HORNO',f:'GPG'},
+  'MAQ-065':{a:'HORNOS',t:'HORNO',f:'GPG'},
+  'MAQ-066':{a:'HORNOS',t:'HORNO',f:'GPG'},
+  'MAQ-067':{a:'HORNOS',t:'HORNO',f:'GPG'},
+  'MAQ-068':{a:'HORNOS',t:'HORNO',f:'BEGESA'},
+  'MAQ-069':{a:'HORNOS',t:'HORNO',f:'BEGESA'},
+  'MAQ-070':{a:'HORNOS',t:'HORNO',f:'BEGESA'},
+  'MAQ-071':{a:'HORNOS',t:'HORNO',f:'BEGESA'},
+  'MAQ-072':{a:'HORNOS',t:'HORNO',f:'BEGESA'},
+  'MAQ-073':{a:'HORNOS',t:'HORNO',f:'BEGESA'},
+  'MAQ-074':{a:'HORNOS',t:'HORNO',f:'BEGESA'},
+  'MAQ-075':{a:'HORNOS',t:'HORNO',f:'BEGESA'},
+  'MAQ-076':{a:'HORNOS',t:'HORNO',f:'BEGESA'},
+  'MAQ-077':{a:'HORNOS',t:'HORNO',f:'BEGESA'},
+  'MAQ-078':{a:'HORNOS',t:'HORNO',f:'GPG'},
+  'MAQ-079':{a:'HORNOS',t:'TALLADORA',f:'PORTICEL'},
+  'MAQ-080':{a:'HORNOS',t:'TALLADORA',f:'AYMI'},
+  'MAQ-081':{a:'FRIO/CLIMA',t:'TUNEL PREFRIO',f:'INFRISA'},
+  'MAQ-082':{a:'FRIO/CLIMA',t:'TUNEL CONGELACION',f:'INFRISA'},
+  'MAQ-083':{a:'FRIO/CLIMA',t:'TUNEL CONGELACION',f:'INFRISA'},
+  'MAQ-084':{a:'FRIO/CLIMA',t:'TUNEL CONGELACION',f:'INFRISA'},
+  'MAQ-085':{a:'FRIO/CLIMA',t:'TUNEL CONGELACION',f:'INFRISA'},
+  'MAQ-086':{a:'FRIO/CLIMA',t:'TUNEL CONGELACION',f:'INFRISA'},
+  'MAQ-087':{a:'FRIO/CLIMA',t:'TUNEL CONGELACION',f:'INFRISA'},
+  'MAQ-088':{a:'FRIO/CLIMA',t:'TUNEL CONGELACION',f:'INFRISA'},
+  'MAQ-089':{a:'FRIO/CLIMA',t:'TUNEL CONGELACION',f:'INFRISA'},
+  'MAQ-090':{a:'FRIO/CLIMA',t:'TUNEL CONGELACION',f:'INFRISA'},
+  'MAQ-091':{a:'FRIO/CLIMA',t:'TUNEL CONGELACION',f:'INFRISA'},
+  'MAQ-092':{a:'ENVASADO',t:'FORMADORA CAJAS',f:'TAVIL'},
+  'MAQ-093':{a:'ENVASADO',t:'FORMADORA CAJAS',f:'TAVIL'},
+  'MAQ-094':{a:'ENVASADO',t:'EMBOLSADORA',f:'PATTYN'},
+  'MAQ-095':{a:'ENVASADO',t:'CARGADOR/DESCARGADOR',f:'PORTICEL'},
+  'MAQ-096':{a:'ENVASADO',t:'CARGADOR/DESCARGADOR',f:'PORTICEL'},
+  'MAQ-097':{a:'ENVASADO',t:'CARGADOR/DESCARGADOR',f:'PORTICEL'},
+  'MAQ-098':{a:'ENVASADO',t:'CARGADOR/DESCARGADOR',f:'PORTICEL'},
+  'MAQ-099':{a:'ENVASADO',t:'DESMOLDEO',f:'PORTICEL'},
+  'MAQ-100':{a:'ENVASADO',t:'DESMOLDEO',f:'PORTICEL'},
+  'MAQ-101':{a:'ENVASADO',t:'CONTADORA',f:'LOYJAR'},
+  'MAQ-102':{a:'ENVASADO',t:'CONTADORA',f:'PORTICEL'},
+  'MAQ-103':{a:'ENVASADO',t:'C. RODILLOS',f:'TAVIL'},
+  'MAQ-104':{a:'ENVASADO',t:'IMPRESORA',f:'UBS'},
+  'MAQ-105':{a:'ENVASADO',t:'IMPRESORA',f:'UBS'},
+  'MAQ-106':{a:'ENVASADO',t:'PRECINTADORA',f:'SOCO-SYSTEM'},
+  'MAQ-107':{a:'ENVASADO',t:'M. PEGATINAS',f:'PANALCOR'},
+  'MAQ-108':{a:'ENVASADO',t:'ROBOT',f:'IPLA-FANUC'},
+  'MAQ-109':{a:'ENVASADO',t:'ENFARDADORA',f:'IPLA-ROBOPAC'},
+  'MAQ-110':{a:'ENVASADO',t:'ENFARDADORA',f:''},
+  'MAQ-111':{a:'OBRADOR',t:'EMBOLADORA',f:'SOMENGIL'},
+  'MAQ-112':{a:'SILOS',t:'SILOS HARINA',f:'AGRIFLEX'},
+  'MAQ-113':{a:'SILOS',t:'SILOS HARINA',f:''},
+  'MAQ-114':{a:'SILOS',t:'SILOS HARINA',f:'AGRIFLEX'},
+  'MAQ-115':{a:'SILOS',t:'SILOS HARINA',f:''},
+  'MAQ-116':{a:'OBRADOR',t:'ADITIVOS',f:''},
+  'MAQ-117':{a:'OBRADOR',t:'ADITIVOS',f:''},
+  'MAQ-118':{a:'OBRADOR',t:'ADITIVOS',f:'DAMM-SABATECNO'},
+  'MAQ-119':{a:'OBRADOR',t:'SILOS HARINA',f:'DAMM-SABATECNO'},
+  'MAQ-120':{a:'OBRADOR',t:'SILOS HARINA',f:'DAMM-SABATECNO'},
+  'MAQ-121':{a:'OBRADOR',t:'SILOS HARINA',f:'DAMM-SABATECNO'},
+  'MAQ-122':{a:'OBRADOR',t:'SILOS HARINA',f:'DAMM-SABATECNO'},
+  'MAQ-123':{a:'OBRADOR',t:'SILOS HARINA',f:'DAMM-SABATECNO'},
+  'MAQ-124':{a:'OBRADOR',t:'SILOS HARINA',f:'DAMM-SABATECNO'},
+  'MAQ-125':{a:'OBRADOR',t:'SILOS HARINA',f:'DAMM-SABATECNO'},
+  'MAQ-126':{a:'SILOS',t:'LEVADURA',f:'BPF'},
+  'MAQ-127':{a:'SILOS',t:'LEVADURA',f:'BPF'},
+  'MAQ-128':{a:'SILOS',t:'LEVADURA',f:'BPF'},
+  'MAQ-129':{a:'SILOS',t:'LEVADURA',f:''},
+  'MAQ-130':{a:'FRIO/CLIMA',t:'CAMARA',f:'INFRISA'},
+  'MAQ-131':{a:'FRIO/CLIMA',t:'CAMARA',f:'INFRISA'},
+  'MAQ-132':{a:'FRIO/CLIMA',t:'CAMARA',f:'INFRISA'},
+  'MAQ-133':{a:'FRIO/CLIMA',t:'CAMARA',f:'INFRISA'},
+  'MAQ-134':{a:'FRIO/CLIMA',t:'CAMARA',f:'INFRISA'},
+  'MAQ-135':{a:'FRIO/CLIMA',t:'AGUA',f:'INFRISA'},
+  'MAQ-136':{a:'FRIO/CLIMA',t:'AGUA',f:'INFRISA'},
+  'MAQ-137':{a:'FRIO/CLIMA',t:'AGUA',f:'INFRISA'},
+  'MAQ-138':{a:'FRIO/CLIMA',t:'AGUA',f:'INFRISA'},
+  'MAQ-139':{a:'FRIO/CLIMA',t:'AGUA',f:'INFRISA'},
+  'MAQ-140':{a:'FRIO/CLIMA',t:'A/A',f:'INFRISA'},
+  'MAQ-141':{a:'FRIO/CLIMA',t:'A/A',f:'INFRIMA'},
+  'MAQ-142':{a:'FRIO/CLIMA',t:'A/A',f:''},
+  'MAQ-143':{a:'FRIO/CLIMA',t:'A/A',f:'INFRISA'},
+  'MAQ-144':{a:'FRIO/CLIMA',t:'ELECTRICIDAD',f:'JACGA'},
+  'MAQ-145':{a:'FRIO/CLIMA',t:'ELECTRICIDAD',f:'JACGA'},
+  'MAQ-146':{a:'FRIO/CLIMA',t:'A/A',f:''},
+  'MAQ-147':{a:'FRIO/CLIMA',t:'EXTRACTORES',f:''},
+  'MAQ-148':{a:'FRIO/CLIMA',t:'EXTRACTORES',f:''},
+  'MAQ-149':{a:'FRIO/CLIMA',t:'EVAPORATIVAS',f:''}
+};
+
+function poblarEstadoMaqSel(){
+  var sel = document.getElementById('estadoMaqSel');
+  if(!sel || sel.options.length > 1) return;
+  var todas = MAQUINAS_BASE_ADMIN.concat(maquinasExtra).sort(function(a,b){ return a.n.localeCompare(b.n); });
+  todas.forEach(function(m){
+    var o = document.createElement('option');
+    o.value = m.id;
+    o.textContent = m.n + ' (' + m.id + ')';
+    sel.appendChild(o);
+  });
+}
+
+function cargarEstadoMaquina(){
+  var sel = document.getElementById('estadoMaqSel');
+  if(!sel || !sel.value) return;
+  var maqId     = sel.value;
+  var maqNombre = sel.options[sel.selectedIndex].textContent.replace(/\s*\(MAQ-\d+\)$/, '');
+  var maqData   = MAQUINAS_FULL_DATA[maqId] || {a:'',t:'',f:''};
+
+  var wrap      = document.getElementById('estadoMaqWrap');
+  var abDiv     = document.getElementById('estadoMaqAbiertas');
+  var resDiv    = document.getElementById('estadoMaqResueltas');
+  var badge     = document.getElementById('estadoMaqBadge');
+
+  document.getElementById('estadoMaqNombre').textContent = maqNombre;
+  var meta = maqData.t || '';
+  if(maqData.f) meta += ' · ' + maqData.f;
+  if(maqData.a) meta += '  |  ' + maqData.a;
+  document.getElementById('estadoMaqMeta').textContent = meta;
+  abDiv.innerHTML  = '<div style="color:rgba(255,255,255,0.3);font-size:0.82rem;padding:10px 0">Cargando...</div>';
+  resDiv.innerHTML = '';
+  badge.textContent = '';
+  badge.style.background = 'transparent';
+  wrap.style.display = 'block';
+
+  DB.ref('averias').orderByChild('maq').equalTo(maqId).once('value').then(function(snap){
+    var todas = [];
+    snap.forEach(function(c){ todas.push(c.val()); });
+
+    var abiertas  = todas.filter(function(a){ return a.estado !== 'RESUELTA'; });
+    var resueltas = todas.filter(function(a){ return a.estado === 'RESUELTA'; })
+                         .sort(function(a,b){ return (b.fecha||'').localeCompare(a.fecha||''); })
+                         .slice(0, 5);
+
+    // Badge
+    if(abiertas.length === 0){
+      badge.textContent = 'OPERATIVA';
+      badge.style.cssText = 'margin-left:auto;padding:5px 14px;border-radius:20px;font-size:0.8rem;font-weight:700;letter-spacing:0.06em;background:rgba(46,204,113,0.15);color:#2ecc71;border:1px solid rgba(46,204,113,0.3)';
+    } else {
+      badge.textContent = abiertas.length + ' AVERIA' + (abiertas.length > 1 ? 'S' : '') + ' ABIERTA' + (abiertas.length > 1 ? 'S' : '');
+      badge.style.cssText = 'margin-left:auto;padding:5px 14px;border-radius:20px;font-size:0.8rem;font-weight:700;letter-spacing:0.06em;background:rgba(231,76,60,0.15);color:#e74c3c;border:1px solid rgba(231,76,60,0.3)';
+    }
+
+    // Averias abiertas
+    if(abiertas.length === 0){
+      abDiv.innerHTML = '<div style="color:rgba(255,255,255,0.35);font-size:0.82rem;padding:8px 0;font-style:italic">Sin averias abiertas actualmente.</div>';
+    } else {
+      var html = '<div style="font-size:0.8rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.07em;margin-bottom:8px">AVERIAS ABIERTAS</div>';
+      abiertas.forEach(function(a){
+        var estadoColor = a.estado === 'EN CURSO' ? '#f39c12' : a.estado === 'PENDIENTE REPUESTO' ? '#e67e22' : '#e74c3c';
+        var estadoLabel = a.estado || 'PENDIENTE';
+        html += '<div style="background:rgba(231,76,60,0.07);border:1px solid rgba(231,76,60,0.2);border-radius:8px;padding:10px 14px;margin-bottom:8px">'
+          + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px">'
+          + '<div style="font-size:0.88rem;font-weight:700;color:#f0f4f8;flex:1">' + _esc(a.descripcion || '—') + '</div>'
+          + '<div style="font-size:0.75rem;font-weight:700;color:'+estadoColor+';white-space:nowrap;padding:2px 8px;border-radius:10px;border:1px solid '+estadoColor+'40">'+estadoLabel+'</div>'
+          + '</div>'
+          + '<div style="font-size:0.76rem;color:rgba(255,255,255,0.45);display:flex;gap:16px;flex-wrap:wrap">'
+          + '<span>👤 ' + _esc(a.mecanico || '—') + '</span>'
+          + '<span>📅 ' + _esc(a.fecha || '—') + (a.hora ? ' ' + a.hora : '') + '</span>'
+          + (a.prioridad ? '<span>⚡ ' + _esc(a.prioridad) + '</span>' : '')
+          + '</div>'
+          + (a.comentarios ? '<div style="font-size:0.76rem;color:rgba(255,255,255,0.35);margin-top:4px;font-style:italic">' + _esc(a.comentarios) + '</div>' : '')
+          + '</div>';
+      });
+      abDiv.innerHTML = html;
+    }
+
+    // Ultimas resueltas
+    if(resueltas.length > 0){
+      var html2 = '<div style="font-size:0.8rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.07em;margin:14px 0 8px">ULTIMAS RESUELTAS</div>';
+      resueltas.forEach(function(a){
+        html2 += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:9px 14px;margin-bottom:6px">'
+          + '<div style="font-size:0.84rem;color:#f0f4f8;margin-bottom:3px">' + _esc(a.descripcion || '—') + '</div>'
+          + '<div style="font-size:0.75rem;color:rgba(255,255,255,0.4);display:flex;gap:16px;flex-wrap:wrap">'
+          + '<span>👤 ' + _esc(a.mecanico || '—') + '</span>'
+          + '<span>📅 ' + _esc(a.fecha || '—') + '</span>'
+          + (a.firmadaPor ? '<span style="color:#2ecc71">✅ ' + _esc(a.firmadaPor) + '</span>' : '')
+          + '</div>'
+          + '</div>';
+      });
+      resDiv.innerHTML = html2;
+    } else {
+      resDiv.innerHTML = '';
+    }
+
+    // Enlace historial completo
+    var histLink = '<div style="margin-top:12px;text-align:right">'
+      + '<a href="historial_maquina.html?maq=' + encodeURIComponent(maqId) + '" target="_blank"'
+      + ' style="font-size:0.8rem;color:rgba(255,255,255,0.35);text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.15);padding-bottom:1px">'
+      + '📋 Ver historial completo →</a></div>';
+    resDiv.innerHTML += histLink;
+
+  }).catch(function(){
+    abDiv.innerHTML = '<div style="color:#e74c3c;font-size:0.82rem">Error al cargar datos de Firebase.</div>';
+  });
+}
+
+function _esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function poblarQRSel(){
+  var sel = document.getElementById('qrMaqSel');
+  if(!sel || sel.options.length > 1) return;
+  var todas = MAQUINAS_BASE_ADMIN.concat(maquinasExtra).sort(function(a,b){ return a.n.localeCompare(b.n); });
+  todas.forEach(function(m){
+    var o = document.createElement('option');
+    o.value = m.id;
+    o.textContent = m.n + ' (' + m.id + ')';
+    sel.appendChild(o);
+  });
+}
+
+function generarQRMaquina(){
+  var sel = document.getElementById('qrMaqSel');
+  if(!sel || !sel.value) return;
+  var maqId     = sel.value;
+  var maqNombre = sel.options[sel.selectedIndex].textContent.replace(/\s*\(MAQ-\d+\)$/, '');
+  var maqData   = MAQUINAS_FULL_DATA[maqId] || {a:'',t:'',f:''};
+  var url = 'https://panalcor.github.io/panalcor/maquina.html?id=' + encodeURIComponent(maqId)
+          + '&n=' + encodeURIComponent(maqNombre);
+
+  // Generar QR en contenedor oculto
+  var tmp = document.createElement('div');
+  tmp.style.cssText = 'position:absolute;left:-9999px;top:-9999px';
+  document.body.appendChild(tmp);
+  _qrInstance = null;
+  try{
+    _qrInstance = new QRCode(tmp, {
+      text: url, width: 150, height: 150,
+      colorDark: '#1a2d42', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  } catch(e){
+    document.body.removeChild(tmp);
+    document.getElementById('qrCanvas').innerHTML = '<div style="color:#e74c3c;font-size:0.85rem">Error generando QR</div>';
+    return;
+  }
+
+  setTimeout(function(){
+    var qrSrc = tmp.querySelector('canvas');
+    document.body.removeChild(tmp);
+    if(!qrSrc) return;
+
+    var CW = 290, CH = 310, QR = 150;
+    var card = document.createElement('canvas');
+    card.width = CW; card.height = CH;
+    var ctx = card.getContext('2d');
+
+    // Fondo blanco + borde gris
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, CW, CH);
+    ctx.strokeStyle = '#b4b4b4';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0.5, 0.5, CW-1, CH-1);
+
+    // Franja dorada superior
+    ctx.fillStyle = '#c9a227';
+    ctx.fillRect(0, 0, CW, 4);
+
+    ctx.textAlign = 'center';
+    var y = 15;
+
+    // PANALCOR S.L. (dorado)
+    ctx.fillStyle = '#c9a227';
+    ctx.font = 'bold 9px Arial,sans-serif';
+    ctx.fillText('PANALCOR S.L.', CW/2, y);
+    y += 14;
+
+    // Area (gris)
+    ctx.fillStyle = '#788ca0';
+    ctx.font = '9px Arial,sans-serif';
+    ctx.fillText(maqData.a.toUpperCase(), CW/2, y);
+    y += 14;
+
+    // ID (dorado)
+    ctx.fillStyle = '#c9a227';
+    ctx.font = 'bold 13px Arial,sans-serif';
+    ctx.fillText(maqId, CW/2, y);
+    y += 20;
+
+    // Nombre (navy bold)
+    ctx.fillStyle = '#1a2d42';
+    ctx.font = 'bold 19px Arial,sans-serif';
+    if(maqNombre.length > 18){
+      var words = maqNombre.split(' ');
+      var mid = Math.ceil(words.length / 2);
+      ctx.fillText(words.slice(0, mid).join(' '), CW/2, y); y += 22;
+      ctx.fillText(words.slice(mid).join(' '), CW/2, y);    y += 22;
+    } else {
+      ctx.fillText(maqNombre, CW/2, y); y += 26;
+    }
+
+    // tipo · fabricante (gris)
+    var tf = maqData.t || '';
+    if(maqData.f) tf += ' · ' + maqData.f;
+    ctx.fillStyle = '#788ca0';
+    ctx.font = '9px Arial,sans-serif';
+    if(ctx.measureText(tf).width > CW - 10) tf = maqData.t || '';
+    ctx.fillText(tf, CW/2, y);
+    y += 14;
+
+    // Separador
+    ctx.strokeStyle = '#b4b4b4';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(20, y+2); ctx.lineTo(CW-20, y+2);
+    ctx.stroke();
+    y += 8;
+
+    // QR centrado
+    ctx.drawImage(qrSrc, (CW - QR)/2, y);
+    y += QR + 8;
+
+    // Hint
+    ctx.fillStyle = '#788ca0';
+    ctx.font = '9px Arial,sans-serif';
+    ctx.fillText('Escanear para declarar averia', CW/2, y);
+
+    // Mostrar tarjeta
+    _qrCardCanvas = card;
+    var container = document.getElementById('qrCanvas');
+    container.innerHTML = '';
+    container.style.cssText = 'background:transparent;padding:0;border:none';
+    card.style.cssText = 'border-radius:8px;box-shadow:0 4px 24px rgba(0,0,0,0.35)';
+    container.appendChild(card);
+    document.getElementById('qrMaqLabel').textContent = '';
+    document.getElementById('qrUrl').textContent = '';
+    document.getElementById('qrWrap').style.display = 'flex';
+  }, 100);
+}
+
+function imprimirQR(){
+  if(!_qrCardCanvas) return;
+  var label = document.getElementById('qrMaqSel').options[document.getElementById('qrMaqSel').selectedIndex].textContent.replace(/\s*\(MAQ-\d+\)$/,'');
+  var img = _qrCardCanvas.toDataURL('image/png');
+  var w = window.open('','_blank');
+  w.document.write('<html><head><title>QR '+label+'</title>'
+    +'<style>body{margin:0;display:flex;justify-content:center;padding:20px;background:#fff}'
+    +'@media print{body{padding:0}img{max-width:100%}}</style></head>'
+    +'<body><img src="'+img+'"></body></html>');
+  w.document.close();
+  w.onload = function(){ w.print(); };
+}
+
+function descargarQR(){
+  if(!_qrCardCanvas) return;
+  var label = document.getElementById('qrMaqSel').options[document.getElementById('qrMaqSel').selectedIndex].textContent.replace(/\s*\(MAQ-\d+\)$/,'').replace(/\s+/g,'_');
+  var a = document.createElement('a');
+  a.download = 'QR_' + label + '.png';
+  a.href = _qrCardCanvas.toDataURL('image/png');
+  a.click();
+}
+
+// Poblar selector de QR cuando se abre la pestaña Maquinas
+document.addEventListener('DOMContentLoaded', function(){
+  setTimeout(function(){ poblarQRSel(); poblarEstadoMaqSel(); }, 500);
+});
+
+// ══════════════════════════════════════════════════
 // TABS
 // ══════════════════════════════════════════════════
 function switchTab(name){
@@ -2428,7 +3198,7 @@ function switchTab(name){
   document.getElementById('tab-'+name).classList.add('active');
   if(name==='mec') { renderMecanicos(); loadPersonal(renderPersonal); }
   if(name==='inf') renderInformes();
-  if(name==='maq') { loadMaquinasExtra(renderMaquinas); }
+  if(name==='maq') { loadMaquinasExtra(renderMaquinas); poblarQRSel(); poblarEstadoMaqSel(); }
   if(name==='rep') { cargarCatalogoRepuestos(); }
   if(name==='cfg') cargarTareasDiariasAdmin();
   if(name==='cfg') cargarFechasRealizacion();
@@ -2436,7 +3206,8 @@ function switchTab(name){
   if(name==='cfg') renderEstadoDatos();
   if(name==='rec') { cargarMecanicosParaRec(); cargarRecordatorios(); }
   if(name==='enc') cargarAvisosEncargados();
-  if(name==='int') initIntegrales();
+  if(name==='int') { cargarCatalogoRepuestos(); initIntegrales(); }
+  if(name==='est') initEstado();
   if(name==='cur') initCursos();
 }
 
@@ -2477,6 +3248,10 @@ function syncPersonalFirebase(){
   DB.ref('config/personal').set(personalData);
   const activos = personalData.filter(m=>m.estado==='ACTIVO').map(m=>m.nombre);
   DB.ref('config/mecanicos').set(activos);
+  // Sync contraseñas individuales para el login de mecánicos
+  const pwds = {};
+  personalData.filter(m=>m.estado==='ACTIVO'&&m.pwd).forEach(m=>{ pwds[m.nombre]=m.pwd; });
+  if(Object.keys(pwds).length) DB.ref('config/mecanicos_pwd').set(pwds);
 }
 
 function renderPersonal(){
@@ -3730,6 +4505,17 @@ function importarExcelRepuestos(input) {
 </div>
 
 <!-- ═══ CURSOS ═══ -->
+<!-- ═══ ESTADO MÁQUINAS ═══ -->
+<div class="panel" id="panel-est">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px">
+    <div>
+      <h2 style="font-size:1.15rem;font-weight:800;color:var(--gold)">🟢 Estado de máquinas en tiempo real</h2>
+      <p style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin-top:3px">Cambia el estado pulsando los botones. Se actualiza en todos los dispositivos al instante.</p>
+    </div>
+  </div>
+  <div id="estContenido"><div style="text-align:center;padding:40px;color:rgba(255,255,255,0.3)">⏳ Cargando...</div></div>
+</div>
+
 <div class="panel" id="panel-cur">
 
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px">
@@ -4648,6 +5434,380 @@ function borrarRecordatorio(id) {
   DB.ref('recordatorios/' + id).remove()
     .then(() => showToast('🗑 Recordatorio eliminado'))
     .catch(() => showToast('❌ Error al borrar'));
+}
+
+// ══════════════════════════════════════════════════
+// TIEMPO DE RESOLUCIÓN
+// ══════════════════════════════════════════════════
+var _trDias = 30;
+
+function setTRPeriod(d) {
+  _trDias = d;
+  ['30','90','365'].forEach(function(x) {
+    var b = document.getElementById('trBtn'+x);
+    if (b) b.classList.toggle('active', String(d)===x);
+  });
+  renderTiempoResolucion();
+}
+
+function minToStr(m) {
+  if (!m || m <= 0) return '—';
+  var h = Math.floor(m/60), mn = m%60;
+  return h ? h+'h '+(mn?mn+'min':'') : mn+'min';
+}
+
+function renderTiempoResolucion() {
+  var corte = Date.now() - _trDias*86400000;
+  var av = getAverias().filter(function(a) {
+    return a.estado === 'RESUELTA' && a.tiempoMin > 0 && a.ts >= corte;
+  });
+
+  // KPIs globales
+  var kpisEl = document.getElementById('trKpis');
+  if (!kpisEl) return;
+  if (!av.length) {
+    kpisEl.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:0.85rem">Sin datos de resolución en el período.</div>';
+    document.getElementById('bTiempoRes').innerHTML = '<tr><td colspan="5" class="no-data">Sin datos</td></tr>';
+    return;
+  }
+  var totalMin = av.reduce(function(s,a){ return s+(a.tiempoMin||0); }, 0);
+  var media = Math.round(totalMin/av.length);
+  var minVal = Math.min.apply(null, av.map(function(a){ return a.tiempoMin; }));
+  var maxVal = Math.max.apply(null, av.map(function(a){ return a.tiempoMin; }));
+  var rapidas = av.filter(function(a){ return a.tiempoMin <= 60; }).length;
+
+  kpisEl.innerHTML = [
+    ['Media resolución', minToStr(media), 'var(--gold)'],
+    ['Más rápida', minToStr(minVal), '#2ecc71'],
+    ['Más lenta', minToStr(maxVal), '#e74c3c'],
+    ['< 1 hora', rapidas + ' av.', '#3498db'],
+    ['Total analizadas', av.length + ' av.', 'rgba(255,255,255,0.5)']
+  ].map(function(r) {
+    return '<div style="background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px;text-align:center">'
+      + '<div style="font-size:1.6rem;font-weight:900;color:'+r[2]+'">'+r[1]+'</div>'
+      + '<div style="font-size:0.68rem;color:rgba(255,255,255,0.4);letter-spacing:0.1em;margin-top:4px;text-transform:uppercase">'+r[0]+'</div>'
+      + '</div>';
+  }).join('');
+
+  // Tabla por tipo
+  var porTipo = {};
+  av.forEach(function(a) {
+    var t = a.tipo || 'Sin tipo';
+    if (!porTipo[t]) porTipo[t] = [];
+    porTipo[t].push(a.tiempoMin);
+  });
+  var rows = Object.keys(porTipo).map(function(t) {
+    var mins = porTipo[t];
+    var med = Math.round(mins.reduce(function(s,v){ return s+v; },0)/mins.length);
+    return { tipo:t, cnt:mins.length, med:med, min:Math.min.apply(null,mins), max:Math.max.apply(null,mins) };
+  }).sort(function(a,b){ return b.cnt-a.cnt; });
+
+  document.getElementById('bTiempoRes').innerHTML = rows.map(function(r) {
+    return '<tr><td style="font-weight:600">'+escHtml(r.tipo)+'</td>'
+      +'<td style="text-align:center">'+r.cnt+'</td>'
+      +'<td style="text-align:center;color:var(--gold);font-weight:700">'+minToStr(r.med)+'</td>'
+      +'<td style="text-align:center;color:#2ecc71">'+minToStr(r.min)+'</td>'
+      +'<td style="text-align:center;color:#e74c3c">'+minToStr(r.max)+'</td></tr>';
+  }).join('') || '<tr><td colspan="5" class="no-data">Sin datos</td></tr>';
+}
+
+// ══════════════════════════════════════════════════
+// COMPARATIVA DE TURNOS
+// ══════════════════════════════════════════════════
+var _ctVista = 'turno';
+
+function setCompTurnosVista(v) {
+  _ctVista = v;
+  ['turno','semana','mes'].forEach(function(x) {
+    var b = document.getElementById('ctBtn'+x.charAt(0).toUpperCase()+x.slice(1));
+    if (b) b.classList.toggle('active', v===x);
+  });
+  renderCompTurnos();
+}
+
+function renderCompTurnos() {
+  var el = document.getElementById('ctContenido');
+  if (!el) return;
+  var av = getAverias();
+  if (!av.length) { el.innerHTML = '<div style="color:rgba(255,255,255,0.3);padding:20px 0;font-size:0.85rem">Sin datos suficientes.</div>'; return; }
+
+  if (_ctVista === 'turno') {
+    var t = { MAÑANA:{av:0,min:0}, TARDE:{av:0,min:0}, NOCHE:{av:0,min:0} };
+    av.forEach(function(a) {
+      var turno = a.turno || '';
+      if (t[turno]) { t[turno].av++; t[turno].min += (a.tiempoMin||0); }
+    });
+    var maxAv = Math.max.apply(null, Object.values(t).map(function(x){ return x.av; })) || 1;
+    var cols = { MAÑANA:'#f39c12', TARDE:'#3498db', NOCHE:'#9b59b6' };
+    el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">'
+      + Object.keys(t).map(function(k) {
+          var d = t[k]; var c = cols[k];
+          var pct = Math.round(d.av/maxAv*100);
+          return '<div style="background:var(--navy-mid);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:16px;text-align:center">'
+            + '<div style="font-size:1.1rem;font-weight:900;color:'+c+';margin-bottom:4px">'+k+'</div>'
+            + '<div style="font-size:2rem;font-weight:900;color:#fff">'+d.av+'</div>'
+            + '<div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-bottom:10px">averías</div>'
+            + '<div style="background:rgba(255,255,255,0.08);border-radius:4px;height:6px;overflow:hidden;margin-bottom:8px">'
+            + '<div style="height:100%;border-radius:4px;background:'+c+';width:'+pct+'%;transition:width .6s"></div></div>'
+            + '<div style="font-size:0.78rem;color:rgba(255,255,255,0.5)">Tiempo medio: <b style="color:'+c+'">'
+            + (d.av ? minToStr(Math.round(d.min/d.av)) : '—')+'</b></div>'
+            + '</div>';
+        }).join('')
+      + '</div>';
+  } else if (_ctVista === 'semana') {
+    var semanas = {};
+    av.forEach(function(a) {
+      if (!a.fecha) return;
+      var d = new Date(a.fecha+'T00:00:00');
+      var dow = d.getDay(); // 0=dom
+      var lunes = new Date(d); lunes.setDate(d.getDate() - (dow===0?6:dow-1));
+      var key = lunes.toISOString().slice(0,10);
+      if (!semanas[key]) semanas[key] = { MAÑANA:0, TARDE:0, NOCHE:0, total:0 };
+      semanas[key].total++;
+      var turno = a.turno || '';
+      if (semanas[key][turno] !== undefined) semanas[key][turno]++;
+    });
+    var keys = Object.keys(semanas).sort().slice(-12);
+    if (!keys.length) { el.innerHTML='<div style="color:rgba(255,255,255,0.3);padding:20px 0">Sin datos.</div>'; return; }
+    el.innerHTML = '<div style="overflow-x:auto"><table class="data-table"><thead><tr>'
+      +'<th>Semana del</th><th style="color:#f39c12">Mañana</th><th style="color:#3498db">Tarde</th><th style="color:#9b59b6">Noche</th><th>Total</th>'
+      +'</tr></thead><tbody>'
+      + keys.map(function(k) {
+          var d = semanas[k];
+          return '<tr><td style="font-size:0.82rem">'+k+'</td>'
+            +'<td style="text-align:center;color:#f39c12;font-weight:700">'+d.MAÑANA+'</td>'
+            +'<td style="text-align:center;color:#3498db;font-weight:700">'+d.TARDE+'</td>'
+            +'<td style="text-align:center;color:#9b59b6;font-weight:700">'+d.NOCHE+'</td>'
+            +'<td style="text-align:center;font-weight:800">'+d.total+'</td></tr>';
+        }).join('')
+      +'</tbody></table></div>';
+  } else {
+    var meses = {};
+    av.forEach(function(a) {
+      if (!a.fecha) return;
+      var key = a.fecha.slice(0,7);
+      if (!meses[key]) meses[key] = { MAÑANA:0, TARDE:0, NOCHE:0, total:0 };
+      meses[key].total++;
+      var turno = a.turno || '';
+      if (meses[key][turno] !== undefined) meses[key][turno]++;
+    });
+    var mkeys = Object.keys(meses).sort().slice(-12);
+    if (!mkeys.length) { el.innerHTML='<div style="color:rgba(255,255,255,0.3);padding:20px 0">Sin datos.</div>'; return; }
+    var mNom = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    el.innerHTML = '<div style="overflow-x:auto"><table class="data-table"><thead><tr>'
+      +'<th>Mes</th><th style="color:#f39c12">Mañana</th><th style="color:#3498db">Tarde</th><th style="color:#9b59b6">Noche</th><th>Total</th>'
+      +'</tr></thead><tbody>'
+      + mkeys.map(function(k) {
+          var d = meses[k]; var p = k.split('-');
+          var lbl = mNom[parseInt(p[1],10)-1] + ' ' + p[0];
+          return '<tr><td style="font-size:0.82rem">'+lbl+'</td>'
+            +'<td style="text-align:center;color:#f39c12;font-weight:700">'+d.MAÑANA+'</td>'
+            +'<td style="text-align:center;color:#3498db;font-weight:700">'+d.TARDE+'</td>'
+            +'<td style="text-align:center;color:#9b59b6;font-weight:700">'+d.NOCHE+'</td>'
+            +'<td style="text-align:center;font-weight:800">'+d.total+'</td></tr>';
+        }).join('')
+      +'</tbody></table></div>';
+  }
+}
+
+// ══════════════════════════════════════════════════
+// ALERTAS AVERÍAS REPETITIVAS
+// ══════════════════════════════════════════════════
+function renderAlertasRepetitivas() {
+  var el = document.getElementById('alertasRepBody');
+  if (!el) return;
+  var umbral = parseInt(document.getElementById('umbralRep').value, 10) || 3;
+  var dias   = parseInt(document.getElementById('diasRep').value, 10) || 30;
+  var corte  = Date.now() - dias*86400000;
+
+  var conteo = {};
+  getAverias().forEach(function(a) {
+    if (!a.maqId || !a.fecha) return;
+    var ts = a.ts || new Date(a.fecha+'T00:00:00').getTime();
+    if (ts < corte) return;
+    var key = a.maqId;
+    if (!conteo[key]) conteo[key] = { nom: a.maqNombre||a.maqId, cnt: 0, tipos: {} };
+    conteo[key].cnt++;
+    var tipo = a.tipo || 'Sin tipo';
+    conteo[key].tipos[tipo] = (conteo[key].tipos[tipo]||0)+1;
+  });
+
+  var alertas = Object.values(conteo).filter(function(x){ return x.cnt >= umbral; })
+    .sort(function(a,b){ return b.cnt-a.cnt; });
+
+  if (!alertas.length) {
+    el.innerHTML = '<div style="background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.25);border-radius:8px;padding:14px 18px;color:#2ecc71;font-size:0.88rem">'
+      + '✅ Ninguna máquina supera el umbral de '+umbral+' averías en los últimos '+dias+' días.</div>';
+    return;
+  }
+
+  el.innerHTML = alertas.map(function(a) {
+    var topTipo = Object.entries(a.tipos).sort(function(x,y){ return y[1]-x[1]; })[0];
+    var nivel = a.cnt >= umbral*2 ? 'rgba(231,76,60,0.15)' : 'rgba(243,156,18,0.1)';
+    var borde = a.cnt >= umbral*2 ? 'rgba(231,76,60,0.4)' : 'rgba(243,156,18,0.35)';
+    var colorN = a.cnt >= umbral*2 ? '#e74c3c' : '#f39c12';
+    return '<div style="background:'+nivel+';border:1px solid '+borde+';border-radius:8px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">'
+      + '<div style="font-size:1.6rem;font-weight:900;color:'+colorN+';min-width:40px;text-align:center">'+a.cnt+'</div>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div style="font-weight:700;color:#fff;font-size:0.92rem">'+escHtml(a.nom)+'</div>'
+      + '<div style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin-top:2px">'
+      + a.cnt + ' averías en los últimos '+dias+' días'
+      + (topTipo ? ' · Más frecuente: <b style="color:'+colorN+'">' + escHtml(topTipo[0]) + ' ('+topTipo[1]+'x)</b>' : '')
+      + '</div></div>'
+      + '<span style="background:'+nivel+';color:'+colorN+';border:1px solid '+borde+';border-radius:20px;padding:3px 10px;font-size:0.72rem;font-weight:700">'
+      + (a.cnt>=umbral*2?'🚨 CRÍTICO':'⚠️ ALERTA') + '</span>'
+      + '</div>';
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════
+// ESTADO DE MÁQUINAS EN TIEMPO REAL
+// ══════════════════════════════════════════════════
+var _estData       = {};   // {maqId: {estado, ts, nota}}
+var _estListenerOn = false;
+var _estFiltroArea = 'TODAS';
+var _estFiltroEst  = 'TODAS';
+var _estBusq       = '';
+
+var EST_CFG = {
+  OPERATIVA:    { color:'#2ecc71', bg:'rgba(46,204,113,0.15)',  icon:'🟢', label:'OPERATIVA'    },
+  AVERIA:       { color:'#e74c3c', bg:'rgba(231,76,60,0.15)',   icon:'🔴', label:'AVERÍA'       },
+  PARADA:       { color:'#f39c12', bg:'rgba(243,156,18,0.15)',  icon:'🟡', label:'PARADA'       },
+  MANTENIMIENTO:{ color:'#3498db', bg:'rgba(52,152,219,0.15)',  icon:'🔵', label:'MANT. PREV.'  }
+};
+
+function initEstado() {
+  if (!_estListenerOn) {
+    _estListenerOn = true;
+    DB.ref('estado_maquinas').on('value', function(snap) {
+      _estData = snap.val() || {};
+      renderEstado();
+    });
+  } else {
+    renderEstado();
+  }
+}
+
+function renderEstado() {
+  var todas = MAQUINAS_BASE_ADMIN.slice();
+  var areas = ['TODAS'];
+  todas.forEach(function(m) { if (m.a && areas.indexOf(m.a) === -1) areas.push(m.a); });
+
+  // Filtros
+  var busq = _estBusq.toLowerCase();
+  var lista = todas.filter(function(m) {
+    if (_estFiltroArea !== 'TODAS' && m.a !== _estFiltroArea) return false;
+    var est = (_estData[m.id] && _estData[m.id].estado) || 'OPERATIVA';
+    if (_estFiltroEst !== 'TODAS' && est !== _estFiltroEst) return false;
+    if (busq && !(m.n.toLowerCase().includes(busq) || m.id.toLowerCase().includes(busq))) return false;
+    return true;
+  });
+
+  // KPIs globales
+  var kpiCounts = { OPERATIVA:0, AVERIA:0, PARADA:0, MANTENIMIENTO:0 };
+  todas.forEach(function(m) {
+    var est = (_estData[m.id] && _estData[m.id].estado) || 'OPERATIVA';
+    kpiCounts[est] = (kpiCounts[est] || 0) + 1;
+  });
+
+  var html = '';
+
+  // KPIs
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:18px">';
+  Object.keys(EST_CFG).forEach(function(k) {
+    var c = EST_CFG[k];
+    html += '<div style="background:'+c.bg+';border:1px solid '+c.color+'40;border-radius:10px;padding:14px;text-align:center;cursor:pointer" onclick="filtrarEstado(\''+k+'\')">'
+          + '<div style="font-size:2rem;font-weight:900;color:'+c.color+'">' + (kpiCounts[k]||0) + '</div>'
+          + '<div style="font-size:0.7rem;color:'+c.color+';letter-spacing:0.1em;margin-top:4px">' + c.icon + ' ' + c.label + '</div>'
+          + '</div>';
+  });
+  html += '</div>';
+
+  // Controles
+  html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center">';
+  html += '<input type="text" id="estBusq" value="' + escHtml(_estBusq) + '" placeholder="Buscar máquina..." oninput="_estBusq=this.value;renderEstado()" '
+        + 'style="flex:1;min-width:180px;background:var(--navy-mid);border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:8px;padding:8px 12px;font-family:Barlow,sans-serif;font-size:0.88rem">';
+  html += '<select onchange="_estFiltroArea=this.value;renderEstado()" style="background:var(--navy-mid);border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:8px;padding:8px 12px;font-family:Barlow,sans-serif;font-size:0.85rem">';
+  areas.forEach(function(a) {
+    html += '<option value="'+a+'"'+(a===_estFiltroArea?' selected':'')+'>'+a+'</option>';
+  });
+  html += '</select>';
+  html += '<select onchange="_estFiltroEst=this.value;renderEstado()" style="background:var(--navy-mid);border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:8px;padding:8px 12px;font-family:Barlow,sans-serif;font-size:0.85rem">';
+  ['TODAS','OPERATIVA','AVERIA','PARADA','MANTENIMIENTO'].forEach(function(e) {
+    var lbl = e==='TODAS'?'Todos los estados':(EST_CFG[e]?EST_CFG[e].icon+' '+EST_CFG[e].label:e);
+    html += '<option value="'+e+'"'+(e===_estFiltroEst?' selected':'')+'>'+lbl+'</option>';
+  });
+  html += '</select>';
+  if (_estFiltroArea!=='TODAS'||_estFiltroEst!=='TODAS'||_estBusq) {
+    html += '<button onclick="_estFiltroArea=\'TODAS\';_estFiltroEst=\'TODAS\';_estBusq=\'\';renderEstado()" '
+          + 'style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);border-radius:8px;padding:8px 14px;cursor:pointer;font-size:0.82rem;font-family:Barlow,sans-serif">✕ Limpiar</button>';
+  }
+  html += '<span style="font-size:0.78rem;color:rgba(255,255,255,0.35);margin-left:auto">' + lista.length + ' / ' + todas.length + ' máquinas</span>';
+  html += '</div>';
+
+  // Grid de máquinas
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">';
+  if (!lista.length) {
+    html += '<div style="grid-column:1/-1;text-align:center;padding:40px;color:rgba(255,255,255,0.3)">Sin resultados</div>';
+  } else {
+    lista.forEach(function(m) {
+      var d = _estData[m.id] || {};
+      var est = d.estado || 'OPERATIVA';
+      var c = EST_CFG[est] || EST_CFG.OPERATIVA;
+      var ts = d.ts ? new Date(d.ts).toLocaleString('es-ES',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+      html += '<div style="background:var(--navy-mid);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px;border-left:3px solid '+c.color+'">'
+            + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+            + '<div>'
+            + '<div style="font-size:0.95rem;font-weight:700;color:#fff">' + escHtml(m.n) + '</div>'
+            + '<div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-top:2px">' + m.id + (m.a ? ' · ' + m.a : '') + '</div>'
+            + '</div>'
+            + '<span style="background:'+c.bg+';color:'+c.color+';border:1px solid '+c.color+'60;border-radius:20px;padding:3px 10px;font-size:0.72rem;font-weight:700;white-space:nowrap">'
+            + c.icon + ' ' + c.label + '</span>'
+            + '</div>'
+            + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">';
+      Object.keys(EST_CFG).forEach(function(e) {
+        var cf = EST_CFG[e];
+        var activo = est === e;
+        html += '<button onclick="cambiarEstMaq(\''+m.id+'\',\''+e+'\')" '
+              + 'style="border:1px solid '+cf.color+(activo?';background:'+cf.bg+';font-weight:800':';background:rgba(255,255,255,0.03)')+';'
+              + 'color:'+(activo?cf.color:'rgba(255,255,255,0.35)')+';border-radius:6px;padding:4px 10px;cursor:pointer;font-size:0.72rem;font-family:Barlow,sans-serif">'
+              + cf.icon + ' ' + cf.label + '</button>';
+      });
+      html += '</div>';
+      // Nota
+      html += '<div style="display:flex;gap:6px">'
+            + '<input type="text" id="nota_'+m.id+'" placeholder="Nota rápida..." value="'+escHtml(d.nota||'')+'" '
+            + 'style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;border-radius:6px;padding:5px 9px;font-family:Barlow,sans-serif;font-size:0.8rem">'
+            + '<button onclick="guardarNotaEst(\''+m.id+'\')" '
+            + 'style="background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.3);color:var(--gold);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:0.78rem;font-family:Barlow,sans-serif">💾</button>'
+            + '</div>';
+      if (ts) html += '<div style="font-size:0.68rem;color:rgba(255,255,255,0.25);margin-top:6px">Actualizado: ' + ts + '</div>';
+      html += '</div>';
+    });
+  }
+  html += '</div>';
+
+  document.getElementById('estContenido').innerHTML = html;
+}
+
+function filtrarEstado(est) {
+  _estFiltroEst = (_estFiltroEst === est) ? 'TODAS' : est;
+  renderEstado();
+}
+
+function cambiarEstMaq(id, est) {
+  var d = _estData[id] || {};
+  var nota = (document.getElementById('nota_'+id) || {}).value || d.nota || '';
+  DB.ref('estado_maquinas/'+id).set({ estado: est, ts: Date.now(), nota: nota })
+    .catch(function() { showToast('❌ Error al guardar'); });
+}
+
+function guardarNotaEst(id) {
+  var nota = (document.getElementById('nota_'+id) || {}).value || '';
+  var d = _estData[id] || {};
+  DB.ref('estado_maquinas/'+id).set({ estado: d.estado||'OPERATIVA', ts: Date.now(), nota: nota })
+    .then(function() { showToast('✅ Nota guardada'); })
+    .catch(function() { showToast('❌ Error'); });
 }
 </script>
 
