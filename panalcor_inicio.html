@@ -696,16 +696,17 @@ function mostrarPortal(s){
   var roles = {mecanico:'Mecanico',encargado:'Encargado',admin:'Administrador'};
   document.getElementById('portalRol').textContent = roles[s.rol] || s.rol;
   document.getElementById('portalBtns').innerHTML = _buildBtns(s.rol);
-  DB.ref('averias').once('value').then(function(snap){
+  DB.ref('averias').on('value', function(snap){
     var data = snap.val() || {};
-    var n = Object.keys(data).filter(function(k){
-      return data[k].estado === 'EN CURSO' || data[k].estado === 'PENDIENTE REPUESTO';
+    var n = Object.values(data).filter(function(a){
+      return a && (a.estado === 'EN CURSO' || a.estado === 'PENDIENTE REPUESTO');
     }).length;
-    if(n > 0){
-      var b = document.getElementById('badgeAverias');
-      if(b){ b.style.display = 'block'; b.textContent = n > 9 ? '9+' : String(n); }
+    var b = document.getElementById('badgeAverias');
+    if(b){
+      if(n > 0){ b.style.display = 'block'; b.textContent = n > 9 ? '9+' : String(n); }
+      else { b.style.display = 'none'; }
     }
-  }).catch(function(){});
+  });
   if(s.rol === 'admin') _checkRepuestos();
 }
 

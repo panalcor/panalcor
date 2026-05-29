@@ -1,18 +1,17 @@
-// Service Worker — PANALCOR v1.0
-const CACHE = 'panalcor-v1';
+// Service Worker — PANALCOR v3
+const CACHE = 'panalcor-v3';
 const SHELL = [
+  'panalcor_inicio.html',
+  'maquina.html',
   'landing.html',
   'admin.html',
-  'mecanicos.html',
   'averias.html',
   'mis_tareas.html',
-  'maquinas_admin.html',
   'plan_preventivo.html',
   'preventivo.html',
   'encargados.html',
   'turnos.html',
   'historial_maquina.html',
-  'qr_maquinas.html',
   'parte_trabajo.html',
   'calendario.html',
   'manual.html',

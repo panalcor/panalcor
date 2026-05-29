@@ -725,6 +725,31 @@ if('serviceWorker' in navigator){
     </div>
   </div>
 
+  <!-- ══ ESTADO DE MÁQUINA ══ -->
+  <div class="card" style="margin-top:16px">
+    <div class="sec-title">🔍 Estado de máquina</div>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+      <select id="estadoMaqSel" onchange="cargarEstadoMaquina()"
+        style="flex:1;min-width:200px;background:var(--navy-deep,#0d1b2a);color:#f0f4f8;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 14px;font-family:Barlow,sans-serif;font-size:0.95rem">
+        <option value="">— Selecciona una máquina —</option>
+      </select>
+    </div>
+    <div id="estadoMaqWrap" style="display:none">
+      <!-- cabecera maquina -->
+      <div id="estadoMaqHdr" style="display:flex;align-items:center;gap:14px;padding:12px 14px;background:rgba(255,255,255,0.04);border-radius:8px;margin-bottom:12px">
+        <div>
+          <div id="estadoMaqNombre" style="font-size:1.05rem;font-weight:700;color:#f0f4f8;letter-spacing:0.04em"></div>
+          <div id="estadoMaqMeta" style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-top:2px"></div>
+        </div>
+        <div id="estadoMaqBadge" style="margin-left:auto;padding:5px 14px;border-radius:20px;font-size:0.8rem;font-weight:700;letter-spacing:0.06em"></div>
+      </div>
+      <!-- averias abiertas -->
+      <div id="estadoMaqAbiertas"></div>
+      <!-- ultimas resueltas -->
+      <div id="estadoMaqResueltas"></div>
+    </div>
+  </div>
+
   <!-- ══ GENERADOR DE CÓDIGOS QR ══ -->
   <div class="card" style="margin-top:16px">
     <div class="sec-title">📱 Códigos QR por máquina</div>
@@ -2736,6 +2761,271 @@ function ejecutarRenombradoHistorial(){
 // QR POR MAQUINA
 // ══════════════════════════════════════════════════
 var _qrInstance = null;
+var _qrCardCanvas = null;
+
+// Datos completos de maquinas para tarjeta QR {a:area, t:tipo, f:fabricante}
+var MAQUINAS_FULL_DATA = {
+  'MAQ-001':{a:'OBRADOR',t:'AMASADORA',f:'NEOTECH'},
+  'MAQ-002':{a:'OBRADOR',t:'AMASADORA',f:'NEOTECH'},
+  'MAQ-003':{a:'OBRADOR',t:'AMASADORA',f:'NEOTECH'},
+  'MAQ-004':{a:'OBRADOR',t:'AMASADORA',f:'NEOTECH'},
+  'MAQ-005':{a:'OBRADOR',t:'AMASADORA',f:'NEOTECH'},
+  'MAQ-006':{a:'OBRADOR',t:'AMASADORA',f:'NEOTECH'},
+  'MAQ-007':{a:'OBRADOR',t:'AMASADORA',f:'NEOTECH'},
+  'MAQ-008':{a:'OBRADOR',t:'AMASADORA',f:'MAGER'},
+  'MAQ-009':{a:'OBRADOR',t:'AMASADORA',f:'KEMPER'},
+  'MAQ-010':{a:'OBRADOR',t:'FORMADORA-ENTABLADORA',f:'TECKMAPA'},
+  'MAQ-011':{a:'OBRADOR',t:'FORMADORA-ENTABLADORA',f:'TECKMAPA'},
+  'MAQ-012':{a:'OBRADOR',t:'FORMADORA-ENTABLADORA',f:'TECKMAPA'},
+  'MAQ-013':{a:'OBRADOR',t:'FORMADORA-ENTABLADORA',f:'TECKMAPA'},
+  'MAQ-014':{a:'OBRADOR',t:'FORMADORA-ENTABLADORA',f:'TECKMAPA'},
+  'MAQ-015':{a:'OBRADOR',t:'FORMADORA-ENTABLADORA',f:'BEOR'},
+  'MAQ-016':{a:'OBRADOR',t:'FORMADORA-ENTABLADORA',f:'TECKMAPA'},
+  'MAQ-017':{a:'OBRADOR',t:'CARRUSEL',f:'SABATECNO'},
+  'MAQ-018':{a:'OBRADOR',t:'CARRUSEL',f:'SABATECNO'},
+  'MAQ-019':{a:'OBRADOR',t:'CARRUSEL',f:'SABATECNO'},
+  'MAQ-020':{a:'OBRADOR',t:'CARRUSEL',f:'SABATECNO'},
+  'MAQ-021':{a:'OBRADOR',t:'CARRUSEL',f:'SABATECNO'},
+  'MAQ-022':{a:'OBRADOR',t:'CARRUSEL',f:'SABATECNO'},
+  'MAQ-023':{a:'OBRADOR',t:'VOLCADOR',f:''},
+  'MAQ-024':{a:'OBRADOR',t:'VOLCADOR',f:''},
+  'MAQ-025':{a:'OBRADOR',t:'VOLCADOR',f:''},
+  'MAQ-026':{a:'OBRADOR',t:'VOLCADOR',f:''},
+  'MAQ-027':{a:'OBRADOR',t:'VOLCADOR',f:''},
+  'MAQ-028':{a:'OBRADOR',t:'VOLCADOR',f:''},
+  'MAQ-029':{a:'OBRADOR',t:'VOLCADOR',f:''},
+  'MAQ-030':{a:'OBRADOR',t:'REPARTIDOR',f:''},
+  'MAQ-031':{a:'OBRADOR',t:'REPARTIDOR',f:''},
+  'MAQ-032':{a:'OBRADOR',t:'REPARTIDOR',f:''},
+  'MAQ-033':{a:'OBRADOR',t:'DIVISORAS',f:'SUBAL'},
+  'MAQ-034':{a:'OBRADOR',t:'DIVISORAS',f:'SUBAL'},
+  'MAQ-035':{a:'OBRADOR',t:'DIVISORAS',f:'SUBAL'},
+  'MAQ-036':{a:'OBRADOR',t:'DIVISORAS',f:'SUBAL'},
+  'MAQ-037':{a:'OBRADOR',t:'DIVISORAS',f:'SUBAL'},
+  'MAQ-038':{a:'OBRADOR',t:'DIVISORAS',f:'SUBAL'},
+  'MAQ-039':{a:'OBRADOR',t:'DIVISORAS',f:'SUBAL'},
+  'MAQ-040':{a:'OBRADOR',t:'DIVISORAS',f:'SUBAL'},
+  'MAQ-041':{a:'OBRADOR',t:'DIVISORAS',f:'SUBAL'},
+  'MAQ-042':{a:'OBRADOR',t:'CAMARA REPOSO',f:'ZELAIETA'},
+  'MAQ-043':{a:'OBRADOR',t:'CAMARA REPOSO',f:'ZELAIETA'},
+  'MAQ-044':{a:'OBRADOR',t:'CAMARA REPOSO',f:'ZELAIETA'},
+  'MAQ-045':{a:'OBRADOR',t:'CAMARA REPOSO',f:'ZELAIETA'},
+  'MAQ-046':{a:'OBRADOR',t:'CAMARA REPOSO',f:'ZELAIETA'},
+  'MAQ-047':{a:'OBRADOR',t:'CAMARA REPOSO',f:'ZELAIETA'},
+  'MAQ-048':{a:'OBRADOR',t:'CAMARA REPOSO',f:'ZELAIETA'},
+  'MAQ-049':{a:'OBRADOR',t:'EMBOLADORA',f:''},
+  'MAQ-050':{a:'OBRADOR',t:'EMBOLADORA',f:''},
+  'MAQ-051':{a:'OBRADOR',t:'EMBOLADORA',f:''},
+  'MAQ-052':{a:'OBRADOR',t:'EMBOLADORA',f:''},
+  'MAQ-053':{a:'OBRADOR',t:'EMBOLADORA',f:''},
+  'MAQ-054':{a:'OBRADOR',t:'EMBOLADORA',f:''},
+  'MAQ-055':{a:'OBRADOR',t:'EMBOLADORA',f:''},
+  'MAQ-056':{a:'OBRADOR',t:'EMBOLADORA',f:''},
+  'MAQ-057':{a:'OBRADOR',t:'EMBOLADORA',f:''},
+  'MAQ-058':{a:'FRIO/CLIMA',t:'FERMENTADORA',f:'INFRISA'},
+  'MAQ-059':{a:'FRIO/CLIMA',t:'FERMENTADORA',f:'INFRISA'},
+  'MAQ-060':{a:'HORNOS',t:'HORNO',f:'BEGESA'},
+  'MAQ-061':{a:'HORNOS',t:'HORNO',f:'GPG'},
+  'MAQ-062':{a:'HORNOS',t:'HORNO',f:'GPG'},
+  'MAQ-063':{a:'HORNOS',t:'HORNO',f:'GPG'},
+  'MAQ-064':{a:'HORNOS',t:'HORNO',f:'GPG'},
+  'MAQ-065':{a:'HORNOS',t:'HORNO',f:'GPG'},
+  'MAQ-066':{a:'HORNOS',t:'HORNO',f:'GPG'},
+  'MAQ-067':{a:'HORNOS',t:'HORNO',f:'GPG'},
+  'MAQ-068':{a:'HORNOS',t:'HORNO',f:'BEGESA'},
+  'MAQ-069':{a:'HORNOS',t:'HORNO',f:'BEGESA'},
+  'MAQ-070':{a:'HORNOS',t:'HORNO',f:'BEGESA'},
+  'MAQ-071':{a:'HORNOS',t:'HORNO',f:'BEGESA'},
+  'MAQ-072':{a:'HORNOS',t:'HORNO',f:'BEGESA'},
+  'MAQ-073':{a:'HORNOS',t:'HORNO',f:'BEGESA'},
+  'MAQ-074':{a:'HORNOS',t:'HORNO',f:'BEGESA'},
+  'MAQ-075':{a:'HORNOS',t:'HORNO',f:'BEGESA'},
+  'MAQ-076':{a:'HORNOS',t:'HORNO',f:'BEGESA'},
+  'MAQ-077':{a:'HORNOS',t:'HORNO',f:'BEGESA'},
+  'MAQ-078':{a:'HORNOS',t:'HORNO',f:'GPG'},
+  'MAQ-079':{a:'HORNOS',t:'TALLADORA',f:'PORTICEL'},
+  'MAQ-080':{a:'HORNOS',t:'TALLADORA',f:'AYMI'},
+  'MAQ-081':{a:'FRIO/CLIMA',t:'TUNEL PREFRIO',f:'INFRISA'},
+  'MAQ-082':{a:'FRIO/CLIMA',t:'TUNEL CONGELACION',f:'INFRISA'},
+  'MAQ-083':{a:'FRIO/CLIMA',t:'TUNEL CONGELACION',f:'INFRISA'},
+  'MAQ-084':{a:'FRIO/CLIMA',t:'TUNEL CONGELACION',f:'INFRISA'},
+  'MAQ-085':{a:'FRIO/CLIMA',t:'TUNEL CONGELACION',f:'INFRISA'},
+  'MAQ-086':{a:'FRIO/CLIMA',t:'TUNEL CONGELACION',f:'INFRISA'},
+  'MAQ-087':{a:'FRIO/CLIMA',t:'TUNEL CONGELACION',f:'INFRISA'},
+  'MAQ-088':{a:'FRIO/CLIMA',t:'TUNEL CONGELACION',f:'INFRISA'},
+  'MAQ-089':{a:'FRIO/CLIMA',t:'TUNEL CONGELACION',f:'INFRISA'},
+  'MAQ-090':{a:'FRIO/CLIMA',t:'TUNEL CONGELACION',f:'INFRISA'},
+  'MAQ-091':{a:'FRIO/CLIMA',t:'TUNEL CONGELACION',f:'INFRISA'},
+  'MAQ-092':{a:'ENVASADO',t:'FORMADORA CAJAS',f:'TAVIL'},
+  'MAQ-093':{a:'ENVASADO',t:'FORMADORA CAJAS',f:'TAVIL'},
+  'MAQ-094':{a:'ENVASADO',t:'EMBOLSADORA',f:'PATTYN'},
+  'MAQ-095':{a:'ENVASADO',t:'CARGADOR/DESCARGADOR',f:'PORTICEL'},
+  'MAQ-096':{a:'ENVASADO',t:'CARGADOR/DESCARGADOR',f:'PORTICEL'},
+  'MAQ-097':{a:'ENVASADO',t:'CARGADOR/DESCARGADOR',f:'PORTICEL'},
+  'MAQ-098':{a:'ENVASADO',t:'CARGADOR/DESCARGADOR',f:'PORTICEL'},
+  'MAQ-099':{a:'ENVASADO',t:'DESMOLDEO',f:'PORTICEL'},
+  'MAQ-100':{a:'ENVASADO',t:'DESMOLDEO',f:'PORTICEL'},
+  'MAQ-101':{a:'ENVASADO',t:'CONTADORA',f:'LOYJAR'},
+  'MAQ-102':{a:'ENVASADO',t:'CONTADORA',f:'PORTICEL'},
+  'MAQ-103':{a:'ENVASADO',t:'C. RODILLOS',f:'TAVIL'},
+  'MAQ-104':{a:'ENVASADO',t:'IMPRESORA',f:'UBS'},
+  'MAQ-105':{a:'ENVASADO',t:'IMPRESORA',f:'UBS'},
+  'MAQ-106':{a:'ENVASADO',t:'PRECINTADORA',f:'SOCO-SYSTEM'},
+  'MAQ-107':{a:'ENVASADO',t:'M. PEGATINAS',f:'PANALCOR'},
+  'MAQ-108':{a:'ENVASADO',t:'ROBOT',f:'IPLA-FANUC'},
+  'MAQ-109':{a:'ENVASADO',t:'ENFARDADORA',f:'IPLA-ROBOPAC'},
+  'MAQ-110':{a:'ENVASADO',t:'ENFARDADORA',f:''},
+  'MAQ-111':{a:'OBRADOR',t:'EMBOLADORA',f:'SOMENGIL'},
+  'MAQ-112':{a:'SILOS',t:'SILOS HARINA',f:'AGRIFLEX'},
+  'MAQ-113':{a:'SILOS',t:'SILOS HARINA',f:''},
+  'MAQ-114':{a:'SILOS',t:'SILOS HARINA',f:'AGRIFLEX'},
+  'MAQ-115':{a:'SILOS',t:'SILOS HARINA',f:''},
+  'MAQ-116':{a:'OBRADOR',t:'ADITIVOS',f:''},
+  'MAQ-117':{a:'OBRADOR',t:'ADITIVOS',f:''},
+  'MAQ-118':{a:'OBRADOR',t:'ADITIVOS',f:'DAMM-SABATECNO'},
+  'MAQ-119':{a:'OBRADOR',t:'SILOS HARINA',f:'DAMM-SABATECNO'},
+  'MAQ-120':{a:'OBRADOR',t:'SILOS HARINA',f:'DAMM-SABATECNO'},
+  'MAQ-121':{a:'OBRADOR',t:'SILOS HARINA',f:'DAMM-SABATECNO'},
+  'MAQ-122':{a:'OBRADOR',t:'SILOS HARINA',f:'DAMM-SABATECNO'},
+  'MAQ-123':{a:'OBRADOR',t:'SILOS HARINA',f:'DAMM-SABATECNO'},
+  'MAQ-124':{a:'OBRADOR',t:'SILOS HARINA',f:'DAMM-SABATECNO'},
+  'MAQ-125':{a:'OBRADOR',t:'SILOS HARINA',f:'DAMM-SABATECNO'},
+  'MAQ-126':{a:'SILOS',t:'LEVADURA',f:'BPF'},
+  'MAQ-127':{a:'SILOS',t:'LEVADURA',f:'BPF'},
+  'MAQ-128':{a:'SILOS',t:'LEVADURA',f:'BPF'},
+  'MAQ-129':{a:'SILOS',t:'LEVADURA',f:''},
+  'MAQ-130':{a:'FRIO/CLIMA',t:'CAMARA',f:'INFRISA'},
+  'MAQ-131':{a:'FRIO/CLIMA',t:'CAMARA',f:'INFRISA'},
+  'MAQ-132':{a:'FRIO/CLIMA',t:'CAMARA',f:'INFRISA'},
+  'MAQ-133':{a:'FRIO/CLIMA',t:'CAMARA',f:'INFRISA'},
+  'MAQ-134':{a:'FRIO/CLIMA',t:'CAMARA',f:'INFRISA'},
+  'MAQ-135':{a:'FRIO/CLIMA',t:'AGUA',f:'INFRISA'},
+  'MAQ-136':{a:'FRIO/CLIMA',t:'AGUA',f:'INFRISA'},
+  'MAQ-137':{a:'FRIO/CLIMA',t:'AGUA',f:'INFRISA'},
+  'MAQ-138':{a:'FRIO/CLIMA',t:'AGUA',f:'INFRISA'},
+  'MAQ-139':{a:'FRIO/CLIMA',t:'AGUA',f:'INFRISA'},
+  'MAQ-140':{a:'FRIO/CLIMA',t:'A/A',f:'INFRISA'},
+  'MAQ-141':{a:'FRIO/CLIMA',t:'A/A',f:'INFRIMA'},
+  'MAQ-142':{a:'FRIO/CLIMA',t:'A/A',f:''},
+  'MAQ-143':{a:'FRIO/CLIMA',t:'A/A',f:'INFRISA'},
+  'MAQ-144':{a:'FRIO/CLIMA',t:'ELECTRICIDAD',f:'JACGA'},
+  'MAQ-145':{a:'FRIO/CLIMA',t:'ELECTRICIDAD',f:'JACGA'},
+  'MAQ-146':{a:'FRIO/CLIMA',t:'A/A',f:''},
+  'MAQ-147':{a:'FRIO/CLIMA',t:'EXTRACTORES',f:''},
+  'MAQ-148':{a:'FRIO/CLIMA',t:'EXTRACTORES',f:''},
+  'MAQ-149':{a:'FRIO/CLIMA',t:'EVAPORATIVAS',f:''}
+};
+
+function poblarEstadoMaqSel(){
+  var sel = document.getElementById('estadoMaqSel');
+  if(!sel || sel.options.length > 1) return;
+  var todas = MAQUINAS_BASE_ADMIN.concat(maquinasExtra).sort(function(a,b){ return a.n.localeCompare(b.n); });
+  todas.forEach(function(m){
+    var o = document.createElement('option');
+    o.value = m.id;
+    o.textContent = m.n + ' (' + m.id + ')';
+    sel.appendChild(o);
+  });
+}
+
+function cargarEstadoMaquina(){
+  var sel = document.getElementById('estadoMaqSel');
+  if(!sel || !sel.value) return;
+  var maqId     = sel.value;
+  var maqNombre = sel.options[sel.selectedIndex].textContent.replace(/\s*\(MAQ-\d+\)$/, '');
+  var maqData   = MAQUINAS_FULL_DATA[maqId] || {a:'',t:'',f:''};
+
+  var wrap      = document.getElementById('estadoMaqWrap');
+  var abDiv     = document.getElementById('estadoMaqAbiertas');
+  var resDiv    = document.getElementById('estadoMaqResueltas');
+  var badge     = document.getElementById('estadoMaqBadge');
+
+  document.getElementById('estadoMaqNombre').textContent = maqNombre;
+  var meta = maqData.t || '';
+  if(maqData.f) meta += ' · ' + maqData.f;
+  if(maqData.a) meta += '  |  ' + maqData.a;
+  document.getElementById('estadoMaqMeta').textContent = meta;
+  abDiv.innerHTML  = '<div style="color:rgba(255,255,255,0.3);font-size:0.82rem;padding:10px 0">Cargando...</div>';
+  resDiv.innerHTML = '';
+  badge.textContent = '';
+  badge.style.background = 'transparent';
+  wrap.style.display = 'block';
+
+  DB.ref('averias').orderByChild('maq').equalTo(maqId).once('value').then(function(snap){
+    var todas = [];
+    snap.forEach(function(c){ todas.push(c.val()); });
+
+    var abiertas  = todas.filter(function(a){ return a.estado !== 'RESUELTA'; });
+    var resueltas = todas.filter(function(a){ return a.estado === 'RESUELTA'; })
+                         .sort(function(a,b){ return (b.fecha||'').localeCompare(a.fecha||''); })
+                         .slice(0, 5);
+
+    // Badge
+    if(abiertas.length === 0){
+      badge.textContent = 'OPERATIVA';
+      badge.style.cssText = 'margin-left:auto;padding:5px 14px;border-radius:20px;font-size:0.8rem;font-weight:700;letter-spacing:0.06em;background:rgba(46,204,113,0.15);color:#2ecc71;border:1px solid rgba(46,204,113,0.3)';
+    } else {
+      badge.textContent = abiertas.length + ' AVERIA' + (abiertas.length > 1 ? 'S' : '') + ' ABIERTA' + (abiertas.length > 1 ? 'S' : '');
+      badge.style.cssText = 'margin-left:auto;padding:5px 14px;border-radius:20px;font-size:0.8rem;font-weight:700;letter-spacing:0.06em;background:rgba(231,76,60,0.15);color:#e74c3c;border:1px solid rgba(231,76,60,0.3)';
+    }
+
+    // Averias abiertas
+    if(abiertas.length === 0){
+      abDiv.innerHTML = '<div style="color:rgba(255,255,255,0.35);font-size:0.82rem;padding:8px 0;font-style:italic">Sin averias abiertas actualmente.</div>';
+    } else {
+      var html = '<div style="font-size:0.8rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.07em;margin-bottom:8px">AVERIAS ABIERTAS</div>';
+      abiertas.forEach(function(a){
+        var estadoColor = a.estado === 'EN CURSO' ? '#f39c12' : a.estado === 'PENDIENTE REPUESTO' ? '#e67e22' : '#e74c3c';
+        var estadoLabel = a.estado || 'PENDIENTE';
+        html += '<div style="background:rgba(231,76,60,0.07);border:1px solid rgba(231,76,60,0.2);border-radius:8px;padding:10px 14px;margin-bottom:8px">'
+          + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px">'
+          + '<div style="font-size:0.88rem;font-weight:700;color:#f0f4f8;flex:1">' + _esc(a.descripcion || '—') + '</div>'
+          + '<div style="font-size:0.75rem;font-weight:700;color:'+estadoColor+';white-space:nowrap;padding:2px 8px;border-radius:10px;border:1px solid '+estadoColor+'40">'+estadoLabel+'</div>'
+          + '</div>'
+          + '<div style="font-size:0.76rem;color:rgba(255,255,255,0.45);display:flex;gap:16px;flex-wrap:wrap">'
+          + '<span>👤 ' + _esc(a.mecanico || '—') + '</span>'
+          + '<span>📅 ' + _esc(a.fecha || '—') + (a.hora ? ' ' + a.hora : '') + '</span>'
+          + (a.prioridad ? '<span>⚡ ' + _esc(a.prioridad) + '</span>' : '')
+          + '</div>'
+          + (a.comentarios ? '<div style="font-size:0.76rem;color:rgba(255,255,255,0.35);margin-top:4px;font-style:italic">' + _esc(a.comentarios) + '</div>' : '')
+          + '</div>';
+      });
+      abDiv.innerHTML = html;
+    }
+
+    // Ultimas resueltas
+    if(resueltas.length > 0){
+      var html2 = '<div style="font-size:0.8rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.07em;margin:14px 0 8px">ULTIMAS RESUELTAS</div>';
+      resueltas.forEach(function(a){
+        html2 += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:9px 14px;margin-bottom:6px">'
+          + '<div style="font-size:0.84rem;color:#f0f4f8;margin-bottom:3px">' + _esc(a.descripcion || '—') + '</div>'
+          + '<div style="font-size:0.75rem;color:rgba(255,255,255,0.4);display:flex;gap:16px;flex-wrap:wrap">'
+          + '<span>👤 ' + _esc(a.mecanico || '—') + '</span>'
+          + '<span>📅 ' + _esc(a.fecha || '—') + '</span>'
+          + (a.firmadaPor ? '<span style="color:#2ecc71">✅ ' + _esc(a.firmadaPor) + '</span>' : '')
+          + '</div>'
+          + '</div>';
+      });
+      resDiv.innerHTML = html2;
+    } else {
+      resDiv.innerHTML = '';
+    }
+
+    // Enlace historial completo
+    var histLink = '<div style="margin-top:12px;text-align:right">'
+      + '<a href="historial_maquina.html?maq=' + encodeURIComponent(maqId) + '" target="_blank"'
+      + ' style="font-size:0.8rem;color:rgba(255,255,255,0.35);text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.15);padding-bottom:1px">'
+      + '📋 Ver historial completo →</a></div>';
+    resDiv.innerHTML += histLink;
+
+  }).catch(function(){
+    abDiv.innerHTML = '<div style="color:#e74c3c;font-size:0.82rem">Error al cargar datos de Firebase.</div>';
+  });
+}
+
+function _esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 
 function poblarQRSel(){
   var sel = document.getElementById('qrMaqSel');
@@ -2754,60 +3044,145 @@ function generarQRMaquina(){
   if(!sel || !sel.value) return;
   var maqId     = sel.value;
   var maqNombre = sel.options[sel.selectedIndex].textContent.replace(/\s*\(MAQ-\d+\)$/, '');
+  var maqData   = MAQUINAS_FULL_DATA[maqId] || {a:'',t:'',f:''};
   var url = 'https://panalcor.github.io/panalcor/maquina.html?id=' + encodeURIComponent(maqId)
           + '&n=' + encodeURIComponent(maqNombre);
 
-  var container = document.getElementById('qrCanvas');
-  container.innerHTML = '';
+  // Generar QR en contenedor oculto
+  var tmp = document.createElement('div');
+  tmp.style.cssText = 'position:absolute;left:-9999px;top:-9999px';
+  document.body.appendChild(tmp);
   _qrInstance = null;
-
   try{
-    _qrInstance = new QRCode(container, {
-      text:         url,
-      width:        260,
-      height:       260,
-      colorDark:    '#c9a227',
-      colorLight:   '#0d1b2a',
+    _qrInstance = new QRCode(tmp, {
+      text: url, width: 150, height: 150,
+      colorDark: '#1a2d42', colorLight: '#ffffff',
       correctLevel: QRCode.CorrectLevel.M
     });
-  } catch(e){ container.innerHTML = '<div style="color:#e74c3c;font-size:0.85rem">Error generando QR</div>'; return; }
+  } catch(e){
+    document.body.removeChild(tmp);
+    document.getElementById('qrCanvas').innerHTML = '<div style="color:#e74c3c;font-size:0.85rem">Error generando QR</div>';
+    return;
+  }
 
-  document.getElementById('qrMaqLabel').textContent = maqNombre;
-  document.getElementById('qrUrl').textContent = url;
-  var wrap = document.getElementById('qrWrap');
-  wrap.style.display = 'flex';
+  setTimeout(function(){
+    var qrSrc = tmp.querySelector('canvas');
+    document.body.removeChild(tmp);
+    if(!qrSrc) return;
+
+    var CW = 290, CH = 310, QR = 150;
+    var card = document.createElement('canvas');
+    card.width = CW; card.height = CH;
+    var ctx = card.getContext('2d');
+
+    // Fondo blanco + borde gris
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, CW, CH);
+    ctx.strokeStyle = '#b4b4b4';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0.5, 0.5, CW-1, CH-1);
+
+    // Franja dorada superior
+    ctx.fillStyle = '#c9a227';
+    ctx.fillRect(0, 0, CW, 4);
+
+    ctx.textAlign = 'center';
+    var y = 15;
+
+    // PANALCOR S.L. (dorado)
+    ctx.fillStyle = '#c9a227';
+    ctx.font = 'bold 9px Arial,sans-serif';
+    ctx.fillText('PANALCOR S.L.', CW/2, y);
+    y += 14;
+
+    // Area (gris)
+    ctx.fillStyle = '#788ca0';
+    ctx.font = '9px Arial,sans-serif';
+    ctx.fillText(maqData.a.toUpperCase(), CW/2, y);
+    y += 14;
+
+    // ID (dorado)
+    ctx.fillStyle = '#c9a227';
+    ctx.font = 'bold 13px Arial,sans-serif';
+    ctx.fillText(maqId, CW/2, y);
+    y += 20;
+
+    // Nombre (navy bold)
+    ctx.fillStyle = '#1a2d42';
+    ctx.font = 'bold 19px Arial,sans-serif';
+    if(maqNombre.length > 18){
+      var words = maqNombre.split(' ');
+      var mid = Math.ceil(words.length / 2);
+      ctx.fillText(words.slice(0, mid).join(' '), CW/2, y); y += 22;
+      ctx.fillText(words.slice(mid).join(' '), CW/2, y);    y += 22;
+    } else {
+      ctx.fillText(maqNombre, CW/2, y); y += 26;
+    }
+
+    // tipo · fabricante (gris)
+    var tf = maqData.t || '';
+    if(maqData.f) tf += ' · ' + maqData.f;
+    ctx.fillStyle = '#788ca0';
+    ctx.font = '9px Arial,sans-serif';
+    if(ctx.measureText(tf).width > CW - 10) tf = maqData.t || '';
+    ctx.fillText(tf, CW/2, y);
+    y += 14;
+
+    // Separador
+    ctx.strokeStyle = '#b4b4b4';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(20, y+2); ctx.lineTo(CW-20, y+2);
+    ctx.stroke();
+    y += 8;
+
+    // QR centrado
+    ctx.drawImage(qrSrc, (CW - QR)/2, y);
+    y += QR + 8;
+
+    // Hint
+    ctx.fillStyle = '#788ca0';
+    ctx.font = '9px Arial,sans-serif';
+    ctx.fillText('Escanear para declarar averia', CW/2, y);
+
+    // Mostrar tarjeta
+    _qrCardCanvas = card;
+    var container = document.getElementById('qrCanvas');
+    container.innerHTML = '';
+    container.style.cssText = 'background:transparent;padding:0;border:none';
+    card.style.cssText = 'border-radius:8px;box-shadow:0 4px 24px rgba(0,0,0,0.35)';
+    container.appendChild(card);
+    document.getElementById('qrMaqLabel').textContent = '';
+    document.getElementById('qrUrl').textContent = '';
+    document.getElementById('qrWrap').style.display = 'flex';
+  }, 100);
 }
 
 function imprimirQR(){
-  var canvas = document.querySelector('#qrCanvas canvas');
-  if(!canvas) return;
-  var label = document.getElementById('qrMaqLabel').textContent;
-  var img = canvas.toDataURL('image/png');
+  if(!_qrCardCanvas) return;
+  var label = document.getElementById('qrMaqSel').options[document.getElementById('qrMaqSel').selectedIndex].textContent.replace(/\s*\(MAQ-\d+\)$/,'');
+  var img = _qrCardCanvas.toDataURL('image/png');
   var w = window.open('','_blank');
-  w.document.write('<html><head><title>QR ' + label + '</title>'
-    + '<style>body{margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:#fff;font-family:Arial,sans-serif}'
-    + 'img{width:280px;height:280px} h2{margin-top:16px;font-size:1.3rem;letter-spacing:0.08em}'
-    + '.sub{font-size:0.8rem;color:#666;margin-top:4px;margin-bottom:20px}</style></head><body>'
-    + '<img src="' + img + '"><h2>PANALCOR — ' + label + '</h2>'
-    + '<div class="sub">Escanea para registrar averia o abrir ficha</div>'
-    + '<script>window.onload=function(){window.print();window.close();}<\/script>'
-    + '</body></html>');
+  w.document.write('<html><head><title>QR '+label+'</title>'
+    +'<style>body{margin:0;display:flex;justify-content:center;padding:20px;background:#fff}'
+    +'@media print{body{padding:0}img{max-width:100%}}</style></head>'
+    +'<body><img src="'+img+'"></body></html>');
   w.document.close();
+  w.onload = function(){ w.print(); };
 }
 
 function descargarQR(){
-  var canvas = document.querySelector('#qrCanvas canvas');
-  if(!canvas) return;
-  var label = document.getElementById('qrMaqLabel').textContent.replace(/\s+/g,'_');
+  if(!_qrCardCanvas) return;
+  var label = document.getElementById('qrMaqSel').options[document.getElementById('qrMaqSel').selectedIndex].textContent.replace(/\s*\(MAQ-\d+\)$/,'').replace(/\s+/g,'_');
   var a = document.createElement('a');
   a.download = 'QR_' + label + '.png';
-  a.href = canvas.toDataURL('image/png');
+  a.href = _qrCardCanvas.toDataURL('image/png');
   a.click();
 }
 
 // Poblar selector de QR cuando se abre la pestaña Maquinas
 document.addEventListener('DOMContentLoaded', function(){
-  setTimeout(poblarQRSel, 500);
+  setTimeout(function(){ poblarQRSel(); poblarEstadoMaqSel(); }, 500);
 });
 
 // ══════════════════════════════════════════════════
@@ -2823,7 +3198,7 @@ function switchTab(name){
   document.getElementById('tab-'+name).classList.add('active');
   if(name==='mec') { renderMecanicos(); loadPersonal(renderPersonal); }
   if(name==='inf') renderInformes();
-  if(name==='maq') { loadMaquinasExtra(renderMaquinas); poblarQRSel(); }
+  if(name==='maq') { loadMaquinasExtra(renderMaquinas); poblarQRSel(); poblarEstadoMaqSel(); }
   if(name==='rep') { cargarCatalogoRepuestos(); }
   if(name==='cfg') cargarTareasDiariasAdmin();
   if(name==='cfg') cargarFechasRealizacion();
