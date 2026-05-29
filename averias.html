@@ -837,6 +837,8 @@ function fbCargarAverias(callback) {
         const soloLocal = averias.filter(a => !fbIds.has(a.id));
         averias = [...fb, ...soloLocal].sort((a,b) => b.ts - a.ts);
         localStorage.setItem('averias_v1', JSON.stringify(averias));
+        // Subir a Firebase las averías que solo estaban en localStorage
+        soloLocal.forEach(a => { if(a && a.id) fbSet(a.id, a); });
       }
       if (callback) callback();
     })
