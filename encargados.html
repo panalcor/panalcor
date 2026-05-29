@@ -1035,19 +1035,38 @@ function encSwitchTab(name){
   }
 }
 
+function _buildPlantaAvMap(fbData){
+  _plantaAvMap = {};
+  var lsAv = [];
+  try{ lsAv = JSON.parse(localStorage.getItem('averias_v1')||'[]'); } catch(e){}
+  // Firebase primero (fuente de verdad)
+  var fbIds = new Set();
+  Object.values(fbData).forEach(function(a){
+    if(!a || a.estado === 'RESUELTA') return;
+    var id = a.maq || a.maqId || '';
+    if(!id) return;
+    fbIds.add(a.id);
+    if(!_plantaAvMap[id]) _plantaAvMap[id] = [];
+    _plantaAvMap[id].push(a);
+  });
+  // Averias solo en localStorage (offline/pendientes de sync)
+  lsAv.forEach(function(a){
+    if(!a || a.estado === 'RESUELTA' || fbIds.has(a.id)) return;
+    var id = a.maq || a.maqId || '';
+    if(!id) return;
+    if(!_plantaAvMap[id]) _plantaAvMap[id] = [];
+    _plantaAvMap[id].push(a);
+  });
+}
+
 function iniciarPlanta(){
   renderPlantaEstructura();
+  // Carga inmediata desde localStorage (sin esperar a Firebase)
+  _buildPlantaAvMap({});
+  actualizarBadgesPlanta();
   _plantaRef = DB.ref('averias');
   _plantaRef.on('value', function(snap){
-    _plantaAvMap = {};
-    var data = snap.val() || {};
-    Object.values(data).forEach(function(a){
-      if(!a || a.estado === 'RESUELTA') return;
-      var id = a.maq || a.maqId || '';
-      if(!id) return;
-      if(!_plantaAvMap[id]) _plantaAvMap[id] = [];
-      _plantaAvMap[id].push(a);
-    });
+    _buildPlantaAvMap(snap.val() || {});
     actualizarBadgesPlanta();
     // Timestamp
     var now = new Date();
