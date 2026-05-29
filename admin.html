@@ -5668,6 +5668,8 @@ function renderAlertasRepetitivas() {
 // ESTADO DE MÁQUINAS EN TIEMPO REAL
 // ══════════════════════════════════════════════════
 var _estData       = {};   // {maqId: {estado, ts, nota}}
+var _estManual     = {};   // datos manuales de estado_maquinas
+var _estAverias    = {};   // averías abiertas por maqId
 var _estListenerOn = false;
 var _estFiltroArea = 'TODAS';
 var _estFiltroEst  = 'TODAS';
@@ -5680,11 +5682,40 @@ var EST_CFG = {
   MANTENIMIENTO:{ color:'#3498db', bg:'rgba(52,152,219,0.15)',  icon:'🔵', label:'MANT. PREV.'  }
 };
 
+function _mergeEstado() {
+  // Las averías abiertas tienen prioridad sobre el estado manual
+  _estData = Object.assign({}, _estManual);
+  Object.keys(_estAverias).forEach(function(maqId) {
+    var avs = _estAverias[maqId];
+    if (!avs || !avs.length) return;
+    var hayPendiente = avs.some(function(a){ return a.estado === 'PENDIENTE REPUESTO'; });
+    _estData[maqId] = {
+      estado: hayPendiente ? 'PARADA' : 'AVERIA',
+      ts: Math.max.apply(null, avs.map(function(a){ return a.ts||0; })),
+      nota: avs[0].descripcion || ''
+    };
+  });
+}
+
 function initEstado() {
   if (!_estListenerOn) {
     _estListenerOn = true;
     DB.ref('estado_maquinas').on('value', function(snap) {
-      _estData = snap.val() || {};
+      _estManual = snap.val() || {};
+      _mergeEstado();
+      renderEstado();
+    });
+    DB.ref('averias').on('value', function(snap) {
+      _estAverias = {};
+      var data = snap.val() || {};
+      Object.values(data).forEach(function(a) {
+        if (!a || a.estado === 'RESUELTA') return;
+        var id = a.maqId || a.maq || '';
+        if (!id) return;
+        if (!_estAverias[id]) _estAverias[id] = [];
+        _estAverias[id].push(a);
+      });
+      _mergeEstado();
       renderEstado();
     });
   } else {
