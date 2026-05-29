@@ -822,7 +822,7 @@ let _fbOnline = false; // se actualiza en el init
 DB.ref('.info/connected').on('value', snap => { _fbOnline = !!snap.val(); });
 
 /* ── Helper: guardar / eliminar en Firebase ─────────────────── */
-function fbSet(id, obj)    { return DB.ref('averias/' + id).update(obj).catch(()=>{}); }
+function fbSet(id, obj)    { return DB.ref('averias/' + id).set(obj).catch(e=>{ console.warn('Firebase write error:', e && e.code, e && e.message); }); }
 function fbRemove(id)      { return DB.ref('averias/' + id).remove().catch(()=>{}); }
 
 /* ── Cargar averías: Firebase primero, localStorage como fallback */
@@ -1312,11 +1312,9 @@ function guardarAveria(){
     costeMateriales: parseFloat(document.getElementById('fCosteMat').value||'0')||0,
     firma: _firmaData || (avOriginal ? avOriginal.firma : null),
     foto: _fotoData || (avOriginal ? avOriginal.foto : null),
-    ...(avOriginal
-      ? (avOriginal.firmada
-          ? { firmada: true, firmadaPor: avOriginal.firmadaPor || null, firmadaFecha: avOriginal.firmadaFecha || null }
-          : {})   // stale local copy — no tocar campos de firma en Firebase
-      : { firmada: false }),
+    firmada: avOriginal ? (avOriginal.firmada || false) : false,
+    firmadaPor: avOriginal ? (avOriginal.firmadaPor || null) : null,
+    firmadaFecha: avOriginal ? (avOriginal.firmadaFecha || null) : null,
     estado,
   };
   if (_editandoId) av.tsActualizado = Date.now();
