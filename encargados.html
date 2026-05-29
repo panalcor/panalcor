@@ -60,7 +60,7 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
 .form-wrap{display:none}
 .who-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(155,89,182,0.15);
   border:1px solid rgba(155,89,182,0.35);border-radius:20px;padding:6px 14px;
-  font-size:0.85rem;font-weight:700;color:var(--purple-light);margin-bottom:20px;cursor:pointer}
+  font-size:0.85rem;font-weight:700;color:var(--purple-light);margin-bottom:20px}
 .section-title{font-size:0.68rem;letter-spacing:.14em;text-transform:uppercase;
   color:var(--gold);margin-bottom:10px;margin-top:20px;padding-bottom:5px;
   border-bottom:1px solid rgba(201,162,39,0.2)}
@@ -322,9 +322,8 @@ if('serviceWorker' in navigator){
 
   <!-- PASO 2: Formulario -->
   <div class="form-wrap" id="formWrap">
-    <div class="who-badge" id="whoBadge" onclick="cambiarEnc()">
+    <div class="who-badge" id="whoBadge">
       <span id="whoName"></span>
-      <span style="font-size:0.7rem;opacity:0.6">✎ cambiar</span>
     </div>
 
     <!-- MÁQUINA -->
