@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c9a227">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PANALCOR">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>Gestión de Averías</title>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -218,21 +225,40 @@ a{color:inherit;text-decoration:none}
   background:rgba(255,255,255,0.05);touch-action:none;cursor:crosshair;
   display:block;width:100%;max-width:500px;height:130px}
 .firma-canvas.firmado{border-color:var(--green,#2ecc71);border-style:solid}
+.foto-preview{display:none;position:relative;margin:8px 0}
+.foto-preview img{width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid rgba(201,162,39,0.4)}
+.foto-preview .foto-del{position:absolute;top:-6px;left:66px;background:#e74c3c;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:0.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:900;line-height:1}
+.btn-foto{background:rgba(52,152,219,0.15);border:1px dashed rgba(52,152,219,0.5);color:#74b9ff;border-radius:8px;padding:10px 16px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.9rem;display:flex;align-items:center;gap:8px;width:100%;justify-content:center;margin-bottom:10px}
+.btn-foto:active{background:rgba(52,152,219,0.25)}
 </style>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+</script>
 </head>
 <body>
 
 <!-- ══ LOGIN MECÁNICO ══ -->
 <div class="mec-login" id="mecLogin">
   <div class="mec-login-box">
+    <a href="panalcor_inicio.html" title="Inicio" style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;background:rgba(201,162,39,0.12);border:1.5px solid rgba(201,162,39,0.4);margin-bottom:10px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z" fill="rgba(201,162,39,0.25)" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 21V15H15V21" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/></svg></a>
     <div class="logo">🔧</div>
     <h2>PANALCOR S.L.</h2>
-    <div class="sub">Partes de Averías · Acceso</div>
+    <div class="sub">Partes de Aver&iacute;as &middot; Acceso</div>
+    <select id="mecLoginSel" style="width:100%;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:9px;padding:13px 16px;font-family:'Barlow',sans-serif;font-size:1rem;margin-bottom:12px;display:block;box-sizing:border-box">
+      <option value="">— Selecciona tu nombre —</option>
+    </select>
     <input type="password" id="mecPwInput" placeholder="Contraseña" autocomplete="off"
-           onkeydown="if(event.key==='Enter') mecLogin()">
-    <button class="mec-login-btn" onclick="mecLogin()">ENTRAR</button>
+           onkeydown="if(event.key==='Enter') mecLoginSubmit()">
+    <label style="display:flex;align-items:center;gap:10px;margin:10px 0 16px;cursor:pointer;justify-content:center;font-size:0.85rem;color:rgba(255,255,255,0.6)">
+      <input type="checkbox" id="mecLoginMiTel" style="width:18px;height:18px;cursor:pointer;accent-color:#c9a227;flex-shrink:0"> Es mi tel&eacute;fono (sesi&oacute;n indefinida)
+    </label>
+    <button class="mec-login-btn" onclick="mecLoginSubmit()">ENTRAR</button>
     <div class="mec-login-err" id="mecLoginErr"></div>
-    <div class="mec-login-hint">Contacta con el responsable de mantenimiento si no tienes la contraseña</div>
+    <div class="mec-login-hint">Contacta con el responsable si no tienes contrase&ntilde;a asignada</div>
   </div>
 </div>
 
@@ -240,38 +266,12 @@ a{color:inherit;text-decoration:none}
 <div id="appAverias" style="display:none">
 
 <div class="topbar">
-  <a href="panalcor_inicio.html" title="Inicio — PANALCOR S.L." style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;flex-shrink:0;background:rgba(201,162,39,0.1);border:1px solid rgba(201,162,39,0.3);transition:all .2s" onmouseover="this.style.background='rgba(201,162,39,0.25)'" onmouseout="this.style.background='rgba(201,162,39,0.1)'"><svg viewBox="0 0 40 40" width="32" height="32" xmlns="http://www.w3.org/2000/svg">
-  <!-- Espiga superior -->
-  <line x1="20" y1="15" x2="20" y2="6" stroke="#c9a227" stroke-width="1.5" stroke-linecap="round"/>
-  <ellipse cx="20" cy="4"   rx="2" ry="4"   fill="#c9a227"/>
-  <ellipse cx="16.5" cy="6.5" rx="1.6" ry="3.2" fill="#c9a227" transform="rotate(-15 16.5 6.5)"/>
-  <ellipse cx="23.5" cy="6.5" rx="1.6" ry="3.2" fill="#c9a227" transform="rotate(15 23.5 6.5)"/>
-  <!-- Espiga izquierda -->
-  <line x1="13.5" cy="21" x1="13.5" y1="21" x2="6" y2="13" stroke="#c9a227" stroke-width="1.5" stroke-linecap="round"/>
-  <ellipse cx="4.5" cy="10.5" rx="2" ry="4" fill="#c9a227" transform="rotate(-30 4.5 10.5)"/>
-  <ellipse cx="8"   cy="8"   rx="1.6" ry="3.2" fill="#c9a227" transform="rotate(-20 8 8)"/>
-  <!-- Espiga derecha -->
-  <line x1="26.5" y1="21" x2="34" y2="13" stroke="#c9a227" stroke-width="1.5" stroke-linecap="round"/>
-  <ellipse cx="35.5" cy="10.5" rx="2" ry="4" fill="#c9a227" transform="rotate(30 35.5 10.5)"/>
-  <ellipse cx="32"  cy="8"   rx="1.6" ry="3.2" fill="#c9a227" transform="rotate(20 32 8)"/>
-  <!-- Dientes engranaje (8) -->
-  <rect x="18.5" y="13" width="3" height="4.5" rx="1" fill="#c9a227"/>
-  <rect x="18.5" y="13" width="3" height="4.5" rx="1" fill="#c9a227" transform="rotate(45  20 24)"/>
-  <rect x="18.5" y="13" width="3" height="4.5" rx="1" fill="#c9a227" transform="rotate(90  20 24)"/>
-  <rect x="18.5" y="13" width="3" height="4.5" rx="1" fill="#c9a227" transform="rotate(135 20 24)"/>
-  <rect x="18.5" y="13" width="3" height="4.5" rx="1" fill="#c9a227" transform="rotate(180 20 24)"/>
-  <rect x="18.5" y="13" width="3" height="4.5" rx="1" fill="#c9a227" transform="rotate(225 20 24)"/>
-  <rect x="18.5" y="13" width="3" height="4.5" rx="1" fill="#c9a227" transform="rotate(270 20 24)"/>
-  <rect x="18.5" y="13" width="3" height="4.5" rx="1" fill="#c9a227" transform="rotate(315 20 24)"/>
-  <!-- Cuerpo engranaje -->
-  <circle cx="20" cy="24" r="7.5" fill="#c9a227"/>
-  <circle cx="20" cy="24" r="3"   fill="#0d1b2a"/>
-</svg></a>
-  <button class="back-btn" onclick="history.back()">← Volver</button>
-  <div>
-    <div class="sub">PANADERÍA · MANTENIMIENTO</div>
-    <h1>🔧 GESTIÓN DE AVERÍAS</h1>
+  <a href="panalcor_inicio.html" title="Inicio" style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;flex-shrink:0;background:rgba(201,162,39,0.12);border:1.5px solid rgba(201,162,39,0.4);transition:all .2s" onmouseover="this.style.background='rgba(201,162,39,0.28)'" onmouseout="this.style.background='rgba(201,162,39,0.12)'"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z" fill="rgba(201,162,39,0.25)" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 21V15H15V21" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/></svg></a>
+  <div style="flex:1;min-width:0;overflow:hidden">
+    <div id="mecNomTopbar" style="font-size:0.92rem;color:#2ecc71;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:none;margin-bottom:2px"></div>
+    <div style="font-size:0.72rem;color:rgba(255,255,255,0.45);letter-spacing:0.08em;white-space:nowrap">🔧 GESTIÓN DE AVERÍAS</div>
   </div>
+  <button class="back-btn" onclick="history.back()">← Volver</button>
 </div>
 
 <div class="tabs">
@@ -458,6 +458,17 @@ a{color:inherit;text-decoration:none}
       </div>
 
       <div class="mat-list" id="matList" style="margin-top:12px"></div>
+    </div>
+
+    <!-- Foto -->
+    <div class="card">
+      <div class="sec-title">📷 Foto (opcional)</div>
+      <input type="file" id="fotoInput" accept="image/*" capture="environment" style="display:none" onchange="onFotoSelected(this)">
+      <button type="button" class="btn-foto" onclick="document.getElementById('fotoInput').click()">📷 Añadir foto</button>
+      <div class="foto-preview" id="fotoPreview">
+        <img id="fotoThumb" src="" alt="foto">
+        <button type="button" class="foto-del" onclick="quitarFoto()" title="Eliminar foto">✕</button>
+      </div>
     </div>
 
     <!-- Estado -->
@@ -655,8 +666,8 @@ let MAQUINAS = [
   {id:'MAQ-055',n:'EMBOLADORA N7',t:'EMBOLADORA',f:'',a:'OBRADOR',c:''},
   {id:'MAQ-056',n:'EMBOLADORA N8',t:'EMBOLADORA',f:'',a:'OBRADOR',c:''},
   {id:'MAQ-057',n:'EMBOLADORA N9',t:'EMBOLADORA',f:'',a:'OBRADOR',c:''},
-  {id:'MAQ-058',n:'FERMENTADORA RELAMPAGO',t:'FERMENTADORA',f:'INFRISA',a:'FERMENTADORA',c:''},
-  {id:'MAQ-059',n:'FERMENTADORA TRUENO',t:'FERMENTADORA',f:'INFRISA',a:'TRUENO-FERMENTADORA',c:''},
+  {id:'MAQ-058',n:'FERMENTADORA RELAMPAGO',t:'FERMENTADORA',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-059',n:'FERMENTADORA TRUENO',t:'FERMENTADORA',f:'INFRISA',a:'FRIO/CLIMA',c:''},
   {id:'MAQ-060',n:'HORNO 1',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
   {id:'MAQ-061',n:'HORNO 2',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
   {id:'MAQ-062',n:'HORNO 3',t:'HORNO',f:'GPG',a:'HORNOS',c:''},
@@ -678,17 +689,17 @@ let MAQUINAS = [
   {id:'MAQ-078',n:'HORNO 19 (4TRUENO)',t:'HORNO',f:'GPG',a:'HORNOS',c:''},
   {id:'MAQ-079',n:'TALLADORA RELAMPAGO',t:'TALLADORA',f:'PORTICEL',a:'HORNOS',c:''},
   {id:'MAQ-080',n:'TALLADORA TRUENO',t:'TALLADORA',f:'AYMI',a:'',c:''},
-  {id:'MAQ-081',n:'TUNEL PREFRIO',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
-  {id:'MAQ-082',n:'TUNEL 1',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
-  {id:'MAQ-083',n:'TUNEL 2',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
-  {id:'MAQ-084',n:'TUNEL 3',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
-  {id:'MAQ-085',n:'TUNEL 4',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
-  {id:'MAQ-086',n:'TUNEL 5',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
-  {id:'MAQ-087',n:'TUNEL 6',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
-  {id:'MAQ-088',n:'TUNEL 7',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
-  {id:'MAQ-089',n:'TUNEL 8',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
-  {id:'MAQ-090',n:'TUNEL 9 (1 TRUENO)',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
-  {id:'MAQ-091',n:'TUNEL 10 (2 TRUENO)',t:'TUNEL',f:'INFRISA',a:'TUNELES',c:''},
+  {id:'MAQ-081',n:'TUNEL PREFRIO',t:'TUNEL PREFRIO',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-082',n:'TUNEL 1',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-083',n:'TUNEL 2',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-084',n:'TUNEL 3',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-085',n:'TUNEL 4',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-086',n:'TUNEL 5',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-087',n:'TUNEL 6',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-088',n:'TUNEL 7',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-089',n:'TUNEL 8',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-090',n:'TUNEL 9 (1 TRUENO)',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-091',n:'TUNEL 10 (2 TRUENO)',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
   {id:'MAQ-092',n:'MAQUINA DE CAJAS',t:'FORMADORA CAJAS',f:'TAVIL',a:'ENVASADO',c:''},
   {id:'MAQ-093',n:'FORMADORA-EMBOLSADORA',t:'FORMADORA CAJAS',f:'TAVIL',a:'ENVASADO',c:''},
   {id:'MAQ-094',n:'MAQUINA DE BOLSAS',t:'EMBOLSADORA',f:'PATTYN',a:'ENVASADO',c:''},
@@ -727,6 +738,26 @@ let MAQUINAS = [
   {id:'MAQ-127',n:'LEVADURA TANQUE 2',t:'LEVADURA',f:'',a:'OBRADOR',c:''},
   {id:'MAQ-128',n:'LEVADURA CUADRO GENERAL Y BOMBAS',t:'LEVADURA',f:'',a:'OBRADOR',c:''},
   {id:'MAQ-129',n:'LEVADURA CUADRO GLICOL',t:'LEVADURA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-130',n:'CAMARA STOCK 1',t:'CAMARA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-131',n:'CAMARA STOCK 2',t:'CAMARA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-132',n:'CAMARA STOCK 3',t:'CAMARA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-133',n:'CAMARA STOCK 4',t:'CAMARA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-134',n:'CAMARA STOCK 5 (TRUENO)',t:'CAMARA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-135',n:'TANQUE 1',t:'AGUA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-136',n:'TANQUE 2',t:'AGUA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-137',n:'TANQUE 3',t:'AGUA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-138',n:'TANQUE 4',t:'AGUA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-139',n:'TANQUE 5 (TRUENO)',t:'AGUA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-140',n:'A/A OBRADOR',t:'A/A',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-141',n:'A/A VESTUARIO',t:'A/A',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-142',n:'A/A OFICINAS',t:'A/A',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-143',n:'TRANSFORMADOR',t:'A/A',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-144',n:'CONDENSADORES ELECTRICOS',t:'ELECTRICIDAD',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-145',n:'CUADROS GENERALES',t:'ELECTRICIDAD',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-146',n:'A/A MUELLE',t:'A/A',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-147',n:'EXTRACTORES RELAMPAGO',t:'EXTRACTORES',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-148',n:'EXTRACTORES TRUENO',t:'EXTRACTORES',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-149',n:'EVAPORATIVAS',t:'EVAPORATIVAS',f:'',a:'FRIO/CLIMA',c:''},
 ];
 
 const PARTES = {
@@ -757,6 +788,14 @@ const PARTES = {
   'ENFARDADORA':['RESISTENCIAS','RODILLOS','NEUMATICA','CUADRO','AJUSTE','OTROS'],
   'DIVISORAS':['MECANICA','ELECTRICO','TOLVA','AJUSTE','OTROS'],
   'EMBOLADORA':['CONO','CARACOL','MOTOR-RED-CORREAS','CUADRO','AJUSTE','OTROS'],
+  'TUNEL CONGELACION':['FRIO EQUIPO1','FRIO EQUIPO2','FRIO COMPRESOR 1','FRIO COMPRESOR 2','PUERTAS','CUADRO','AJUSTE','OTROS'],
+  'TUNEL PREFRIO':['FRIO EQUIPO1','FRIO COMPRESOR 1','PUERTAS','CUADRO','AJUSTE','OTROS'],
+  'CAMARA':['FRIO EQUIPO 1','FRIO EQUIPO 2','FRIO EQUIPO 3','FRIO EQUIPO 4','FRIO COMPRESOR 1','FRIO COMPRESOR 2','FRIO COMPRESOR 3','FRIO COMPRESOR 4','MECANICO','ELECTRICO','CUADRO','AJUSTE','OTROS'],
+  'AGUA':['BOYA','NIVEL','BOMBAS','EV','FRIO COMPRESOR','FRIO EQUIPO','CUADRO','AJUSTE','OTROS'],
+  'A/A':['FRIO COMPRESOR','FRIO EQUIPO','CUADRO','AJUSTE','OTROS'],
+  'EXTRACTORES':['MOTORES','CANALIZACION','CUADRO','AJUSTE','OTROS'],
+  'EVAPORATIVAS':['AGUA','MOTORES','CANALIZACION','FILTROS','AJUSTE','OTROS'],
+  'ELECTRICIDAD':['ELECTRICO','MECANICO','CUADRO','AJUSTE','OTROS'],
 };
 
 // ══════════════════════════════════════════════
@@ -779,7 +818,7 @@ let _fbOnline = false; // se actualiza en el init
 DB.ref('.info/connected').on('value', snap => { _fbOnline = !!snap.val(); });
 
 /* ── Helper: guardar / eliminar en Firebase ─────────────────── */
-function fbSet(id, obj)    { return DB.ref('averias/' + id).set(obj).catch(()=>{}); }
+function fbSet(id, obj)    { return DB.ref('averias/' + id).update(obj).catch(()=>{}); }
 function fbRemove(id)      { return DB.ref('averias/' + id).remove().catch(()=>{}); }
 
 /* ── Cargar averías: Firebase primero, localStorage como fallback */
@@ -804,7 +843,8 @@ function fbCargarAverias(callback) {
 let averias = JSON.parse(localStorage.getItem('averias_v1') || '[]');
 let repuestosData = [];
 let materialesForm = [];
-let _editandoId    = null; // null = nueva avería | string = retomando existente
+let _editandoId       = null;  // null = nueva avería | string = retomando existente
+let _editandoResuelta = false; // true cuando se retoma una RESUELTA para añadir info
 let charts = {};
 
 // ══════════════════════════════════════════════
@@ -846,18 +886,55 @@ function init(){
   const retId = params.get('retomar');
   if(retId){ setTimeout(function(){ retomarAveria(retId); }, 300); }
 
-  // ?maq=MAQ-001  → pre-seleccionar máquina desde QR
-  const maqQR  = params.get('maq');
+  // ?maq=MAQ-001  → abrir avería desde QR con todo auto-relleno
+  const maqQR = params.get('maq');
   if(maqQR){
-    const sel = document.getElementById('fMaquina');
-    if(sel) {
+    setTimeout(function(){
+      var sel = document.getElementById('fMaquina');
+      if(!sel) return;
       sel.value = maqQR;
       onMaquinaChange();
-      sel.style.transition = 'box-shadow 0.4s';
-      sel.style.boxShadow  = '0 0 0 3px rgba(201,162,39,0.6)';
-      setTimeout(() => sel.style.boxShadow = '', 2500);
-      showToast('📱 Máquina pre-seleccionada desde QR');
-    }
+
+      // Auto-rellenar fecha y hora actual
+      var ahora = new Date();
+      // Fecha con lógica de turno
+      var d = new Date(ahora);
+      var umbral = d.getDay()===0 ? 21 : 22;
+      if(ahora.getHours() >= umbral) d.setDate(d.getDate()+1);
+      var yyyy = d.getFullYear();
+      var mm   = String(d.getMonth()+1).padStart(2,'0');
+      var dd   = String(d.getDate()).padStart(2,'0');
+      document.getElementById('fFecha').value = yyyy+'-'+mm+'-'+dd;
+
+      var hh = String(ahora.getHours()).padStart(2,'0');
+      var min = String(ahora.getMinutes()).padStart(2,'0');
+      document.getElementById('fHoraInicio').value = hh+':'+min;
+      syncTurnoConHora();
+
+      // Marcar el mecánico logueado
+      var mecNom = _mecSesionValida();
+      if(mecNom){
+        document.querySelectorAll('.mec-check').forEach(function(c){
+          if(c.value.toUpperCase() === mecNom.toUpperCase()) c.checked = true;
+        });
+      }
+
+      // Banner informativo
+      var maqObj = MAQUINAS.find(function(m){ return m.id === maqQR; });
+      if(maqObj){
+        var banner = document.getElementById('retomandoBanner');
+        if(banner){
+          banner.style.display = 'flex';
+          banner.style.borderColor = 'rgba(231,76,60,0.4)';
+          banner.style.background  = 'rgba(231,76,60,0.08)';
+          document.getElementById('retomandoInfo').textContent = '📱 QR · ' + maqObj.n + ' — Rellena y guarda como EN CURSO o RESUELTA';
+        }
+      }
+
+      switchTab('nueva');
+      showToast('📱 ' + (maqObj ? maqObj.n : maqQR) + ' — Registra la avería');
+      setTimeout(function(){ window.scrollTo({top:0, behavior:'smooth'}); }, 100);
+    }, 400);
   }
 }
 
@@ -1160,12 +1237,23 @@ function guardarAveria(){
   const tipo = document.querySelector('input[name=tipo]:checked');
   const grav = document.querySelector('input[name=grav]:checked');
 
+  const parteVal = document.getElementById('fParte').value;
+  const causaVal = document.getElementById('fCausa').value;
+  const turnoVal = document.getElementById('fTurno').value;
+  const mecsChecked = [...document.querySelectorAll('.mec-check:checked')];
+  const accionVal = document.getElementById('fAccion').value.trim();
+
   if(!maqId){showToast('⚠️ Selecciona la máquina');return;}
+  if(!parteVal){showToast('⚠️ Selecciona el parte / componente afectado');return;}
   if(!fecha||!horaIni){showToast('⚠️ Indica la fecha y hora');return;}
+  if(!turnoVal){showToast('⚠️ Selecciona el turno');return;}
   if(!tipo){showToast('⚠️ Selecciona el tipo de avería');return;}
   if(!grav){showToast('⚠️ Selecciona la gravedad');return;}
+  if(!causaVal){showToast('⚠️ Selecciona la causa raíz');return;}
+  if(mecsChecked.length === 0){showToast('⚠️ Selecciona al menos un mecánico');return;}
   if(!desc){showToast('⚠️ Escribe una descripción');return;}
   if(!estado){showToast('\u26a0\ufe0f Indica el estado final');return;}
+  if(estado === 'RESUELTA' && !accionVal){showToast('⚠️ Escribe la acción correctiva realizada');return;}
   if(estado === 'RESUELTA' && !_firmaData){
     showToast('\u270d\ufe0f Firma requerida para marcar como RESUELTA');
     document.getElementById('firmaWrap').classList.add('visible');
@@ -1217,9 +1305,19 @@ function guardarAveria(){
     materiales: [...materialesForm],
     costeMateriales: parseFloat(document.getElementById('fCosteMat').value||'0')||0,
     firma: _firmaData || (avOriginal ? avOriginal.firma : null),
+    foto: _fotoData || (avOriginal ? avOriginal.foto : null),
+    ...(avOriginal
+      ? (avOriginal.firmada
+          ? { firmada: true, firmadaPor: avOriginal.firmadaPor || null, firmadaFecha: avOriginal.firmadaFecha || null }
+          : {})   // stale local copy — no tocar campos de firma en Firebase
+      : { firmada: false }),
     estado,
   };
   if (_editandoId) av.tsActualizado = Date.now();
+  // tsCierre: se registra la primera vez que pasa a RESUELTA y no cambia si ya existe
+  av.tsCierre = (estado === 'RESUELTA')
+    ? (avOriginal && avOriginal.tsCierre ? avOriginal.tsCierre : Date.now())
+    : (avOriginal ? (avOriginal.tsCierre || null) : null);
 
   if (_editandoId) {
     const editIdx = averias.findIndex(function(a){return a.id===_editandoId;});
@@ -1229,19 +1327,27 @@ function guardarAveria(){
     averias.unshift(av);
   }
   localStorage.setItem('averias_v1', JSON.stringify(averias));
-
-  // ── Guardar en Firebase (funciona desde cualquier red) ──
-  fbSet(av.id, av).then(() => {
-    console.log('✅ Avería sincronizada con Firebase');
-  });
-
-  showToast(_fbOnline ? '✅ Avería guardada y sincronizada ☁️' : '✅ Avería guardada (se sincronizará cuando haya conexión)');
   limpiarForm();
   switchTab('historial');
+
+  // Toast basado en resultado real de Firebase (no en _fbOnline)
+  var _tsShown = false;
+  var _tsFallback = setTimeout(function(){
+    if(!_tsShown){ _tsShown=true; showToast('✅ Avería guardada'); }
+  }, 2500);
+  fbSet(av.id, av).then(function(){
+    clearTimeout(_tsFallback);
+    if(!_tsShown){ _tsShown=true; showToast('✅ Avería guardada y sincronizada ☁️'); }
+  }).catch(function(){
+    clearTimeout(_tsFallback);
+    if(!_tsShown){ _tsShown=true; showToast('✅ Avería guardada localmente'); }
+  });
 }
 
 function limpiarForm(){
   _editandoId = null;
+  _editandoResuelta = false;
+  document.getElementById('fEstado').disabled = false;
   var banner = document.getElementById('retomandoBanner');
   if (banner) banner.style.display = 'none';
   document.getElementById('fMaquina').value='';
@@ -1258,6 +1364,7 @@ function limpiarForm(){
   document.querySelectorAll('input[name=grav]').forEach(r=>r.checked=false);
   materialesForm=[];
   renderMatList();
+  quitarFoto();
   document.getElementById('alertRec').style.display='none';
   setFechaHoy();
   setTurnoAuto();
@@ -1300,6 +1407,7 @@ function renderHistorial(){
         <span class="averia-maq">${a.maqNombre} ${crit}</span>
         <span class="averia-desc">${a.parte?a.parte+' · ':''}${a.descripcion}</span>
         <span style="font-size:0.8rem;color:rgba(255,255,255,0.4);white-space:nowrap;margin-right:8px">${a.fecha} ${a.horaInicio}</span>
+        ${a.foto?`<img src="${a.foto}" style="width:32px;height:32px;object-fit:cover;border-radius:5px;flex-shrink:0;margin-right:4px">`:''}
         <span class="averia-badge ${badgeCls}"><span class="estado-dot ${dotCls}"></span>${a.estado}</span>
       </div>
       <div class="averia-body" id="av${i}">
@@ -1317,7 +1425,25 @@ function renderHistorial(){
         ${a.accion?`<div style="margin-top:10px"><div class="di-label">Acción correctiva</div><div style="margin-top:4px;font-size:0.95rem">${a.accion}</div></div>`:''}
         ${a.observaciones?`<div style="margin-top:10px"><div class="di-label">Observaciones</div><div style="margin-top:4px;font-size:0.95rem">${a.observaciones}</div></div>`:''}
         ${a.materiales&&a.materiales.length?`<div style="margin-top:10px"><div class="di-label">Material utilizado</div><div style="margin-top:4px;font-size:0.9rem">${a.materiales.map(m=>`${m.desc} (${m.ref}) × ${m.qty}`).join(' | ')}</div></div>`:''}
-        ${a.estado!=='RESUELTA'?`<div style="margin-top:14px"><button class="btn btn-gold" style="font-size:0.8rem;padding:7px 14px" onclick="retomarAveria('${a.id}')">🔄 Retomar avería</button></div>`:''}
+        ${a.foto?`<div style="margin-top:10px"><div class="di-label">Foto</div><img src="${a.foto}" style="margin-top:4px;width:80px;height:80px;object-fit:cover;border-radius:8px;border:2px solid rgba(201,162,39,0.4)"></div>`:''}
+        ${a.estado==='RESUELTA'
+          ? (a.firmada
+              ? `<div style="margin-top:10px;font-size:0.82rem;color:#2ecc71">✅ Firmado · Conforme encargado: ${a.firmadaPor||'—'}${a.firmadaFecha?' ('+a.firmadaFecha+')':''}</div>`
+              : a.firma
+                ? `<div style="margin-top:10px;font-size:0.82rem;color:#2ecc71">✍️ Firmado por mecánico</div>`
+                : `<div style="margin-top:10px;font-size:0.82rem;color:#f39c12">⏳ Pendiente de firma</div>`)
+          : ''}
+        ${a.estado!=='RESUELTA'
+          ? `<div style="margin-top:14px"><button class="btn btn-gold" style="font-size:0.8rem;padding:7px 14px" onclick="retomarAveria('${a.id}')">🔄 Retomar avería</button></div>`
+          : (()=>{
+              const mecN = typeof _mecSesionValida==='function' ? _mecSesionValida() : false;
+              const dentroPlazo = a.tsCierre && (Date.now()-a.tsCierre)<28800000;
+              const involucrado = mecN && a.mecanicos && a.mecanicos.indexOf(mecN)!==-1;
+              return (dentroPlazo && involucrado)
+                ? `<div style="margin-top:14px"><button class="btn btn-gold" style="font-size:0.8rem;padding:7px 14px;background:rgba(46,204,113,0.15);border-color:rgba(46,204,113,0.5);color:#2ecc71" onclick="retomarAveria('${a.id}')">✏️ Añadir información</button></div>`
+                : '';
+            })()
+        }
 
       </div>
     </div>`;
@@ -1354,6 +1480,13 @@ function retomarAveria(id){
   document.querySelectorAll('input[name=tipo]').forEach(function(r){r.checked=(r.value===av.tipo);});
   document.querySelectorAll('input[name=grav]').forEach(function(r){r.checked=(r.value===av.gravedad);});
   document.querySelectorAll('.mec-check').forEach(function(c){c.checked=!!(av.mecanicos&&av.mecanicos.includes(c.value));});
+  // Si hay mecanico logado y es distinto al que abrió la avería, marcarlo también
+  var mecActualRet = _mecSesionValida();
+  if(mecActualRet){
+    document.querySelectorAll('.mec-check').forEach(function(c){
+      if(c.value.toUpperCase() === mecActualRet.toUpperCase()) c.checked = true;
+    });
+  }
 
   materialesForm = av.materiales ? av.materiales.map(function(m){return Object.assign({},m);}) : [];
   renderMatList();
@@ -1367,8 +1500,22 @@ function retomarAveria(id){
       id + ' · ' + (av.maqNombre||'') + ' · ' + (av.estado||'');
   }
 
+  // Modo edición RESUELTA: solo añadir, no cambiar estado ni borrar
+  _editandoResuelta = (av.estado === 'RESUELTA');
+  if(_editandoResuelta){
+    document.getElementById('fEstado').disabled = true;
+    var bannerRes = document.getElementById('retomandoBanner');
+    if(bannerRes){
+      bannerRes.style.display = 'flex';
+      bannerRes.style.borderColor = 'rgba(46,204,113,0.4)';
+      bannerRes.style.background  = 'rgba(46,204,113,0.08)';
+      document.getElementById('retomandoInfo').textContent =
+        '✏️ Avería RESUELTA — Puedes añadir información (no se puede borrar ni reabrir)';
+    }
+  }
+
   switchTab('nueva');
-  showToast('📋 Avería cargada — complétala y guarda');
+  showToast(_editandoResuelta ? '✏️ Avería resuelta — añade información' : '📋 Avería cargada — complétala y guarda');
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
@@ -1584,42 +1731,154 @@ document.addEventListener('click',e=>{
 
 <script>
 // ══════════════════════════════════════════════
-// LOGIN MECÁNICO
+// LOGIN MECANICO — sesion persistente por nombre
 // ══════════════════════════════════════════════
-const MEC_SESSION_KEY = 'mecAuth';
-const MEC_PW_DEFAULT  = 'panalcor';
+var MEC_SESION_KEY = 'mecSesion';
+var _MEC_FALLBACK_AV = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE'];
 
-function getMecPwd(callback){
-  DB.ref('config/mecanicoPwd').once('value')
-    .then(snap => callback(snap.val() || MEC_PW_DEFAULT))
-    .catch(()  => callback(localStorage.getItem('mecanicoPwd') || MEC_PW_DEFAULT));
+function _mecSesionValida(){
+  try {
+    var s = JSON.parse(localStorage.getItem(MEC_SESION_KEY) || 'null');
+    if(!s || !s.nombre) return false;
+    if(s.expires !== null && Date.now() > s.expires){ localStorage.removeItem(MEC_SESION_KEY); return false; }
+    return s.nombre;
+  } catch(e){ return false; }
 }
 
-function mecLogin(){
-  const val = document.getElementById('mecPwInput').value;
-  const err = document.getElementById('mecLoginErr');
-  if(!val){ err.textContent = '⚠️ Introduce la contraseña'; return; }
-  getMecPwd(pwd => {
-    if(val === pwd){
-      sessionStorage.setItem(MEC_SESSION_KEY, '1');
-      document.getElementById('mecLogin').style.display   = 'none';
-      document.getElementById('appAverias').style.display = 'block';
-      err.textContent = '';
-    } else {
-      err.textContent = '❌ Contraseña incorrecta';
+function _adminSessionValida(){
+  var t = parseInt(localStorage.getItem('adminSession') || 0);
+  return t > 0 && (Date.now() - t) < 8 * 3600 * 1000;
+}
+
+function _aplicarSesionAverias(nombre){
+  document.getElementById('mecLogin').style.display   = 'none';
+  document.getElementById('appAverias').style.display = 'block';
+  var el = document.getElementById('mecNomTopbar');
+  if(el){ el.textContent = '\u{1F477} ' + nombre; el.style.display = 'block'; }
+}
+
+(function cargarMecLoginAv(){
+  var sel = document.getElementById('mecLoginSel');
+  if(!sel) return;
+  function poblarAv(lista){
+    lista.forEach(function(n){
+      var o = document.createElement('option');
+      o.value = n; o.textContent = n; sel.appendChild(o);
+    });
+  }
+  DB.ref('config/mecanicos').once('value')
+    .then(function(snap){ var v=snap.val(); poblarAv(v&&v.length?v:_MEC_FALLBACK_AV); })
+    .catch(function(){ poblarAv(_MEC_FALLBACK_AV); });
+})();
+
+function mecLoginSubmit(){
+  var nombre  = document.getElementById('mecLoginSel').value;
+  var pw      = document.getElementById('mecPwInput').value;
+  var err     = document.getElementById('mecLoginErr');
+  var esMiTel = document.getElementById('mecLoginMiTel').checked;
+  err.textContent = '';
+  if(!nombre){ err.textContent = '⚠️ Selecciona tu nombre'; return; }
+  if(!pw)    { err.textContent = '⚠️ Introduce la contrasena'; return; }
+  DB.ref('config/mecanicos_pwd').once('value').then(function(snap){
+    var pwsObj = snap.val() || {};
+    var pwEsperada = pwsObj[nombre] || null;
+    if(!pwEsperada){ err.textContent = '❌ Sin contrasena asignada. Contacta con el responsable.'; return; }
+    if(pw !== pwEsperada){
+      err.textContent = '❌ Contrasena incorrecta';
       document.getElementById('mecPwInput').value = '';
       document.getElementById('mecPwInput').focus();
+      return;
     }
-  });
+    DB.ref('config/mecSessionHoras').once('value').then(function(snap2){
+      var horas = snap2.val() || 8;
+      var expires = esMiTel ? null : (Date.now() + horas * 3600 * 1000);
+      localStorage.setItem(MEC_SESION_KEY, JSON.stringify({nombre:nombre, expires:expires}));
+      _aplicarSesionAverias(nombre);
+    }).catch(function(){
+      var expires = esMiTel ? null : (Date.now() + 8 * 3600 * 1000);
+      localStorage.setItem(MEC_SESION_KEY, JSON.stringify({nombre:nombre, expires:expires}));
+      _aplicarSesionAverias(nombre);
+    });
+  }).catch(function(){ err.textContent = '❌ Error de conexion. Intentalo de nuevo.'; });
 }
 
-// Comprobar sesión al cargar
+// ── SESION UNIFICADA ──────────────────────────────
+(function(){
+  var ps=null;
+  try{ps=JSON.parse(localStorage.getItem('panalcor_session')||'null');}catch(e){}
+  if(ps&&(ps.rol==='mecanico'||ps.rol==='encargado'||ps.rol==='admin')&&Date.now()<ps.expires){
+    if(ps.rol==='mecanico'){
+      try{
+        var ms=JSON.parse(localStorage.getItem(MEC_SESION_KEY)||'null');
+        if(!ms||ms.nombre!==ps.nombre){
+          localStorage.setItem(MEC_SESION_KEY,JSON.stringify({nombre:ps.nombre,expires:null}));
+        }
+      }catch(e){ localStorage.setItem(MEC_SESION_KEY,JSON.stringify({nombre:ps.nombre,expires:null})); }
+    }
+  } else {
+    window.location.replace('panalcor_inicio.html?back='+encodeURIComponent(window.location.href));
+  }
+})();
+
 (function checkMecSession(){
-  if(sessionStorage.getItem(MEC_SESSION_KEY) === '1'){
+  var nombre = _mecSesionValida();
+  if(nombre){ _aplicarSesionAverias(nombre); return; }
+  if(_adminSessionValida()){
+    document.getElementById('mecLogin').style.display   = 'none';
+    document.getElementById('appAverias').style.display = 'block';
+    return;
+  }
+  // Encargado: permitir acceso sin nombre de mecanico
+  var ps2=null;
+  try{ps2=JSON.parse(localStorage.getItem('panalcor_session')||'null');}catch(e){}
+  if(ps2&&(ps2.rol==='encargado')&&Date.now()<ps2.expires){
     document.getElementById('mecLogin').style.display   = 'none';
     document.getElementById('appAverias').style.display = 'block';
   }
 })();
+
+// ══ FOTO ══════════════════════════════════════════
+var _fotoData = null;
+
+function comprimirFoto(file, cb) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = new Image();
+    img.onload = function() {
+      var canvas = document.createElement('canvas');
+      var MAX = 900;
+      var w = img.width, h = img.height;
+      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      cb(canvas.toDataURL('image/jpeg', 0.72));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function onFotoSelected(input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  comprimirFoto(file, function(b64) {
+    _fotoData = b64;
+    var thumb = document.getElementById('fotoThumb');
+    var preview = document.getElementById('fotoPreview');
+    if (thumb) thumb.src = b64;
+    if (preview) preview.style.display = 'block';
+  });
+}
+
+function quitarFoto() {
+  _fotoData = null;
+  var preview = document.getElementById('fotoPreview');
+  var input = document.getElementById('fotoInput');
+  var thumb = document.getElementById('fotoThumb');
+  if (preview) preview.style.display = 'none';
+  if (thumb) thumb.src = '';
+  if (input) input.value = '';
+}
 
 // ══ FIRMA DIGITAL ══════════════════════════════════
 var _firmaData = null;

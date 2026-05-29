@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#c9a227">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PANALCOR">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Encargados — PANALCOR</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;900&display=swap" rel="stylesheet">
@@ -16,6 +23,18 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;min-height:100vh}
+
+/* ── LOGIN ENCARGADOS ── */
+#encLoginScreen{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px}
+#encLoginScreen .box{background:var(--navy-mid);border:1px solid rgba(155,89,182,0.4);border-radius:18px;padding:36px 28px;width:100%;max-width:340px;text-align:center}
+#encLoginScreen .ico{font-size:2.8rem;margin-bottom:10px}
+#encLoginScreen h2{font-size:1.3rem;font-weight:900;color:var(--purple-light);margin-bottom:4px}
+#encLoginScreen .sub{font-size:0.75rem;color:rgba(255,255,255,0.35);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:26px}
+#encLoginScreen input{width:100%;background:var(--navy);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:9px;padding:14px;font-family:'Barlow',sans-serif;font-size:1.2rem;text-align:center;letter-spacing:0.25em;margin-bottom:14px}
+#encLoginScreen input:focus{outline:none;border-color:var(--purple)}
+#encLoginScreen .btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--purple),#7d3c98);color:#fff;border:none;border-radius:9px;font-family:'Barlow',sans-serif;font-size:1rem;font-weight:900;letter-spacing:0.1em;cursor:pointer}
+#encLoginScreen .err{color:var(--red);font-size:0.85rem;margin-top:10px;min-height:18px}
+#encLoginScreen .home-link{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;background:rgba(201,162,39,0.12);border:1.5px solid rgba(201,162,39,0.4);margin-bottom:12px}
 
 /* TOPBAR */
 .topbar{background:linear-gradient(135deg,#0a1520,var(--navy-mid));border-bottom:2px solid var(--purple);
@@ -41,7 +60,7 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
 .form-wrap{display:none}
 .who-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(155,89,182,0.15);
   border:1px solid rgba(155,89,182,0.35);border-radius:20px;padding:6px 14px;
-  font-size:0.85rem;font-weight:700;color:var(--purple-light);margin-bottom:20px;cursor:pointer}
+  font-size:0.85rem;font-weight:700;color:var(--purple-light);margin-bottom:20px}
 .section-title{font-size:0.68rem;letter-spacing:.14em;text-transform:uppercase;
   color:var(--gold);margin-bottom:10px;margin-top:20px;padding-bottom:5px;
   border-bottom:1px solid rgba(201,162,39,0.2)}
@@ -99,6 +118,15 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
 .btn-guardar:hover{filter:brightness(1.1)}
 .btn-guardar:disabled{opacity:0.5;cursor:not-allowed}
 
+/* FIRMA CONFORMIDAD */
+.firma-pend-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.firma-canvas-enc{border:2px dashed rgba(255,255,255,0.3);border-radius:10px;background:rgba(255,255,255,0.05);touch-action:none;cursor:crosshair;display:block;width:100%;max-width:480px;height:120px}
+.firma-canvas-enc.firmado{border-color:#2ecc71;border-style:solid}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--navy-mid);border:1px solid rgba(155,89,182,0.4);border-radius:14px;padding:24px 20px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:1rem;font-weight:900;color:var(--purple-light);margin-bottom:16px}
+
 /* CONFIRMACIÓN */
 .confirm-wrap{display:none;text-align:center;padding:40px 20px}
 .confirm-ico{font-size:3.5rem;margin-bottom:14px}
@@ -112,22 +140,172 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
   color:var(--white);padding:11px 28px;border-radius:8px;cursor:pointer;
   font-family:'Barlow',sans-serif;font-size:0.9rem;font-weight:700}
 
+/* VISTA ADMIN ─ columnas por encargado */
+#adminViewEnc{display:none;padding:16px 16px 0;max-width:960px;margin:0 auto}
+.adm-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:8px}
+@media(max-width:680px){.adm-cols{grid-template-columns:1fr 1fr}}
+@media(max-width:420px){.adm-cols{grid-template-columns:1fr}}
+.adm-col{background:rgba(255,255,255,0.04);border:1px solid rgba(155,89,182,0.25);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.adm-col-hdr{background:rgba(155,89,182,0.18);padding:9px 13px;font-size:0.82rem;font-weight:900;letter-spacing:0.1em;color:var(--purple-light);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.adm-count{background:rgba(155,89,182,0.35);border-radius:20px;padding:2px 8px;font-size:0.7rem;font-weight:700}
+.adm-col-body{padding:8px;max-height:280px;overflow-y:auto;flex:1}
+.adm-av-item{border-bottom:1px solid rgba(255,255,255,0.06);padding:7px 4px;font-size:0.74rem}
+.adm-av-item:last-child{border-bottom:none}
+.adm-av-date{color:rgba(255,255,255,0.35);margin-bottom:2px;font-size:0.68rem}
+.adm-av-maq{font-weight:700;color:var(--white);margin-bottom:1px}
+.adm-av-desc{color:rgba(255,255,255,0.5);line-height:1.35}
+.adm-empty{color:rgba(255,255,255,0.22);font-size:0.78rem;text-align:center;padding:18px 0}
+.adm-refresh{background:rgba(155,89,182,0.15);border:1px solid rgba(155,89,182,0.35);color:var(--purple-light);padding:8px 18px;border-radius:8px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.05em}
+
 /* TOAST */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
   background:rgba(20,35,50,0.97);border:1px solid rgba(255,255,255,0.15);
   border-radius:10px;padding:11px 22px;font-size:0.88rem;opacity:0;
   transition:all .3s;z-index:999;white-space:nowrap;pointer-events:none}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── TABS ── */
+.enc-tabs{display:flex;background:var(--navy-mid);border-bottom:2px solid rgba(201,162,39,0.2);overflow-x:auto}
+.enc-tab{padding:12px 20px;cursor:pointer;font-size:0.9rem;font-weight:600;letter-spacing:0.04em;
+  color:rgba(255,255,255,0.4);border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap}
+.enc-tab:hover{color:var(--white)}
+.enc-tab.active{color:var(--gold-light);border-bottom-color:var(--gold)}
+
+/* ── PLANTA VIEW ── */
+.planta-wrap{padding:16px;max-width:980px;margin:0 auto;padding-bottom:40px}
+.planta-stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.planta-stat{flex:1;min-width:100px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+  border-radius:10px;padding:10px 14px;text-align:center}
+.planta-stat-n{font-size:1.8rem;font-weight:900;line-height:1}
+.planta-stat-l{font-size:0.66rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-top:4px}
+.planta-area{margin-bottom:22px}
+.planta-area-title{font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);
+  margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid rgba(201,162,39,0.2)}
+.planta-grid{display:flex;flex-wrap:wrap;gap:6px}
+.planta-maq{padding:6px 10px;border-radius:6px;cursor:pointer;border:1px solid rgba(255,255,255,0.1);
+  background:rgba(255,255,255,0.03);font-size:0.78rem;font-weight:600;color:rgba(255,255,255,0.4);
+  transition:all .18s;position:relative;-webkit-tap-highlight-color:transparent;user-select:none}
+.planta-maq:hover{border-color:rgba(255,255,255,0.25);color:rgba(255,255,255,0.75)}
+.planta-maq.ok{border-color:rgba(46,204,113,0.35);color:rgba(46,204,113,0.75)}
+.planta-maq.ok:hover{background:rgba(46,204,113,0.07)}
+.planta-maq.en-curso{border-color:rgba(243,156,18,0.55);background:rgba(243,156,18,0.1);color:#f39c12}
+.planta-maq.alerta{border-color:rgba(231,76,60,0.65);background:rgba(231,76,60,0.13);color:#e74c3c;
+  animation:maq-pulse 2s ease-in-out infinite}
+@keyframes maq-pulse{0%,100%{background:rgba(231,76,60,0.13)}50%{background:rgba(231,76,60,0.25)}}
+.planta-maq .maq-cnt{position:absolute;top:-6px;right:-6px;background:#e74c3c;color:#fff;
+  border-radius:50%;width:16px;height:16px;font-size:0.6rem;font-weight:900;line-height:16px;text-align:center}
+.planta-maq.en-curso .maq-cnt{background:#f39c12}
+/* Modal detalle maquina */
+.planta-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:1000;
+  align-items:center;justify-content:center;padding:16px}
+.planta-modal.open{display:flex}
+.planta-modal-box{background:var(--navy-mid);border:1px solid rgba(201,162,39,0.3);border-radius:14px;
+  padding:20px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto}
+.planta-modal-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:12px}
+.planta-modal-title{font-size:1rem;font-weight:900;color:var(--gold-light);letter-spacing:0.04em}
+.planta-modal-sub{font-size:0.72rem;color:rgba(255,255,255,0.35);margin-top:3px}
+.planta-modal-close{background:transparent;border:none;color:rgba(255,255,255,0.4);
+  font-size:1.3rem;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0}
+.planta-av-item{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+  border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.planta-av-estado{display:inline-block;font-size:0.68rem;font-weight:700;letter-spacing:0.07em;
+  padding:2px 8px;border-radius:4px;margin-bottom:6px;text-transform:uppercase}
+.est-pendiente{background:rgba(231,76,60,0.2);color:#e74c3c}
+.est-en-curso{background:rgba(243,156,18,0.2);color:#f39c12}
+.est-rep{background:rgba(230,126,34,0.2);color:#e67e22}
 </style>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+</script>
 </head>
 <body>
+
+<!-- ══ LOGIN ENCARGADOS ══ -->
+<div id="encLoginScreen">
+  <div class="box">
+    <a href="panalcor_inicio.html" class="home-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z" fill="rgba(201,162,39,0.25)" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 21V15H15V21" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/></svg></a>
+    <div class="ico">👷</div>
+    <h2>ENCARGADOS</h2>
+    <div class="sub">PANALCOR S.L. &middot; Acceso restringido</div>
+    <input type="password" id="encPwInput" placeholder="Contraseña" autocomplete="off"
+           onkeydown="if(event.key==='Enter') encLoginCheck()">
+    <button class="btn" onclick="encLoginCheck()">ENTRAR</button>
+    <div class="err" id="encLoginErr"></div>
+  </div>
+</div>
+
+<div id="encApp" style="display:none">
 
 <div class="topbar">
   <a href="panalcor_inicio.html" class="back-btn">← Inicio</a>
   <h1>👷 Encargados</h1>
+  <button onclick="verFirmasPendientes()" style="background:rgba(155,89,182,0.15);border:1px solid rgba(155,89,182,0.4);color:var(--purple-light);padding:7px 12px;border-radius:7px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.78rem;font-weight:700;letter-spacing:0.04em">✍️ Firmas</button>
 </div>
 
-<div class="wrap">
+<!-- TABS -->
+<div class="enc-tabs" id="encTabs" style="display:none">
+  <div class="enc-tab active" id="tab-planta"     onclick="encSwitchTab('planta')">🏭 Planta</div>
+  <div class="enc-tab"        id="tab-registrar"  onclick="encSwitchTab('registrar')" style="display:none">📋 Registrar</div>
+  <div class="enc-tab"        id="tab-encargados" onclick="encSwitchTab('encargados')" style="display:none">📊 Encargados</div>
+</div>
+
+<!-- VISTA PLANTA EN TIEMPO REAL -->
+<div id="plantaView" style="display:none">
+  <div class="planta-wrap">
+    <div class="planta-stats">
+      <div class="planta-stat">
+        <div class="planta-stat-n" id="pStatTotal" style="color:var(--white)">—</div>
+        <div class="planta-stat-l">Máquinas</div>
+      </div>
+      <div class="planta-stat">
+        <div class="planta-stat-n" id="pStatOk" style="color:#2ecc71">—</div>
+        <div class="planta-stat-l">Operativas</div>
+      </div>
+      <div class="planta-stat">
+        <div class="planta-stat-n" id="pStatAlert" style="color:#e74c3c">—</div>
+        <div class="planta-stat-l">Con incidencia</div>
+      </div>
+      <div class="planta-stat" id="pStatUpdWrap" style="display:none">
+        <div class="planta-stat-n" style="font-size:0.7rem;color:rgba(255,255,255,0.3)" id="pStatUpd"></div>
+        <div class="planta-stat-l">Actualizado</div>
+      </div>
+    </div>
+    <div id="plantaGrid">
+      <div style="text-align:center;padding:30px;color:rgba(255,255,255,0.25);font-size:0.85rem">Cargando estado de planta...</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE MÁQUINA -->
+<div class="planta-modal" id="plantaModal" onclick="if(event.target===this)cerrarPlantaModal()">
+  <div class="planta-modal-box">
+    <div class="planta-modal-hdr">
+      <div>
+        <div class="planta-modal-title" id="plantaModalTitle"></div>
+        <div class="planta-modal-sub"   id="plantaModalSub"></div>
+      </div>
+      <button class="planta-modal-close" onclick="cerrarPlantaModal()">✕</button>
+    </div>
+    <div id="plantaModalBody"></div>
+  </div>
+</div>
+
+<!-- ══ VISTA ADMIN: columnas por encargado ══ -->
+<div id="adminViewEnc">
+  <div class="section-title" style="margin-top:6px">📊 Avisos registrados por encargado</div>
+  <div class="adm-cols" id="admCols">
+    <div style="text-align:center;padding:24px;color:rgba(255,255,255,0.3);grid-column:1/-1">Cargando...</div>
+  </div>
+  <div style="margin-top:14px;text-align:center;padding-bottom:28px">
+    <button class="adm-refresh" onclick="cargarAdminView()">🔄 Actualizar</button>
+  </div>
+</div>
+
+<div id="mainWrap" class="wrap">
 
   <!-- PASO 1: Seleccionar encargado -->
   <div id="stepEnc">
@@ -144,9 +322,8 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
 
   <!-- PASO 2: Formulario -->
   <div class="form-wrap" id="formWrap">
-    <div class="who-badge" id="whoBadge" onclick="cambiarEnc()">
+    <div class="who-badge" id="whoBadge">
       <span id="whoName"></span>
-      <span style="font-size:0.7rem;opacity:0.6">✎ cambiar</span>
     </div>
 
     <!-- MÁQUINA -->
@@ -236,6 +413,34 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
     <button class="btn-otro" onclick="nuevoRegistro()">➕ Registrar otra avería</button>
   </div>
 
+</div><!-- /mainWrap -->
+
+<!-- SECCIÓN FIRMAS PENDIENTES -->
+<div class="wrap" id="firmasPendWrap" style="display:none">
+  <div class="section-title" style="margin-top:0">✍️ Órdenes resueltas — pendientes de firma</div>
+  <div id="firmasPendList"><div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3)">Cargando...</div></div>
+  <button class="btn-otro" style="margin-top:10px;width:100%" onclick="volverDesdeFirmas()">← Volver al inicio</button>
+</div>
+
+<!-- MODAL FIRMA CONFORMIDAD -->
+<div class="modal-overlay" id="firmaModal">
+  <div class="modal-box">
+    <div class="modal-title">✍️ Firma de conformidad</div>
+    <div id="firmaModalInfo" style="font-size:0.82rem;color:rgba(255,255,255,0.55);margin-bottom:14px;line-height:1.6"></div>
+    <div class="field">
+      <label>Nombre del encargado</label>
+      <input type="text" id="firmaEncNombre" placeholder="Tu nombre">
+    </div>
+    <div class="field">
+      <label>Firma</label>
+      <canvas class="firma-canvas-enc" id="firmaCanvasEnc" width="480" height="120"></canvas>
+      <button type="button" onclick="borrarFirmaEnc()" style="background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);color:#e74c3c;padding:5px 12px;border-radius:6px;font-family:'Barlow',sans-serif;font-size:0.78rem;cursor:pointer;margin-top:6px">🗑️ Borrar firma</button>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:10px">
+      <button type="button" onclick="cerrarFirmaModal()" style="flex:1;padding:11px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);border-radius:8px;font-family:'Barlow',sans-serif;font-size:0.9rem;cursor:pointer">Cancelar</button>
+      <button type="button" id="btnConfirmarFirma" onclick="confirmarFirma()" style="flex:2;padding:11px;background:linear-gradient(135deg,var(--purple),#6c3483);border:none;color:#fff;border-radius:8px;font-family:'Barlow',sans-serif;font-size:0.9rem;font-weight:900;cursor:pointer">✅ Confirmar firma</button>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -368,6 +573,12 @@ function poblarMaquinas(){
     });
     sel.appendChild(grp);
   });
+  // Pre-seleccionar maquina desde QR (?maq=MAQ-001)
+  var maqParam = new URLSearchParams(window.location.search).get('maq');
+  if(maqParam){
+    var mFound = MAQUINAS_ENC.find(function(m){ return m.id === maqParam; });
+    if(mFound) sel.value = mFound.n || mFound.id;
+  }
 }
 
 // ── Cargar mecánicos desde Firebase ──────────────────────────
@@ -541,6 +752,498 @@ function showToast(msg){
   clearTimeout(_toastTimer);
   _toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 3000);
 }
+
+// ── FIRMAS PENDIENTES ────────────────────────────────────────
+function volverDesdeFirmas(){
+  document.getElementById('firmasPendWrap').style.display = 'none';
+  if(encActual){
+    document.getElementById('formWrap').style.display = 'block';
+  } else {
+    document.getElementById('stepEnc').style.display = 'block';
+  }
+}
+
+var _firmaAvId = null;
+var _firmaEncData = null;
+
+function verFirmasPendientes(){
+  // Asegurarse de que mainWrap es visible (firmasPendWrap está dentro)
+  document.getElementById('plantaView').style.display   = 'none';
+  document.getElementById('adminViewEnc').style.display = 'none';
+  document.getElementById('mainWrap').style.display     = 'block';
+  // Marcar tab Registrar como activo si existe
+  ['planta','registrar','encargados'].forEach(function(t){
+    var el = document.getElementById('tab-'+t);
+    if(el) el.classList.toggle('active', t === 'registrar');
+  });
+  document.getElementById('stepEnc').style.display      = 'none';
+  document.getElementById('formWrap').style.display     = 'none';
+  document.getElementById('confirmWrap').style.display  = 'none';
+  document.getElementById('firmasPendWrap').style.display = 'block';
+  cargarFirmasPendientes();
+}
+
+function cargarFirmasPendientes(){
+  var el = document.getElementById('firmasPendList');
+  DB.ref('averias').once('value').then(function(snap){
+    var data = snap.val();
+    var pend = [];
+    // IDs que el encargado ya ha firmado localmente (aunque Firebase aun no lo sepa)
+    var lsAv = [];
+    try{ lsAv = JSON.parse(localStorage.getItem('averias_v1')||'[]'); } catch(e){}
+    var localFirmadas = {};
+    lsAv.forEach(function(a){ if(a && a.firmada) localFirmadas[a.id] = true; });
+    if(data){
+      Object.values(data).forEach(function(a){
+        if(a && a.estado === 'RESUELTA' && !a.firmada && !localFirmadas[a.id]) pend.push(a);
+      });
+    }
+    // Averias solo en localStorage (no estan en Firebase)
+    var fbIds = pend.map(function(a){ return a.id; });
+    lsAv.forEach(function(a){
+      if(a && a.estado==='RESUELTA' && !a.firmada && fbIds.indexOf(a.id)===-1) pend.push(a);
+    });
+    pend.sort(function(a,b){ return (b.fecha||'').localeCompare(a.fecha||''); });
+    if(!pend.length){
+      el.innerHTML='<div style="text-align:center;padding:20px;color:#2ecc71;font-size:0.9rem">✅ No hay órdenes pendientes de firma</div>';
+      return;
+    }
+    el.innerHTML = pend.map(function(a){
+      return '<div class="firma-pend-card">'
+        +'<div style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-bottom:4px">'+a.fecha+' · '+a.id+'</div>'
+        +'<div style="font-size:0.95rem;font-weight:700;margin-bottom:2px">'+(a.maqNombre||a.maqId||'—')+'</div>'
+        +'<div style="font-size:0.82rem;color:rgba(255,255,255,0.6);margin-bottom:8px">'
+          +a.descripcion
+          +(a.mecanicos&&a.mecanicos.length?' · 👷 '+a.mecanicos.join(', '):'')
+        +'</div>'
+        +'<button onclick="abrirFirmaModal(\''+a.id+'\',\''+encodeURIComponent(a.maqNombre||a.maqId||'')+'\')" '
+          +'style="background:rgba(155,89,182,0.2);border:1px solid rgba(155,89,182,0.45);color:var(--purple-light);'
+          +'border-radius:7px;padding:8px 16px;cursor:pointer;font-family:\'Barlow\',sans-serif;font-size:0.85rem;font-weight:700">'
+          +'✍️ Firmar conformidad'
+        +'</button>'
+        +'</div>';
+    }).join('');
+  }).catch(function(){
+    el.innerHTML='<div style="color:rgba(255,255,255,0.4);font-size:0.85rem;text-align:center;padding:20px">Error al cargar datos</div>';
+  });
+}
+
+function abrirFirmaModal(avId, maqEncoded){
+  _firmaAvId = avId;
+  _firmaEncData = null;
+  var modal = document.getElementById('firmaModal');
+  if(modal) modal.classList.add('open');
+  var info = document.getElementById('firmaModalInfo');
+  if(info) info.innerHTML = '<b>Avería:</b> '+avId+'<br><b>Máquina:</b> '+decodeURIComponent(maqEncoded);
+  var nombre = document.getElementById('firmaEncNombre');
+  if(nombre) nombre.value = encActual || '';
+  borrarFirmaEnc();
+  // Init canvas
+  initFirmaEncCanvas();
+}
+
+function cerrarFirmaModal(){
+  var modal = document.getElementById('firmaModal');
+  if(modal) modal.classList.remove('open');
+  _firmaAvId = null;
+  _firmaEncData = null;
+}
+
+var _firmaEncCanvas = null, _firmaEncCtx = null, _firmaEncDrawing = false;
+
+function initFirmaEncCanvas(){
+  _firmaEncCanvas = document.getElementById('firmaCanvasEnc');
+  if(!_firmaEncCanvas) return;
+  _firmaEncCtx = _firmaEncCanvas.getContext('2d');
+  _firmaEncCtx.strokeStyle = '#c39bd3';
+  _firmaEncCtx.lineWidth   = 2.5;
+  _firmaEncCtx.lineCap     = 'round';
+  _firmaEncCtx.lineJoin    = 'round';
+  _firmaEncCtx.clearRect(0,0,_firmaEncCanvas.width,_firmaEncCanvas.height);
+  _firmaEncCanvas.classList.remove('firmado');
+
+  function pos(e){
+    var r = _firmaEncCanvas.getBoundingClientRect();
+    var sx = _firmaEncCanvas.width / r.width;
+    var sy = _firmaEncCanvas.height / r.height;
+    var src = e.touches ? e.touches[0] : e;
+    return {x:(src.clientX-r.left)*sx, y:(src.clientY-r.top)*sy};
+  }
+  var lx, ly;
+  _firmaEncCanvas.onmousedown = _firmaEncCanvas.ontouchstart = function(e){
+    e.preventDefault(); _firmaEncDrawing=true; var p=pos(e); lx=p.x; ly=p.y;
+  };
+  _firmaEncCanvas.onmousemove = _firmaEncCanvas.ontouchmove = function(e){
+    e.preventDefault();
+    if(!_firmaEncDrawing) return;
+    var p=pos(e);
+    _firmaEncCtx.beginPath(); _firmaEncCtx.moveTo(lx,ly); _firmaEncCtx.lineTo(p.x,p.y); _firmaEncCtx.stroke();
+    lx=p.x; ly=p.y;
+    _firmaEncCanvas.classList.add('firmado');
+  };
+  document.onmouseup = document.ontouchend = function(){ _firmaEncDrawing=false; };
+}
+
+function borrarFirmaEnc(){
+  if(_firmaEncCtx && _firmaEncCanvas){
+    _firmaEncCtx.clearRect(0,0,_firmaEncCanvas.width,_firmaEncCanvas.height);
+    _firmaEncCanvas.classList.remove('firmado');
+  }
+  _firmaEncData = null;
+}
+
+function confirmarFirma(){
+  if(!_firmaAvId){ cerrarFirmaModal(); return; }
+  var nombre = (document.getElementById('firmaEncNombre').value||'').trim();
+  if(!nombre){ showToast('Indica tu nombre'); return; }
+  if(!_firmaEncCanvas || !_firmaEncCanvas.classList.contains('firmado')){ showToast('Firma el documento'); return; }
+  var firmaSrc = _firmaEncCanvas.toDataURL('image/png');
+  var hoy = new Date().toISOString().split('T')[0];
+
+  var update = {firmada:true, firmadaPor:nombre, firmadaFecha:hoy, firmadaFirma:firmaSrc};
+
+  // Actualizar localStorage primero (fallback offline para cargarFirmasPendientes)
+  try{
+    var lsAv = JSON.parse(localStorage.getItem('averias_v1')||'[]');
+    var idx = lsAv.findIndex(function(a){ return a.id === _firmaAvId; });
+    if(idx !== -1){
+      lsAv[idx].firmada      = true;
+      lsAv[idx].firmadaPor   = nombre;
+      lsAv[idx].firmadaFecha = hoy;
+      lsAv[idx].firmadaFirma = firmaSrc;
+      localStorage.setItem('averias_v1', JSON.stringify(lsAv));
+    }
+  } catch(e){}
+
+  cerrarFirmaModal();
+
+  // Recargar lista solo cuando Firebase confirma la escritura
+  DB.ref('averias/'+_firmaAvId).update(update).then(function(){
+    showToast('✅ Firma guardada en Firebase');
+    cargarFirmasPendientes();
+  }).catch(function(){
+    showToast('⚠️ Sin conexión — guardado solo local');
+    cargarFirmasPendientes(); // localFirmadas filtra la avería firmada localmente
+  });
+}
+
+// ── VISTA PLANTA ─────────────────────────────────────────────────
+var MAQUINAS_PLANTA = [
+  {id:'MAQ-001',n:'PABAT 1',a:'OBRADOR'},{id:'MAQ-002',n:'PABAT 2',a:'OBRADOR'},
+  {id:'MAQ-003',n:'PABAT 3',a:'OBRADOR'},{id:'MAQ-004',n:'PABAT 4',a:'OBRADOR'},
+  {id:'MAQ-005',n:'PABAT 5',a:'OBRADOR'},{id:'MAQ-006',n:'PABAT 6',a:'OBRADOR'},
+  {id:'MAQ-007',n:'PABAT 7',a:'OBRADOR'},{id:'MAQ-008',n:'PABAT 8',a:'OBRADOR'},
+  {id:'MAQ-009',n:'AMASADORA CANDEAL',a:'OBRADOR'},
+  {id:'MAQ-010',n:'LINEA 1',a:'OBRADOR'},{id:'MAQ-011',n:'LINEA 2',a:'OBRADOR'},
+  {id:'MAQ-012',n:'LINEA 3',a:'OBRADOR'},{id:'MAQ-013',n:'LINEA 4',a:'OBRADOR'},
+  {id:'MAQ-014',n:'LINEA 5',a:'OBRADOR'},{id:'MAQ-015',n:'LINEA 6',a:'OBRADOR'},
+  {id:'MAQ-016',n:'LINEA 7',a:'OBRADOR'},
+  {id:'MAQ-017',n:'CARRUSEL 1',a:'OBRADOR'},{id:'MAQ-018',n:'CARRUSEL 2',a:'OBRADOR'},
+  {id:'MAQ-019',n:'CARRUSEL 3',a:'OBRADOR'},{id:'MAQ-020',n:'CARRUSEL 4',a:'OBRADOR'},
+  {id:'MAQ-021',n:'CARRUSEL 5',a:'OBRADOR'},{id:'MAQ-022',n:'CARRUSEL 6',a:'OBRADOR'},
+  {id:'MAQ-023',n:'VOLCADOR 1',a:'OBRADOR'},{id:'MAQ-024',n:'VOLCADOR 2',a:'OBRADOR'},
+  {id:'MAQ-025',n:'VOLCADOR 3',a:'OBRADOR'},{id:'MAQ-026',n:'VOLCADOR 4',a:'OBRADOR'},
+  {id:'MAQ-027',n:'VOLCADOR 5',a:'OBRADOR'},{id:'MAQ-028',n:'VOLCADOR 6',a:'OBRADOR'},
+  {id:'MAQ-029',n:'VOLCADOR 7',a:'OBRADOR'},
+  {id:'MAQ-030',n:'REPARTIDOR 1',a:'OBRADOR'},{id:'MAQ-031',n:'REPARTIDOR 2',a:'OBRADOR'},
+  {id:'MAQ-032',n:'REPARTIDOR 3',a:'OBRADOR'},
+  {id:'MAQ-033',n:'DIVISORA N1',a:'OBRADOR'},{id:'MAQ-034',n:'DIVISORA N2',a:'OBRADOR'},
+  {id:'MAQ-035',n:'DIVISORA N3',a:'OBRADOR'},{id:'MAQ-036',n:'DIVISORA N4',a:'OBRADOR'},
+  {id:'MAQ-037',n:'DIVISORA N5',a:'OBRADOR'},{id:'MAQ-038',n:'DIVISORA N6',a:'OBRADOR'},
+  {id:'MAQ-039',n:'DIVISORA N7',a:'OBRADOR'},{id:'MAQ-040',n:'DIVISORA N8',a:'OBRADOR'},
+  {id:'MAQ-041',n:'DIVISORA N9',a:'OBRADOR'},
+  {id:'MAQ-042',n:'CAMARA BOLAS N1',a:'OBRADOR'},{id:'MAQ-043',n:'CAMARA BOLAS N2',a:'OBRADOR'},
+  {id:'MAQ-044',n:'CAMARA BOLAS N3',a:'OBRADOR'},{id:'MAQ-045',n:'CAMARA BOLAS N4',a:'OBRADOR'},
+  {id:'MAQ-046',n:'CAMARA BOLAS N5',a:'OBRADOR'},{id:'MAQ-047',n:'CAMARA BOLAS N6',a:'OBRADOR'},
+  {id:'MAQ-048',n:'CAMARA BOLAS N7',a:'OBRADOR'},
+  {id:'MAQ-049',n:'EMBOLADORA N1',a:'OBRADOR'},{id:'MAQ-050',n:'EMBOLADORA N2',a:'OBRADOR'},
+  {id:'MAQ-051',n:'EMBOLADORA N3',a:'OBRADOR'},{id:'MAQ-052',n:'EMBOLADORA N4',a:'OBRADOR'},
+  {id:'MAQ-053',n:'EMBOLADORA N5',a:'OBRADOR'},{id:'MAQ-054',n:'EMBOLADORA N6',a:'OBRADOR'},
+  {id:'MAQ-055',n:'EMBOLADORA N7',a:'OBRADOR'},{id:'MAQ-056',n:'EMBOLADORA N8',a:'OBRADOR'},
+  {id:'MAQ-057',n:'EMBOLADORA N9',a:'OBRADOR'},
+  {id:'MAQ-111',n:'LAVADORA',a:'OBRADOR'},
+  {id:'MAQ-116',n:'ADITIVOS',a:'OBRADOR'},{id:'MAQ-117',n:'CUADRO ADITIVOS',a:'OBRADOR'},
+  {id:'MAQ-118',n:'REVOLVER',a:'OBRADOR'},
+  {id:'MAQ-119',n:'TOLVA 1',a:'OBRADOR'},{id:'MAQ-120',n:'TOLVA 2',a:'OBRADOR'},
+  {id:'MAQ-121',n:'TOLVA 3',a:'OBRADOR'},{id:'MAQ-122',n:'TOLVA 4',a:'OBRADOR'},
+  {id:'MAQ-123',n:'TOLVA 5',a:'OBRADOR'},{id:'MAQ-124',n:'TOLVA 6',a:'OBRADOR'},
+  {id:'MAQ-125',n:'TOLVA 7',a:'OBRADOR'},
+  {id:'MAQ-060',n:'HORNO 1',a:'HORNOS'},{id:'MAQ-061',n:'HORNO 2',a:'HORNOS'},
+  {id:'MAQ-062',n:'HORNO 3',a:'HORNOS'},{id:'MAQ-063',n:'HORNO 4',a:'HORNOS'},
+  {id:'MAQ-064',n:'HORNO 5',a:'HORNOS'},{id:'MAQ-065',n:'HORNO 6',a:'HORNOS'},
+  {id:'MAQ-066',n:'HORNO 7',a:'HORNOS'},{id:'MAQ-067',n:'HORNO 8',a:'HORNOS'},
+  {id:'MAQ-068',n:'HORNO 9',a:'HORNOS'},{id:'MAQ-069',n:'HORNO 10',a:'HORNOS'},
+  {id:'MAQ-070',n:'HORNO 11',a:'HORNOS'},{id:'MAQ-071',n:'HORNO 12',a:'HORNOS'},
+  {id:'MAQ-072',n:'HORNO 13',a:'HORNOS'},{id:'MAQ-073',n:'HORNO 14',a:'HORNOS'},
+  {id:'MAQ-074',n:'HORNO 15',a:'HORNOS'},{id:'MAQ-075',n:'HORNO 16',a:'HORNOS'},
+  {id:'MAQ-076',n:'HORNO 17',a:'HORNOS'},{id:'MAQ-077',n:'HORNO 18',a:'HORNOS'},
+  {id:'MAQ-078',n:'HORNO 19',a:'HORNOS'},
+  {id:'MAQ-079',n:'TALLADORA RELAMPAGO',a:'HORNOS'},{id:'MAQ-080',n:'TALLADORA TRUENO',a:'HORNOS'},
+  {id:'MAQ-058',n:'FERMENTADORA RELAMPAGO',a:'FRIO/CLIMA'},
+  {id:'MAQ-059',n:'FERMENTADORA TRUENO',a:'FRIO/CLIMA'},
+  {id:'MAQ-081',n:'TUNEL PREFRIO',a:'FRIO/CLIMA'},
+  {id:'MAQ-082',n:'TUNEL 1',a:'FRIO/CLIMA'},{id:'MAQ-083',n:'TUNEL 2',a:'FRIO/CLIMA'},
+  {id:'MAQ-084',n:'TUNEL 3',a:'FRIO/CLIMA'},{id:'MAQ-085',n:'TUNEL 4',a:'FRIO/CLIMA'},
+  {id:'MAQ-086',n:'TUNEL 5',a:'FRIO/CLIMA'},{id:'MAQ-087',n:'TUNEL 6',a:'FRIO/CLIMA'},
+  {id:'MAQ-088',n:'TUNEL 7',a:'FRIO/CLIMA'},{id:'MAQ-089',n:'TUNEL 8',a:'FRIO/CLIMA'},
+  {id:'MAQ-090',n:'TUNEL 9',a:'FRIO/CLIMA'},{id:'MAQ-091',n:'TUNEL 10',a:'FRIO/CLIMA'},
+  {id:'MAQ-130',n:'CAMARA STOCK 1',a:'FRIO/CLIMA'},{id:'MAQ-131',n:'CAMARA STOCK 2',a:'FRIO/CLIMA'},
+  {id:'MAQ-132',n:'CAMARA STOCK 3',a:'FRIO/CLIMA'},{id:'MAQ-133',n:'CAMARA STOCK 4',a:'FRIO/CLIMA'},
+  {id:'MAQ-134',n:'CAMARA STOCK 5',a:'FRIO/CLIMA'},
+  {id:'MAQ-135',n:'TANQUE 1',a:'FRIO/CLIMA'},{id:'MAQ-136',n:'TANQUE 2',a:'FRIO/CLIMA'},
+  {id:'MAQ-137',n:'TANQUE 3',a:'FRIO/CLIMA'},{id:'MAQ-138',n:'TANQUE 4',a:'FRIO/CLIMA'},
+  {id:'MAQ-139',n:'TANQUE 5',a:'FRIO/CLIMA'},
+  {id:'MAQ-140',n:'A/A OBRADOR',a:'FRIO/CLIMA'},{id:'MAQ-141',n:'A/A VESTUARIO',a:'FRIO/CLIMA'},
+  {id:'MAQ-142',n:'A/A OFICINAS',a:'FRIO/CLIMA'},{id:'MAQ-143',n:'TRANSFORMADOR',a:'FRIO/CLIMA'},
+  {id:'MAQ-144',n:'CONDENSADORES',a:'FRIO/CLIMA'},{id:'MAQ-145',n:'CUADROS GENERALES',a:'FRIO/CLIMA'},
+  {id:'MAQ-146',n:'A/A MUELLE',a:'FRIO/CLIMA'},
+  {id:'MAQ-147',n:'EXTRACTORES RELAMPAGO',a:'FRIO/CLIMA'},{id:'MAQ-148',n:'EXTRACTORES TRUENO',a:'FRIO/CLIMA'},
+  {id:'MAQ-149',n:'EVAPORATIVAS',a:'FRIO/CLIMA'},
+  {id:'MAQ-092',n:'MAQ. CAJAS',a:'ENVASADO'},{id:'MAQ-093',n:'FORM.-EMBOLSADORA',a:'ENVASADO'},
+  {id:'MAQ-094',n:'MAQ. BOLSAS',a:'ENVASADO'},
+  {id:'MAQ-095',n:'DESCARGADOR 1',a:'ENVASADO'},{id:'MAQ-096',n:'DESCARGADOR 2',a:'ENVASADO'},
+  {id:'MAQ-097',n:'CARGADOR 1',a:'ENVASADO'},{id:'MAQ-098',n:'CARGADOR 2',a:'ENVASADO'},
+  {id:'MAQ-099',n:'DESMOLDEO 1',a:'ENVASADO'},{id:'MAQ-100',n:'DESMOLDEO 2',a:'ENVASADO'},
+  {id:'MAQ-101',n:'CONTADORA 1',a:'ENVASADO'},{id:'MAQ-102',n:'CONTADORA 2',a:'ENVASADO'},
+  {id:'MAQ-103',n:'CAMINO RODILLOS',a:'ENVASADO'},
+  {id:'MAQ-104',n:'IMPRESORA RELAMPAGO',a:'ENVASADO'},{id:'MAQ-105',n:'IMPRESORA TRUENO',a:'ENVASADO'},
+  {id:'MAQ-106',n:'PRECINTADORA',a:'ENVASADO'},{id:'MAQ-107',n:'M. PEGATINAS',a:'ENVASADO'},
+  {id:'MAQ-108',n:'ROBOT',a:'ENVASADO'},
+  {id:'MAQ-109',n:'ENFARDADORA RELAMPAGO',a:'ENVASADO'},{id:'MAQ-110',n:'ENFARDADORA TRUENO',a:'ENVASADO'},
+  {id:'MAQ-112',n:'SILOS',a:'SILOS'},{id:'MAQ-113',n:'TURBINAS',a:'SILOS'},
+  {id:'MAQ-114',n:'CUADRO SILOS',a:'SILOS'},{id:'MAQ-115',n:'CUADRO HARINA',a:'SILOS'},
+  {id:'MAQ-126',n:'LEVADURA TANQUE 1',a:'SILOS'},{id:'MAQ-127',n:'LEVADURA TANQUE 2',a:'SILOS'},
+  {id:'MAQ-128',n:'LEVADURA CUADRO GRAL',a:'SILOS'},{id:'MAQ-129',n:'LEVADURA CUADRO GLICOL',a:'SILOS'}
+];
+var AREAS_ORDER = ['OBRADOR','HORNOS','FRIO/CLIMA','ENVASADO','SILOS'];
+
+var _plantaRef  = null;
+var _plantaAvMap = {};
+
+function encSwitchTab(name){
+  ['planta','registrar','encargados'].forEach(function(t){
+    var el = document.getElementById('tab-'+t);
+    if(el) el.classList.toggle('active', t === name);
+  });
+  document.getElementById('plantaView').style.display     = name === 'planta'     ? 'block' : 'none';
+  document.getElementById('mainWrap').style.display       = name === 'registrar'  ? 'block' : 'none';
+  document.getElementById('adminViewEnc').style.display   = name === 'encargados' ? 'block' : 'none';
+  if(name === 'planta'){
+    if(!_plantaRef) iniciarPlanta();
+  } else if(name === 'encargados'){
+    cargarAdminView();
+  }
+}
+
+function iniciarPlanta(){
+  renderPlantaEstructura();
+  _plantaRef = DB.ref('averias');
+  _plantaRef.on('value', function(snap){
+    _plantaAvMap = {};
+    var data = snap.val() || {};
+    Object.values(data).forEach(function(a){
+      if(!a || a.estado === 'RESUELTA') return;
+      var id = a.maq || a.maqId || '';
+      if(!id) return;
+      if(!_plantaAvMap[id]) _plantaAvMap[id] = [];
+      _plantaAvMap[id].push(a);
+    });
+    actualizarBadgesPlanta();
+    // Timestamp
+    var now = new Date();
+    var hhmm = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+    var upd = document.getElementById('pStatUpd');
+    var updW = document.getElementById('pStatUpdWrap');
+    if(upd){ upd.textContent = hhmm; }
+    if(updW){ updW.style.display = 'block'; }
+  });
+}
+
+function renderPlantaEstructura(){
+  var byArea = {};
+  AREAS_ORDER.forEach(function(a){ byArea[a] = []; });
+  MAQUINAS_PLANTA.forEach(function(m){
+    if(byArea[m.a]) byArea[m.a].push(m);
+  });
+  var html = '';
+  AREAS_ORDER.forEach(function(area){
+    var maqList = byArea[area] || [];
+    if(!maqList.length) return;
+    html += '<div class="planta-area">'
+      + '<div class="planta-area-title">' + area + ' <span style="color:rgba(255,255,255,0.25);font-weight:400">(' + maqList.length + ')</span></div>'
+      + '<div class="planta-grid">';
+    maqList.forEach(function(m){
+      html += '<div class="planta-maq" id="pmaq-' + m.id + '" onclick="abrirDetalleMaq(\'' + m.id + '\')">'
+        + m.n + '</div>';
+    });
+    html += '</div></div>';
+  });
+  document.getElementById('plantaGrid').innerHTML = html;
+}
+
+function actualizarBadgesPlanta(){
+  var total = MAQUINAS_PLANTA.length;
+  var conIncidencia = 0;
+  MAQUINAS_PLANTA.forEach(function(m){
+    var el = document.getElementById('pmaq-' + m.id);
+    if(!el) return;
+    var avs = _plantaAvMap[m.id] || [];
+    el.classList.remove('ok','en-curso','alerta');
+    var old = el.querySelector('.maq-cnt');
+    if(old) old.remove();
+    if(avs.length === 0){
+      el.classList.add('ok');
+    } else {
+      conIncidencia++;
+      var hasAlerta = avs.some(function(a){ return a.estado !== 'EN CURSO'; });
+      el.classList.add(hasAlerta ? 'alerta' : 'en-curso');
+      var cnt = document.createElement('span');
+      cnt.className = 'maq-cnt';
+      cnt.textContent = avs.length > 9 ? '9+' : String(avs.length);
+      el.appendChild(cnt);
+    }
+  });
+  var el = document.getElementById('pStatTotal');
+  if(el) el.textContent = total;
+  el = document.getElementById('pStatOk');
+  if(el) el.textContent = total - conIncidencia;
+  el = document.getElementById('pStatAlert');
+  if(el) el.textContent = conIncidencia;
+}
+
+function abrirDetalleMaq(maqId){
+  var maq = MAQUINAS_PLANTA.find(function(m){ return m.id === maqId; });
+  if(!maq) return;
+  var avs = _plantaAvMap[maqId] || [];
+  document.getElementById('plantaModalTitle').textContent = maq.n;
+  document.getElementById('plantaModalSub').textContent   = maqId + ' · ' + maq.a;
+  var html = '';
+  if(avs.length === 0){
+    html = '<div style="text-align:center;padding:24px 0;color:#2ecc71;font-size:0.9rem">✅ Máquina operativa · Sin incidencias abiertas</div>';
+  } else {
+    avs.forEach(function(a){
+      var ec = a.estado === 'EN CURSO' ? 'est-en-curso' : a.estado === 'PENDIENTE REPUESTO' ? 'est-rep' : 'est-pendiente';
+      html += '<div class="planta-av-item">'
+        + '<div class="planta-av-estado ' + ec + '">' + (a.estado || 'PENDIENTE') + '</div>'
+        + '<div style="font-size:0.9rem;font-weight:700;color:#f0f4f8;margin-bottom:5px">' + _escEnc(a.descripcion || '—') + '</div>'
+        + '<div style="font-size:0.75rem;color:rgba(255,255,255,0.45);display:flex;gap:14px;flex-wrap:wrap">'
+        + '<span>👤 ' + _escEnc(a.mecanico || '—') + '</span>'
+        + '<span>📅 ' + _escEnc(a.fecha || '—') + (a.hora ? ' ' + a.hora : '') + '</span>'
+        + (a.prioridad ? '<span>⚡ ' + _escEnc(a.prioridad) + '</span>' : '')
+        + '</div>'
+        + (a.comentarios ? '<div style="font-size:0.75rem;color:rgba(255,255,255,0.3);margin-top:5px;font-style:italic">' + _escEnc(a.comentarios) + '</div>' : '')
+        + '</div>';
+    });
+  }
+  document.getElementById('plantaModalBody').innerHTML = html;
+  document.getElementById('plantaModal').classList.add('open');
+}
+
+function cerrarPlantaModal(){
+  document.getElementById('plantaModal').classList.remove('open');
+}
+
+function _escEnc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── VISTA ADMIN: columnas de avisos por encargado ─────────────
+var ENCARGADOS_LIST = ['IVAN','LUISMI','SERGIO','PINILLA','MAGER','COSTI'];
+
+function cargarAdminView(){
+  var el = document.getElementById('admCols');
+  if(!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:24px;color:rgba(255,255,255,0.3);grid-column:1/-1">Cargando...</div>';
+  DB.ref('avisos_encargados').once('value').then(function(snap){
+    var data = snap.val() || {};
+    var byEnc = {};
+    ENCARGADOS_LIST.forEach(function(n){ byEnc[n] = []; });
+    Object.values(data).forEach(function(av){
+      var enc = (av.encargado||'').toUpperCase();
+      if(byEnc[enc]) byEnc[enc].push(av);
+    });
+    ENCARGADOS_LIST.forEach(function(n){
+      byEnc[n].sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+    });
+    el.innerHTML = ENCARGADOS_LIST.map(function(nombre){
+      var lista = byEnc[nombre];
+      var itemsHtml = lista.length ? lista.map(function(av){
+        var maq  = av.maquina || '—';
+        var desc = (av.descripcion||'');
+        if(desc.length > 70) desc = desc.substring(0,70) + '…';
+        var fecha = av.fecha || '';
+        var hora  = av.horaAveria ? ' · '+av.horaAveria : '';
+        return '<div class="adm-av-item">'
+          +'<div class="adm-av-date">'+fecha+hora+'</div>'
+          +'<div class="adm-av-maq">'+maq+'</div>'
+          +'<div class="adm-av-desc">'+desc+'</div>'
+          +'</div>';
+      }).join('') : '<div class="adm-empty">Sin registros</div>';
+      return '<div class="adm-col">'
+        +'<div class="adm-col-hdr"><span>'+nombre+'</span><span class="adm-count">'+lista.length+'</span></div>'
+        +'<div class="adm-col-body">'+itemsHtml+'</div>'
+        +'</div>';
+    }).join('');
+  }).catch(function(){
+    el.innerHTML = '<div style="color:rgba(231,76,60,0.7);font-size:0.85rem;text-align:center;padding:24px;grid-column:1/-1">Error al cargar datos</div>';
+  });
+}
+
+// ── LOGIN ENCARGADOS ─────────────────────────────────────────────
+var ENC_PW = 'encargados2025';
+var ENC_SESSION_KEY = 'enc_session';
+
+function _arrancaEncApp(esAdmin, nombreEnc){
+  document.getElementById('encLoginScreen').style.display = 'none';
+  document.getElementById('encApp').style.display = 'block';
+  document.getElementById('encTabs').style.display = 'flex';
+
+  var tR = document.getElementById('tab-registrar');
+  var tE = document.getElementById('tab-encargados');
+
+  if(esAdmin){
+    if(tR) tR.style.display = 'none';
+    if(tE) tE.style.display = 'block';
+  } else {
+    if(tR) tR.style.display = 'block';
+    if(tE) tE.style.display = 'none';
+    if(nombreEnc) selEnc(nombreEnc);
+  }
+
+  document.getElementById('mainWrap').style.display     = 'none';
+  document.getElementById('adminViewEnc').style.display = 'none';
+  document.getElementById('plantaView').style.display   = 'block';
+  iniciarPlanta();
+}
+
+function encLoginCheck(){
+  var pw  = document.getElementById('encPwInput').value;
+  var err = document.getElementById('encLoginErr');
+  if(pw === ENC_PW){
+    sessionStorage.setItem(ENC_SESSION_KEY, '1');
+    err.textContent = '';
+    _arrancaEncApp(false, null);
+  } else {
+    err.textContent = 'Contrasena incorrecta';
+    document.getElementById('encPwInput').value = '';
+    document.getElementById('encPwInput').focus();
+  }
+}
+
+(function(){
+  var ps = null;
+  try{ ps = JSON.parse(localStorage.getItem('panalcor_session') || 'null'); } catch(e){}
+  var ok = (ps && (ps.rol === 'encargado' || ps.rol === 'admin') && Date.now() < ps.expires)
+         || sessionStorage.getItem(ENC_SESSION_KEY) === '1';
+  if(ok){
+    var esAdmin  = ps && ps.rol === 'admin'    && Date.now() < ps.expires;
+    var nombre   = ps && ps.rol === 'encargado' && ps.nombre && Date.now() < ps.expires ? ps.nombre : null;
+    _arrancaEncApp(esAdmin, nombre);
+  } else {
+    window.location.replace('panalcor_inicio.html?back=' + encodeURIComponent(window.location.href));
+  }
+})();
 </script>
+</div><!-- /encApp -->
 </body>
 </html>
