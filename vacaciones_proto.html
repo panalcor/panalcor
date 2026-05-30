@@ -172,6 +172,13 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 .fest-badge{font-size:0.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:rgba(255,165,0,0.18);color:#ffb347;border:1px solid rgba(255,165,0,0.35);padding:2px 6px;border-radius:4px;margin-left:8px}
 .dom-badge{background:rgba(52,152,219,0.18);color:#74b9ff;border-color:rgba(52,152,219,0.35)}
 .sec-lbl{font-size:0.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid rgba(201,162,39,0.2)}
+.sab-fecha-normal{border-color:rgba(255,255,255,0.15) !important}
+.sab-fecha-alerta{border-color:rgba(231,76,60,0.7) !important;color:var(--red) !important;background:rgba(231,76,60,0.08) !important}
+.sab-tipo-aviso{border-radius:7px;padding:8px 12px;font-size:0.82rem;font-weight:600;margin-top:10px;display:none}
+.sab-tipo-sab{background:rgba(201,162,39,0.1);border:1px solid rgba(201,162,39,0.3);color:var(--gold)}
+.sab-tipo-dom{background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.35);color:var(--red)}
+.sab-tipo-fest{background:rgba(255,140,0,0.1);border:1px solid rgba(255,140,0,0.35);color:#ffb347}
+.mec-checkboxes.grid-dimmed{opacity:0.45;pointer-events:none;filter:grayscale(0.6)}
 </style>
 </head>
 <body>
@@ -191,7 +198,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
   <div class="tab"        id="tab-ausencias"  onclick="switchTab('ausencias')">👷 Ausencias</div>
   <div class="tab"        id="tab-calendario" onclick="switchTab('calendario')">📅 Calendario</div>
   <div class="tab"        id="tab-bolsas"     onclick="switchTab('bolsas')">📊 Bolsas de días</div>
-  <div class="tab"        id="tab-sabados"    onclick="switchTab('sabados')">📋 Sábados</div>
+  <div class="tab"        id="tab-sabados"    onclick="switchTab('sabados')">📋 Sáb. · Dom. · Fest.</div>
   <div class="tab"        id="tab-semanas"    onclick="switchTab('semanas')">🔄 Semanas afectadas</div>
   <div class="tab"        id="tab-resumen"    onclick="switchTab('resumen')">📋 Resumen</div>
 </div>
@@ -333,17 +340,20 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
   <div class="sec-lbl">📊 Sábados trabajados por mecánico</div>
   <div class="sab-count-grid" id="pSabCountGrid"></div>
 
-  <div class="sec-lbl">➕ Registrar sábado</div>
-  <div class="sab-form">
-    <div class="sab-form-field" style="flex:0 0 160px">
-      <label>Fecha</label>
-      <input type="date" id="pSabFecha">
+  <div class="sec-lbl">➕ Registrar día trabajado</div>
+  <div class="sab-form" style="flex-direction:column;gap:10px">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+      <div class="sab-form-field" style="flex:0 0 180px">
+        <label>Fecha</label>
+        <input type="date" id="pSabFecha" onchange="pDetectarTipoDia()" class="sab-fecha-normal">
+      </div>
+      <div class="sab-form-field" style="flex:1">
+        <label>Mecánicos que trabajaron</label>
+        <div class="mec-checkboxes" id="pSabCbs"></div>
+      </div>
+      <button class="btn btn-green" onclick="pAddSabado()" style="align-self:flex-end;white-space:nowrap">+ Añadir</button>
     </div>
-    <div class="sab-form-field">
-      <label>Mecánicos que trabajaron</label>
-      <div class="mec-checkboxes" id="pSabCbs"></div>
-    </div>
-    <button class="btn btn-green" onclick="pAddSabado()" style="align-self:flex-end;white-space:nowrap">+ Añadir</button>
+    <div class="sab-tipo-aviso" id="pSabTipoAviso"></div>
   </div>
   <div class="sab-list" id="pSabList"><div class="empty">Sin sábados registrados</div></div>
 
@@ -1262,6 +1272,57 @@ function pInitSabForm(){
   document.getElementById('pFestFecha').value = isoLocal(hoy);
 }
 
+function pTipoDia(fecha){
+  if(!fecha) return null;
+  var d   = parseLocal(fecha);
+  var dow = d.getDay();
+  var festSet = getFestivosSet();
+  if(festSet[fecha]) return 'fest';
+  if(dow === 0)      return 'dom';
+  if(dow === 6)      return 'sab';
+  return 'lab'; // laborable (lunes-viernes no festivo)
+}
+
+function pDetectarTipoDia(){
+  var fecha   = document.getElementById('pSabFecha').value;
+  var input   = document.getElementById('pSabFecha');
+  var aviso   = document.getElementById('pSabTipoAviso');
+  var cbsWrap = document.getElementById('pSabCbs');
+  var tipo    = pTipoDia(fecha);
+
+  // Reset
+  input.className = 'sab-fecha-normal';
+  aviso.style.display = 'none';
+  aviso.className = 'sab-tipo-aviso';
+  cbsWrap.classList.remove('grid-dimmed');
+
+  if(!fecha) return;
+
+  if(tipo === 'sab'){
+    aviso.className = 'sab-tipo-aviso sab-tipo-sab';
+    aviso.textContent = '📅 Sábado — se registrará en sábados trabajados';
+    aviso.style.display = 'block';
+  } else if(tipo === 'dom'){
+    input.className = 'sab-fecha-alerta';
+    cbsWrap.classList.add('grid-dimmed');
+    aviso.className = 'sab-tipo-aviso sab-tipo-dom';
+    aviso.innerHTML = '🔴 Domingo — se registrará en <b>festivos y domingos trabajados</b>';
+    aviso.style.display = 'block';
+  } else if(tipo === 'fest'){
+    var festSet = getFestivosSet();
+    var desc = (_festivos.find(function(f){ return f.fecha===fecha; })||{}).desc || 'Festivo';
+    input.className = 'sab-fecha-alerta';
+    cbsWrap.classList.add('grid-dimmed');
+    aviso.className = 'sab-tipo-aviso sab-tipo-fest';
+    aviso.innerHTML = '🎌 Festivo: <b>'+esc(desc)+'</b> — se registrará en <b>festivos y domingos trabajados</b>';
+    aviso.style.display = 'block';
+  } else {
+    aviso.className = 'sab-tipo-aviso sab-tipo-dom';
+    aviso.textContent = '⚠️ Día laborable — normalmente solo se registran sábados, domingos y festivos';
+    aviso.style.display = 'block';
+  }
+}
+
 function pAddSabado(){
   var fecha = document.getElementById('pSabFecha').value;
   if(!fecha){ showToast('⚠️ Selecciona una fecha'); return; }
@@ -1270,14 +1331,31 @@ function pAddSabado(){
     return cb && cb.checked;
   }).map(Number);
   if(!mecs.length){ showToast('⚠️ Selecciona al menos un mecánico'); return; }
-  var prev = (_T.sabados[fecha]||{}).mecanicos || [];
-  _T.sabados[fecha] = { mecanicos: [...new Set([...prev, ...mecs])] };
-  pFbSet('sabados', _T.sabados);
+
+  var tipo = pTipoDia(fecha);
+  var esFestODom = (tipo === 'dom' || tipo === 'fest');
+
+  if(esFestODom){
+    // Guardar en festivos trabajados
+    var prev = (_T.festivos[fecha]||{}).mecanicos || [];
+    _T.festivos[fecha] = { mecanicos: [...new Set([...prev, ...mecs])] };
+    pFbSet('festivos', _T.festivos);
+    showToast('✅ '+(tipo==='dom'?'Domingo':'Festivo')+' registrado en fest./dom. trabajados');
+  } else {
+    // Guardar en sábados (o laborable con aviso)
+    var prev2 = (_T.sabados[fecha]||{}).mecanicos || [];
+    _T.sabados[fecha] = { mecanicos: [...new Set([...prev2, ...mecs])] };
+    pFbSet('sabados', _T.sabados);
+    showToast('✅ '+(tipo==='sab'?'Sábado':'Día')+' registrado');
+  }
+
   pRecalcBolsas();
   pGetAllMecIds().forEach(function(k){ var cb=document.getElementById('pSabCbs_cb'+k); if(cb) cb.checked=false; });
+  // Reset fecha y aviso
+  document.getElementById('pSabFecha').value = '';
+  pDetectarTipoDia();
   renderSabadosTab();
   renderBolsas();
-  showToast('✅ Sábado registrado');
 }
 
 function pDeleteSabado(fecha){
