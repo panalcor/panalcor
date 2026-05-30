@@ -5880,7 +5880,7 @@ function docsSetVista(v){
   document.getElementById('docsSelectorRep').style.display = v==='repuesto' ? '' : 'none';
   _docsMaqId = ''; _docsRepKey = '';
   document.getElementById('docsMaqSel').value = '';
-  document.getElementById('docsRepSel').value = '';
+  docsRepLimpiar();
   docsRenderLista();
 }
 
