@@ -250,7 +250,7 @@ if('serviceWorker' in navigator){
       </div>
     </button>
 
-    <button class="choice-btn" style="background:linear-gradient(135deg,rgba(100,210,255,0.18),rgba(0,180,255,0.08));border:2px solid rgba(100,210,255,0.4);color:var(--white);box-shadow:0 4px 20px rgba(100,210,255,0.1)" onclick="irA('frio')">
+    <button id="btnFrioLanding" class="choice-btn" style="display:none;background:linear-gradient(135deg,rgba(100,210,255,0.18),rgba(0,180,255,0.08));border:2px solid rgba(100,210,255,0.4);color:var(--white);box-shadow:0 4px 20px rgba(100,210,255,0.1)" onclick="irA('frio')">
       <div class="ch-ico">❄️</div>
       <div class="ch-body">
         <div class="ch-title">Frío</div>
@@ -658,6 +658,11 @@ function mostrar(id){
 }
 
 function mostrarChoice(){
+  var btnFrio = document.getElementById('btnFrioLanding');
+  if(btnFrio){
+    var n = (mecActual||'').toUpperCase();
+    btnFrio.style.display = (n==='GREGORIO'||n==='JOSE') ? '' : 'none';
+  }
   document.getElementById('choiceWho').textContent = maqActual ? '\u{1F3ED} ' + maqActual.n : '';
   var bar  = document.getElementById('mecTopBar');
   var name = document.getElementById('mecTopBarName');
