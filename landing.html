@@ -648,7 +648,7 @@ function mostrarBanner(bannerId, idEl, nameEl, subEl){
 
 /* ── PANTALLAS ── */
 function mostrar(id){
-  ['screenLogin','screenChoice','screenDocs'].forEach(function(s){
+  ['screenLogin','screenChoice','screenDocs','screenFrio'].forEach(function(s){
     var el = document.getElementById(s);
     if(el) el.classList.toggle('hidden', s !== id);
   });
