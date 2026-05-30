@@ -5901,45 +5901,74 @@ function docsCargarMaquinas(){
   }
 }
 
-function docsCargarRepuestos(){
-  // Usar _repBase si ya está cargado, si no cargar del localStorage o Firebase
-  var cargarYRenderizar = function(lista){
-    lista = lista.filter(function(r){ return r && (r.desc||r.ref); });
-    lista.sort(function(a,b){ return (a.desc||'').localeCompare(b.desc||''); });
-    var sel = document.getElementById('docsRepSel');
-    if(!sel) return;
-    if(!lista.length){ sel.innerHTML = '<option value="">Sin repuestos en catálogo</option>'; return; }
-    sel.innerHTML = '<option value="">— Selecciona repuesto —</option>'
-      + lista.map(function(r){
-          var key = _repKey(r.desc||'', String(r.ref||''));
-          var label = (r.desc||'') + (r.ref ? ' ('+r.ref+')' : '');
-          return '<option value="'+escHtml(key)+'">'+escHtml(label)+'</option>';
-        }).join('');
-  };
+var _docsRepLista = []; // cache de repuestos para el buscador
 
+function docsCargarRepuestos(){
+  var cargar = function(lista){
+    _docsRepLista = lista.filter(function(r){ return r && (r.desc||r.ref); })
+      .sort(function(a,b){ return (a.desc||'').localeCompare(b.desc||''); });
+  };
   if(typeof _repBase !== 'undefined' && _repBase.length){
-    cargarYRenderizar(_repBase);
+    cargar(_repBase);
   } else {
-    // Intentar desde localStorage
     try{
       var cached = JSON.parse(localStorage.getItem('repuestosCache')||'[]');
-      if(cached.length){ cargarYRenderizar(cached); return; }
+      if(cached.length){ cargar(cached); return; }
     }catch(e){}
-    // Fallback Firebase
     DB.ref('repuestos_base').once('value').then(function(snap){
-      var val = snap.val() || {};
-      cargarYRenderizar(Object.values(val));
+      cargar(Object.values(snap.val()||{}));
     });
   }
 }
 
-function docsOnMaqChange(){
-  _docsMaqId = document.getElementById('docsMaqSel').value;
+function docsRepFiltrar(){
+  var q = (document.getElementById('docsRepBuscar').value||'').toLowerCase().trim();
+  var dd = document.getElementById('docsRepDropdown');
+  if(!q){ dd.style.display='none'; return; }
+  var res = _docsRepLista.filter(function(r){
+    return (r.desc||'').toLowerCase().includes(q) || String(r.ref||'').toLowerCase().includes(q);
+  }).slice(0, 40);
+  if(!res.length){
+    dd.innerHTML='<div style="padding:10px 14px;color:rgba(255,255,255,0.35);font-size:0.85rem">Sin resultados</div>';
+    dd.style.display='block'; return;
+  }
+  dd.innerHTML = res.map(function(r){
+    var key = _repKey(r.desc||'', String(r.ref||''));
+    var label = escHtml(r.desc||'') + (r.ref ? ' <span style="color:rgba(255,255,255,0.4);font-size:0.78rem">('+escHtml(String(r.ref))+')</span>' : '');
+    return '<div onclick="docsRepSeleccionar(\''+escAttr(key)+'\',\''+escAttr((r.desc||'')+(r.ref?' ('+r.ref+')':''))+'\') " '
+      +'style="padding:9px 14px;cursor:pointer;font-size:0.85rem;border-bottom:1px solid rgba(255,255,255,0.05);transition:background .1s" '
+      +'onmouseover="this.style.background=\'rgba(201,162,39,0.1)\'" onmouseout="this.style.background=\'\'">'+label+'</div>';
+  }).join('');
+  dd.style.display='block';
+}
+
+function docsRepSeleccionar(key, label){
+  _docsRepKey = key;
+  document.getElementById('docsRepBuscar').value = '';
+  document.getElementById('docsRepDropdown').style.display = 'none';
+  var selEl = document.getElementById('docsRepSeleccionado');
+  document.getElementById('docsRepSelLabel').textContent = label;
+  selEl.style.display = 'flex';
   docsRenderLista();
 }
 
-function docsOnRepChange(){
-  _docsRepKey = document.getElementById('docsRepSel').value;
+function docsRepLimpiar(){
+  _docsRepKey = '';
+  document.getElementById('docsRepBuscar').value = '';
+  document.getElementById('docsRepDropdown').style.display = 'none';
+  document.getElementById('docsRepSeleccionado').style.display = 'none';
+  docsRenderLista();
+}
+
+// Cerrar dropdown al hacer click fuera
+document.addEventListener('click', function(e){
+  var dd = document.getElementById('docsRepDropdown');
+  var inp = document.getElementById('docsRepBuscar');
+  if(dd && inp && !dd.contains(e.target) && e.target !== inp) dd.style.display='none';
+});
+
+function docsOnMaqChange(){
+  _docsMaqId = document.getElementById('docsMaqSel').value;
   docsRenderLista();
 }
 
@@ -6076,13 +6105,18 @@ function escAttr(s){ return String(s||'').replace(/'/g,'&#39;').replace(/"/g,'&q
       </select>
     </div>
 
-    <!-- Selector repuesto -->
-    <div id="docsSelectorRep" style="display:none">
+    <!-- Selector repuesto (buscador) -->
+    <div id="docsSelectorRep" style="display:none;position:relative;max-width:500px">
       <label style="font-size:0.72rem;color:var(--gold);display:block;margin-bottom:5px;letter-spacing:.1em;text-transform:uppercase">Repuesto</label>
-      <select id="docsRepSel" onchange="docsOnRepChange()"
-        style="width:100%;max-width:500px;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 14px;font-family:'Barlow',sans-serif;font-size:0.9rem">
-        <option value="">— Selecciona repuesto —</option>
-      </select>
+      <input type="text" id="docsRepBuscar" placeholder="Escribe nombre o referencia..." autocomplete="off"
+        oninput="docsRepFiltrar()"
+        onfocus="docsRepFiltrar()"
+        style="width:100%;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 14px;font-family:'Barlow',sans-serif;font-size:0.9rem">
+      <div id="docsRepDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:100;background:var(--navy-mid);border:1px solid rgba(201,162,39,0.35);border-radius:0 0 8px 8px;max-height:240px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.5)"></div>
+      <div id="docsRepSeleccionado" style="display:none;margin-top:6px;padding:7px 12px;background:rgba(201,162,39,0.1);border:1px solid rgba(201,162,39,0.3);border-radius:7px;font-size:0.85rem;font-weight:600;color:var(--gold-light);display:flex;align-items:center;justify-content:space-between">
+        <span id="docsRepSelLabel">—</span>
+        <span onclick="docsRepLimpiar()" style="cursor:pointer;color:rgba(255,255,255,0.4);font-size:0.9rem;margin-left:10px">✕</span>
+      </div>
     </div>
   </div>
 
