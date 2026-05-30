@@ -5887,27 +5887,49 @@ function docsSetVista(v){
 function docsCargarMaquinas(){
   DB.ref('maquinas_extra').once('value').then(function(snap){
     var val = snap.val() || {};
-    var maquinas = [];
-    // Añadir también las hardcodeadas que estén en MAQUINAS
-    if(typeof MAQUINAS !== 'undefined') maquinas = MAQUINAS.slice();
-    Object.values(val).forEach(function(m){ if(m && m.id && !maquinas.find(function(x){ return x.id===m.id; })) maquinas.push(m); });
+    var maquinas = Object.values(val).filter(function(m){ return m && m.id && m.n; });
     maquinas.sort(function(a,b){ return (a.n||'').localeCompare(b.n||''); });
     var sel = document.getElementById('docsMaqSel');
     if(!sel) return;
+    if(!maquinas.length){
+      sel.innerHTML = '<option value="">Sin máquinas registradas</option>';
+      return;
+    }
     sel.innerHTML = '<option value="">— Selecciona máquina —</option>'
-      + maquinas.map(function(m){ return '<option value="'+m.id+'">'+m.n+'</option>'; }).join('');
+      + maquinas.map(function(m){ return '<option value="'+escHtml(m.id)+'">'+escHtml(m.n)+'</option>'; }).join('');
   });
 }
 
 function docsCargarRepuestos(){
-  DB.ref('repuestos_catalogo').once('value').then(function(snap){
-    var val = snap.val() || {};
-    var reps = Object.entries(val).sort(function(a,b){ return (a[1].desc||'').localeCompare(b[1].desc||''); });
+  // Usar _repBase si ya está cargado, si no cargar del localStorage o Firebase
+  var cargarYRenderizar = function(lista){
+    lista = lista.filter(function(r){ return r && (r.desc||r.ref); });
+    lista.sort(function(a,b){ return (a.desc||'').localeCompare(b.desc||''); });
     var sel = document.getElementById('docsRepSel');
     if(!sel) return;
+    if(!lista.length){ sel.innerHTML = '<option value="">Sin repuestos en catálogo</option>'; return; }
     sel.innerHTML = '<option value="">— Selecciona repuesto —</option>'
-      + reps.map(function(e){ return '<option value="'+e[0]+'">'+(e[1].desc||e[0])+(e[1].ref?' ('+e[1].ref+')':'')+'</option>'; }).join('');
-  });
+      + lista.map(function(r){
+          var key = _repKey(r.desc||'', String(r.ref||''));
+          var label = (r.desc||'') + (r.ref ? ' ('+r.ref+')' : '');
+          return '<option value="'+escHtml(key)+'">'+escHtml(label)+'</option>';
+        }).join('');
+  };
+
+  if(typeof _repBase !== 'undefined' && _repBase.length){
+    cargarYRenderizar(_repBase);
+  } else {
+    // Intentar desde localStorage
+    try{
+      var cached = JSON.parse(localStorage.getItem('repuestosCache')||'[]');
+      if(cached.length){ cargarYRenderizar(cached); return; }
+    }catch(e){}
+    // Fallback Firebase
+    DB.ref('repuestos_base').once('value').then(function(snap){
+      var val = snap.val() || {};
+      cargarYRenderizar(Object.values(val));
+    });
+  }
 }
 
 function docsOnMaqChange(){
