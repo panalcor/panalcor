@@ -6390,11 +6390,68 @@ const FRIO_CHECKLIST = [
 let _frioEqs = {};
 let _frioReady = false;
 
+const FRIO_EQUIPOS_BASE = [
+  {nombre:"A/A OBRADOR",tipo:"Climatizador / Bomba de calor",ubicacion:"Obrador",estado:"Operativo",tMin:"",tMax:"",refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"FERM. EQUIPO 1",tipo:"Otro",ubicacion:"Fermentacion",estado:"Operativo",tMin:"",tMax:"",refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:"Equipo de fermentacion"},
+  {nombre:"FERM. EQUIPO 2",tipo:"Otro",ubicacion:"Fermentacion",estado:"Operativo",tMin:"",tMax:"",refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:"Equipo de fermentacion"},
+  {nombre:"FERM. EQUIPO 3",tipo:"Otro",ubicacion:"Fermentacion",estado:"Operativo",tMin:"",tMax:"",refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:"Equipo de fermentacion"},
+  {nombre:"FERM. EQUIPO 4",tipo:"Otro",ubicacion:"Fermentacion",estado:"Operativo",tMin:"",tMax:"",refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:"Equipo de fermentacion"},
+  {nombre:"TUNEL PREFRIO EQ1",tipo:"Tunel de frio",ubicacion:"Prefrio",estado:"Operativo",tMin:-5,tMax:0,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"TUNEL PREFRIO EQ2",tipo:"Tunel de frio",ubicacion:"Prefrio",estado:"Operativo",tMin:-5,tMax:0,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"TUNEL 1 EQUIPO 1",tipo:"Tunel de frio",ubicacion:"Tunel 1",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"TUNEL 1 EQUIPO 2",tipo:"Tunel de frio",ubicacion:"Tunel 1",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"TUNEL 2 EQUIPO 1",tipo:"Tunel de frio",ubicacion:"Tunel 2",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"TUNEL 2 EQUIPO 2",tipo:"Tunel de frio",ubicacion:"Tunel 2",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"TUNEL 3 EQUIPO 1",tipo:"Tunel de frio",ubicacion:"Tunel 3",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"TUNEL 3 EQUIPO 2",tipo:"Tunel de frio",ubicacion:"Tunel 3",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"TUNEL 4 EQUIPO 1",tipo:"Tunel de frio",ubicacion:"Tunel 4",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"TUNEL 4 EQUIPO 2",tipo:"Tunel de frio",ubicacion:"Tunel 4",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"TUNEL 5 EQUIPO 1",tipo:"Tunel de frio",ubicacion:"Tunel 5",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"TUNEL 5 EQUIPO 2",tipo:"Tunel de frio",ubicacion:"Tunel 5",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"TUNEL 6 EQUIPO 1",tipo:"Tunel de frio",ubicacion:"Tunel 6",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"TUNEL 6 EQUIPO 2",tipo:"Tunel de frio",ubicacion:"Tunel 6",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"TUNEL 7 EQUIPO 1",tipo:"Tunel de frio",ubicacion:"Tunel 7",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"TUNEL 7 EQUIPO 2",tipo:"Tunel de frio",ubicacion:"Tunel 7",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"TUNEL 8 EQUIPO 1",tipo:"Tunel de frio",ubicacion:"Tunel 8",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"TUNEL 8 EQUIPO 2",tipo:"Tunel de frio",ubicacion:"Tunel 8",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"CAM -20 N1 EQUIPO 1",tipo:"Camara frigorifica negativa",ubicacion:"Camara -20 N1",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"CAM -20 N1 EQUIPO 2",tipo:"Camara frigorifica negativa",ubicacion:"Camara -20 N1",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"CAM -20 N1 EQUIPO 3",tipo:"Camara frigorifica negativa",ubicacion:"Camara -20 N1",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"CAM -20 N1 EQUIPO 4",tipo:"Camara frigorifica negativa",ubicacion:"Camara -20 N1",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"CAM -20 N2 EQUIPO 1",tipo:"Camara frigorifica negativa",ubicacion:"Camara -20 N2",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"CAM -20 N2 EQUIPO 2",tipo:"Camara frigorifica negativa",ubicacion:"Camara -20 N2",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"CAM -20 N3 EQUIPO 1",tipo:"Camara frigorifica negativa",ubicacion:"Camara -20 N3",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"CAM -20 N3 EQUIPO 2",tipo:"Camara frigorifica negativa",ubicacion:"Camara -20 N3",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"CAM -20 N4 EQUIPO 1",tipo:"Camara frigorifica negativa",ubicacion:"Camara -20 N4",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"CAM -20 N4 EQUIPO 2",tipo:"Camara frigorifica negativa",ubicacion:"Camara -20 N4",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:""},
+  {nombre:"TANQUE 1 LEVADURA",tipo:"Otro",ubicacion:"Levadura",estado:"Operativo",tMin:"",tMax:"",refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:"Tanque de levadura"},
+  {nombre:"TANQUE 2 LEVADURA",tipo:"Otro",ubicacion:"Levadura",estado:"Operativo",tMin:"",tMax:"",refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:"Tanque de levadura"},
+  {nombre:"TANQUE 1 AGUA",tipo:"Otro",ubicacion:"Agua",estado:"Operativo",tMin:"",tMax:"",refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:"Tanque de agua"},
+  {nombre:"TANQUE 2 AGUA",tipo:"Otro",ubicacion:"Agua",estado:"Operativo",tMin:"",tMax:"",refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:"Tanque de agua"},
+  {nombre:"TANQUE 3 AGUA",tipo:"Otro",ubicacion:"Agua",estado:"Operativo",tMin:"",tMax:"",refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:"Tanque de agua"},
+  {nombre:"TANQUE 4 AGUA",tipo:"Otro",ubicacion:"Agua",estado:"Operativo",tMin:"",tMax:"",refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:"Tanque de agua"},
+  {nombre:"TANQUE AGUA TRUENO",tipo:"Otro",ubicacion:"Trueno",estado:"Operativo",tMin:"",tMax:"",refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:"Trueno"},
+  {nombre:"PREFRIO TRUENO",tipo:"Tunel de frio",ubicacion:"Trueno",estado:"Operativo",tMin:-5,tMax:0,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:"Trueno"},
+  {nombre:"TUNEL 1 EQUIPO 1 TRUENO",tipo:"Tunel de frio",ubicacion:"Trueno",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:"Trueno"},
+  {nombre:"TUNEL 1 EQUIPO 2 TRUENO",tipo:"Tunel de frio",ubicacion:"Trueno",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:"Trueno"},
+  {nombre:"TUNEL 2 EQUIPO 1 TRUENO",tipo:"Tunel de frio",ubicacion:"Trueno",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:"Trueno"},
+  {nombre:"TUNEL 2 EQUIPO 2 TRUENO",tipo:"Tunel de frio",ubicacion:"Trueno",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:"Trueno"},
+  {nombre:"CAMARA -20 EQ1 TRUENO",tipo:"Camara frigorifica negativa",ubicacion:"Trueno",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:"Trueno"},
+  {nombre:"CAMARA -20 EQ2 TRUENO",tipo:"Camara frigorifica negativa",ubicacion:"Trueno",estado:"Operativo",tMin:-22,tMax:-18,refrigerante:"",cargaKg:"",marca:"",modelo:"",serie:"",potencia:"",fechaInst:"",proxRev:"",notas:"Trueno"},
+];
+
 function initFrio() {
   if (!_frioReady) {
     _frioReady = true;
     DB.ref('frio/equipos').on('value', snap => {
       _frioEqs = snap.val() || {};
+      // Auto-importar equipos base si la lista está vacía
+      if (!Object.keys(_frioEqs).length) {
+        const payload = {};
+        FRIO_EQUIPOS_BASE.forEach((eq, i) => { payload['eq' + String(i).padStart(3,'0')] = eq; });
+        DB.ref('frio/equipos').set(payload).then(() => toast('✅ Equipos de frío cargados desde el Excel'));
+        return;
+      }
       frioRenderEqTable();
       frioPopularSelects();
     });
