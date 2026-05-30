@@ -1341,22 +1341,10 @@ function pAddSabado(){
   }).map(Number);
   if(!mecs.length){ showToast('⚠️ Selecciona al menos un mecánico'); return; }
 
-  var tipo = pTipoDia(fecha);
-  var esFestODom = (tipo === 'dom' || tipo === 'fest');
-
-  if(esFestODom){
-    // Guardar en festivos trabajados
-    var prev = (_T.festivos[fecha]||{}).mecanicos || [];
-    _T.festivos[fecha] = { mecanicos: [...new Set([...prev, ...mecs])] };
-    pFbSet('festivos', _T.festivos);
-    showToast('✅ '+(tipo==='dom'?'Domingo':'Festivo')+' registrado en fest./dom. trabajados');
-  } else {
-    // Guardar en sábados (o laborable con aviso)
-    var prev2 = (_T.sabados[fecha]||{}).mecanicos || [];
-    _T.sabados[fecha] = { mecanicos: [...new Set([...prev2, ...mecs])] };
-    pFbSet('sabados', _T.sabados);
-    showToast('✅ '+(tipo==='sab'?'Sábado':'Día')+' registrado');
-  }
+  var prev = (_T.sabados[fecha]||{}).mecanicos || [];
+  _T.sabados[fecha] = { mecanicos: [...new Set([...prev, ...mecs])] };
+  pFbSet('sabados', _T.sabados);
+  showToast('✅ Sábado registrado');
 
   pRecalcBolsas();
   pGetAllMecIds().forEach(function(k){ var cb=document.getElementById('pSabCbs_cb'+k); if(cb) cb.checked=false; });
