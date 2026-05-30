@@ -571,9 +571,12 @@ function addFestivo(){
 }
 
 function removeFestivo(fecha){
+  var f = _festivos.find(function(f){ return f.fecha===fecha; });
+  if(!confirm('¿Eliminar el festivo '+fmtDate(fecha)+(f?' — '+f.desc:'')+' ?')) return;
   _festivos = _festivos.filter(function(f){ return f.fecha!==fecha; });
   saveLS('prot_festivos', _festivos);
   renderFestivos();
+  showToast('🗑 Festivo eliminado');
 }
 
 function renderFestivos(){
@@ -1361,7 +1364,8 @@ function pAddSabado(){
 }
 
 function pDeleteSabado(fecha){
-  if(!confirm('¿Eliminar el sábado '+fecha+'?')) return;
+  var mecs = ((_T.sabados[fecha]||{}).mecanicos||[]).map(function(m){ return (_T.mecanicos[String(m)]||{}).nombre||'Mec '+m; }).join(', ');
+  if(!confirm('¿Eliminar el sábado '+fmtDate(fecha)+'?\n'+(mecs?'Mecánicos: '+mecs:''))) return;
   delete _T.sabados[fecha];
   pFbSet('sabados', _T.sabados);
   pRecalcBolsas();
@@ -1389,7 +1393,10 @@ function pAddFestTrabajado(){
 }
 
 function pDeleteFest(fecha){
-  if(!confirm('¿Eliminar el festivo/domingo '+fecha+'?')) return;
+  var d = parseLocal(fecha);
+  var esDom = d.getDay()===0;
+  var mecs = ((_T.festivos[fecha]||{}).mecanicos||[]).map(function(m){ return (_T.mecanicos[String(m)]||{}).nombre||'Mec '+m; }).join(', ');
+  if(!confirm('¿Eliminar '+(esDom?'el domingo':'el festivo')+' '+fmtDate(fecha)+'?\n'+(mecs?'Mecánicos: '+mecs:''))) return;
   delete _T.festivos[fecha];
   pFbSet('festivos', _T.festivos);
   pRecalcBolsas();
