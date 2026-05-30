@@ -146,6 +146,32 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 
 .sep{border:none;border-top:1px solid rgba(255,255,255,0.07);margin:16px 0}
 .info-box{background:rgba(52,152,219,0.08);border:1px solid rgba(52,152,219,0.25);border-radius:8px;padding:10px 14px;font-size:0.82rem;color:rgba(255,255,255,0.6);line-height:1.6;margin-bottom:14px}
+
+/* SÁBADOS */
+.sab-count-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-bottom:20px}
+.sab-count-card{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px;text-align:center}
+.sab-count-name{font-size:0.75rem;font-weight:700;color:var(--gold-light);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sab-count-val{font-size:1.9rem;font-weight:900;color:var(--gold);line-height:1}
+.sab-count-lbl{font-size:0.58rem;color:rgba(255,255,255,0.28);letter-spacing:.1em;text-transform:uppercase;margin-top:3px}
+.sab-count-extra{border-style:dashed;opacity:0.8}
+.sab-form{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;padding:16px;background:var(--navy-mid);border:1px solid rgba(255,255,255,0.07);border-radius:10px;margin-bottom:16px}
+.sab-form-field{flex:1;min-width:140px}
+.sab-form-field label{font-size:0.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:5px}
+.mec-checkboxes{display:flex;gap:7px;flex-wrap:wrap;margin-top:4px}
+.mec-cb{display:flex;align-items:center;gap:5px;font-size:0.82rem;cursor:pointer;padding:5px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);transition:all .15s;user-select:none}
+.mec-cb:hover{border-color:var(--gold);background:rgba(201,162,39,0.07)}
+.mec-cb input{accent-color:var(--gold)}
+.sab-list{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+.sab-item{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:11px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.sab-date{font-weight:700;font-size:0.88rem;min-width:160px}
+.sab-mecs{flex:1;display:flex;flex-wrap:wrap;gap:5px}
+.sab-mec-tag{font-size:0.68rem;background:rgba(201,162,39,0.13);border:1px solid rgba(201,162,39,0.28);color:var(--gold);padding:2px 7px;border-radius:4px}
+.sab-del{background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.28);color:var(--red);padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.78rem;font-family:'Barlow',sans-serif}
+.sab-del:hover{background:rgba(231,76,60,0.28)}
+.sab-item-fest{border-color:rgba(255,165,0,0.3);background:rgba(255,140,0,0.05)}
+.fest-badge{font-size:0.6rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:rgba(255,165,0,0.18);color:#ffb347;border:1px solid rgba(255,165,0,0.35);padding:2px 6px;border-radius:4px;margin-left:8px}
+.dom-badge{background:rgba(52,152,219,0.18);color:#74b9ff;border-color:rgba(52,152,219,0.35)}
+.sec-lbl{font-size:0.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid rgba(201,162,39,0.2)}
 </style>
 </head>
 <body>
@@ -165,6 +191,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
   <div class="tab"        id="tab-ausencias"  onclick="switchTab('ausencias')">👷 Ausencias</div>
   <div class="tab"        id="tab-calendario" onclick="switchTab('calendario')">📅 Calendario</div>
   <div class="tab"        id="tab-bolsas"     onclick="switchTab('bolsas')">📊 Bolsas de días</div>
+  <div class="tab"        id="tab-sabados"    onclick="switchTab('sabados')">📋 Sábados</div>
   <div class="tab"        id="tab-semanas"    onclick="switchTab('semanas')">🔄 Semanas afectadas</div>
   <div class="tab"        id="tab-resumen"    onclick="switchTab('resumen')">📋 Resumen</div>
 </div>
@@ -298,6 +325,46 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
   <div id="bolsasGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">
     <div class="empty"><div class="ico">⏳</div>Cargando bolsas...</div>
   </div>
+</div>
+
+<!-- ═══ SÁBADOS ═══ -->
+<div class="panel" id="panel-sabados">
+
+  <div class="sec-lbl">📊 Sábados trabajados por mecánico</div>
+  <div class="sab-count-grid" id="pSabCountGrid"></div>
+
+  <div class="sec-lbl">➕ Registrar sábado</div>
+  <div class="sab-form">
+    <div class="sab-form-field" style="flex:0 0 160px">
+      <label>Fecha</label>
+      <input type="date" id="pSabFecha">
+    </div>
+    <div class="sab-form-field">
+      <label>Mecánicos que trabajaron</label>
+      <div class="mec-checkboxes" id="pSabCbs"></div>
+    </div>
+    <button class="btn btn-green" onclick="pAddSabado()" style="align-self:flex-end;white-space:nowrap">+ Añadir</button>
+  </div>
+  <div class="sab-list" id="pSabList"><div class="empty">Sin sábados registrados</div></div>
+
+  <div class="sec-lbl">🎌 Festivos y domingos trabajados</div>
+  <div class="sab-count-grid" id="pFestCountGrid"></div>
+  <div class="sab-form">
+    <div class="sab-form-field" style="flex:0 0 160px">
+      <label>Fecha (festivo o domingo)</label>
+      <input type="date" id="pFestFecha">
+    </div>
+    <div class="sab-form-field">
+      <label>Mecánicos que trabajaron</label>
+      <div class="mec-checkboxes" id="pFestCbs"></div>
+    </div>
+    <button class="btn btn-green" onclick="pAddFestTrabajado()" style="align-self:flex-end;white-space:nowrap">+ Añadir</button>
+  </div>
+  <div style="font-size:0.78rem;color:rgba(255,255,255,0.3);margin-bottom:12px;line-height:1.6">
+    Si el festivo cae en sábado queda excluido del conteo de sábados extra. Los mecánicos con <code>festivosDias &gt; 0</code> generan días libres (configurable en Bolsas desde turnos.html).
+  </div>
+  <div class="sab-list" id="pFestList"><div class="empty">Sin festivos/domingos registrados</div></div>
+
 </div>
 
 <!-- ═══ SEMANAS AFECTADAS ═══ -->
@@ -1165,6 +1232,206 @@ function renderBolsas(){
   }).join('');
 }
 
+/* ════ SÁBADOS ════ */
+var MESES_SH_SAB = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+var DIAS_SAB = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+function pFbSet(path, value){ DB.ref('turnos/'+path).set(value); }
+
+function pGetAllMecIds(){
+  return Object.keys(_T.mecanicos).sort(function(a,b){ return +a - +b; });
+}
+
+function pInitSabForm(){
+  var ids = pGetAllMecIds();
+  ['pSabCbs','pFestCbs'].forEach(function(wrId){
+    var wr = document.getElementById(wrId);
+    if(!wr) return;
+    wr.innerHTML = ids.map(function(k){
+      var nom = (_T.mecanicos[k]||{}).nombre || 'Mec '+k;
+      var extra = +k > 5;
+      return '<label class="mec-cb" '+(extra?'style="opacity:0.75;border-style:dashed"':'')+'>'
+        +'<input type="checkbox" id="'+wrId+'_cb'+k+'" value="'+k+'"> '+esc(nom)+'</label>';
+    }).join('');
+  });
+  // Fecha por defecto: próximo sábado
+  var hoy = new Date();
+  var diasHastaSab = (6 - hoy.getDay() + 7) % 7 || 7;
+  var proxSab = new Date(hoy); proxSab.setDate(hoy.getDate() + diasHastaSab);
+  document.getElementById('pSabFecha').value  = isoLocal(proxSab);
+  document.getElementById('pFestFecha').value = isoLocal(hoy);
+}
+
+function pAddSabado(){
+  var fecha = document.getElementById('pSabFecha').value;
+  if(!fecha){ showToast('⚠️ Selecciona una fecha'); return; }
+  var mecs = pGetAllMecIds().filter(function(k){
+    var cb = document.getElementById('pSabCbs_cb'+k);
+    return cb && cb.checked;
+  }).map(Number);
+  if(!mecs.length){ showToast('⚠️ Selecciona al menos un mecánico'); return; }
+  var prev = (_T.sabados[fecha]||{}).mecanicos || [];
+  _T.sabados[fecha] = { mecanicos: [...new Set([...prev, ...mecs])] };
+  pFbSet('sabados', _T.sabados);
+  pRecalcBolsas();
+  pGetAllMecIds().forEach(function(k){ var cb=document.getElementById('pSabCbs_cb'+k); if(cb) cb.checked=false; });
+  renderSabadosTab();
+  renderBolsas();
+  showToast('✅ Sábado registrado');
+}
+
+function pDeleteSabado(fecha){
+  if(!confirm('¿Eliminar el sábado '+fecha+'?')) return;
+  delete _T.sabados[fecha];
+  pFbSet('sabados', _T.sabados);
+  pRecalcBolsas();
+  renderSabadosTab();
+  renderBolsas();
+  showToast('🗑 Eliminado');
+}
+
+function pAddFestTrabajado(){
+  var fecha = document.getElementById('pFestFecha').value;
+  if(!fecha){ showToast('⚠️ Selecciona una fecha'); return; }
+  var mecs = pGetAllMecIds().filter(function(k){
+    var cb = document.getElementById('pFestCbs_cb'+k);
+    return cb && cb.checked;
+  }).map(Number);
+  if(!mecs.length){ showToast('⚠️ Selecciona al menos un mecánico'); return; }
+  var prev = (_T.festivos[fecha]||{}).mecanicos || [];
+  _T.festivos[fecha] = { mecanicos: [...new Set([...prev, ...mecs])] };
+  pFbSet('festivos', _T.festivos);
+  pRecalcBolsas();
+  pGetAllMecIds().forEach(function(k){ var cb=document.getElementById('pFestCbs_cb'+k); if(cb) cb.checked=false; });
+  renderSabadosTab();
+  renderBolsas();
+  showToast('✅ Festivo/domingo registrado');
+}
+
+function pDeleteFest(fecha){
+  if(!confirm('¿Eliminar el festivo/domingo '+fecha+'?')) return;
+  delete _T.festivos[fecha];
+  pFbSet('festivos', _T.festivos);
+  pRecalcBolsas();
+  renderSabadosTab();
+  renderBolsas();
+  showToast('🗑 Eliminado');
+}
+
+function pRecalcBolsas(){
+  // Recalcula sabadosExtra en _T.bolsas (igual que turnos.html)
+  var c = {};
+  pGetAllMecIds().forEach(function(k){ c[k] = 0; });
+  Object.entries(_T.sabados).forEach(function(e){
+    var fecha = e[0]; var s = e[1];
+    if(_T.festivos[fecha]) return; // festivo → no computa
+    (s.mecanicos||[]).forEach(function(m){
+      var k = String(m);
+      if(c[k] !== undefined) c[k]++;
+    });
+  });
+  pGetAllMecIds().forEach(function(k){
+    if(!_T.bolsas[k]) _T.bolsas[k] = {};
+    _T.bolsas[k].sabadosExtra = c[k] || 0;
+  });
+  pFbSet('bolsas', _T.bolsas);
+}
+
+function renderSabadosTab(){
+  pInitSabForm();
+  var ids = pGetAllMecIds();
+
+  // ── Conteo sábados (excluye festivos) ──
+  var sabC = {}; ids.forEach(function(k){ sabC[k] = 0; });
+  Object.entries(_T.sabados).forEach(function(e){
+    if(_T.festivos[e[0]]) return;
+    (e[1].mecanicos||[]).forEach(function(m){ var k=String(m); if(sabC[k]!==undefined) sabC[k]++; });
+  });
+  var cgSab = document.getElementById('pSabCountGrid');
+  cgSab.innerHTML = ids.map(function(k){
+    var nom = (_T.mecanicos[k]||{}).nombre||'Mec '+k;
+    var extra = +k>5;
+    return '<div class="sab-count-card'+(extra?' sab-count-extra':'')+'">'
+      +'<div class="sab-count-name" title="'+esc(nom)+'">'+esc(nom)+'</div>'
+      +'<div class="sab-count-val">'+sabC[k]+'</div>'
+      +'<div class="sab-count-lbl">sábados</div>'
+      +'</div>';
+  }).join('');
+
+  // ── Lista sábados ──
+  var entries = Object.entries(_T.sabados).sort(function(a,b){ return b[0].localeCompare(a[0]); });
+  var listEl = document.getElementById('pSabList');
+  if(!entries.length){
+    listEl.innerHTML = '<div class="empty">Sin sábados registrados</div>';
+  } else {
+    listEl.innerHTML = entries.map(function(e){
+      var fecha = e[0]; var data = e[1];
+      var d = parseLocal(fecha);
+      var esFest = !!_T.festivos[fecha];
+      var tags = (data.mecanicos||[]).map(function(m){
+        return '<span class="sab-mec-tag">'+esc((_T.mecanicos[String(m)]||{}).nombre||'Mec '+m)+'</span>';
+      }).join('');
+      var festBadge = esFest ? '<span class="fest-badge">FESTIVO — no computa</span>' : '';
+      return '<div class="sab-item'+(esFest?' sab-item-fest':'')+'">'
+        +'<div class="sab-date">📅 '+d.getDate()+' '+MESES_SH_SAB[d.getMonth()]+' '+d.getFullYear()+festBadge+'</div>'
+        +'<div class="sab-mecs">'+tags+'</div>'
+        +'<button class="sab-del" onclick="pDeleteSabado(\''+fecha+'\')">✕ Eliminar</button>'
+        +'</div>';
+    }).join('');
+  }
+
+  // ── Conteo festivos/domingos ──
+  var festC = {}; ids.forEach(function(k){ festC[k] = 0; });
+  Object.values(_T.festivos).forEach(function(s){
+    (s.mecanicos||[]).forEach(function(m){ var k=String(m); if(festC[k]!==undefined) festC[k]++; });
+  });
+  var cgFest = document.getElementById('pFestCountGrid');
+  if(!Object.keys(_T.festivos).length){
+    cgFest.innerHTML = '<div style="color:rgba(255,255,255,0.25);font-size:0.82rem;padding:8px 0">Sin festivos/domingos registrados</div>';
+  } else {
+    cgFest.innerHTML = ids.map(function(k){
+      var nom = (_T.mecanicos[k]||{}).nombre||'Mec '+k;
+      var extra = +k>5;
+      var fDias = (_T.mecanicos[k]||{}).festivosDias || 0;
+      var cnt = festC[k]||0;
+      var lbl = fDias > 0 ? '→ '+(cnt*fDias)+' días lib.' : (cnt > 0 ? 'cobrados' : 'fest./dom.');
+      return '<div class="sab-count-card'+(extra?' sab-count-extra':'')+'">'
+        +'<div class="sab-count-name" title="'+esc(nom)+'">'+esc(nom)+'</div>'
+        +'<div class="sab-count-val" style="'+(fDias>0&&cnt>0?'color:var(--gold)':'')+(fDias===0&&cnt>0?'color:var(--green)':'')+'">'+cnt+'</div>'
+        +'<div class="sab-count-lbl">'+lbl+'</div>'
+        +'</div>';
+    }).join('');
+  }
+
+  // ── Lista festivos/domingos ──
+  var fEntries = Object.entries(_T.festivos).sort(function(a,b){ return b[0].localeCompare(a[0]); });
+  var festListEl = document.getElementById('pFestList');
+  if(!fEntries.length){
+    festListEl.innerHTML = '<div class="empty">Sin festivos/domingos registrados</div>';
+  } else {
+    festListEl.innerHTML = fEntries.map(function(e){
+      var fecha = e[0]; var data = e[1];
+      var d   = parseLocal(fecha);
+      var dow = d.getDay();
+      var esDom = dow === 0; var esSab = dow === 6;
+      var enSabs = esSab && !!_T.sabados[fecha];
+      var tags = (data.mecanicos||[]).map(function(m){
+        return '<span class="sab-mec-tag">'+esc((_T.mecanicos[String(m)]||{}).nombre||'Mec '+m)+'</span>';
+      }).join('') || '<span style="color:rgba(255,255,255,0.28);font-size:0.78rem">Sin mecánicos</span>';
+      var ico = esDom ? '☀️' : '🎌';
+      var tipoBadge = esDom
+        ? '<span class="fest-badge dom-badge">DOMINGO</span>'
+        : '<span class="fest-badge">FESTIVO</span>';
+      var sabNote = enSabs ? '<span class="fest-badge">Sáb. excluido del conteo</span>' : '';
+      return '<div class="sab-item sab-item-fest">'
+        +'<div class="sab-date">'+ico+' '+DIAS_SAB[dow]+' '+d.getDate()+' '+MESES_SH_SAB[d.getMonth()]+' '+d.getFullYear()+tipoBadge+sabNote+'</div>'
+        +'<div class="sab-mecs">'+tags+'</div>'
+        +'<button class="sab-del" onclick="pDeleteFest(\''+fecha+'\')">✕ Eliminar</button>'
+        +'</div>';
+    }).join('');
+  }
+}
+
 /* ════ TABS ════ */
 function switchTab(name){
   document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
@@ -1172,6 +1439,7 @@ function switchTab(name){
   document.getElementById('panel-'+name).classList.add('active');
   document.getElementById('tab-'+name).classList.add('active');
   if(name==='calendario') renderCalendario();
+  if(name==='sabados')    renderSabadosTab();
   if(name==='semanas')    renderSemanas();
   if(name==='bolsas')     renderBolsas();
   if(name==='resumen')    renderResumen();
