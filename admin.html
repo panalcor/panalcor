@@ -6443,6 +6443,8 @@ const FRIO_EQUIPOS_BASE = [
 function initFrio() {
   if (!_frioReady) {
     _frioReady = true;
+    // Mostrar botón inmediatamente mientras carga Firebase
+    frioRenderEqTable();
     DB.ref('frio/equipos').on('value', snap => {
       _frioEqs = snap.val() || {};
       frioRenderEqTable();
