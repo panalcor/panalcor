@@ -144,6 +144,23 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 .panel{display:none}
 .panel.active{display:block}
 
+/* ── CONFIG ── */
+.config-section{max-width:560px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:5px}
+.field input,.field select{width:100%;background:var(--navy-light);color:var(--white);border:1px solid rgba(255,255,255,.18);border-radius:7px;padding:10px 13px;font-family:'Barlow',sans-serif;font-size:.95rem}
+.field input:focus,.field select:focus{outline:none;border-color:var(--gold)}
+.field-hint{font-size:.7rem;color:rgba(255,255,255,.28);margin-top:4px}
+.extra-mec-row{display:flex;gap:8px;align-items:flex-end;margin-bottom:10px}
+.extra-mec-row input{flex:1;background:var(--navy-light);color:var(--white);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:9px 12px;font-family:'Barlow',sans-serif;font-size:.9rem}
+.extra-mec-row input:focus{outline:none;border-color:var(--gold)}
+.extra-mec-del{background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.28);color:var(--red);padding:9px 13px;border-radius:6px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:.82rem;white-space:nowrap}
+.extra-mec-del:hover{background:rgba(231,76,60,.25)}
+.btn-primary{background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a;border:none}
+.btn-primary:hover{filter:brightness(1.1)}
+.btn-add{background:rgba(46,204,113,.15);color:var(--green);border:1px solid rgba(46,204,113,.32)}
+.btn-add:hover{background:rgba(46,204,113,.28)}
+
 /* ── TURNOS CALENDARIO ── */
 .month-nav{display:flex;align-items:center;gap:12px;margin-bottom:14px}
 .month-nav h2{font-size:1.1rem;font-weight:900;color:var(--gold-light);letter-spacing:.06em;flex:1;text-align:center;text-transform:capitalize}
@@ -270,6 +287,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
   <div class="tab"        id="tab-turnos"     onclick="switchTab('turnos')">🗓 Turnos</div>
   <div class="tab"        id="tab-semanas"    onclick="switchTab('semanas')">🔄 Semanas afectadas</div>
   <div class="tab"        id="tab-resumen"    onclick="switchTab('resumen')">📋 Resumen</div>
+  <div class="tab"        id="tab-config"     onclick="switchTab('config')">⚙️ Config</div>
 </div>
 
 <div class="content">
@@ -552,6 +570,81 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
   </div>
   <div id="semanasWrap">
     <div class="empty"><div class="ico">📆</div>Añade ausencias para ver las semanas afectadas.</div>
+  </div>
+</div>
+
+<!-- ═══ CONFIGURACIÓN ═══ -->
+<div class="panel" id="panel-config">
+  <div class="sec-lbl">⚙️ Configuración del módulo de turnos</div>
+  <div class="config-section">
+
+    <div class="card">
+      <div class="sec-lbl" style="margin-top:0">👷 Nombres de los mecánicos</div>
+      <div id="mecNombresForm"></div>
+      <button class="btn btn-gold" onclick="saveNombres()" style="margin-top:8px">Guardar nombres</button>
+    </div>
+
+    <div class="card">
+      <div class="sec-lbl" style="margin-top:0">🔄 Rotación Gregorio (Mecánico 3)</div>
+      <div class="field">
+        <label>Lunes de inicio de rotación</label>
+        <input type="date" id="rotInicioFecha">
+        <div class="field-hint">El primer lunes del ciclo de rotación de Gregorio</div>
+      </div>
+      <div class="field">
+        <label>Turno de inicio (primeras 2 semanas)</label>
+        <select id="rotInicioTurno">
+          <option value="mañana">☀️ Mañana</option>
+          <option value="tarde">🌅 Tarde</option>
+        </select>
+      </div>
+      <button class="btn btn-gold" onclick="saveRotacion()">Guardar rotación</button>
+    </div>
+
+    <div class="card">
+      <div class="sec-lbl" style="margin-top:0">🔀 Rotación Javier E. / Jose (cuando Gregorio está de tarde)</div>
+      <div class="field">
+        <label>¿Quién va de mañana en la primera semana de cada bloque tarde de Gregorio?</label>
+        <select id="tarStarter">
+          <option value="4">Javier E. empieza de mañana</option>
+          <option value="5">Jose empieza de mañana</option>
+        </select>
+        <div class="field-hint">Luego alternan semana a semana dentro de cada bloque de 2 semanas tarde</div>
+      </div>
+      <div class="field">
+        <label>Cuando Alex cubre noche (Rafa ausente), ¿quién va de mañana primero?</label>
+        <select id="alexCovStarter">
+          <option value="4">Javier E. primero</option>
+          <option value="5">Jose primero</option>
+        </select>
+        <div class="field-hint">Luego se van alternando para equilibrar las semanas de mañana</div>
+      </div>
+      <button class="btn btn-gold" onclick="saveRotacionExtra()">Guardar</button>
+    </div>
+
+    <div class="card">
+      <div class="sec-lbl" style="margin-top:0">📊 Bolsas anuales</div>
+      <div class="field">
+        <label>Días de vacaciones por mecánico</label>
+        <input type="number" id="cfgVac" min="0" max="40" value="22">
+      </div>
+      <div class="field">
+        <label>Asuntos propios por mecánico</label>
+        <input type="number" id="cfgAsu" min="0" max="10" value="5">
+      </div>
+      <button class="btn btn-gold" onclick="saveCfgBolsas()">Guardar</button>
+    </div>
+
+    <div class="card">
+      <div class="sec-lbl" style="margin-top:0">👥 Mecánicos de seguimiento (lista global)</div>
+      <p style="font-size:0.8rem;color:rgba(255,255,255,0.35);margin-bottom:14px;line-height:1.5">Se cargan automáticamente desde la lista general de mecánicos. Aparecen en sábados y ausencias pero <b>no computan en la rotación de turnos</b>.</p>
+      <div id="extraMecsForm"></div>
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn btn-outline" onclick="syncMecanicosGlobal()">🔄 Sincronizar lista global</button>
+        <button class="btn btn-gold" onclick="saveExtraMecNombres()">Guardar nombres</button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1330,6 +1423,132 @@ function hideSabTooltip(){
   document.getElementById('sabTooltip').style.display = 'none';
 }
 
+/* ════ CONFIGURACIÓN ════ */
+var CFG_PERFILES = ['','Fijo noche','Fijo mañana / cubre noche','Rotativo 2 sem.','Flexible','Flexible'];
+
+function renderConfig(){
+  var form = document.getElementById('mecNombresForm');
+  if(!form) return;
+  form.innerHTML = '';
+  for(var i=1;i<=5;i++){
+    var k=String(i);
+    form.innerHTML += '<div class="field">'
+      +'<label>Mecánico '+i+' <span style="color:rgba(255,255,255,.25);font-size:.62rem;text-transform:none;letter-spacing:0;font-weight:400">— '+CFG_PERFILES[i]+'</span></label>'
+      +'<input type="text" id="nomMec'+k+'" value="'+esc((_T.mecanicos[k]||{}).nombre||NOMBRES_DEFAULT[i])+'">'
+      +'</div>';
+  }
+  var rot = _T.config.rotacionMec3 || {};
+  document.getElementById('rotInicioFecha').value  = rot.inicio      || '';
+  document.getElementById('rotInicioTurno').value  = rot.turnoInicio || 'mañana';
+  document.getElementById('tarStarter').value      = _T.config.tarStarter     || '4';
+  document.getElementById('alexCovStarter').value  = _T.config.alexCovStarter || '4';
+  document.getElementById('cfgVac').value = _T.config.vacTotal || 22;
+  document.getElementById('cfgAsu').value = _T.config.asuTotal || 5;
+
+  var extraIds  = getExtraMecIds();
+  var extraForm = document.getElementById('extraMecsForm');
+  if(!extraForm) return;
+  if(!extraIds.length){
+    extraForm.innerHTML = '<div style="color:rgba(255,255,255,.28);font-size:.82rem;margin-bottom:6px">Sin mecánicos adicionales todavía</div>';
+  } else {
+    extraForm.innerHTML = extraIds.map(function(k){
+      var nom = (_T.mecanicos[k]||{}).nombre||'Mecánico '+k;
+      return '<div class="extra-mec-row">'
+        +'<div style="flex:1"><div style="font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:4px">Nombre</div>'
+        +'<input type="text" id="nomMecExtra'+k+'" value="'+esc(nom)+'"></div>'
+        +'<button class="extra-mec-del" onclick="deleteExtraMec(\''+k+'\')">✕ Eliminar</button>'
+        +'</div>';
+    }).join('');
+  }
+}
+
+function saveNombres(){
+  for(var i=1;i<=5;i++){
+    var k=String(i), v=(document.getElementById('nomMec'+k)||{value:''}).value.trim();
+    if(v && _T.mecanicos[k]) _T.mecanicos[k].nombre = v;
+  }
+  fbSet('mecanicos',_T.mecanicos);
+  tcUpdateHeaders();
+  showToast('✅ Nombres guardados');
+}
+
+function saveRotacion(){
+  var inicio = document.getElementById('rotInicioFecha').value;
+  if(!inicio){ showToast('⚠️ Selecciona fecha de inicio'); return; }
+  _T.config.rotacionMec3 = { inicio: inicio, turnoInicio: document.getElementById('rotInicioTurno').value };
+  fbSet('config',_T.config);
+  if(document.getElementById('panel-turnos').classList.contains('active')) renderTurnosCal();
+  showToast('✅ Rotación configurada');
+}
+
+function saveRotacionExtra(){
+  _T.config.tarStarter     = document.getElementById('tarStarter').value;
+  _T.config.alexCovStarter = document.getElementById('alexCovStarter').value;
+  fbSet('config',_T.config);
+  if(document.getElementById('panel-turnos').classList.contains('active')) renderTurnosCal();
+  showToast('✅ Configuración guardada');
+}
+
+function saveCfgBolsas(){
+  _T.config.vacTotal = +document.getElementById('cfgVac').value || 22;
+  _T.config.asuTotal = +document.getElementById('cfgAsu').value || 5;
+  fbSet('config',_T.config);
+  showToast('✅ Bolsas anuales guardadas');
+}
+
+function deleteExtraMec(id){
+  var nom = (_T.mecanicos[id]||{}).nombre || 'este mecánico';
+  if(!confirm('¿Eliminar a '+nom+'? Sus datos de sábados y ausencias quedarán huérfanos.')) return;
+  delete _T.mecanicos[id];
+  fbSet('mecanicos',_T.mecanicos);
+  renderConfig();
+  showToast('🗑 Eliminado');
+}
+
+function saveExtraMecNombres(){
+  getExtraMecIds().forEach(function(k){
+    var el = document.getElementById('nomMecExtra'+k);
+    var v = el ? el.value.trim() : '';
+    if(v && _T.mecanicos[k]) _T.mecanicos[k].nombre = v;
+  });
+  fbSet('mecanicos',_T.mecanicos);
+  showToast('✅ Nombres guardados');
+}
+
+function syncGlobalMecanicos(globalNames){
+  var rotNorms   = [1,2,3,4,5].map(function(i){ return ((_T.mecanicos[String(i)]||{}).nombre||'').toUpperCase().replace(/\.+\s*$/,'').trim(); });
+  var extraNorms = getExtraMecIds().map(function(k){ return ((_T.mecanicos[k]||{}).nombre||'').toUpperCase().replace(/\.+\s*$/,'').trim(); });
+  var nextId     = Math.max(5, ...getAllMecIds().map(Number)) + 1;
+  var changed    = false;
+  globalNames.forEach(function(name){
+    var norm = (name||'').toUpperCase().replace(/\.+\s*$/,'').trim();
+    if(!norm) return;
+    if(rotNorms.includes(norm) || extraNorms.includes(norm)) return;
+    _T.mecanicos[String(nextId)] = { nombre: name, perfil: 'extra' };
+    ensureBolsa(String(nextId));
+    nextId++; changed = true;
+  });
+  if(changed){
+    fbSet('mecanicos',_T.mecanicos);
+    fbSet('bolsas',_T.bolsas);
+    renderConfig();
+    showToast('✅ Lista de mecánicos actualizada');
+  } else {
+    showToast('Sin mecánicos nuevos que añadir');
+  }
+}
+
+function syncMecanicosGlobal(){
+  DB.ref('config/mecanicos').once('value').then(function(snap){
+    var names = snap.val();
+    if(names && Array.isArray(names) && names.length){
+      syncGlobalMecanicos(names);
+    } else {
+      showToast('⚠️ No se encontró la lista global');
+    }
+  });
+}
+
 /* ════ CALENDARIO SEMANAL DE TURNOS ════ */
 function toDS(d){
   var y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
@@ -1936,6 +2155,7 @@ function switchTab(name){
   if(name==='semanas')    renderSemanas();
   if(name==='bolsas')     renderBolsas();
   if(name==='resumen')    renderResumen();
+  if(name==='config')     renderConfig();
 }
 
 /* ════ INIT ════ */
