@@ -6189,13 +6189,72 @@ function escAttr(s){ return String(s||'').replace(/'/g,'&#39;').replace(/"/g,'&q
       <div class="sec-title" style="margin:0">🏭 Inventario de Equipos de Frío</div>
       <button onclick="frioEqModal()" class="btn-export" style="background:rgba(100,210,255,.12);border:1px solid rgba(100,210,255,.4);color:#64d2ff">+ Nuevo Equipo</button>
     </div>
+    <!-- Barra edición múltiple -->
+    <div id="frioBulkBar" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;background:rgba(100,210,255,.07);border:1px solid rgba(100,210,255,.25);border-radius:8px;margin-bottom:12px">
+      <span id="frioBulkCount" style="font-size:.85rem;font-weight:700;color:#64d2ff">0 seleccionados</span>
+      <button onclick="frioBulkEdit()" style="padding:7px 14px;border-radius:7px;font-family:'Barlow',sans-serif;font-size:.83rem;font-weight:700;cursor:pointer;border:1px solid rgba(100,210,255,.4);background:rgba(100,210,255,.15);color:#64d2ff">✏️ Editar seleccionados</button>
+      <button onclick="frioBulkEstado('Operativo')" style="padding:7px 12px;border-radius:7px;font-family:'Barlow',sans-serif;font-size:.83rem;font-weight:700;cursor:pointer;border:1px solid rgba(46,204,113,.4);background:rgba(46,204,113,.1);color:#2ecc71">✅ Operativo</button>
+      <button onclick="frioBulkEstado('Avería')" style="padding:7px 12px;border-radius:7px;font-family:'Barlow',sans-serif;font-size:.83rem;font-weight:700;cursor:pointer;border:1px solid rgba(231,76,60,.4);background:rgba(231,76,60,.1);color:#e74c3c">⚡ Avería</button>
+      <button onclick="frioBulkEstado('En revisión')" style="padding:7px 12px;border-radius:7px;font-family:'Barlow',sans-serif;font-size:.83rem;font-weight:700;cursor:pointer;border:1px solid rgba(243,156,18,.4);background:rgba(243,156,18,.1);color:#f39c12">🔧 En revisión</button>
+      <button onclick="frioBulkEstado('Parado')" style="padding:7px 12px;border-radius:7px;font-family:'Barlow',sans-serif;font-size:.83rem;font-weight:700;cursor:pointer;border:1px solid rgba(149,165,166,.4);background:rgba(149,165,166,.1);color:#95a5a6">⛔ Parado</button>
+      <button onclick="frioDeselAll()" style="padding:7px 12px;border-radius:7px;font-family:'Barlow',sans-serif;font-size:.83rem;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.45);margin-left:auto">✕ Deseleccionar</button>
+    </div>
     <div style="overflow-x:auto">
       <table class="data-table">
         <thead><tr>
+          <th style="width:32px"><input type="checkbox" id="frioChkAll" onclick="frioToggleAll(this)" style="accent-color:#64d2ff;width:15px;height:15px;cursor:pointer"></th>
           <th>Nombre</th><th>Tipo</th><th>Ubicación</th><th>Refrigerante</th><th>T.Trabajo</th><th>Estado</th><th>Próx.Rev.</th><th></th>
         </tr></thead>
-        <tbody id="frioEqTbody"><tr><td colspan="8" style="text-align:center;color:rgba(255,255,255,.3);padding:24px">Cargando...</td></tr></tbody>
+        <tbody id="frioEqTbody"><tr><td colspan="9" style="text-align:center;color:rgba(255,255,255,.3);padding:24px">Cargando...</td></tr></tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal edición múltiple -->
+<div id="frioBulkModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:901;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--navy-mid);border:1px solid rgba(100,210,255,.35);border-radius:14px;padding:24px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div class="sec-title" style="margin:0;color:#64d2ff">✏️ Editar seleccionados</div>
+      <span onclick="document.getElementById('frioBulkModal').style.display='none'" style="cursor:pointer;color:rgba(255,255,255,.4);font-size:1.3rem;line-height:1">✕</span>
+    </div>
+    <div id="frioBulkSubtitle" style="font-size:.8rem;color:rgba(255,255,255,.4);margin-bottom:18px"></div>
+    <p style="font-size:.82rem;color:rgba(255,255,255,.45);margin-bottom:16px">Deja en blanco los campos que <b>no</b> quieras cambiar. Solo se actualizarán los que rellenes.</p>
+    <div class="frio-grid">
+      <div class="frio-field"><label>Tipo</label>
+        <select id="frioBulkTipo">
+          <option value="">— Sin cambios —</option>
+          <option>Cámara frigorífica positiva</option><option>Cámara frigorífica negativa</option>
+          <option>Vitrina positiva</option><option>Vitrina negativa</option>
+          <option>Túnel de frío</option><option>Obrador refrigerado</option>
+          <option>Unidad condensadora</option><option>Climatizador / Bomba de calor</option><option>Otro</option>
+        </select>
+      </div>
+      <div class="frio-field"><label>Ubicación</label><input type="text" id="frioBulkUbic" placeholder="Sin cambios"></div>
+      <div class="frio-field"><label>Refrigerante</label>
+        <select id="frioBulkRefrig">
+          <option value="">— Sin cambios —</option>
+          <option>R404A</option><option>R448A</option><option>R452A</option>
+          <option>R290 (propano)</option><option>R134a</option><option>R407C</option>
+          <option>R407F</option><option>R22 (legacy)</option><option>R717 (amoniaco)</option><option>Otro</option>
+        </select>
+      </div>
+      <div class="frio-field"><label>Carga refrig. (kg)</label><input type="number" id="frioBulkCarga" step="0.1" placeholder="Sin cambios"></div>
+      <div class="frio-field"><label>T. mín. trabajo (°C)</label><input type="number" id="frioBulkTMin" step="0.5" placeholder="Sin cambios"></div>
+      <div class="frio-field"><label>T. máx. trabajo (°C)</label><input type="number" id="frioBulkTMax" step="0.5" placeholder="Sin cambios"></div>
+      <div class="frio-field"><label>Marca</label><input type="text" id="frioBulkMarca" placeholder="Sin cambios"></div>
+      <div class="frio-field"><label>Estado</label>
+        <select id="frioBulkEstadoSel">
+          <option value="">— Sin cambios —</option>
+          <option>Operativo</option><option>Avería</option><option>En revisión</option><option>Parado</option>
+        </select>
+      </div>
+      <div class="frio-field"><label>Próx. revisión F-Gas</label><input type="date" id="frioBulkProxRev"></div>
+      <div class="frio-field span2"><label>Notas</label><input type="text" id="frioBulkNotas" placeholder="Sin cambios"></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+      <button onclick="document.getElementById('frioBulkModal').style.display='none'" style="padding:10px 20px;border-radius:8px;font-family:'Barlow',sans-serif;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,.2);background:transparent;color:rgba(255,255,255,.55)">Cancelar</button>
+      <button onclick="frioBulkGuardar()" style="padding:10px 24px;border-radius:8px;font-family:'Barlow',sans-serif;font-weight:700;cursor:pointer;border:none;background:#64d2ff;color:#0a1520">💾 Aplicar a seleccionados</button>
     </div>
   </div>
 </div>
@@ -6500,6 +6559,102 @@ function frioPopularMecs(id) {
   el.innerHTML = '<option value="">— Selecciona —</option>' + nombres.map(n=>`<option>${n}</option>`).join('');
 }
 
+// ─── SELECCIÓN MÚLTIPLE ──────────────────────────
+let _frioSel = new Set();
+
+function frioRowClick(event, key) {
+  const chk = document.getElementById('frioChk_' + key);
+  if (!chk) return;
+  chk.checked = !chk.checked;
+  frioToggleChk(key);
+}
+
+function frioToggleAll(chk) {
+  const keys = Object.keys(_frioEqs);
+  keys.forEach(k => {
+    const c = document.getElementById('frioChk_' + k);
+    if (c) c.checked = chk.checked;
+    chk.checked ? _frioSel.add(k) : _frioSel.delete(k);
+  });
+  frioUpdateBulkBar();
+}
+
+function frioToggleChk(key) {
+  const c = document.getElementById('frioChk_' + key);
+  if (!c) return;
+  c.checked ? _frioSel.add(key) : _frioSel.delete(key);
+  const all = document.getElementById('frioChkAll');
+  if (all) all.checked = _frioSel.size === Object.keys(_frioEqs).length;
+  frioUpdateBulkBar();
+}
+
+function frioDeselAll() {
+  _frioSel.clear();
+  document.querySelectorAll('[id^="frioChk_"]').forEach(c => c.checked = false);
+  const all = document.getElementById('frioChkAll');
+  if (all) all.checked = false;
+  frioUpdateBulkBar();
+}
+
+function frioUpdateBulkBar() {
+  const bar = document.getElementById('frioBulkBar');
+  const cnt = document.getElementById('frioBulkCount');
+  if (!bar) return;
+  if (_frioSel.size > 0) {
+    bar.style.display = 'flex';
+    cnt.textContent = _frioSel.size + ' seleccionado' + (_frioSel.size > 1 ? 's' : '');
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function frioBulkEstado(estado) {
+  if (!_frioSel.size) return;
+  if (!confirm('¿Cambiar estado a "' + estado + '" en ' + _frioSel.size + ' equipo(s)?')) return;
+  const updates = {};
+  _frioSel.forEach(k => { updates['frio/equipos/' + k + '/estado'] = estado; });
+  DB.ref().update(updates).then(() => { toast('✅ Estado actualizado en ' + _frioSel.size + ' equipos'); frioDeselAll(); });
+}
+
+function frioBulkEdit() {
+  if (!_frioSel.size) return;
+  document.getElementById('frioBulkSubtitle').textContent = _frioSel.size + ' equipo(s) seleccionado(s)';
+  ['frioBulkTipo','frioBulkRefrig','frioBulkEstadoSel'].forEach(id => document.getElementById(id).value = '');
+  ['frioBulkUbic','frioBulkCarga','frioBulkTMin','frioBulkTMax','frioBulkMarca','frioBulkProxRev','frioBulkNotas'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('frioBulkModal').style.display = 'flex';
+}
+
+function frioBulkGuardar() {
+  const g = id => document.getElementById(id).value;
+  const campos = {
+    tipo:        g('frioBulkTipo'),
+    ubicacion:   g('frioBulkUbic').trim(),
+    refrigerante:g('frioBulkRefrig'),
+    cargaKg:     g('frioBulkCarga'),
+    tMin:        g('frioBulkTMin'),
+    tMax:        g('frioBulkTMax'),
+    marca:       g('frioBulkMarca').trim(),
+    estado:      g('frioBulkEstadoSel'),
+    proxRev:     g('frioBulkProxRev'),
+    notas:       g('frioBulkNotas').trim(),
+  };
+  // Solo los que tienen valor
+  const updates = {};
+  _frioSel.forEach(k => {
+    Object.entries(campos).forEach(([field, val]) => {
+      if (val === '' || val === null) return;
+      const v = (field === 'cargaKg' || field === 'tMin' || field === 'tMax') ? parseFloat(val) : val;
+      updates['frio/equipos/' + k + '/' + field] = v;
+    });
+  });
+  if (!Object.keys(updates).length) { toast('⚠️ No hay campos para actualizar'); return; }
+  DB.ref().update(updates).then(() => {
+    toast('✅ ' + _frioSel.size + ' equipo(s) actualizados');
+    document.getElementById('frioBulkModal').style.display = 'none';
+    frioDeselAll();
+  }).catch(err => alert('Error: ' + err.message));
+}
+
 // ─── EQUIPOS ─────────────────────────────────────
 function frioImportarBase() {
   if (!confirm('¿Cargar los 47 equipos del Excel FRIO 2024? Se añadirán a Firebase.')) return;
@@ -6525,7 +6680,9 @@ function frioRenderEqTable() {
     const proxRev = e.proxRev || '—';
     const proxStyle = proxRev !== '—' && proxRev < hoy ? 'color:#e74c3c;font-weight:700' : 'color:rgba(255,255,255,.6)';
     const estCls = {Operativo:'frio-op',Avería:'frio-av','En revisión':'frio-rev',Parado:'frio-stop'}[e.estado||'Operativo']||'frio-op';
-    return `<tr>
+    const checked = _frioSel.has(k) ? 'checked' : '';
+    return `<tr id="frioRow_${k}" style="cursor:pointer" onclick="frioRowClick(event,'${k}')">
+      <td onclick="event.stopPropagation()" style="padding:10px 8px"><input type="checkbox" id="frioChk_${k}" ${checked} onchange="frioToggleChk('${k}')" style="accent-color:#64d2ff;width:15px;height:15px;cursor:pointer"></td>
       <td style="font-weight:700">${e.nombre}</td>
       <td style="font-size:.82rem;color:rgba(255,255,255,.65)">${e.tipo||'—'}</td>
       <td style="font-size:.82rem">${e.ubicacion||'—'}</td>
@@ -6533,7 +6690,7 @@ function frioRenderEqTable() {
       <td style="font-size:.82rem">${tRango}</td>
       <td><span class="frio-badge ${estCls}">${e.estado||'Operativo'}</span></td>
       <td style="font-size:.8rem;${proxStyle}">${proxRev}</td>
-      <td style="white-space:nowrap">
+      <td style="white-space:nowrap" onclick="event.stopPropagation()">
         <button onclick="frioEqModal('${k}')" style="background:none;border:none;color:rgba(201,162,39,.8);cursor:pointer;padding:3px 6px" title="Editar">✏️</button>
         <button onclick="frioDeleteEq('${k}')" style="background:none;border:none;color:rgba(231,76,60,.7);cursor:pointer;padding:3px 6px" title="Eliminar">🗑️</button>
       </td>
