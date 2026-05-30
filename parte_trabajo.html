@@ -412,10 +412,16 @@ function getMecsSelec(){
 }
 
 /* ══ FILTRAR ══ */
+// Normaliza el turno guardado ('MAÑANA (06-14h)') al valor del checkbox ('MANANA','TARDE','NOCHE')
+function normTurno(t){
+  var first = (t||'').split(' ')[0].toUpperCase();
+  return first.replace(/Ñ/g,'N').replace(/ñ/g,'N');
+}
+
 function filtrar(rango, turnos, mecs){
   return _averias.filter(function(a){
     if(!a.fecha || a.fecha < rango.desde || a.fecha > rango.hasta) return false;
-    if(turnos.length && a.turno && !turnos.includes(a.turno)) return false;
+    if(turnos.length && a.turno && !turnos.includes(normTurno(a.turno))) return false;
     if(mecs.length){
       var involucrado = (a.mecanicos||[]).some(function(m){ return mecs.includes(m); });
       if(!involucrado) return false;
