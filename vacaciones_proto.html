@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Gestión Ausencias — Prototipo PANALCOR</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0d1b2a; --navy-mid:#1a2d42; --navy-light:#243d56;
+  --gold:#c9a227; --gold-light:#f0c040;
+  --white:#f0f4f8; --green:#2ecc71; --red:#e74c3c; --yellow:#f39c12;
+  --purple:#9b59b6; --blue:#3498db;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;min-height:100vh;padding-bottom:80px}
+
+/* TOPBAR */
+.topbar{background:linear-gradient(135deg,#0a1520,var(--navy-mid));border-bottom:2px solid var(--gold);padding:12px 20px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:50}
+.topbar h1{font-size:1.1rem;font-weight:900;color:var(--gold-light);letter-spacing:.04em}
+.topbar-sub{font-size:0.7rem;color:rgba(255,255,255,0.4);letter-spacing:.1em;text-transform:uppercase;margin-top:1px}
+.proto-badge{background:rgba(155,89,182,0.25);border:1px solid rgba(155,89,182,0.5);color:var(--purple);font-size:0.68rem;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.08em;text-transform:uppercase;margin-left:auto}
+
+/* TABS */
+.tabs{display:flex;gap:2px;background:var(--navy-mid);padding:0 20px;border-bottom:1px solid rgba(255,255,255,0.08)}
+.tab{padding:12px 20px;font-size:0.85rem;font-weight:700;color:rgba(255,255,255,0.4);cursor:pointer;border-bottom:3px solid transparent;letter-spacing:.04em;transition:all .2s}
+.tab:hover{color:rgba(255,255,255,0.7)}
+.tab.active{color:var(--gold-light);border-bottom-color:var(--gold)}
+
+/* CONTENT */
+.content{max-width:1100px;margin:0 auto;padding:24px 20px}
+
+/* CARD */
+.card{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:20px 22px;margin-bottom:16px}
+.card-title{font-size:0.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:14px}
+.card-title span{color:var(--gold);margin-right:6px}
+
+/* FORM ELEMENTS */
+label.lbl{font-size:0.73rem;color:rgba(255,255,255,0.4);display:block;margin-bottom:4px;letter-spacing:.06em;text-transform:uppercase}
+input[type=text],input[type=date],input[type=month],input[type=number],select,textarea{
+  background:var(--navy-light);color:var(--white);border:1px solid rgba(255,255,255,0.15);
+  border-radius:7px;padding:9px 12px;font-family:'Barlow',sans-serif;font-size:0.9rem;width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.row .f{flex:1;min-width:140px}
+.row .f-auto{flex:0 0 auto}
+
+/* BUTTONS */
+.btn{padding:9px 18px;border-radius:8px;font-family:'Barlow',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;border:none;transition:all .2s;letter-spacing:.03em}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a}
+.btn-gold:hover{filter:brightness(1.1)}
+.btn-red{background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.4);color:var(--red)}
+.btn-red:hover{background:rgba(231,76,60,0.35)}
+.btn-outline{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)}
+.btn-outline:hover{background:rgba(255,255,255,0.12)}
+.btn-sm{padding:5px 12px;font-size:0.78rem}
+.btn-green{background:rgba(46,204,113,0.2);border:1px solid rgba(46,204,113,0.4);color:var(--green)}
+.btn-green:hover{background:rgba(46,204,113,0.35)}
+
+/* FESTIVOS LIST */
+.festivo-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(201,162,39,0.12);border:1px solid rgba(201,162,39,0.3);border-radius:6px;padding:4px 10px;font-size:0.82rem;margin:3px}
+.festivo-chip .rm{cursor:pointer;color:rgba(255,255,255,0.35);font-size:0.9rem;line-height:1}
+.festivo-chip .rm:hover{color:var(--red)}
+
+/* AUSENCIAS TABLE */
+.aus-table{width:100%;border-collapse:collapse;font-size:0.85rem}
+.aus-table th{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.4);font-size:0.68rem;letter-spacing:.1em;text-transform:uppercase;padding:8px 12px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.08)}
+.aus-table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.05);vertical-align:middle}
+.aus-table tr:last-child td{border-bottom:none}
+.tipo-badge{font-size:0.72rem;font-weight:700;padding:3px 9px;border-radius:20px}
+.tipo-VAC{background:rgba(52,152,219,0.2);color:var(--blue);border:1px solid rgba(52,152,219,0.35)}
+.tipo-AP{background:rgba(155,89,182,0.2);color:var(--purple);border:1px solid rgba(155,89,182,0.35)}
+.tipo-PER{background:rgba(46,204,113,0.2);color:var(--green);border:1px solid rgba(46,204,113,0.35)}
+.tipo-OTR{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.2)}
+
+/* SEMANAS AFECTADAS */
+.semana-card{background:var(--navy-light);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.semana-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.semana-label{font-weight:700;font-size:0.9rem;color:var(--gold-light)}
+.semana-mec{font-size:0.8rem;color:rgba(255,255,255,0.5)}
+.semana-razon{font-size:0.72rem;font-weight:700;padding:2px 9px;border-radius:20px;background:rgba(231,76,60,0.15);color:var(--red);border:1px solid rgba(231,76,60,0.3)}
+.semana-tareas{margin-bottom:10px}
+.tarea-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.82rem}
+.tarea-row:last-child{border-bottom:none}
+.tarea-nombre{flex:1;color:rgba(255,255,255,0.8)}
+.tarea-maq{font-size:0.75rem;color:rgba(255,255,255,0.4);min-width:100px}
+.tarea-turno{font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.5);min-width:60px;text-align:center}
+.sustit-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(46,204,113,0.07);border:1px solid rgba(46,204,113,0.2);border-radius:7px}
+.sustit-label{font-size:0.78rem;color:rgba(255,255,255,0.5);white-space:nowrap}
+.sustit-select{flex:1;max-width:220px;padding:6px 10px;font-size:0.85rem}
+.sustit-saved{font-size:0.75rem;color:var(--green);display:none}
+
+/* RESUMEN */
+.resumen-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:16px}
+.res-card{background:var(--navy-light);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px 16px}
+.res-num{font-size:1.8rem;font-weight:900;line-height:1;color:var(--gold-light)}
+.res-lbl{font-size:0.68rem;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:.08em;margin-top:4px}
+
+/* EMPTY */
+.empty{text-align:center;padding:50px 20px;color:rgba(255,255,255,0.25);font-size:0.9rem}
+.empty .ico{font-size:2.5rem;margin-bottom:10px}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--navy-mid);border:1px solid rgba(201,162,39,.4);border-radius:10px;padding:11px 22px;font-size:.9rem;font-weight:600;z-index:9999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* PANEL */
+.panel{display:none}
+.panel.active{display:block}
+
+.sep{border:none;border-top:1px solid rgba(255,255,255,0.07);margin:16px 0}
+.info-box{background:rgba(52,152,219,0.08);border:1px solid rgba(52,152,219,0.25);border-radius:8px;padding:10px 14px;font-size:0.82rem;color:rgba(255,255,255,0.6);line-height:1.6;margin-bottom:14px}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div>
+    <div class="topbar h1" style="display:inline;font-size:1.1rem;font-weight:900;color:#f0c040;letter-spacing:.04em">🗓 Gestión de Ausencias</div>
+    <div class="topbar-sub">Reasignación automática de preventivo</div>
+  </div>
+  <div class="proto-badge">⚗️ PROTOTIPO</div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" id="tab-festivos"   onclick="switchTab('festivos')">📅 Festivos</div>
+  <div class="tab"        id="tab-ausencias"  onclick="switchTab('ausencias')">👷 Ausencias</div>
+  <div class="tab"        id="tab-semanas"    onclick="switchTab('semanas')">🔄 Semanas afectadas</div>
+  <div class="tab"        id="tab-resumen"    onclick="switchTab('resumen')">📋 Resumen</div>
+</div>
+
+<div class="content">
+
+<!-- ═══ FESTIVOS ═══ -->
+<div class="panel active" id="panel-festivos">
+  <div class="card">
+    <div class="card-title"><span>📅</span>Festivos del año</div>
+    <div class="info-box">
+      Introduce los días festivos antes de diciembre del año anterior. Las semanas parciales con todos los días laborables cubiertos por ausencia+festivos se tratarán como semana completa y activarán la reasignación.
+    </div>
+    <div class="row" style="margin-bottom:14px">
+      <div class="f">
+        <label class="lbl">Año</label>
+        <input type="number" id="fAnio" min="2024" max="2030" style="max-width:120px">
+      </div>
+      <div class="f">
+        <label class="lbl">Fecha festivo</label>
+        <input type="date" id="fFestivo">
+      </div>
+      <div class="f">
+        <label class="lbl">Descripción (opcional)</label>
+        <input type="text" id="fFestivoDesc" placeholder="Ej: Día de Castilla-La Mancha">
+      </div>
+      <div class="f-auto">
+        <button class="btn btn-gold" onclick="addFestivo()" style="margin-top:22px">+ Añadir</button>
+      </div>
+    </div>
+    <div id="festivosWrap">
+      <div style="font-size:0.78rem;color:rgba(255,255,255,0.25)">No hay festivos añadidos.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>📋</span>Festivos por año</div>
+    <div id="festivosResumen" style="font-size:0.85rem;color:rgba(255,255,255,0.4)">Sin datos.</div>
+  </div>
+</div>
+
+<!-- ═══ AUSENCIAS ═══ -->
+<div class="panel" id="panel-ausencias">
+  <div class="card">
+    <div class="card-title"><span>➕</span>Nueva ausencia</div>
+    <div class="row" style="margin-bottom:12px">
+      <div class="f">
+        <label class="lbl">Mecánico</label>
+        <select id="fMec">
+          <option value="">Cargando...</option>
+        </select>
+      </div>
+      <div class="f">
+        <label class="lbl">Tipo</label>
+        <select id="fTipo">
+          <option value="VAC">🏖 Vacaciones</option>
+          <option value="AP">🏠 Asuntos propios</option>
+          <option value="PER">📋 Permiso</option>
+          <option value="OTR">📌 Otro</option>
+        </select>
+      </div>
+      <div class="f">
+        <label class="lbl">Desde</label>
+        <input type="date" id="fAusDesde">
+      </div>
+      <div class="f">
+        <label class="lbl">Hasta</label>
+        <input type="date" id="fAusHasta">
+      </div>
+      <div class="f">
+        <label class="lbl">Nota (opcional)</label>
+        <input type="text" id="fAusNota" placeholder="Observación">
+      </div>
+      <div class="f-auto">
+        <button class="btn btn-gold" onclick="addAusencia()" style="margin-top:22px">+ Añadir</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>📋</span>Ausencias registradas</div>
+    <div id="ausenciasWrap">
+      <div class="empty"><div class="ico">👷</div>Sin ausencias registradas.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SEMANAS AFECTADAS ═══ -->
+<div class="panel" id="panel-semanas">
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-title"><span>🔍</span>Filtro</div>
+    <div class="row">
+      <div class="f" style="max-width:200px">
+        <label class="lbl">Mecánico</label>
+        <select id="filtMec" onchange="renderSemanas()">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="f" style="max-width:180px">
+        <label class="lbl">Mes</label>
+        <input type="month" id="filtMes" onchange="renderSemanas()">
+      </div>
+      <div class="f-auto" style="align-self:flex-end">
+        <button class="btn btn-outline" onclick="document.getElementById('filtMec').value='';document.getElementById('filtMes').value='';renderSemanas()">Limpiar</button>
+      </div>
+    </div>
+  </div>
+  <div id="semanasWrap">
+    <div class="empty"><div class="ico">📆</div>Añade ausencias para ver las semanas afectadas.</div>
+  </div>
+</div>
+
+<!-- ═══ RESUMEN ═══ -->
+<div class="panel" id="panel-resumen">
+  <div id="resumenWrap">
+    <div class="empty"><div class="ico">📋</div>Sin datos todavía.</div>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ════ FIREBASE ════ */
+var FB_CFG = {
+  apiKey:"AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU",
+  authDomain:"panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:"https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"panalcor-mantenimiento",
+  storageBucket:"panalcor-mantenimiento.firebasestorage.app",
+  messagingSenderId:"67593058609",
+  appId:"1:67593058609:web:c33fa1fa4fce2932485810"
+};
+if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
+var DB = firebase.database();
+
+/* ════ ESTADO ════ */
+var _mecanicos  = [];
+var _tareas     = []; // tareas_diarias de Firebase
+var _festivos   = loadLS('prot_festivos') || [];   // [{fecha:'2026-01-01', desc:'Año Nuevo'}]
+var _ausencias  = loadLS('prot_ausencias') || [];  // [{id, mec, tipo, desde, hasta, nota}]
+var _sustitutos = loadLS('prot_sustitutos') || {}; // {'mecAusente|YYYY-WW': 'mecSustituto'}
+
+/* ════ HELPERS ════ */
+function loadLS(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }
+function saveLS(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+var _toastT;
+function showToast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(_toastT); _toastT = setTimeout(function(){ t.classList.remove('show'); }, 2800);
+}
+
+/* Fecha en formato YYYY-MM-DD sin offset UTC */
+function isoLocal(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function parseLocal(s){ // 'YYYY-MM-DD' → Date a mediodia local (sin problema UTC)
+  var p = s.split('-');
+  return new Date(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2]), 12, 0, 0);
+}
+function fmtDate(iso){
+  if(!iso) return '—';
+  var p = iso.split('-');
+  return p[2]+'/'+p[1]+'/'+p[0];
+}
+/* Lunes de la semana a la que pertenece una fecha */
+function getLunes(d){
+  var dd = new Date(d);
+  var dow = dd.getDay() === 0 ? 6 : dd.getDay()-1;
+  dd.setDate(dd.getDate()-dow);
+  dd.setHours(12,0,0,0);
+  return dd;
+}
+/* Domingo de la semana */
+function getDomingo(lunes){
+  var d = new Date(lunes);
+  d.setDate(d.getDate()+6);
+  return d;
+}
+/* Clave de semana YYYY-WW */
+function weekKey(lunes){
+  var y = lunes.getFullYear();
+  var start = new Date(y,0,1,12,0,0);
+  var dayOfYear = Math.round((lunes - start) / 86400000);
+  var dow = start.getDay()===0?6:start.getDay()-1;
+  var w = Math.ceil((dayOfYear + dow + 1) / 7);
+  return y+'-W'+String(w).padStart(2,'0');
+}
+/* Días laborables (L-V) de una semana */
+function diasLaborables(lunes){
+  var dias = [];
+  for(var i=0; i<5; i++){
+    var d = new Date(lunes);
+    d.setDate(d.getDate()+i);
+    dias.push(isoLocal(d));
+  }
+  return dias;
+}
+/* Set de festivos para rápida consulta */
+function getFestivosSet(){
+  var s = {};
+  _festivos.forEach(function(f){ s[f.fecha] = true; });
+  return s;
+}
+/* Tipo ausencia → label */
+function tipoLabel(t){
+  return {VAC:'Vacaciones',AP:'Asuntos propios',PER:'Permiso',OTR:'Otro'}[t]||t;
+}
+
+/* ════ FIREBASE: CARGAR DATOS ════ */
+function cargarDatos(){
+  var fallback = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE'];
+  DB.ref('config/mecanicos').once('value').then(function(s){
+    var v = s.val();
+    _mecanicos = (v && v.length) ? v : fallback;
+  }).catch(function(){ _mecanicos = fallback; }).finally(function(){
+    renderMecSelects();
+  });
+
+  DB.ref('tareas_diarias').once('value').then(function(s){
+    var val = s.val() || {};
+    _tareas = Object.values(val).filter(function(t){ return t && t.id; });
+  }).catch(function(){ _tareas = []; });
+}
+
+function renderMecSelects(){
+  var opts = _mecanicos.map(function(m){ return '<option value="'+esc(m)+'">'+esc(m)+'</option>'; }).join('');
+  var optsAll = '<option value="">Todos</option>'+opts;
+  document.getElementById('fMec').innerHTML = opts;
+  document.getElementById('filtMec').innerHTML = optsAll;
+}
+
+/* ════ FESTIVOS ════ */
+function addFestivo(){
+  var fecha = document.getElementById('fFestivo').value;
+  var desc  = document.getElementById('fFestivoDesc').value.trim();
+  if(!fecha){ showToast('⚠️ Selecciona una fecha'); return; }
+  if(_festivos.find(function(f){ return f.fecha===fecha; })){ showToast('⚠️ Ya existe ese festivo'); return; }
+  _festivos.push({fecha:fecha, desc:desc||'Festivo'});
+  _festivos.sort(function(a,b){ return a.fecha.localeCompare(b.fecha); });
+  saveLS('prot_festivos', _festivos);
+  document.getElementById('fFestivo').value = '';
+  document.getElementById('fFestivoDesc').value = '';
+  renderFestivos();
+  showToast('✅ Festivo añadido');
+}
+
+function removeFestivo(fecha){
+  _festivos = _festivos.filter(function(f){ return f.fecha!==fecha; });
+  saveLS('prot_festivos', _festivos);
+  renderFestivos();
+}
+
+function renderFestivos(){
+  var wrap = document.getElementById('festivosWrap');
+  if(!_festivos.length){
+    wrap.innerHTML = '<div style="font-size:0.78rem;color:rgba(255,255,255,0.25)">No hay festivos añadidos.</div>';
+  } else {
+    wrap.innerHTML = _festivos.map(function(f){
+      return '<span class="festivo-chip">'+fmtDate(f.fecha)+' — '+esc(f.desc)
+        +'<span class="rm" onclick="removeFestivo(\''+f.fecha+'\')">✕</span></span>';
+    }).join('');
+  }
+  // Resumen por año
+  var porAnio = {};
+  _festivos.forEach(function(f){
+    var y = f.fecha.substring(0,4);
+    if(!porAnio[y]) porAnio[y] = [];
+    porAnio[y].push(f);
+  });
+  var res = document.getElementById('festivosResumen');
+  var keys = Object.keys(porAnio).sort();
+  if(!keys.length){ res.textContent='Sin datos.'; return; }
+  res.innerHTML = keys.map(function(y){
+    return '<div style="margin-bottom:10px"><b style="color:var(--gold-light)">'+y+'</b>'
+      +' <span style="color:rgba(255,255,255,0.4);font-size:0.8rem">('+porAnio[y].length+' festivos)</span>'
+      +'<div style="margin-top:6px">'+porAnio[y].map(function(f){
+        return '<span class="festivo-chip">'+fmtDate(f.fecha)+' — '+esc(f.desc)+'</span>';
+      }).join('')+'</div></div>';
+  }).join('');
+}
+
+/* ════ AUSENCIAS ════ */
+function addAusencia(){
+  var mec   = document.getElementById('fMec').value;
+  var tipo  = document.getElementById('fTipo').value;
+  var desde = document.getElementById('fAusDesde').value;
+  var hasta = document.getElementById('fAusHasta').value;
+  var nota  = document.getElementById('fAusNota').value.trim();
+  if(!mec)  { showToast('⚠️ Selecciona mecánico'); return; }
+  if(!desde){ showToast('⚠️ Indica fecha de inicio'); return; }
+  if(!hasta){ showToast('⚠️ Indica fecha de fin'); return; }
+  if(hasta < desde){ showToast('⚠️ La fecha de fin no puede ser anterior al inicio'); return; }
+  _ausencias.push({id: Date.now().toString(), mec:mec, tipo:tipo, desde:desde, hasta:hasta, nota:nota});
+  _ausencias.sort(function(a,b){ return a.desde.localeCompare(b.desde)||a.mec.localeCompare(b.mec); });
+  saveLS('prot_ausencias', _ausencias);
+  document.getElementById('fAusDesde').value = '';
+  document.getElementById('fAusHasta').value = '';
+  document.getElementById('fAusNota').value  = '';
+  renderAusencias();
+  showToast('✅ Ausencia registrada');
+}
+
+function removeAusencia(id){
+  _ausencias = _ausencias.filter(function(a){ return a.id!==id; });
+  saveLS('prot_ausencias', _ausencias);
+  renderAusencias();
+  renderSemanas();
+}
+
+function renderAusencias(){
+  var wrap = document.getElementById('ausenciasWrap');
+  if(!_ausencias.length){
+    wrap.innerHTML = '<div class="empty"><div class="ico">👷</div>Sin ausencias registradas.</div>';
+    return;
+  }
+  var rows = _ausencias.map(function(a){
+    var dias = Math.round((parseLocal(a.hasta)-parseLocal(a.desde))/86400000)+1;
+    return '<tr>'
+      +'<td><b>'+esc(a.mec)+'</b></td>'
+      +'<td><span class="tipo-badge tipo-'+a.tipo+'">'+tipoLabel(a.tipo)+'</span></td>'
+      +'<td>'+fmtDate(a.desde)+'</td>'
+      +'<td>'+fmtDate(a.hasta)+'</td>'
+      +'<td style="color:rgba(255,255,255,0.4);font-size:0.82rem">'+dias+' día'+(dias!==1?'s':'')+'</td>'
+      +'<td style="color:rgba(255,255,255,0.4);font-size:0.82rem">'+esc(a.nota||'—')+'</td>'
+      +'<td><button class="btn btn-red btn-sm" onclick="removeAusencia(\''+a.id+'\')">✕ Eliminar</button></td>'
+      +'</tr>';
+  }).join('');
+  wrap.innerHTML = '<table class="aus-table"><thead><tr>'
+    +'<th>Mecánico</th><th>Tipo</th><th>Desde</th><th>Hasta</th><th>Días</th><th>Nota</th><th></th>'
+    +'</tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+/* ════ LÓGICA SEMANAS AFECTADAS ════ */
+/*
+  Una semana (L-V) activa reasignación si:
+  - TODOS los días laborables de esa semana están cubiertos por:
+    ausencia del mecánico  OR  festivo
+  Y al menos un día está en ausencia (no es semana de solo festivos)
+*/
+function calcSemanasAfectadas(){
+  var festSet = getFestivosSet();
+  var resultado = []; // [{mec, aus, lunes, domIso, wkey, tareas, sustituto}]
+
+  _ausencias.forEach(function(aus){
+    // Recorrer semanas que se solapan con el rango de ausencia
+    var cursor = getLunes(parseLocal(aus.desde));
+    var finAus = parseLocal(aus.hasta);
+
+    while(true){
+      var dom = getDomingo(cursor);
+      if(cursor > finAus) break;
+
+      var labs = diasLaborables(cursor);
+      var cubiertos = 0;
+      var diasEnAusencia = 0;
+
+      labs.forEach(function(dia){
+        var enAus = dia >= aus.desde && dia <= aus.hasta;
+        var esFestivo = !!festSet[dia];
+        if(enAus) diasEnAusencia++;
+        if(enAus || esFestivo) cubiertos++;
+      });
+
+      var semanaCubierta = cubiertos === 5 && diasEnAusencia > 0;
+
+      if(semanaCubierta){
+        var wk = weekKey(cursor);
+        var lunIso = isoLocal(cursor);
+        var domIso = isoLocal(dom);
+        var sustKey = aus.mec+'|'+wk;
+        // Tareas asignadas a este mecánico
+        var tareasDelMec = _tareas.filter(function(t){
+          return (t.mecanico||'').toUpperCase() === aus.mec.toUpperCase();
+        });
+        resultado.push({
+          mec: aus.mec,
+          aus: aus,
+          lunes: lunIso,
+          domingo: domIso,
+          wkey: wk,
+          sustKey: sustKey,
+          tareas: tareasDelMec,
+          sustituto: _sustitutos[sustKey] || ''
+        });
+      }
+
+      cursor.setDate(cursor.getDate()+7);
+      if(cursor.getFullYear() > finAus.getFullYear()+1) break; // safety
+    }
+  });
+
+  // Ordenar por fecha
+  resultado.sort(function(a,b){ return a.lunes.localeCompare(b.lunes)||a.mec.localeCompare(b.mec); });
+  return resultado;
+}
+
+function renderSemanas(){
+  var filtMec = document.getElementById('filtMec').value;
+  var filtMes = document.getElementById('filtMes').value; // 'YYYY-MM'
+
+  var semanas = calcSemanasAfectadas().filter(function(s){
+    if(filtMec && s.mec !== filtMec) return false;
+    if(filtMes && s.lunes.substring(0,7) !== filtMes && s.domingo.substring(0,7) !== filtMes) return false;
+    return true;
+  });
+
+  var wrap = document.getElementById('semanasWrap');
+  if(!semanas.length){
+    wrap.innerHTML = '<div class="empty"><div class="ico">✅</div>Sin semanas afectadas'+(filtMec||filtMes?' con los filtros seleccionados.':'.')+'</div>';
+    return;
+  }
+
+  wrap.innerHTML = semanas.map(function(s, idx){
+    // Razon
+    var labs = diasLaborables(parseLocal(s.lunes));
+    var festSet = getFestivosSet();
+    var festivos = labs.filter(function(d){ return festSet[d]; }).length;
+    var enAus    = labs.filter(function(d){ return d>=s.aus.desde && d<=s.aus.hasta; }).length;
+    var razon = enAus===5 ? 'Semana completa'
+      : 'Parcial + '+festivos+' festivo'+(festivos!==1?'s':'');
+
+    // Tareas
+    var tareasHtml = '';
+    if(s.tareas.length){
+      tareasHtml = '<div class="semana-tareas">'
+        +s.tareas.map(function(t){
+          return '<div class="tarea-row">'
+            +'<span class="tarea-nombre">'+esc(t.tarea||t.id)+'</span>'
+            +'<span class="tarea-maq">'+esc(t.maquina||'—')+'</span>'
+            +'<span class="tarea-turno">'+esc(t.turno||'TODOS')+'</span>'
+            +'</div>';
+        }).join('')
+        +'</div>';
+    } else {
+      tareasHtml = '<div style="font-size:0.8rem;color:rgba(255,255,255,0.25);padding:4px 0 10px">Sin tareas preventivas asignadas a este mecánico en Firebase.</div>';
+    }
+
+    // Selector sustituto
+    var mecOptions = _mecanicos.filter(function(m){ return m!==s.mec; }).map(function(m){
+      return '<option value="'+esc(m)+'"'+(s.sustituto===m?' selected':'')+'>'+esc(m)+'</option>';
+    }).join('');
+    var sustHtml = '<div class="sustit-row">'
+      +'<span class="sustit-label">Sustituto:</span>'
+      +'<select class="sustit-select" id="sust_'+idx+'" onchange="guardarSustituto(\''+s.sustKey+'\',this.value,'+idx+')">'
+      +'<option value="">— Sin asignar —</option>'+mecOptions
+      +'</select>'
+      +'<span class="sustit-saved" id="saved_'+idx+'">✅ Guardado</span>'
+      +'</div>';
+
+    return '<div class="semana-card">'
+      +'<div class="semana-header">'
+      +'<span class="semana-label">📆 '+fmtDate(s.lunes)+' — '+fmtDate(s.domingo)+'</span>'
+      +'<span style="font-size:0.8rem;color:var(--gold)">'+esc(s.mec)+'</span>'
+      +'<span class="semana-razon">'+razon+'</span>'
+      +'<span style="font-size:0.72rem;color:rgba(255,255,255,0.35)">'+esc(tipoLabel(s.aus.tipo))+'</span>'
+      +'</div>'
+      +tareasHtml
+      +sustHtml
+      +'</div>';
+  }).join('');
+}
+
+function guardarSustituto(sustKey, mec, idx){
+  if(mec) _sustitutos[sustKey] = mec;
+  else delete _sustitutos[sustKey];
+  saveLS('prot_sustitutos', _sustitutos);
+  var el = document.getElementById('saved_'+idx);
+  if(el){ el.style.display='inline'; setTimeout(function(){ el.style.display='none'; },2000); }
+}
+
+/* ════ RESUMEN ════ */
+function renderResumen(){
+  var semanas = calcSemanasAfectadas();
+  var wrap = document.getElementById('resumenWrap');
+
+  if(!semanas.length){
+    wrap.innerHTML = '<div class="empty"><div class="ico">📋</div>Sin semanas afectadas todavía.</div>';
+    return;
+  }
+
+  var totalSem    = semanas.length;
+  var conSustit   = semanas.filter(function(s){ return s.sustituto; }).length;
+  var sinSustit   = totalSem - conSustit;
+  var totalTareas = semanas.reduce(function(acc,s){ return acc+s.tareas.length; },0);
+
+  var kpis = '<div class="resumen-grid">'
+    +'<div class="res-card"><div class="res-num">'+totalSem+'</div><div class="res-lbl">Semanas afectadas</div></div>'
+    +'<div class="res-card"><div class="res-num" style="color:var(--green)">'+conSustit+'</div><div class="res-lbl">Con sustituto asignado</div></div>'
+    +'<div class="res-card"><div class="res-num" style="color:var(--red)">'+sinSustit+'</div><div class="res-lbl">Sin sustituto</div></div>'
+    +'<div class="res-card"><div class="res-num" style="color:var(--blue)">'+totalTareas+'</div><div class="res-lbl">Tareas a reasignar</div></div>'
+    +'</div>';
+
+  // Tabla detalle
+  var rows = semanas.map(function(s){
+    var tareasStr = s.tareas.length ? s.tareas.map(function(t){ return esc(t.tarea||t.id); }).join('<br>') : '<span style="color:rgba(255,255,255,0.25)">—</span>';
+    var sustHtml = s.sustituto
+      ? '<b style="color:var(--green)">'+esc(s.sustituto)+'</b>'
+      : '<span style="color:var(--red);font-weight:700">Sin asignar</span>';
+    return '<tr>'
+      +'<td style="white-space:nowrap;font-size:0.82rem">'+fmtDate(s.lunes)+'<br><span style="color:rgba(255,255,255,0.35)">'+fmtDate(s.domingo)+'</span></td>'
+      +'<td><b>'+esc(s.mec)+'</b></td>'
+      +'<td><span class="tipo-badge tipo-'+s.aus.tipo+'">'+tipoLabel(s.aus.tipo)+'</span></td>'
+      +'<td style="font-size:0.8rem">'+tareasStr+'</td>'
+      +'<td>'+sustHtml+'</td>'
+      +'</tr>';
+  }).join('');
+
+  wrap.innerHTML = kpis
+    +'<div class="card" style="margin-top:4px">'
+    +'<div class="card-title"><span>📋</span>Detalle de reasignaciones</div>'
+    +'<table class="aus-table"><thead><tr>'
+    +'<th>Semana</th><th>Mecánico ausente</th><th>Motivo</th><th>Tareas preventivas</th><th>Sustituto</th>'
+    +'</tr></thead><tbody>'+rows+'</tbody></table>'
+    +'</div>';
+}
+
+/* ════ TABS ════ */
+function switchTab(name){
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.getElementById('panel-'+name).classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  if(name==='semanas') renderSemanas();
+  if(name==='resumen') renderResumen();
+}
+
+/* ════ INIT ════ */
+(function(){
+  var hoy = new Date();
+  document.getElementById('fAnio').value = hoy.getFullYear();
+  var yymm = hoy.getFullYear()+'-'+String(hoy.getMonth()+1).padStart(2,'0');
+  document.getElementById('filtMes').value = yymm;
+  renderFestivos();
+  renderAusencias();
+  cargarDatos();
+})();
+</script>
+</body>
+</html>
