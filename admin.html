@@ -6336,20 +6336,33 @@ function escAttr(s){ return String(s||'').replace(/'/g,'&#39;').replace(/"/g,'&q
 <!-- ── PREVENTIVO FRÍO ── -->
 <div id="frioSec-prev" style="display:none">
   <div class="card" style="margin-bottom:14px;border:1px solid rgba(46,204,113,.12)">
-    <div class="sec-title" style="margin-bottom:14px">🔧 Registrar Revisión Preventiva</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div class="sec-title" style="margin:0">🔧 Registrar Revisión Preventiva</div>
+      <button onclick="frioGestionChecklist()" style="padding:7px 14px;border-radius:7px;font-family:'Barlow',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;border:1px solid rgba(201,162,39,.35);background:rgba(201,162,39,.1);color:var(--gold-light)">⚙️ Gestionar checklist</button>
+    </div>
     <div class="frio-grid">
       <div class="frio-field"><label>Equipo</label><select id="frioPrEq"><option value="">— Selecciona —</option></select></div>
       <div class="frio-field"><label>Fecha</label><input type="date" id="frioPrFecha"></div>
       <div class="frio-field"><label>Mecánico</label><select id="frioPrMec"><option value="">— Selecciona —</option></select></div>
       <div class="frio-field"><label>Tipo revisión</label>
-        <select id="frioPrTipo">
+        <select id="frioPrTipo" onchange="frioFiltrarChecklist()">
+          <option value="">Todos los ítems</option>
           <option>Mensual</option><option>Trimestral</option><option>Semestral</option><option>Anual</option><option>F-Gas obligatoria</option>
         </select>
       </div>
     </div>
     <div style="margin-bottom:14px">
-      <div style="font-size:.72rem;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Checklist de revisión</div>
-      <div id="frioPrChecklist" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:6px"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px">
+        <div style="font-size:.72rem;color:var(--gold);letter-spacing:.1em;text-transform:uppercase">Checklist de revisión</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap">
+          <span style="font-size:.7rem;padding:2px 7px;border-radius:8px;background:rgba(100,210,255,.15);color:#64d2ff;border:1px solid rgba(100,210,255,.3)">● Mensual</span>
+          <span style="font-size:.7rem;padding:2px 7px;border-radius:8px;background:rgba(243,156,18,.15);color:#f39c12;border:1px solid rgba(243,156,18,.3)">● Trimestral</span>
+          <span style="font-size:.7rem;padding:2px 7px;border-radius:8px;background:rgba(155,89,182,.15);color:#9b59b6;border:1px solid rgba(155,89,182,.3)">● Semestral</span>
+          <span style="font-size:.7rem;padding:2px 7px;border-radius:8px;background:rgba(46,204,113,.15);color:#2ecc71;border:1px solid rgba(46,204,113,.3)">● Anual</span>
+          <span style="font-size:.7rem;padding:2px 7px;border-radius:8px;background:rgba(231,76,60,.15);color:#e74c3c;border:1px solid rgba(231,76,60,.3)">● F-Gas</span>
+        </div>
+      </div>
+      <div id="frioPrChecklist" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:6px"></div>
     </div>
     <div class="frio-field" style="margin-bottom:14px">
       <label>Observaciones</label>
@@ -6361,10 +6374,35 @@ function escAttr(s){ return String(s||'').replace(/'/g,'&#39;').replace(/"/g,'&q
     <div class="sec-title" style="margin-bottom:12px">📋 Historial Revisiones Preventivas</div>
     <div style="overflow-x:auto">
       <table class="data-table">
-        <thead><tr><th>Equipo</th><th>Fecha</th><th>Tipo</th><th>Mecánico</th><th>Checklist</th><th>Observaciones</th><th></th></tr></thead>
+        <thead><tr><th>Equipo</th><th>Fecha</th><th>Tipo</th><th>Mecánico</th><th>Completado</th><th>Observaciones</th><th></th></tr></thead>
         <tbody id="frioPrTbody"></tbody>
       </table>
     </div>
+  </div>
+</div>
+
+<!-- Modal gestión checklist -->
+<div id="frioChecklistModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:902;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--navy-mid);border:1px solid rgba(201,162,39,.35);border-radius:14px;padding:24px;width:100%;max-width:620px;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+      <div class="sec-title" style="margin:0;color:var(--gold-light)">⚙️ Gestionar Checklist Preventivo</div>
+      <span onclick="document.getElementById('frioChecklistModal').style.display='none'" style="cursor:pointer;color:rgba(255,255,255,.4);font-size:1.3rem;line-height:1">✕</span>
+    </div>
+    <!-- Añadir ítem -->
+    <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:14px;margin-bottom:16px;border:1px solid rgba(255,255,255,.08)">
+      <div style="font-size:.78rem;color:var(--gold);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">➕ Añadir ítem personalizado</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+        <div class="frio-field" style="flex:1;min-width:180px"><label>Descripción</label><input type="text" id="frioNewItemNombre" placeholder="ej: Cambio de relés y contactores"></div>
+        <div class="frio-field" style="width:140px"><label>Periodicidad</label>
+          <select id="frioNewItemPeriodo">
+            <option>Mensual</option><option>Trimestral</option><option selected>Semestral</option><option>Anual</option><option>F-Gas obligatoria</option>
+          </select>
+        </div>
+        <button onclick="frioAddCustomItem()" style="padding:9px 16px;border-radius:7px;font-family:'Barlow',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;border:1px solid rgba(46,204,113,.4);background:rgba(46,204,113,.12);color:#2ecc71;white-space:nowrap;margin-bottom:1px">+ Añadir</button>
+      </div>
+    </div>
+    <!-- Lista ítems -->
+    <div id="frioChecklistLista"></div>
   </div>
 </div>
 
@@ -6431,21 +6469,39 @@ function escAttr(s){ return String(s||'').replace(/'/g,'&#39;').replace(/"/g,'&q
 // FRÍO — admin
 // ══════════════════════════════════════
 const FRIO_CHECKLIST = [
-  'Limpieza filtros/rejillas condensador',
-  'Limpieza evaporador',
-  'Verificación carga de gas (F-Gas)',
-  'Control de presiones (aspiración/impulsión)',
-  'Verificación temperatura de trabajo',
-  'Revisión sellos y juntas de puertas',
-  'Control resistencias de desescarche',
-  'Verificación presostatos y termostatos',
-  'Revisión ventiladores (condensador/evaporador)',
-  'Control corrientes y tensiones eléctricas',
-  'Revisión válvulas de expansión',
-  'Revisión válvulas solenoide',
-  'Lubricación si aplica',
-  'Registro en libro F-Gas',
+  {nombre:'Limpieza filtros/rejillas condensador',     periodo:'Mensual'},
+  {nombre:'Limpieza evaporador',                       periodo:'Mensual'},
+  {nombre:'Control de presiones (aspiración/impulsión)',periodo:'Mensual'},
+  {nombre:'Verificación temperatura de trabajo',       periodo:'Mensual'},
+  {nombre:'Revisión sellos y juntas de puertas',       periodo:'Mensual'},
+  {nombre:'Control resistencias de desescarche',       periodo:'Mensual'},
+  {nombre:'Verificación carga de gas (F-Gas)',         periodo:'Trimestral'},
+  {nombre:'Verificación presostatos y termostatos',    periodo:'Trimestral'},
+  {nombre:'Revisión ventiladores (condensador/evaporador)',periodo:'Trimestral'},
+  {nombre:'Control corrientes y tensiones eléctricas', periodo:'Semestral'},
+  {nombre:'Revisión válvulas de expansión',            periodo:'Semestral'},
+  {nombre:'Revisión válvulas solenoide',               periodo:'Semestral'},
+  {nombre:'Lubricación si aplica',                     periodo:'Semestral'},
+  {nombre:'Registro en libro F-Gas',                   periodo:'F-Gas obligatoria'},
 ];
+let _frioCustomItems = []; // cargados desde Firebase frio/checklist_custom
+
+const FRIO_PERIODO_COLOR = {
+  'Mensual':           {bg:'rgba(100,210,255,.15)', color:'#64d2ff',  border:'rgba(100,210,255,.3)'},
+  'Trimestral':        {bg:'rgba(243,156,18,.15)',  color:'#f39c12',  border:'rgba(243,156,18,.3)'},
+  'Semestral':         {bg:'rgba(155,89,182,.15)',  color:'#9b59b6',  border:'rgba(155,89,182,.3)'},
+  'Anual':             {bg:'rgba(46,204,113,.15)',  color:'#2ecc71',  border:'rgba(46,204,113,.3)'},
+  'F-Gas obligatoria': {bg:'rgba(231,76,60,.15)',   color:'#e74c3c',  border:'rgba(231,76,60,.3)'},
+};
+
+function frioGetAllChecklist() {
+  return [...FRIO_CHECKLIST, ..._frioCustomItems];
+}
+
+function frioPeriodoBadge(periodo) {
+  const c = FRIO_PERIODO_COLOR[periodo] || {bg:'rgba(255,255,255,.08)',color:'rgba(255,255,255,.5)',border:'rgba(255,255,255,.15)'};
+  return `<span style="font-size:.68rem;padding:1px 7px;border-radius:8px;font-weight:700;white-space:nowrap;background:${c.bg};color:${c.color};border:1px solid ${c.border}">${periodo}</span>`;
+}
 let _frioEqs = {};
 let _frioReady = false;
 
@@ -6509,6 +6565,10 @@ function initFrio() {
       frioRenderEqTable();
       frioPopularSelects();
     });
+    DB.ref('frio/checklist_custom').on('value', snap => {
+      const data = snap.val() || {};
+      _frioCustomItems = Object.entries(data).map(([k,v]) => ({...v, _key:k}));
+    });
   }
   frioSec('equipos');
 }
@@ -6535,7 +6595,7 @@ function frioSec(sec) {
   }
   if (sec === 'prev') {
     const fp = document.getElementById('frioPrFecha'); if (fp && !fp.value) fp.value = hoy;
-    frioRenderChecklist();
+    frioRenderChecklist(null);
     frioPopularMecs('frioPrMec');
     frioLoadPrev();
   }
@@ -6847,39 +6907,57 @@ function frioDeleteAv(key) {
 }
 
 // ─── PREVENTIVO FRÍO ──────────────────────────────
-function frioRenderChecklist() {
-  const c=document.getElementById('frioPrChecklist');
-  if (!c||c.children.length) return;
-  c.innerHTML=FRIO_CHECKLIST.map((item,i)=>`
-    <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:7px;cursor:pointer;font-size:.87rem">
-      <input type="checkbox" id="frioPrChk_${i}" style="width:16px;height:16px;accent-color:#2ecc71;flex-shrink:0">
-      <span>${item}</span>
-    </label>`).join('');
+function frioRenderChecklist(filtro) {
+  const c = document.getElementById('frioPrChecklist');
+  if (!c) return;
+  const todos = frioGetAllChecklist();
+  const items = filtro ? todos.filter(it => it.periodo === filtro) : todos;
+  c.innerHTML = items.map((item, i) => {
+    const id = 'frioPrChk_' + (item._key || i);
+    const color = (FRIO_PERIODO_COLOR[item.periodo]||{}).color || 'rgba(255,255,255,.5)';
+    return `<label style="display:flex;align-items:center;gap:9px;padding:9px 12px;background:rgba(255,255,255,.03);border-radius:7px;cursor:pointer;font-size:.87rem;border:1px solid rgba(255,255,255,.05)">
+      <input type="checkbox" id="${id}" data-nombre="${item.nombre}" data-periodo="${item.periodo}" style="width:16px;height:16px;accent-color:#2ecc71;flex-shrink:0">
+      <span style="flex:1">${item.nombre}</span>
+      ${frioPeriodoBadge(item.periodo)}
+    </label>`;
+  }).join('');
+}
+
+function frioFiltrarChecklist() {
+  const filtro = document.getElementById('frioPrTipo').value;
+  frioRenderChecklist(filtro || null);
 }
 
 function frioLoadPrev() {
-  DB.ref('frio/preventivo').once('value').then(snap=>{
-    const all=snap.val()||{};
-    const tbody=document.getElementById('frioPrTbody');
+  DB.ref('frio/preventivo').once('value').then(snap => {
+    const all = snap.val() || {};
+    const tbody = document.getElementById('frioPrTbody');
     if (!tbody) return;
-    const rows=Object.entries(all).sort((a,b)=>b[1].ts-a[1].ts);
+    const rows = Object.entries(all).sort((a,b) => b[1].ts - a[1].ts);
     if (!rows.length) {
-      tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:rgba(255,255,255,.3);padding:20px">Sin revisiones preventivas registradas</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:rgba(255,255,255,.3);padding:20px">Sin revisiones preventivas registradas</td></tr>';
       return;
     }
-    tbody.innerHTML=rows.map(([k,r])=>{
-      const eq=(_frioEqs[r.equipoKey]||{}).nombre||'—';
-      const ok=Array.isArray(r.checklist)?r.checklist.filter(Boolean).length:'—';
-      const total=Array.isArray(r.checklist)?r.checklist.length:FRIO_CHECKLIST.length;
-      const pct=typeof ok==='number'?Math.round(ok/total*100):0;
-      const pctColor=pct>=80?'#2ecc71':pct>=50?'#f39c12':'#e74c3c';
+    tbody.innerHTML = rows.map(([k,r]) => {
+      const eq = (_frioEqs[r.equipoKey]||{}).nombre || '—';
+      let ok, total, pct;
+      if (Array.isArray(r.checklist) && r.checklist.length && typeof r.checklist[0] === 'object') {
+        ok = r.checklist.filter(x => x.ok).length;
+        total = r.checklist.length;
+      } else if (Array.isArray(r.checklist)) {
+        ok = r.checklist.filter(Boolean).length;
+        total = r.checklist.length;
+      } else { ok = '—'; total = '—'; }
+      pct = typeof ok === 'number' ? Math.round(ok / total * 100) : 0;
+      const pctColor = pct >= 80 ? '#2ecc71' : pct >= 50 ? '#f39c12' : '#e74c3c';
+      const tipoLabel = r.tipo ? frioPeriodoBadge(r.tipo) : '—';
       return `<tr>
         <td style="font-weight:600">${eq}</td>
         <td style="font-size:.85rem">${r.fecha||'—'}</td>
-        <td style="font-size:.82rem">${r.tipo||'—'}</td>
+        <td>${tipoLabel}</td>
         <td style="font-size:.85rem">${r.mecanico||'—'}</td>
         <td style="text-align:center"><span style="color:${pctColor};font-weight:700">${ok}/${total}</span></td>
-        <td style="font-size:.8rem;color:rgba(255,255,255,.6);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.obs||''}</td>
+        <td style="font-size:.8rem;color:rgba(255,255,255,.6);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.obs||''}">${r.obs||''}</td>
         <td><button onclick="frioDeletePrev('${k}')" style="background:none;border:none;color:rgba(231,76,60,.6);cursor:pointer">🗑️</button></td>
       </tr>`;
     }).join('');
@@ -6887,19 +6965,22 @@ function frioLoadPrev() {
 }
 
 function frioGuardarPrev() {
-  const equipoKey=document.getElementById('frioPrEq').value;
-  const fecha=document.getElementById('frioPrFecha').value;
-  if (!equipoKey||!fecha) { showToast('⚠️ Equipo y fecha son obligatorios'); return; }
-  const checklist=FRIO_CHECKLIST.map((_,i)=>!!(document.getElementById('frioPrChk_'+i)||{}).checked);
+  const equipoKey = document.getElementById('frioPrEq').value;
+  const fecha = document.getElementById('frioPrFecha').value;
+  if (!equipoKey || !fecha) { showToast('⚠️ Equipo y fecha son obligatorios'); return; }
+  const checklist = [];
+  document.querySelectorAll('#frioPrChecklist input[type=checkbox]').forEach(chk => {
+    checklist.push({nombre: chk.dataset.nombre, periodo: chk.dataset.periodo, ok: chk.checked});
+  });
   DB.ref('frio/preventivo').push({
     equipoKey, fecha,
-    tipo:document.getElementById('frioPrTipo').value,
-    mecanico:document.getElementById('frioPrMec').value,
-    checklist, obs:document.getElementById('frioPrObs').value.trim(),
-    ts:Date.now()
-  }).then(()=>{
-    document.getElementById('frioPrObs').value='';
-    FRIO_CHECKLIST.forEach((_,i)=>{const el=document.getElementById('frioPrChk_'+i);if(el)el.checked=false;});
+    tipo: document.getElementById('frioPrTipo').value || 'Todos',
+    mecanico: document.getElementById('frioPrMec').value,
+    checklist, obs: document.getElementById('frioPrObs').value.trim(),
+    ts: Date.now()
+  }).then(() => {
+    document.getElementById('frioPrObs').value = '';
+    document.querySelectorAll('#frioPrChecklist input[type=checkbox]').forEach(c => c.checked = false);
     frioLoadPrev();
     showToast('✅ Revisión preventiva guardada');
   });
@@ -6907,7 +6988,61 @@ function frioGuardarPrev() {
 
 function frioDeletePrev(key) {
   if (!confirm('¿Eliminar revisión?')) return;
-  DB.ref('frio/preventivo/'+key).remove().then(()=>frioLoadPrev());
+  DB.ref('frio/preventivo/' + key).remove().then(() => frioLoadPrev());
+}
+
+// ─── GESTIÓN CHECKLIST PERSONALIZADO ─────────────
+function frioGestionChecklist() {
+  frioRenderChecklistLista();
+  document.getElementById('frioChecklistModal').style.display = 'flex';
+}
+
+function frioRenderChecklistLista() {
+  const el = document.getElementById('frioChecklistLista');
+  if (!el) return;
+  const todos = frioGetAllChecklist();
+  el.innerHTML = todos.map((item, i) => {
+    const esCustom = !!item._key;
+    const c = FRIO_PERIODO_COLOR[item.periodo] || {};
+    return `<div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.06);flex-wrap:wrap">
+      <span style="flex:1;font-size:.88rem">${item.nombre}</span>
+      <select onchange="frioUpdateItemPeriod(this,'${item._key||'base_'+i}',${esCustom})" style="background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:4px 8px;font-family:'Barlow',sans-serif;font-size:.8rem;${esCustom?'':'opacity:.5;pointer-events:none'}">
+        ${['Mensual','Trimestral','Semestral','Anual','F-Gas obligatoria'].map(p=>`<option ${p===item.periodo?'selected':''}>${p}</option>`).join('')}
+      </select>
+      ${frioPeriodoBadge(item.periodo)}
+      ${esCustom ? `<button onclick="frioDeleteCustomItem('${item._key}')" style="background:none;border:none;color:rgba(231,76,60,.7);cursor:pointer;padding:2px 6px;font-size:.9rem" title="Eliminar">🗑️</button>` : '<span style="width:28px;font-size:.7rem;color:rgba(255,255,255,.25);text-align:center">base</span>'}
+    </div>`;
+  }).join('');
+}
+
+function frioAddCustomItem() {
+  const nombre = document.getElementById('frioNewItemNombre').value.trim();
+  const periodo = document.getElementById('frioNewItemPeriodo').value;
+  if (!nombre) { showToast('⚠️ Escribe una descripción'); return; }
+  DB.ref('frio/checklist_custom').push({nombre, periodo}).then(() => {
+    document.getElementById('frioNewItemNombre').value = '';
+    frioRenderChecklistLista();
+    frioRenderChecklist();
+    showToast('✅ Ítem añadido');
+  });
+}
+
+function frioDeleteCustomItem(key) {
+  if (!confirm('¿Eliminar este ítem del checklist?')) return;
+  DB.ref('frio/checklist_custom/' + key).remove().then(() => {
+    frioRenderChecklistLista();
+    frioRenderChecklist();
+    showToast('Ítem eliminado');
+  });
+}
+
+function frioUpdateItemPeriod(sel, key, esCustom) {
+  if (!esCustom) return;
+  DB.ref('frio/checklist_custom/' + key + '/periodo').set(sel.value).then(() => {
+    frioRenderChecklistLista();
+    frioRenderChecklist();
+    showToast('✅ Periodicidad actualizada');
+  });
 }
 </script>
 
