@@ -20,6 +20,7 @@
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -225,6 +226,7 @@ if('serviceWorker' in navigator){
   <div class="tab" onclick="switchTab('int')"  id="tab-int">🔩 Integrales</div>
   <div class="tab" onclick="switchTab('cur')"  id="tab-cur">📚 Cursos</div>
   <div class="tab" onclick="switchTab('rec')"  id="tab-rec">🔔 Recordatorios</div>
+  <div class="tab" onclick="switchTab('docs')" id="tab-docs">📁 Documentos</div>
   <div class="tab" onclick="switchTab('est')"  id="tab-est">🟢 Estado</div>
   <a href="calendario.html" target="_blank" class="tab" style="text-decoration:none">📅 Calendario</a>
   <a href="manual.html" target="_blank" class="tab" style="text-decoration:none">📖 Manual</a>
@@ -1231,7 +1233,8 @@ const FB_CFG = {
   appId:             "1:67593058609:web:c33fa1fa4fce2932485810"
 };
 if (!firebase.apps.length) firebase.initializeApp(FB_CFG);
-const DB = firebase.database();
+const DB      = firebase.database();
+const STORAGE = firebase.storage();
 
 // ── SESION UNIFICADA ──────────────────────────────
 (function(){
@@ -3213,6 +3216,7 @@ function switchTab(name){
   if(name==='inf') renderInformes();
   if(name==='maq') { loadMaquinasExtra(renderMaquinas); poblarQRSel(); poblarEstadoMaqSel(); }
   if(name==='rep') { cargarCatalogoRepuestos(); }
+  if(name==='docs') { docsInit(); }
   if(name==='cfg') cargarTareasDiariasAdmin();
   if(name==='cfg') cargarFechasRealizacion();
   if(name==='cfg') cargarFechasRealizacion();
@@ -5853,7 +5857,243 @@ function guardarNotaEst(id) {
     .then(function() { showToast('✅ Nota guardada'); })
     .catch(function() { showToast('❌ Error'); });
 }
+
+// ══════════════════════════════════════════════════
+// DOCUMENTOS
+// ══════════════════════════════════════════════════
+
+var _docsVistaActual = 'maquina'; // 'maquina' | 'repuesto'
+var _docsMaqId = '';
+var _docsRepKey = '';
+
+function docsInit(){
+  docsCargarMaquinas();
+  docsCargarRepuestos();
+  docsRenderLista();
+}
+
+function docsSetVista(v){
+  _docsVistaActual = v;
+  document.getElementById('docsVistaMaq').classList.toggle('active', v==='maquina');
+  document.getElementById('docsVistaRep').classList.toggle('active', v==='repuesto');
+  document.getElementById('docsSelectorMaq').style.display = v==='maquina' ? '' : 'none';
+  document.getElementById('docsSelectorRep').style.display = v==='repuesto' ? '' : 'none';
+  _docsMaqId = ''; _docsRepKey = '';
+  document.getElementById('docsMaqSel').value = '';
+  document.getElementById('docsRepSel').value = '';
+  docsRenderLista();
+}
+
+function docsCargarMaquinas(){
+  DB.ref('maquinas_extra').once('value').then(function(snap){
+    var val = snap.val() || {};
+    var maquinas = [];
+    // Añadir también las hardcodeadas que estén en MAQUINAS
+    if(typeof MAQUINAS !== 'undefined') maquinas = MAQUINAS.slice();
+    Object.values(val).forEach(function(m){ if(m && m.id && !maquinas.find(function(x){ return x.id===m.id; })) maquinas.push(m); });
+    maquinas.sort(function(a,b){ return (a.n||'').localeCompare(b.n||''); });
+    var sel = document.getElementById('docsMaqSel');
+    if(!sel) return;
+    sel.innerHTML = '<option value="">— Selecciona máquina —</option>'
+      + maquinas.map(function(m){ return '<option value="'+m.id+'">'+m.n+'</option>'; }).join('');
+  });
+}
+
+function docsCargarRepuestos(){
+  DB.ref('repuestos_catalogo').once('value').then(function(snap){
+    var val = snap.val() || {};
+    var reps = Object.entries(val).sort(function(a,b){ return (a[1].desc||'').localeCompare(b[1].desc||''); });
+    var sel = document.getElementById('docsRepSel');
+    if(!sel) return;
+    sel.innerHTML = '<option value="">— Selecciona repuesto —</option>'
+      + reps.map(function(e){ return '<option value="'+e[0]+'">'+(e[1].desc||e[0])+(e[1].ref?' ('+e[1].ref+')':'')+'</option>'; }).join('');
+  });
+}
+
+function docsOnMaqChange(){
+  _docsMaqId = document.getElementById('docsMaqSel').value;
+  docsRenderLista();
+}
+
+function docsOnRepChange(){
+  _docsRepKey = document.getElementById('docsRepSel').value;
+  docsRenderLista();
+}
+
+function docsGetPath(){
+  if(_docsVistaActual === 'maquina' && _docsMaqId) return 'documentos/maquinas/' + _docsMaqId;
+  if(_docsVistaActual === 'repuesto' && _docsRepKey) return 'documentos/repuestos/' + _docsRepKey;
+  return null;
+}
+
+function docsRenderLista(){
+  var wrap = document.getElementById('docsListaWrap');
+  if(!wrap) return;
+  var path = docsGetPath();
+  var uploadCard = document.getElementById('docsUploadCard');
+  if(uploadCard) uploadCard.style.display = path ? '' : 'none';
+  if(!path){
+    wrap.innerHTML = '<div style="text-align:center;padding:30px;color:rgba(255,255,255,0.25);font-size:0.9rem">Selecciona una máquina o repuesto para ver sus documentos.</div>';
+    return;
+  }
+  wrap.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3)">Cargando...</div>';
+  DB.ref(path).once('value').then(function(snap){
+    var val = snap.val() || {};
+    var docs = Object.entries(val).sort(function(a,b){ return (b[1].ts||0)-(a[1].ts||0); });
+    if(!docs.length){
+      wrap.innerHTML = '<div style="text-align:center;padding:30px;color:rgba(255,255,255,0.25)">Sin documentos. Sube el primero arriba.</div>';
+      return;
+    }
+    wrap.innerHTML = docs.map(function(e){
+      var id = e[0], d = e[1];
+      var esImagen = (d.tipo||'').startsWith('image/');
+      var ico = esImagen ? '🖼️' : '📄';
+      var fecha = d.ts ? new Date(d.ts).toLocaleDateString('es-ES') : '—';
+      var size = d.size ? (d.size > 1048576 ? (d.size/1048576).toFixed(1)+' MB' : Math.round(d.size/1024)+' KB') : '';
+      return '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--navy-light);border:1px solid rgba(255,255,255,0.07);border-radius:9px;margin-bottom:8px">'
+        + '<span style="font-size:1.4rem">'+ico+'</span>'
+        + '<div style="flex:1;min-width:0">'
+          + '<div style="font-weight:700;font-size:0.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escHtml(d.nombre||id)+'</div>'
+          + '<div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-top:2px">'+fecha+(size?' · '+size:'')+'</div>'
+        + '</div>'
+        + '<a href="'+d.url+'" target="_blank" style="background:rgba(52,152,219,0.2);border:1px solid rgba(52,152,219,0.4);color:#74b9ff;padding:6px 12px;border-radius:7px;font-size:0.78rem;font-weight:700;text-decoration:none;white-space:nowrap">👁 Ver</a>'
+        + '<button onclick="docsBorrar(\''+path+'\',\''+id+'\',\''+escAttr(d.storagePath||'')+'\',\''+escAttr(d.nombre||id)+'\')" style="background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.35);color:var(--red);padding:6px 12px;border-radius:7px;font-size:0.78rem;font-weight:700;cursor:pointer;white-space:nowrap">✕</button>'
+        + '</div>';
+    }).join('');
+  });
+}
+
+function docsSubir(){
+  var path = docsGetPath();
+  if(!path){ showToast('⚠️ Selecciona máquina o repuesto primero'); return; }
+  var fileInput = document.getElementById('docsFileInput');
+  var file = fileInput.files[0];
+  if(!file){ showToast('⚠️ Selecciona un archivo'); return; }
+
+  var maxMB = 20;
+  if(file.size > maxMB * 1024 * 1024){ showToast('⚠️ Archivo demasiado grande (máx '+maxMB+' MB)'); return; }
+
+  var tiposPermitidos = ['application/pdf','image/jpeg','image/png','image/gif','image/webp'];
+  if(!tiposPermitidos.includes(file.type)){ showToast('⚠️ Solo se permiten PDF e imágenes'); return; }
+
+  var nombreLimpio = file.name.replace(/[^a-zA-Z0-9._\-áéíóúÁÉÍÓÚñÑ ]/g, '_');
+  var storagePath  = path + '/' + Date.now() + '_' + nombreLimpio;
+
+  var progressWrap = document.getElementById('docsProgress');
+  var progressBar  = document.getElementById('docsProgressBar');
+  var progressTxt  = document.getElementById('docsProgressTxt');
+  progressWrap.style.display = 'block';
+  progressBar.style.width = '0%';
+  progressTxt.textContent = 'Subiendo...';
+
+  var ref  = STORAGE.ref(storagePath);
+  var task = ref.put(file);
+
+  task.on('state_changed',
+    function(snapshot){
+      var pct = Math.round(snapshot.bytesTransferred / snapshot.totalBytes * 100);
+      progressBar.style.width = pct + '%';
+      progressTxt.textContent = pct + '%';
+    },
+    function(error){
+      progressWrap.style.display = 'none';
+      showToast('❌ Error al subir: ' + (error.code || error.message));
+    },
+    function(){
+      task.snapshot.ref.getDownloadURL().then(function(url){
+        var docId = Date.now().toString();
+        var meta  = { nombre: nombreLimpio, url: url, tipo: file.type, size: file.size, ts: Date.now(), storagePath: storagePath };
+        DB.ref(path + '/' + docId).set(meta).then(function(){
+          progressWrap.style.display = 'none';
+          fileInput.value = '';
+          document.getElementById('docsFileLabel').textContent = 'Ningún archivo seleccionado';
+          showToast('✅ Documento subido correctamente');
+          docsRenderLista();
+        });
+      });
+    }
+  );
+}
+
+function docsBorrar(dbPath, docId, storagePath, nombre){
+  if(!confirm('¿Eliminar "'+nombre+'"?\nSe borrará el archivo del servidor permanentemente.')) return;
+  var promises = [DB.ref(dbPath+'/'+docId).remove()];
+  if(storagePath) promises.push(STORAGE.ref(storagePath).delete().catch(function(){}));
+  Promise.all(promises).then(function(){
+    showToast('🗑 Documento eliminado');
+    docsRenderLista();
+  });
+}
+
+function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escAttr(s){ return String(s||'').replace(/'/g,'&#39;').replace(/"/g,'&quot;'); }
 </script>
+
+<!-- ═══ DOCUMENTOS ═══ -->
+<div class="panel" id="panel-docs">
+
+  <!-- Selector tipo -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="sec-title" style="margin-bottom:12px">📁 Gestión de Documentos</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button id="docsVistaMaq" onclick="docsSetVista('maquina')"
+        style="flex:1;padding:10px;border-radius:8px;font-family:'Barlow',sans-serif;font-size:0.88rem;font-weight:700;cursor:pointer;border:1px solid rgba(201,162,39,0.35);background:rgba(201,162,39,0.2);color:var(--gold-light);transition:all .2s"
+        class="active">🏭 Por Máquina</button>
+      <button id="docsVistaRep" onclick="docsSetVista('repuesto')"
+        style="flex:1;padding:10px;border-radius:8px;font-family:'Barlow',sans-serif;font-size:0.88rem;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.6);transition:all .2s">
+        🔧 Por Repuesto</button>
+    </div>
+
+    <!-- Selector máquina -->
+    <div id="docsSelectorMaq">
+      <label style="font-size:0.72rem;color:var(--gold);display:block;margin-bottom:5px;letter-spacing:.1em;text-transform:uppercase">Máquina</label>
+      <select id="docsMaqSel" onchange="docsOnMaqChange()"
+        style="width:100%;max-width:400px;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 14px;font-family:'Barlow',sans-serif;font-size:0.9rem">
+        <option value="">— Selecciona máquina —</option>
+      </select>
+    </div>
+
+    <!-- Selector repuesto -->
+    <div id="docsSelectorRep" style="display:none">
+      <label style="font-size:0.72rem;color:var(--gold);display:block;margin-bottom:5px;letter-spacing:.1em;text-transform:uppercase">Repuesto</label>
+      <select id="docsRepSel" onchange="docsOnRepChange()"
+        style="width:100%;max-width:500px;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 14px;font-family:'Barlow',sans-serif;font-size:0.9rem">
+        <option value="">— Selecciona repuesto —</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Subir documento -->
+  <div class="card" id="docsUploadCard" style="display:none;margin-bottom:14px;border:1px solid rgba(46,204,113,0.2)">
+    <div class="sec-title" style="margin-bottom:12px;color:var(--green)">⬆️ Subir documento</div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <label style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:9px 16px;cursor:pointer;font-size:0.85rem;font-weight:600;color:rgba(255,255,255,0.7);transition:all .2s"
+        onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
+        📎 Elegir archivo (PDF / imagen)
+        <input type="file" id="docsFileInput" accept=".pdf,image/*" style="display:none"
+          onchange="document.getElementById('docsFileLabel').textContent=this.files[0]?this.files[0].name:'Ningún archivo seleccionado'">
+      </label>
+      <span id="docsFileLabel" style="font-size:0.82rem;color:rgba(255,255,255,0.4);font-style:italic">Ningún archivo seleccionado</span>
+      <button onclick="docsSubir()" class="btn-export btn-green" style="white-space:nowrap">⬆️ Subir</button>
+    </div>
+    <!-- Barra de progreso -->
+    <div id="docsProgress" style="display:none;margin-top:12px">
+      <div style="background:rgba(255,255,255,0.07);border-radius:4px;height:8px;overflow:hidden;margin-bottom:4px">
+        <div id="docsProgressBar" style="height:100%;border-radius:4px;background:linear-gradient(90deg,var(--green),#27ae60);width:0%;transition:width .2s"></div>
+      </div>
+      <div id="docsProgressTxt" style="font-size:0.75rem;color:var(--green);text-align:center">0%</div>
+    </div>
+  </div>
+
+  <!-- Lista documentos -->
+  <div class="card">
+    <div class="sec-title" style="margin-bottom:12px">📋 Documentos subidos</div>
+    <div id="docsListaWrap">
+      <div style="text-align:center;padding:30px;color:rgba(255,255,255,0.25);font-size:0.9rem">Selecciona una máquina o repuesto para ver sus documentos.</div>
+    </div>
+  </div>
+
+</div>
 
 </body>
 </html>
