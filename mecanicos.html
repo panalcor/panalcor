@@ -322,7 +322,7 @@ if('serviceWorker' in navigator){
   <div class="tab" onclick="switchTab('formacion')">
     <span class="tab-icon">🎓</span>Formación
   </div>
-  <div class="tab" onclick="switchTab('frio')">
+  <div class="tab" id="tabFrioMec" onclick="switchTab('frio')" style="display:none">
     <span class="tab-icon">❄️</span>Frío
   </div>
 </div>
@@ -1094,6 +1094,12 @@ function _aplicarSesionMec(nombre){
     Array.from(sel.options).forEach(function(o){
       if(o.value && o.value.toUpperCase() === nombre.toUpperCase()) sel.value = o.value;
     });
+  }
+  // Mostrar pestaña Frío solo a Gregorio y Jose
+  var tabFrio = document.getElementById('tabFrioMec');
+  if(tabFrio){
+    var n = nombre.toUpperCase();
+    tabFrio.style.display = (n === 'GREGORIO' || n === 'JOSE') ? '' : 'none';
   }
 }
 
