@@ -377,6 +377,14 @@ if('serviceWorker' in navigator){
 
     <!-- TAB: DOCUMENTOS -->
     <div class="dpanel" id="dpanel-docs">
+      <div id="ghTokenWrap" style="background:rgba(201,162,39,0.07);border:1px solid rgba(201,162,39,0.2);border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <span style="font-size:0.72rem;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap">🔑 Token GitHub</span>
+        <input type="password" id="ghTokenInput" placeholder="ghp_..."
+          style="flex:1;min-width:140px;background:var(--navy-deep);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:6px 10px;color:#fff;font-family:Barlow,sans-serif;font-size:0.85rem">
+        <button onclick="guardarGhToken()"
+          style="background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a;border:none;border-radius:6px;padding:6px 14px;font-family:Barlow,sans-serif;font-weight:700;cursor:pointer;white-space:nowrap">Guardar</button>
+        <span id="ghTokenMsg" style="font-size:0.78rem;color:var(--green)"></span>
+      </div>
       <div class="upload-area" id="docUploadArea"
         onclick="document.getElementById('docInput').click()"
         ondragover="event.preventDefault();this.classList.add('dragover')"
@@ -720,7 +728,7 @@ function switchTab(el){
   var tab = el.dataset.tab;
   if(tab === 'inst')  cargarInstrucciones();
   if(tab === 'fotos') cargarFotos();
-  if(tab === 'docs')  { cargarDocs(); }
+  if(tab === 'docs')  { initGhTokenField(); cargarDocs(); }
   if(tab === 'hist')  cargarHistorial();
 }
 
@@ -904,8 +912,30 @@ function borrarFoto(name, elemId){
 }
 
 // ══════════════════════════════════════════
-// TAB DOCUMENTOS — Firebase Storage
+// TAB DOCUMENTOS — GitHub API
 // ══════════════════════════════════════════
+var GH_REPO   = 'panalcor/panalcor';
+var GH_BRANCH = 'main';
+
+function getGhToken(){ return localStorage.getItem('ghToken') || ''; }
+function ghApiUrl(path){ return 'https://api.github.com/repos/' + GH_REPO + '/contents/' + path; }
+
+function guardarGhToken(){
+  var val = document.getElementById('ghTokenInput').value.trim();
+  if(!val) return;
+  localStorage.setItem('ghToken', val);
+  document.getElementById('ghTokenInput').value = val.substring(0,8) + '...';
+  var msg = document.getElementById('ghTokenMsg');
+  msg.textContent = '✓ Guardado';
+  setTimeout(function(){ msg.textContent = ''; }, 2000);
+}
+
+function initGhTokenField(){
+  var el = document.getElementById('ghTokenInput');
+  if(!el) return;
+  var t = getGhToken();
+  el.value = t ? t.substring(0,8) + '...' : '';
+}
 
 function dropDocs(e){
   e.preventDefault();
@@ -915,6 +945,11 @@ function dropDocs(e){
 
 function subirDocs(files){
   if(!maqActual || !files.length) return;
+  var token = getGhToken();
+  if(!token){
+    alert('⚠️ Introduce y guarda el Token GitHub en la sección de arriba antes de subir documentos.');
+    return;
+  }
   var list  = Array.from(files);
   var prog  = document.getElementById('docProgress');
   var fill  = document.getElementById('docPFill');
@@ -923,46 +958,37 @@ function subirDocs(files){
   var done = 0;
 
   list.forEach(function(file){
-    var safeName = Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-    var stoPath  = 'maquinas/' + maqActual.id + '/docs/' + safeName;
-    var ref = STORAGE.ref(stoPath);
-    var task = ref.put(file);
-    task.on('state_changed',
-      function(snap){
-        var pct = Math.round(snap.bytesTransferred / snap.totalBytes * 100);
-        fill.style.width = pct + '%';
-        label.textContent = 'Subiendo ' + file.name + '... ' + pct + '%';
-      },
-      function(err){
+    var safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    var ghPath   = 'manuales/' + maqActual.id + '/' + safeName;
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      var b64 = ev.target.result.split(',')[1];
+      fill.style.width = '40%';
+      label.textContent = 'Subiendo ' + file.name + '...';
+      fetch(ghApiUrl(ghPath), {
+        method: 'PUT',
+        headers: { 'Authorization': 'token ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: 'Add doc ' + safeName + ' [' + maqActual.id + ']', content: b64, branch: GH_BRANCH })
+      })
+      .then(function(r){ if(!r.ok) return r.json().then(function(j){ throw new Error(j.message||r.status); }); return r.json(); })
+      .then(function(data){
+        var url = 'https://panalcor.github.io/panalcor/' + ghPath;
+        var meta = { nombre: file.name, url: url, ghPath: ghPath, sha: data.content ? data.content.sha : '', fecha: new Date().toISOString().substring(0,10), size: file.size };
+        return DB.ref('maquinas/' + maqActual.id + '/docs').push(meta);
+      })
+      .then(function(){
+        done++;
+        fill.style.width = Math.round(done / list.length * 100) + '%';
+        label.textContent = 'Listo (' + done + '/' + list.length + ')';
+        if(done === list.length){ setTimeout(function(){ prog.style.display='none'; fill.style.width='0%'; }, 1200); cargarDocs(); }
+      })
+      .catch(function(err){
         done++;
         label.textContent = '❌ Error: ' + err.message;
         if(done === list.length) setTimeout(function(){ prog.style.display='none'; }, 3000);
-      },
-      function(){
-        ref.getDownloadURL().then(function(url){
-          var meta = {
-            nombre : file.name,
-            url    : url,
-            stoRef : stoPath,
-            fecha  : new Date().toISOString().substring(0,10),
-            size   : file.size
-          };
-          return DB.ref('maquinas/' + maqActual.id + '/docs').push(meta);
-        }).then(function(){
-          done++;
-          fill.style.width = Math.round(done / list.length * 100) + '%';
-          label.textContent = 'Listo (' + done + '/' + list.length + ')';
-          if(done === list.length){
-            setTimeout(function(){ prog.style.display='none'; fill.style.width='0%'; }, 1200);
-            cargarDocs();
-          }
-        }).catch(function(err){
-          done++;
-          label.textContent = '❌ Error: ' + err.message;
-          if(done === list.length) setTimeout(function(){ prog.style.display='none'; }, 3000);
-        });
-      }
-    );
+      });
+    };
+    reader.readAsDataURL(file);
   });
 }
 
@@ -970,50 +996,45 @@ function cargarDocs(){
   if(!maqActual) return;
   var lista = document.getElementById('docList');
   lista.innerHTML = '<div class="no-data-msg">Cargando...</div>';
-
   DB.ref('maquinas/' + maqActual.id + '/docs').once('value').then(function(snap){
     var val = snap.val();
-    if(!val || !Object.keys(val).length){
-      lista.innerHTML = '<div class="no-data-msg">Sin documentos todavía</div>';
-      return;
-    }
-    var docs = Object.entries(val).map(function(e){
-      return Object.assign({ _key: e[0] }, e[1]);
-    }).sort(function(a,b){ return (b.fecha||'') > (a.fecha||'') ? 1 : -1; });
-
+    if(!val || !Object.keys(val).length){ lista.innerHTML = '<div class="no-data-msg">Sin documentos todavía</div>'; return; }
+    var docs = Object.entries(val).map(function(e){ return Object.assign({ _key: e[0] }, e[1]); })
+               .sort(function(a,b){ return (b.fecha||'') > (a.fecha||'') ? 1 : -1; });
     lista.innerHTML = docs.map(function(d){
       var ext  = (d.nombre||'').split('.').pop().toUpperCase();
-      var icon = ext==='PDF' ? '📕' : ext==='XLS'||ext==='XLSX' ? '📗' :
-                 ext==='DOC'||ext==='DOCX' ? '📘' : '📎';
+      var icon = ext==='PDF'?'📕':ext==='XLS'||ext==='XLSX'?'📗':ext==='DOC'||ext==='DOCX'?'📘':'📎';
       var size = d.size>1048576 ? (d.size/1048576).toFixed(1)+' MB' : Math.round(d.size/1024)+' KB';
-      var stoRef = (d.stoRef||'').replace(/'/g,"\\'");
-      var nombre = (d.nombre||'').replace(/'/g,"\\'");
       return '<div class="doc-item" id="doc_' + d._key + '">' +
         '<div class="doc-icon">' + icon + '</div>' +
-        '<div class="doc-info">' +
-          '<div class="doc-name">' + (d.nombre||'') + '</div>' +
-          '<div class="doc-meta">' + size + ' · ' + (d.fecha||'') + '</div>' +
-        '</div>' +
+        '<div class="doc-info"><div class="doc-name">' + (d.nombre||d.ghPath||'') + '</div><div class="doc-meta">' + size + ' · ' + (d.fecha||'') + '</div></div>' +
         '<div class="doc-actions">' +
           '<a class="doc-btn" href="' + d.url + '" target="_blank">⬇️ Abrir</a>' +
-          '<button class="doc-btn del" onclick="borrarDoc(\'' + d._key + '\',\'' + stoRef + '\',\'' + nombre + '\')">🗑️</button>' +
-        '</div>' +
-      '</div>';
+          '<button class="doc-btn del" onclick="borrarDoc(\'' + d._key + '\',\'' + (d.ghPath||'').replace(/\'/g,"\'") + '\',\'' + (d.nombre||'').replace(/\'/g,"\'") + '\')">🗑️</button>' +
+        '</div></div>';
     }).join('');
-  }).catch(function(){
-    lista.innerHTML = '<div class="no-data-msg">Error al cargar documentos</div>';
-  });
+  }).catch(function(){ lista.innerHTML = '<div class="no-data-msg">Error al cargar documentos</div>'; });
 }
 
-function borrarDoc(key, stoRef, nombre){
+function borrarDoc(key, ghPath, nombre){
   if(!confirm('¿Eliminar "' + nombre + '"?')) return;
-  DB.ref('maquinas/' + maqActual.id + '/docs/' + key).remove().then(function(){
-    if(stoRef) STORAGE.ref(stoRef).delete().catch(function(){});
-    var el = document.getElementById('doc_' + key);
-    if(el) el.remove();
-    var items = document.querySelectorAll('#docList .doc-item');
-    if(!items.length) document.getElementById('docList').innerHTML = '<div class="no-data-msg">Sin documentos todavía</div>';
-  });
+  var token = getGhToken();
+  function quitarDeDB(){
+    DB.ref('maquinas/' + maqActual.id + '/docs/' + key).remove().then(function(){
+      var el = document.getElementById('doc_' + key);
+      if(el) el.remove();
+      var items = document.querySelectorAll('#docList .doc-item');
+      if(!items.length) document.getElementById('docList').innerHTML = '<div class="no-data-msg">Sin documentos todavía</div>';
+    });
+  }
+  if(token && ghPath){
+    fetch(ghApiUrl(ghPath), { headers:{ 'Authorization':'token '+token } })
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        return fetch(ghApiUrl(ghPath),{ method:'DELETE', headers:{ 'Authorization':'token '+token, 'Content-Type':'application/json' }, body: JSON.stringify({ message:'Remove doc '+nombre, sha: data.sha, branch: GH_BRANCH }) });
+      })
+      .then(quitarDeDB).catch(quitarDeDB);
+  } else { quitarDeDB(); }
 }
 
 // TAB HISTORIAL — Ficha analítica
