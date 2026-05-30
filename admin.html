@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -6613,7 +6613,7 @@ function frioBulkEstado(estado) {
   if (!confirm('¿Cambiar estado a "' + estado + '" en ' + _frioSel.size + ' equipo(s)?')) return;
   const updates = {};
   _frioSel.forEach(k => { updates['frio/equipos/' + k + '/estado'] = estado; });
-  DB.ref().update(updates).then(() => { toast('✅ Estado actualizado en ' + _frioSel.size + ' equipos'); frioDeselAll(); });
+  DB.ref().update(updates).then(() => { showToast('✅ Estado actualizado en ' + _frioSel.size + ' equipos'); frioDeselAll(); });
 }
 
 function frioBulkEdit() {
@@ -6647,9 +6647,9 @@ function frioBulkGuardar() {
       updates['frio/equipos/' + k + '/' + field] = v;
     });
   });
-  if (!Object.keys(updates).length) { toast('⚠️ No hay campos para actualizar'); return; }
+  if (!Object.keys(updates).length) { showToast('⚠️ No hay campos para actualizar'); return; }
   DB.ref().update(updates).then(() => {
-    toast('✅ ' + _frioSel.size + ' equipo(s) actualizados');
+    showToast('✅ ' + _frioSel.size + ' equipo(s) actualizados');
     document.getElementById('frioBulkModal').style.display = 'none';
     frioDeselAll();
   }).catch(err => alert('Error: ' + err.message));
@@ -6661,7 +6661,7 @@ function frioImportarBase() {
   const payload = {};
   FRIO_EQUIPOS_BASE.forEach((eq, i) => { payload['eq' + String(i).padStart(3,'0')] = eq; });
   DB.ref('frio/equipos').set(payload)
-    .then(() => toast('✅ 47 equipos cargados correctamente'))
+    .then(() => showToast('✅ 47 equipos cargados correctamente'))
     .catch(err => { alert('Error al guardar en Firebase: ' + err.message); console.error(err); });
 }
 
@@ -6717,7 +6717,7 @@ function frioEqModalClose() {
 function frioGuardarEq() {
   const nombre = document.getElementById('frioEqNombre').value.trim();
   const tipo   = document.getElementById('frioEqTipo').value;
-  if (!nombre || !tipo) { toast('⚠️ Nombre y tipo son obligatorios'); return; }
+  if (!nombre || !tipo) { showToast('⚠️ Nombre y tipo son obligatorios'); return; }
   const key = document.getElementById('frioEqKey').value || DB.ref('frio/equipos').push().key;
   const g = id => document.getElementById(id).value;
   DB.ref('frio/equipos/'+key).set({
@@ -6728,12 +6728,12 @@ function frioGuardarEq() {
     tMax:g('frioEqTMax')!==''?parseFloat(g('frioEqTMax')):'', potencia:parseFloat(g('frioEqPot'))||'',
     fechaInst:g('frioEqFechaInst'), proxRev:g('frioEqProxRev'), estado:g('frioEqEstado')||'Operativo',
     notas:g('frioEqNotas').trim()
-  }).then(() => { frioEqModalClose(); toast('✅ Equipo guardado'); });
+  }).then(() => { frioEqModalClose(); showToast('✅ Equipo guardado'); });
 }
 
 function frioDeleteEq(key) {
   if (!confirm('¿Eliminar este equipo?')) return;
-  DB.ref('frio/equipos/'+key).remove().then(() => toast('Equipo eliminado'));
+  DB.ref('frio/equipos/'+key).remove().then(() => showToast('Equipo eliminado'));
 }
 
 // ─── TEMPERATURAS ─────────────────────────────────
@@ -6774,7 +6774,7 @@ function frioGuardarTemp() {
   const equipoKey=document.getElementById('frioTmpEq').value;
   const temperatura=document.getElementById('frioTmpVal').value;
   const fecha=document.getElementById('frioTmpFecha').value;
-  if (!equipoKey||temperatura===''||!fecha) { toast('⚠️ Equipo, fecha y temperatura son obligatorios'); return; }
+  if (!equipoKey||temperatura===''||!fecha) { showToast('⚠️ Equipo, fecha y temperatura son obligatorios'); return; }
   DB.ref('frio/temperaturas').push({
     equipoKey, temperatura:parseFloat(temperatura), fecha,
     hora:document.getElementById('frioTmpHora').value,
@@ -6785,7 +6785,7 @@ function frioGuardarTemp() {
     document.getElementById('frioTmpVal').value='';
     document.getElementById('frioTmpObs').value='';
     frioLoadTemps();
-    toast('✅ Temperatura registrada');
+    showToast('✅ Temperatura registrada');
   });
 }
 
@@ -6824,7 +6824,7 @@ function frioLoadAverias() {
 function frioGuardarAveria() {
   const equipoKey=document.getElementById('frioAvEq').value;
   const descripcion=document.getElementById('frioAvDesc').value.trim();
-  if (!equipoKey||!descripcion) { toast('⚠️ Equipo y descripción son obligatorios'); return; }
+  if (!equipoKey||!descripcion) { showToast('⚠️ Equipo y descripción son obligatorios'); return; }
   DB.ref('frio/averias').push({
     equipoKey,
     fechaHora:document.getElementById('frioAvFecha').value,
@@ -6837,7 +6837,7 @@ function frioGuardarAveria() {
   }).then(()=>{
     ['frioAvDesc','frioAvSol'].forEach(id=>document.getElementById(id).value='');
     frioLoadAverias();
-    toast('✅ Avería registrada');
+    showToast('✅ Avería registrada');
   });
 }
 
@@ -6889,7 +6889,7 @@ function frioLoadPrev() {
 function frioGuardarPrev() {
   const equipoKey=document.getElementById('frioPrEq').value;
   const fecha=document.getElementById('frioPrFecha').value;
-  if (!equipoKey||!fecha) { toast('⚠️ Equipo y fecha son obligatorios'); return; }
+  if (!equipoKey||!fecha) { showToast('⚠️ Equipo y fecha son obligatorios'); return; }
   const checklist=FRIO_CHECKLIST.map((_,i)=>!!(document.getElementById('frioPrChk_'+i)||{}).checked);
   DB.ref('frio/preventivo').push({
     equipoKey, fecha,
@@ -6901,7 +6901,7 @@ function frioGuardarPrev() {
     document.getElementById('frioPrObs').value='';
     FRIO_CHECKLIST.forEach((_,i)=>{const el=document.getElementById('frioPrChk_'+i);if(el)el.checked=false;});
     frioLoadPrev();
-    toast('✅ Revisión preventiva guardada');
+    showToast('✅ Revisión preventiva guardada');
   });
 }
 
@@ -6913,3 +6913,4 @@ function frioDeletePrev(key) {
 
 </body>
 </html>
+
