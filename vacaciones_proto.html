@@ -129,6 +129,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 <div class="tabs">
   <div class="tab active" id="tab-festivos"   onclick="switchTab('festivos')">📅 Festivos</div>
   <div class="tab"        id="tab-ausencias"  onclick="switchTab('ausencias')">👷 Ausencias</div>
+  <div class="tab"        id="tab-bolsas"     onclick="switchTab('bolsas')">📊 Bolsas de días</div>
   <div class="tab"        id="tab-semanas"    onclick="switchTab('semanas')">🔄 Semanas afectadas</div>
   <div class="tab"        id="tab-resumen"    onclick="switchTab('resumen')">📋 Resumen</div>
 </div>
@@ -224,6 +225,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
         <button class="btn btn-gold" onclick="addAusencia()" style="margin-top:22px">+ Añadir</button>
       </div>
     </div>
+    <div id="ausWarn" style="display:none;margin-top:10px;padding:10px 14px;background:rgba(243,156,18,0.1);border:1px solid rgba(243,156,18,0.35);border-radius:8px;font-size:0.83rem;color:var(--yellow);line-height:1.6"></div>
   </div>
 
   <div class="card">
@@ -231,6 +233,17 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
     <div id="ausenciasWrap">
       <div class="empty"><div class="ico">👷</div>Sin ausencias registradas.</div>
     </div>
+  </div>
+</div>
+
+<!-- ═══ BOLSAS ═══ -->
+<div class="panel" id="panel-bolsas">
+  <div class="info-box" style="margin-bottom:14px">
+    Datos leídos en tiempo real desde <b>turnos.html</b> (Firebase <code>turnos/</code>). Solo lectura.
+    <button class="btn btn-outline btn-sm" onclick="cargarTurnos()" style="margin-left:10px">🔄 Actualizar</button>
+  </div>
+  <div id="bolsasGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">
+    <div class="empty"><div class="ico">⏳</div>Cargando bolsas...</div>
   </div>
 </div>
 
@@ -290,6 +303,9 @@ var _tareas     = []; // tareas_diarias de Firebase
 var _festivos   = loadLS('prot_festivos') || [];   // [{fecha:'2026-01-01', desc:'Año Nuevo'}]
 var _ausencias  = loadLS('prot_ausencias') || [];  // [{id, mec, tipo, desde, hasta, nota}]
 var _sustitutos = loadLS('prot_sustitutos') || {}; // {'mecAusente|YYYY-WW': 'mecSustituto'}
+
+// Datos de turnos.html (solo lectura)
+var _T = { mecanicos:{}, bolsas:{}, sabados:{}, festivos:{}, config:{ vacTotal:22, asuTotal:5 } };
 
 /* ════ HELPERS ════ */
 function loadLS(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }
@@ -361,20 +377,39 @@ function tipoLabel(t){
 
 /* ════ FIREBASE: CARGAR DATOS ════ */
 function cargarDatos(){
-  var fallback = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE'];
-  DB.ref('config/mecanicos').once('value').then(function(s){
-    var v = s.val();
-    _mecanicos = (v && v.length) ? v : fallback;
-    renderMecSelects();
-  }).catch(function(){
-    _mecanicos = fallback;
-    renderMecSelects();
-  });
+  cargarTurnos();
 
   DB.ref('tareas_diarias').once('value').then(function(s){
     var val = s.val() || {};
     _tareas = Object.values(val).filter(function(t){ return t && t.id; });
   }).catch(function(){ _tareas = []; });
+}
+
+function cargarTurnos(){
+  DB.ref('turnos').once('value').then(function(s){
+    var d = s.val() || {};
+    if(d.mecanicos) _T.mecanicos = d.mecanicos;
+    if(d.bolsas)    _T.bolsas    = d.bolsas;
+    if(d.sabados)   _T.sabados   = d.sabados;
+    if(d.festivos)  _T.festivos  = d.festivos;
+    if(d.config)    _T.config    = Object.assign({vacTotal:22,asuTotal:5}, d.config);
+
+    // Usar nombres de turnos para los selects
+    _mecanicos = Object.keys(_T.mecanicos).sort(function(a,b){ return +a-+b; })
+      .map(function(k){ return _T.mecanicos[k].nombre || 'Mec '+k; })
+      .filter(Boolean);
+
+    renderMecSelects();
+    if(document.getElementById('panel-bolsas').classList.contains('active')) renderBolsas();
+  }).catch(function(){
+    // fallback a lista global
+    var fallback = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE'];
+    DB.ref('config/mecanicos').once('value').then(function(s){
+      var v = s.val();
+      _mecanicos = (v && v.length) ? v : fallback;
+      renderMecSelects();
+    }).catch(function(){ _mecanicos = fallback; renderMecSelects(); });
+  });
 }
 
 function renderMecSelects(){
@@ -539,6 +574,45 @@ function addAusencia(){
   if(!desde){ showToast('⚠️ Indica fecha de inicio'); return; }
   if(!hasta){ showToast('⚠️ Indica fecha de fin'); return; }
   if(hasta < desde){ showToast('⚠️ La fecha de fin no puede ser anterior al inicio'); return; }
+
+  // Aviso bolsa desde turnos.html
+  var warnEl = document.getElementById('ausWarn');
+  warnEl.style.display = 'none';
+  var mecKey = getTurnosMecKey(mec);
+  if(mecKey && (tipo === 'VAC' || tipo === 'AP')){
+    var diasNuevos = diasHabilesEnRango(desde, hasta);
+    var b = _T.bolsas[mecKey] || {};
+    var cfg = _T.config;
+    if(tipo === 'VAC'){
+      var usados = b.vacacionesUsadas || 0;
+      var total  = cfg.vacTotal || 22;
+      var resta  = Math.max(0, total - usados);
+      // Contar ya registradas en el prototipo
+      var yaReg = _ausencias.filter(function(a){ return a.mec===mec && a.tipo==='VAC'; })
+        .reduce(function(s,a){ return s + diasHabilesEnRango(a.desde, a.hasta); }, 0);
+      var disponibles = Math.max(0, resta - yaReg);
+      if(diasNuevos > disponibles){
+        warnEl.innerHTML = '⚠️ <b>'+mec+'</b> tiene <b>'+disponibles+'</b> día'+(disponibles!==1?'s':'')+' de vacaciones disponibles'
+          +' ('+total+' totales − '+usados+' usados en turnos'+(yaReg?' − '+yaReg+' en este prototipo':'')+')'
+          +'. Estás añadiendo <b>'+diasNuevos+'</b> días hábiles.';
+        warnEl.style.display = 'block';
+      }
+    } else if(tipo === 'AP'){
+      var usadosAP = b.asuntosUsados || 0;
+      var totalAP  = cfg.asuTotal || 5;
+      var restaAP  = Math.max(0, totalAP - usadosAP);
+      var yaRegAP  = _ausencias.filter(function(a){ return a.mec===mec && a.tipo==='AP'; })
+        .reduce(function(s,a){ return s + diasHabilesEnRango(a.desde, a.hasta); }, 0);
+      var disponiblesAP = Math.max(0, restaAP - yaRegAP);
+      if(diasNuevos > disponiblesAP){
+        warnEl.innerHTML = '⚠️ <b>'+mec+'</b> tiene <b>'+disponiblesAP+'</b> asunto'+(disponiblesAP!==1?'s':'')+' propio'+(disponiblesAP!==1?'s':'')+' disponible'+(disponiblesAP!==1?'s':'')+''
+          +' ('+totalAP+' totales − '+usadosAP+' usados en turnos'+(yaRegAP?' − '+yaRegAP+' en este prototipo':'')+')'
+          +'. Estás añadiendo <b>'+diasNuevos+'</b> días hábiles.';
+        warnEl.style.display = 'block';
+      }
+    }
+  }
+
   _ausencias.push({id: Date.now().toString(), mec:mec, tipo:tipo, desde:desde, hasta:hasta, nota:nota});
   _ausencias.sort(function(a,b){ return a.desde.localeCompare(b.desde)||a.mec.localeCompare(b.mec); });
   saveLS('prot_ausencias', _ausencias);
@@ -793,6 +867,98 @@ function renderResumen(){
     +'</div>';
 }
 
+/* Busca la key numérica en _T.mecanicos que corresponde al nombre del mecánico */
+function getTurnosMecKey(nombre){
+  var keys = Object.keys(_T.mecanicos);
+  for(var i=0; i<keys.length; i++){
+    var n = (_T.mecanicos[keys[i]].nombre||'').toUpperCase().trim();
+    if(n === nombre.toUpperCase().trim()) return keys[i];
+  }
+  return null;
+}
+
+/* ════ BOLSAS (desde turnos/) ════ */
+function renderBolsas(){
+  var grid = document.getElementById('bolsasGrid');
+  var mecKeys = Object.keys(_T.mecanicos).sort(function(a,b){ return +a-+b; });
+  if(!mecKeys.length){
+    grid.innerHTML = '<div class="empty"><div class="ico">⏳</div>Cargando datos de turnos...</div>';
+    return;
+  }
+
+  var vacTot = _T.config.vacTotal || 22;
+  var asuTot = _T.config.asuTotal || 5;
+
+  // Contar sábados en tiempo real (excluyendo festivos)
+  var sabCounts = {};
+  mecKeys.forEach(function(k){ sabCounts[k] = 0; });
+  Object.entries(_T.sabados).forEach(function(e){
+    var fecha = e[0]; var s = e[1];
+    if(_T.festivos[fecha]) return;
+    (s.mecanicos||[]).forEach(function(m){
+      var k = String(m);
+      if(sabCounts[k] !== undefined) sabCounts[k]++;
+    });
+  });
+
+  grid.innerHTML = mecKeys.map(function(k){
+    var mec     = _T.mecanicos[k];
+    var b       = _T.bolsas[k] || {};
+    var nombre  = mec.nombre || 'Mec '+k;
+    var isExtra = +k > 5;
+
+    var vUs  = b.vacacionesUsadas || 0;
+    var aUs  = b.asuntosUsados    || 0;
+    var vRe  = Math.max(0, vacTot - vUs);
+    var aRe  = Math.max(0, asuTot - aUs);
+    var vPct = Math.min(100, vacTot ? vUs/vacTot*100 : 0);
+    var aPct = Math.min(100, asuTot ? aUs/asuTot*100 : 0);
+
+    var sEx       = sabCounts[k] || 0;
+    var umbral    = mec.sabUmbral !== undefined ? mec.sabUmbral : 10;
+    var mult      = mec.sabMult   !== undefined ? mec.sabMult   : 1;
+    var sabGen    = Math.max(0, sEx - umbral) * mult;
+    var sabLib    = b.diasLibreSabado || 0;
+    var sabDisp   = Math.max(0, sabGen - sabLib);
+    var dPend     = b.diasPendientes || 0;
+
+    var faltan = Math.max(0, umbral - sEx);
+    var sabHint = (sEx < umbral && sEx > 0)
+      ? '<span style="font-size:0.7rem;color:rgba(255,255,255,0.3)"> (faltan '+faltan+' para 1.º día)</span>' : '';
+
+    // Días usados en el prototipo (ausencias registradas aquí)
+    var vacProt = _ausencias.filter(function(a){ return a.mec===nombre && a.tipo==='VAC'; })
+      .reduce(function(s,a){ return s+diasHabilesEnRango(a.desde,a.hasta); }, 0);
+    var apProt  = _ausencias.filter(function(a){ return a.mec===nombre && a.tipo==='AP'; })
+      .reduce(function(s,a){ return s+diasHabilesEnRango(a.desde,a.hasta); }, 0);
+
+    var vReTotal = Math.max(0, vRe - vacProt);
+    var aReTotal = Math.max(0, aRe - apProt);
+    var vColor   = vReTotal <= 3 ? 'var(--red)' : vReTotal <= 7 ? 'var(--yellow)' : 'var(--green)';
+    var aColor   = aReTotal <= 1 ? 'var(--red)' : aReTotal <= 2 ? 'var(--yellow)' : 'var(--green)';
+
+    return '<div style="background:var(--navy-mid);border:1px solid rgba(255,255,255,'+(isExtra?'0.05':'0.1')+');border-radius:10px;padding:18px;'+(isExtra?'opacity:0.85;border-style:dashed':'')+'">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">'
+        +'<b style="color:var(--gold-light);font-size:0.95rem">'+esc(nombre)+(isExtra?' <span style="font-size:0.6rem;color:rgba(255,255,255,0.3);font-weight:400">seguim.</span>':'')+'</b>'
+      +'</div>'
+      +(dPend ? '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);margin-bottom:4px"><span style="color:var(--green);font-size:0.82rem;font-weight:700">📌 Días pendientes arrastre</span><b style="color:var(--green)">'+dPend+'</b></div>' : '')
+      +'<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:0.85rem"><span style="color:rgba(255,255,255,0.5)">Vacaciones usadas (turnos)</span><span>'+vUs+'/'+vacTot+'</span></div>'
+      +'<div style="background:rgba(255,255,255,0.07);border-radius:3px;height:4px;overflow:hidden;margin:4px 0 2px"><div style="height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gold),var(--gold-light));width:'+vPct+'%"></div></div>'
+      +(vacProt ? '<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:0.78rem"><span style="color:rgba(255,255,255,0.35)">Planificadas aquí</span><span style="color:var(--yellow)">+'+vacProt+'</span></div>' : '')
+      +'<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:0.88rem;font-weight:700"><span style="color:rgba(255,255,255,0.6)">Disponibles</span><b style="color:'+vColor+'">'+vReTotal+' días</b></div>'
+      +'<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:0.85rem;margin-top:6px"><span style="color:rgba(255,255,255,0.5)">A. propios usados (turnos)</span><span>'+aUs+'/'+asuTot+'</span></div>'
+      +'<div style="background:rgba(255,255,255,0.07);border-radius:3px;height:4px;overflow:hidden;margin:4px 0 2px"><div style="height:100%;border-radius:3px;background:linear-gradient(90deg,#3498db,#74b9ff);width:'+aPct+'%"></div></div>'
+      +(apProt ? '<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:0.78rem"><span style="color:rgba(255,255,255,0.35)">Planificados aquí</span><span style="color:var(--yellow)">+'+apProt+'</span></div>' : '')
+      +'<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:0.88rem;font-weight:700"><span style="color:rgba(255,255,255,0.6)">Disponibles</span><b style="color:'+aColor+'">'+aReTotal+' días</b></div>'
+      +'<div style="border-top:1px solid rgba(255,255,255,0.06);margin:10px 0 6px"></div>'
+      +'<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:0.82rem"><span style="color:rgba(255,255,255,0.5)">Sáb. extra trabajados</span><span>'+sEx+(umbral?' <span style="color:rgba(255,255,255,0.3);font-size:0.72rem">(umbral '+umbral+')</span>':'')+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:0.82rem"><span style="color:rgba(255,255,255,0.5)">Días libres generados</span><b style="color:'+(sabGen?'var(--gold)':'rgba(255,255,255,0.4)')+'">'+sabGen+sabHint+'</b></div>'
+      +'<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:0.82rem"><span style="color:rgba(255,255,255,0.5)">Libres disfrutados</span><span>'+sabLib+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:0.88rem;font-weight:700"><span style="color:var(--gold)">Disponibles sábados</span><b style="color:var(--gold)">'+sabDisp+(sabDisp?' 🎯':'')+'</b></div>'
+      +'</div>';
+  }).join('');
+}
+
 /* ════ TABS ════ */
 function switchTab(name){
   document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
@@ -800,6 +966,7 @@ function switchTab(name){
   document.getElementById('panel-'+name).classList.add('active');
   document.getElementById('tab-'+name).classList.add('active');
   if(name==='semanas') renderSemanas();
+  if(name==='bolsas')  renderBolsas();
   if(name==='resumen') renderResumen();
 }
 
