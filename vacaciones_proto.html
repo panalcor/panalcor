@@ -83,6 +83,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 .cal-legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;font-size:0.78rem;color:rgba(255,255,255,0.5)}
 .leg{display:inline-flex;align-items:center;gap:5px}
 .leg-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.cal-day.sem-hoy{border-color:rgba(201,162,39,0.3);background:rgba(201,162,39,0.04)}
 
 /* FESTIVOS LIST */
 .festivo-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(201,162,39,0.12);border:1px solid rgba(201,162,39,0.3);border-radius:6px;padding:4px 10px;font-size:0.82rem;margin:3px}
@@ -911,85 +912,90 @@ function renderResumen(){
     +'</div>';
 }
 
-/* ════ CALENDARIO MENSUAL ════ */
+/* ════ CALENDARIO VENTANA DESLIZANTE ════ */
 var MESES_ES  = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-var DIAS_ES   = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-var _calAnio  = new Date().getFullYear();
-var _calMes   = new Date().getMonth(); // 0-11
+var MESES_SH  = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+var _calOffset = 0; // desplazamiento en semanas desde la semana actual
 
-function calMes(delta){
-  _calMes += delta;
-  if(_calMes > 11){ _calMes = 0;  _calAnio++; }
-  if(_calMes <  0){ _calMes = 11; _calAnio--; }
-  renderCalendario();
-}
-function calHoy(){
-  _calAnio = new Date().getFullYear();
-  _calMes  = new Date().getMonth();
-  renderCalendario();
-}
+function calMes(delta){ _calOffset += delta; renderCalendario(); }
+function calHoy(){ _calOffset = 0; renderCalendario(); }
 
 function renderCalendario(){
   var festSet = getFestivosSet();
   var hoyIso  = isoLocal(new Date());
   var grid    = document.getElementById('calGrid');
 
-  document.getElementById('calTitulo').textContent = MESES_ES[_calMes] + ' ' + _calAnio;
+  // Lunes de la semana actual
+  var lunesHoy = getLunes(new Date());
+
+  // Ventana: empieza 1 semana antes del lunes actual + offset → 7 semanas total
+  var lunesInicio = new Date(lunesHoy);
+  lunesInicio.setDate(lunesHoy.getDate() + (_calOffset - 1) * 7);
+
+  // Título: rango de fechas visible
+  var domingoFin = new Date(lunesInicio);
+  domingoFin.setDate(lunesInicio.getDate() + 7 * 7 - 1);
+  var tit = lunesInicio.getDate()+' '+MESES_SH[lunesInicio.getMonth()]+' '+lunesInicio.getFullYear()
+    +' — '+domingoFin.getDate()+' '+MESES_SH[domingoFin.getMonth()]+' '+domingoFin.getFullYear();
+  document.getElementById('calTitulo').textContent = tit;
 
   // Cabeceras días
-  var dowLabels = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
-  var html = dowLabels.map(function(d, i){
+  var html = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].map(function(d,i){
     return '<div class="cal-dow'+(i>=5?' finde':'')+'">'+d+'</div>';
   }).join('');
 
-  // Primer día del mes (ajustado a L=0)
-  var primerDia = new Date(_calAnio, _calMes, 1);
-  var dowPrimero = primerDia.getDay() === 0 ? 6 : primerDia.getDay() - 1; // L=0 … D=6
-  var diasEnMes  = new Date(_calAnio, _calMes + 1, 0).getDate();
+  var mesActual = null;
 
-  // Días vacíos al inicio
-  for(var e = 0; e < dowPrimero; e++){
-    html += '<div class="cal-day other-month"></div>';
-  }
+  // 7 semanas × 7 días = 49 celdas
+  for(var w = 0; w < 7; w++){
+    for(var d = 0; d < 7; d++){
+      var fecha = new Date(lunesInicio);
+      fecha.setDate(lunesInicio.getDate() + w * 7 + d);
+      var iso      = isoLocal(fecha);
+      var dow      = fecha.getDay();
+      var esFinde  = dow === 0 || dow === 6;
+      var esFest   = !!festSet[iso];
+      var esHoy    = iso === hoyIso;
+      // Es la semana actual (fila 2 cuando offset=0)
+      var esSemActual = (w === 1 - (-_calOffset===0 ? 0 : 0)) && _calOffset === 0
+        ? w === 1
+        : false;
+      // Calcular si el día pertenece a la semana actual real
+      var lunesDia = getLunes(fecha);
+      var esSemHoy = isoLocal(lunesDia) === isoLocal(lunesHoy);
 
-  // Días del mes
-  for(var dia = 1; dia <= diasEnMes; dia++){
-    var fecha = new Date(_calAnio, _calMes, dia);
-    var iso   = isoLocal(fecha);
-    var dow   = fecha.getDay(); // 0=dom, 6=sab
-    var esFinde   = dow === 0 || dow === 6;
-    var esFestivo = !!festSet[iso];
-    var esHoy     = iso === hoyIso;
+      // Separador de mes: si cambia el mes, insertar fila de mes
+      var mesEste = fecha.getMonth();
+      if(d === 0 && mesEste !== mesActual){
+        // Insertar encabezado de mes que ocupa toda la fila (7 cols)
+        mesActual = mesEste;
+        html += '<div style="grid-column:1/-1;background:rgba(201,162,39,0.07);border:1px solid rgba(201,162,39,0.15);'
+          +'border-radius:6px;padding:5px 12px;font-size:0.72rem;font-weight:700;letter-spacing:.1em;'
+          +'text-transform:uppercase;color:var(--gold);margin:2px 0">'
+          + MESES_ES[mesEste]+' '+fecha.getFullYear()
+          +'</div>';
+      }
 
-    var clases = 'cal-day';
-    if(esFinde)   clases += ' is-finde';
-    if(esFestivo) clases += ' is-festivo';
-    if(esHoy)     clases += ' is-today';
+      var clases = 'cal-day';
+      if(esFinde)   clases += ' is-finde';
+      if(esFest)    clases += ' is-festivo';
+      if(esHoy)     clases += ' is-today';
+      if(esSemHoy)  clases += ' sem-hoy';
 
-    var numHtml = '<div class="day-num'+(esHoy?' today-num':'')+'"><span>'+dia+'</span>'
-      + (esFestivo ? '<span class="fest-dot" title="'+esc((_festivos.find(function(f){return f.fecha===iso;})||{}).desc||'Festivo')+'">★</span>' : '')
-      + '</div>';
+      var festDesc = esFest ? ((_festivos.find(function(f){return f.fecha===iso;})||{}).desc||'Festivo') : '';
+      var numHtml  = '<div class="day-num'+(esHoy?' today-num':'')+'"><span>'+fecha.getDate()+'</span>'
+        + (esFest ? '<span class="fest-dot" title="'+esc(festDesc)+'">★</span>' : '')
+        + '</div>';
 
-    // Ausentes ese día
-    var ausHtml = '';
-    _ausencias.forEach(function(aus){
-      if(iso < aus.desde || iso > aus.hasta) return;
-      // Sábado/domingo: informativo, lo mostramos en gris
-      var tipo = (esFinde) ? 'OTR' : aus.tipo;
-      ausHtml += '<span class="aus-tag aus-'+tipo+'" title="'+esc(tipoLabel(aus.tipo))+'">'
-        + esc(aus.mec)
-        + '</span>';
-    });
+      // Ausentes ese día
+      var ausHtml = '';
+      _ausencias.forEach(function(aus){
+        if(iso < aus.desde || iso > aus.hasta) return;
+        var tipo = esFinde ? 'OTR' : aus.tipo;
+        ausHtml += '<span class="aus-tag aus-'+tipo+'" title="'+esc(tipoLabel(aus.tipo))+'">'+esc(aus.mec)+'</span>';
+      });
 
-    html += '<div class="'+clases+'">' + numHtml + ausHtml + '</div>';
-  }
-
-  // Días vacíos al final para completar la última fila
-  var totalCeldas = dowPrimero + diasEnMes;
-  var resto = totalCeldas % 7;
-  if(resto > 0){
-    for(var f = 0; f < (7 - resto); f++){
-      html += '<div class="cal-day other-month"></div>';
+      html += '<div class="'+clases+'">' + numHtml + ausHtml + '</div>';
     }
   }
 
