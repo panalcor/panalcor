@@ -322,6 +322,9 @@ if('serviceWorker' in navigator){
   <div class="tab" onclick="switchTab('formacion')">
     <span class="tab-icon">🎓</span>Formación
   </div>
+  <div class="tab" onclick="switchTab('frio')">
+    <span class="tab-icon">❄️</span>Frío
+  </div>
 </div>
 
 <!-- ══════════ PANEL REPUESTOS ══════════ -->
@@ -466,13 +469,14 @@ setInterval(updateClock, 30000);
 // ══════════════════════════════════════
 function switchTab(t){
   document.querySelectorAll('.tab').forEach((el,i)=>{
-    const tabs = ['repuestos','mantenimiento','historial','formacion'];
+    const tabs = ['repuestos','mantenimiento','historial','formacion','frio'];
     el.classList.toggle('active', tabs[i]===t);
   });
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('panel-'+t).classList.add('active');
   if(t==='historial') renderHistorial();
   if(t==='formacion') cargarFormacion();
+  if(t==='frio') initFrio();
 }
 
 // ══════════════════════════════════════
@@ -1168,5 +1172,461 @@ function mecOvLogin(){
   document.getElementById('mecLoginOverlay').style.display = 'flex';
 })();
 </script>
+
+<!-- ═══ FRÍO ═══ -->
+<div class="panel" id="panel-frio">
+
+<style>
+.frio-nav-btn{padding:9px 18px;border-radius:8px;font-family:'Barlow',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;border:1px solid rgba(100,210,255,.25);background:rgba(100,210,255,.07);color:rgba(100,210,255,.55);transition:all .2s}
+.frio-nav-btn.active{background:rgba(100,210,255,.18);border-color:rgba(100,210,255,.55);color:#64d2ff}
+.frio-nav-btn:hover:not(.active){color:rgba(100,210,255,.9);background:rgba(100,210,255,.12)}
+.frio-badge{display:inline-block;padding:2px 9px;border-radius:10px;font-size:.7rem;font-weight:700;letter-spacing:.06em}
+.frio-op  {background:rgba(46,204,113,.15);color:#2ecc71;border:1px solid rgba(46,204,113,.3)}
+.frio-av  {background:rgba(231,76,60,.15);color:#e74c3c;border:1px solid rgba(231,76,60,.3)}
+.frio-rev {background:rgba(243,156,18,.15);color:#f39c12;border:1px solid rgba(243,156,18,.3)}
+.frio-stop{background:rgba(149,165,166,.15);color:#95a5a6;border:1px solid rgba(149,165,166,.3)}
+.frio-field{display:flex;flex-direction:column;gap:4px}
+.frio-field label{font-size:.72rem;color:#c9a227;letter-spacing:.1em;text-transform:uppercase}
+.frio-field input,.frio-field select,.frio-field textarea{background:#131d28;color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:7px;padding:9px 12px;font-family:'Barlow',sans-serif;font-size:.9rem;width:100%}
+.frio-field textarea{resize:vertical;min-height:68px}
+.frio-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:12px;margin-bottom:16px}
+.frio-grid .frio-field.span2{grid-column:span 2}
+#frioToastMec{position:fixed;bottom:24px;right:24px;background:#1a2d42;border:1px solid rgba(201,162,39,.5);border-radius:10px;padding:12px 20px;font-family:'Barlow',sans-serif;font-size:.95rem;font-weight:600;z-index:9999;opacity:0;transform:translateY(20px);transition:all .3s;pointer-events:none}
+</style>
+
+<div id="frioToastMec"></div>
+
+<div style="padding:16px">
+
+<!-- Sub-nav -->
+<div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap">
+  <button onclick="frioSec('equipos')" id="frioBtn-equipos" class="frio-nav-btn active">🏭 Equipos</button>
+  <button onclick="frioSec('temps')"   id="frioBtn-temps"   class="frio-nav-btn">🌡️ Temperaturas</button>
+  <button onclick="frioSec('averias')" id="frioBtn-averias" class="frio-nav-btn">⚡ Averías</button>
+  <button onclick="frioSec('prev')"    id="frioBtn-prev"    class="frio-nav-btn">🔧 Preventivo</button>
+</div>
+
+<!-- ── EQUIPOS ── -->
+<div id="frioSec-equipos">
+  <div style="background:#253345;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:18px">
+    <div style="font-size:.95rem;font-weight:700;color:#c9a227;letter-spacing:.06em;margin-bottom:14px">🏭 Inventario de Equipos de Frío</div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:.88rem">
+        <thead><tr style="border-bottom:1px solid rgba(201,162,39,.2)">
+          <th style="text-align:left;padding:8px 12px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#c9a227">Nombre</th>
+          <th style="text-align:left;padding:8px 12px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#c9a227">Tipo</th>
+          <th style="text-align:left;padding:8px 12px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#c9a227">Ubicación</th>
+          <th style="text-align:left;padding:8px 12px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#c9a227">Refrigerante</th>
+          <th style="text-align:left;padding:8px 12px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#c9a227">T.Trabajo</th>
+          <th style="text-align:left;padding:8px 12px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#c9a227">Estado</th>
+          <th style="text-align:left;padding:8px 12px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#c9a227">Próx.Rev.</th>
+        </tr></thead>
+        <tbody id="frioEqTbody"><tr><td colspan="7" style="text-align:center;color:rgba(255,255,255,.3);padding:24px">Cargando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── TEMPERATURAS ── -->
+<div id="frioSec-temps" style="display:none">
+  <div style="background:#253345;border:1px solid rgba(100,210,255,.12);border-radius:10px;padding:18px;margin-bottom:14px">
+    <div style="font-size:.95rem;font-weight:700;color:#c9a227;letter-spacing:.06em;margin-bottom:14px">🌡️ Registrar Temperatura</div>
+    <div class="frio-grid">
+      <div class="frio-field"><label>Equipo</label><select id="frioTmpEq"><option value="">— Selecciona —</option></select></div>
+      <div class="frio-field"><label>Fecha</label><input type="date" id="frioTmpFecha"></div>
+      <div class="frio-field"><label>Hora</label><input type="time" id="frioTmpHora"></div>
+      <div class="frio-field"><label>Temperatura (°C)</label><input type="number" id="frioTmpVal" step="0.1" placeholder="ej: -18.5"></div>
+      <div class="frio-field"><label>Registrado por</label><input type="text" id="frioTmpQuien" placeholder="Nombre"></div>
+      <div class="frio-field span2"><label>Observaciones</label><input type="text" id="frioTmpObs" placeholder="Alerta, anomalía..."></div>
+    </div>
+    <button onclick="frioGuardarTemp()" style="padding:10px 20px;border-radius:8px;font-family:'Barlow',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;border:1px solid rgba(100,210,255,.4);background:rgba(100,210,255,.12);color:#64d2ff">💾 Guardar temperatura</button>
+  </div>
+  <div style="background:#253345;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:18px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div style="font-size:.95rem;font-weight:700;color:#c9a227;letter-spacing:.06em">📋 Historial de Temperaturas</div>
+      <select id="frioTmpFiltro" onchange="frioLoadTemps()" style="background:#131d28;color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:7px;padding:7px 12px;font-family:'Barlow',sans-serif;font-size:.85rem">
+        <option value="">Todos los equipos</option>
+      </select>
+    </div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:.87rem">
+        <thead><tr style="border-bottom:1px solid rgba(201,162,39,.2)">
+          <th style="text-align:left;padding:8px 10px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#c9a227">Equipo</th>
+          <th style="text-align:left;padding:8px 10px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#c9a227">Fecha</th>
+          <th style="text-align:left;padding:8px 10px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#c9a227">Hora</th>
+          <th style="text-align:left;padding:8px 10px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#c9a227">Temp</th>
+          <th style="text-align:left;padding:8px 10px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#c9a227">Quién</th>
+          <th style="text-align:left;padding:8px 10px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#c9a227">Observaciones</th>
+        </tr></thead>
+        <tbody id="frioTmpTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── AVERÍAS FRÍO ── -->
+<div id="frioSec-averias" style="display:none">
+  <div style="background:#253345;border:1px solid rgba(231,76,60,.12);border-radius:10px;padding:18px;margin-bottom:14px">
+    <div style="font-size:.95rem;font-weight:700;color:#c9a227;letter-spacing:.06em;margin-bottom:14px">⚡ Registrar Avería de Frío</div>
+    <div class="frio-grid">
+      <div class="frio-field"><label>Equipo</label><select id="frioAvEq"><option value="">— Selecciona —</option></select></div>
+      <div class="frio-field"><label>Fecha y hora</label><input type="datetime-local" id="frioAvFecha"></div>
+      <div class="frio-field"><label>Estado</label>
+        <select id="frioAvEstado"><option>Pendiente</option><option>En curso</option><option>Resuelto</option></select>
+      </div>
+      <div class="frio-field"><label>Causa</label>
+        <select id="frioAvCausa">
+          <option value="">— Selecciona —</option>
+          <option>Pérdida de gas refrigerante</option>
+          <option>Fallo compresor</option>
+          <option>Condensador sucio/averiado</option>
+          <option>Evaporador helado/averiado</option>
+          <option>Fallo termostato/presostato</option>
+          <option>Resistencias de desescarche</option>
+          <option>Fallo ventilador</option>
+          <option>Válvula de expansión</option>
+          <option>Problema eléctrico</option>
+          <option>Fuga en circuito</option>
+          <option>Fallo válvula solenoide</option>
+          <option>Otra</option>
+        </select>
+      </div>
+      <div class="frio-field span2"><label>Descripción del fallo</label><input type="text" id="frioAvDesc" placeholder="Describe el problema"></div>
+      <div class="frio-field span2"><label>Solución aplicada</label><input type="text" id="frioAvSol" placeholder="Acciones realizadas"></div>
+    </div>
+    <button onclick="frioGuardarAveria()" style="padding:10px 20px;border-radius:8px;font-family:'Barlow',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;border:1px solid rgba(231,76,60,.4);background:rgba(231,76,60,.12);color:#e74c3c">💾 Guardar avería</button>
+  </div>
+  <div style="background:#253345;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:18px">
+    <div style="font-size:.95rem;font-weight:700;color:#c9a227;letter-spacing:.06em;margin-bottom:12px">📋 Historial Averías Frío</div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:.87rem">
+        <thead><tr style="border-bottom:1px solid rgba(201,162,39,.2)">
+          <th style="text-align:left;padding:8px 10px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#c9a227">Equipo</th>
+          <th style="text-align:left;padding:8px 10px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#c9a227">Fecha</th>
+          <th style="text-align:left;padding:8px 10px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#c9a227">Descripción</th>
+          <th style="text-align:left;padding:8px 10px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#c9a227">Causa</th>
+          <th style="text-align:left;padding:8px 10px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#c9a227">Estado</th>
+        </tr></thead>
+        <tbody id="frioAvTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── PREVENTIVO FRÍO ── -->
+<div id="frioSec-prev" style="display:none">
+  <div style="background:#253345;border:1px solid rgba(46,204,113,.12);border-radius:10px;padding:18px;margin-bottom:14px">
+    <div style="font-size:.95rem;font-weight:700;color:#c9a227;letter-spacing:.06em;margin-bottom:14px">🔧 Registrar Revisión Preventiva</div>
+    <div class="frio-grid">
+      <div class="frio-field"><label>Equipo</label><select id="frioPrEq"><option value="">— Selecciona —</option></select></div>
+      <div class="frio-field"><label>Fecha</label><input type="date" id="frioPrFecha"></div>
+      <div class="frio-field"><label>Tipo revisión</label>
+        <select id="frioPrTipo">
+          <option>Mensual</option><option>Trimestral</option><option>Semestral</option><option>Anual</option><option>F-Gas obligatoria</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:.72rem;color:#c9a227;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Checklist de revisión</div>
+      <div id="frioPrChecklist" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:6px"></div>
+    </div>
+    <div class="frio-field" style="margin-bottom:14px">
+      <label>Observaciones</label>
+      <textarea id="frioPrObs" placeholder="Notas, anomalías encontradas, piezas sustituidas..."></textarea>
+    </div>
+    <button onclick="frioGuardarPrev()" style="padding:10px 20px;border-radius:8px;font-family:'Barlow',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;border:1px solid rgba(46,204,113,.4);background:rgba(46,204,113,.12);color:#2ecc71">💾 Guardar revisión</button>
+  </div>
+  <div style="background:#253345;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:18px">
+    <div style="font-size:.95rem;font-weight:700;color:#c9a227;letter-spacing:.06em;margin-bottom:12px">📋 Historial Revisiones Preventivas</div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:.87rem">
+        <thead><tr style="border-bottom:1px solid rgba(201,162,39,.2)">
+          <th style="text-align:left;padding:8px 10px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#c9a227">Equipo</th>
+          <th style="text-align:left;padding:8px 10px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#c9a227">Fecha</th>
+          <th style="text-align:left;padding:8px 10px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#c9a227">Tipo</th>
+          <th style="text-align:left;padding:8px 10px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#c9a227">Mecánico</th>
+          <th style="text-align:left;padding:8px 10px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#c9a227">Checklist</th>
+          <th style="text-align:left;padding:8px 10px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#c9a227">Observaciones</th>
+        </tr></thead>
+        <tbody id="frioPrTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</div><!-- /padding -->
+</div><!-- /panel-frio -->
+
+<script>
+// ══════════════════════════════════════
+// FRÍO — mecanicos.html
+// ══════════════════════════════════════
+const FRIO_CHECKLIST = [
+  'Limpieza filtros/rejillas condensador',
+  'Limpieza evaporador',
+  'Verificación carga de gas (F-Gas)',
+  'Control de presiones (aspiración/impulsión)',
+  'Verificación temperatura de trabajo',
+  'Revisión sellos y juntas de puertas',
+  'Control resistencias de desescarche',
+  'Verificación presostatos y termostatos',
+  'Revisión ventiladores (condensador/evaporador)',
+  'Control corrientes y tensiones eléctricas',
+  'Revisión válvulas de expansión',
+  'Revisión válvulas solenoide',
+  'Lubricación si aplica',
+  'Registro en libro F-Gas',
+];
+let _frioEqs = {};
+let _frioReady = false;
+
+function frioToast(msg) {
+  const el = document.getElementById('frioToastMec');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.opacity = '1';
+  el.style.transform = 'translateY(0)';
+  setTimeout(() => { el.style.opacity='0'; el.style.transform='translateY(20px)'; }, 2800);
+}
+
+function frioMecActual() {
+  try { return JSON.parse(localStorage.getItem('mecSesion')||'{}').nombre||''; } catch(e){ return ''; }
+}
+
+function initFrio() {
+  if (!_frioReady) {
+    _frioReady = true;
+    _DB_MEC.ref('frio/equipos').on('value', snap => {
+      _frioEqs = snap.val() || {};
+      frioRenderEqTable();
+      frioPopularSelects();
+    });
+  }
+  frioSec('equipos');
+}
+
+function frioSec(sec) {
+  ['equipos','temps','averias','prev'].forEach(s => {
+    const el = document.getElementById('frioSec-' + s);
+    const btn = document.getElementById('frioBtn-' + s);
+    if (el) el.style.display = s === sec ? '' : 'none';
+    if (btn) btn.classList.toggle('active', s === sec);
+  });
+  const hoy = new Date().toISOString().slice(0,10);
+  const ahora = new Date().toTimeString().slice(0,5);
+  const mecNombre = frioMecActual();
+  if (sec === 'temps') {
+    const fd = document.getElementById('frioTmpFecha'); if (fd && !fd.value) fd.value = hoy;
+    const fh = document.getElementById('frioTmpHora');  if (fh && !fh.value) fh.value = ahora;
+    const fq = document.getElementById('frioTmpQuien'); if (fq && !fq.value) fq.value = mecNombre;
+    frioLoadTemps();
+  }
+  if (sec === 'averias') {
+    const fa = document.getElementById('frioAvFecha');
+    if (fa && !fa.value) fa.value = new Date().toISOString().slice(0,16);
+    frioLoadAverias();
+  }
+  if (sec === 'prev') {
+    const fp = document.getElementById('frioPrFecha'); if (fp && !fp.value) fp.value = hoy;
+    frioRenderChecklist();
+    frioLoadPrev();
+  }
+}
+
+function frioPopularSelects() {
+  const opts = '<option value="">— Selecciona —</option>' +
+    Object.keys(_frioEqs).map(k => `<option value="${k}">${_frioEqs[k].nombre}</option>`).join('');
+  ['frioTmpEq','frioAvEq','frioPrEq'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.innerHTML = opts;
+  });
+  const filtro = document.getElementById('frioTmpFiltro');
+  if (filtro) filtro.innerHTML = '<option value="">Todos los equipos</option>' +
+    Object.keys(_frioEqs).map(k => `<option value="${k}">${_frioEqs[k].nombre}</option>`).join('');
+}
+
+// ─── EQUIPOS ─────────────────────────────────────
+function frioRenderEqTable() {
+  const tbody = document.getElementById('frioEqTbody');
+  if (!tbody) return;
+  const keys = Object.keys(_frioEqs);
+  if (!keys.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:rgba(255,255,255,.3);padding:24px">No hay equipos registrados.</td></tr>';
+    return;
+  }
+  const hoy = new Date().toISOString().slice(0,10);
+  tbody.innerHTML = keys.map(k => {
+    const e = _frioEqs[k];
+    const tRango = (e.tMin!==''&&e.tMin!==undefined&&e.tMax!==''&&e.tMax!==undefined) ? `${e.tMin}°C / ${e.tMax}°C` : '—';
+    const proxRev = e.proxRev || '—';
+    const proxStyle = proxRev !== '—' && proxRev < hoy ? 'color:#e74c3c;font-weight:700' : 'color:rgba(255,255,255,.55)';
+    const estCls = {Operativo:'frio-op',Avería:'frio-av','En revisión':'frio-rev',Parado:'frio-stop'}[e.estado||'Operativo']||'frio-op';
+    return `<tr style="border-bottom:1px solid rgba(255,255,255,.05)">
+      <td style="padding:10px 12px;font-weight:700">${e.nombre}</td>
+      <td style="padding:10px 12px;font-size:.82rem;color:rgba(255,255,255,.65)">${e.tipo||'—'}</td>
+      <td style="padding:10px 12px;font-size:.82rem">${e.ubicacion||'—'}</td>
+      <td style="padding:10px 12px;font-size:.8rem">${e.refrigerante||'—'}${e.cargaKg?'&nbsp;·&nbsp;'+e.cargaKg+'kg':''}</td>
+      <td style="padding:10px 12px;font-size:.82rem">${tRango}</td>
+      <td style="padding:10px 12px"><span class="frio-badge ${estCls}">${e.estado||'Operativo'}</span></td>
+      <td style="padding:10px 12px;font-size:.8rem;${proxStyle}">${proxRev}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── TEMPERATURAS ─────────────────────────────────
+function frioLoadTemps() {
+  const filtro = (document.getElementById('frioTmpFiltro')||{}).value||'';
+  _DB_MEC.ref('frio/temperaturas').orderByChild('ts').limitToLast(200).once('value').then(snap => {
+    const all = snap.val()||{};
+    const tbody = document.getElementById('frioTmpTbody');
+    if (!tbody) return;
+    let rows = Object.entries(all).filter(([,r])=>!filtro||r.equipoKey===filtro).reverse();
+    if (!rows.length) {
+      tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:rgba(255,255,255,.3);padding:20px">Sin registros</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(([k,r])=>{
+      const eq = (_frioEqs[r.equipoKey]||{}).nombre||'—';
+      const eqInfo = _frioEqs[r.equipoKey];
+      let tempColor='inherit';
+      if (eqInfo && r.temperatura!==undefined) {
+        const alto = eqInfo.tMax!==''&&eqInfo.tMax!==undefined && r.temperatura > parseFloat(eqInfo.tMax)+2;
+        const bajo = eqInfo.tMin!==''&&eqInfo.tMin!==undefined && r.temperatura < parseFloat(eqInfo.tMin)-2;
+        if (alto||bajo) tempColor='#e74c3c';
+      }
+      return `<tr style="border-bottom:1px solid rgba(255,255,255,.05)">
+        <td style="padding:9px 10px;font-weight:600">${eq}</td>
+        <td style="padding:9px 10px">${r.fecha||'—'}</td>
+        <td style="padding:9px 10px">${r.hora||'—'}</td>
+        <td style="padding:9px 10px;font-weight:700;color:${tempColor}">${r.temperatura!==undefined?r.temperatura+' °C':'—'}</td>
+        <td style="padding:9px 10px;font-size:.85rem">${r.quien||'—'}</td>
+        <td style="padding:9px 10px;font-size:.8rem;color:rgba(255,255,255,.6)">${r.obs||''}</td>
+      </tr>`;
+    }).join('');
+  });
+}
+
+function frioGuardarTemp() {
+  const equipoKey=document.getElementById('frioTmpEq').value;
+  const temperatura=document.getElementById('frioTmpVal').value;
+  const fecha=document.getElementById('frioTmpFecha').value;
+  if (!equipoKey||temperatura===''||!fecha) { frioToast('⚠️ Equipo, fecha y temperatura son obligatorios'); return; }
+  _DB_MEC.ref('frio/temperaturas').push({
+    equipoKey, temperatura:parseFloat(temperatura), fecha,
+    hora:document.getElementById('frioTmpHora').value,
+    quien:document.getElementById('frioTmpQuien').value.trim()||frioMecActual(),
+    obs:document.getElementById('frioTmpObs').value.trim(),
+    ts:Date.now()
+  }).then(()=>{
+    document.getElementById('frioTmpVal').value='';
+    document.getElementById('frioTmpObs').value='';
+    frioLoadTemps();
+    frioToast('✅ Temperatura registrada');
+  });
+}
+
+// ─── AVERÍAS FRÍO ─────────────────────────────────
+function frioLoadAverias() {
+  _DB_MEC.ref('frio/averias').once('value').then(snap=>{
+    const all=snap.val()||{};
+    const tbody=document.getElementById('frioAvTbody');
+    if (!tbody) return;
+    const rows=Object.entries(all).sort((a,b)=>b[1].ts-a[1].ts);
+    if (!rows.length) {
+      tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,.3);padding:20px">Sin averías registradas</td></tr>';
+      return;
+    }
+    tbody.innerHTML=rows.map(([k,r])=>{
+      const eq=(_frioEqs[r.equipoKey]||{}).nombre||'—';
+      const estCls={Pendiente:'frio-av','En curso':'frio-rev',Resuelto:'frio-op'}[r.estado]||'';
+      return `<tr style="border-bottom:1px solid rgba(255,255,255,.05)">
+        <td style="padding:9px 10px;font-weight:600">${eq}</td>
+        <td style="padding:9px 10px;font-size:.82rem">${(r.fechaHora||'').replace('T',' ')}</td>
+        <td style="padding:9px 10px;font-size:.85rem">${r.descripcion||'—'}</td>
+        <td style="padding:9px 10px;font-size:.8rem;color:rgba(255,255,255,.6)">${r.causa||'—'}</td>
+        <td style="padding:9px 10px"><span class="frio-badge ${estCls}">${r.estado}</span></td>
+      </tr>`;
+    }).join('');
+  });
+}
+
+function frioGuardarAveria() {
+  const equipoKey=document.getElementById('frioAvEq').value;
+  const descripcion=document.getElementById('frioAvDesc').value.trim();
+  if (!equipoKey||!descripcion) { frioToast('⚠️ Equipo y descripción son obligatorios'); return; }
+  _DB_MEC.ref('frio/averias').push({
+    equipoKey,
+    fechaHora:document.getElementById('frioAvFecha').value,
+    descripcion,
+    causa:document.getElementById('frioAvCausa').value,
+    mecanico:frioMecActual(),
+    estado:document.getElementById('frioAvEstado').value||'Pendiente',
+    solucion:document.getElementById('frioAvSol').value.trim(),
+    ts:Date.now()
+  }).then(()=>{
+    ['frioAvDesc','frioAvSol'].forEach(id=>document.getElementById(id).value='');
+    frioLoadAverias();
+    frioToast('✅ Avería registrada');
+  });
+}
+
+// ─── PREVENTIVO FRÍO ──────────────────────────────
+function frioRenderChecklist() {
+  const c=document.getElementById('frioPrChecklist');
+  if (!c||c.children.length) return;
+  c.innerHTML=FRIO_CHECKLIST.map((item,i)=>`
+    <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:7px;cursor:pointer;font-size:.87rem">
+      <input type="checkbox" id="frioPrChk_${i}" style="width:16px;height:16px;accent-color:#2ecc71;flex-shrink:0">
+      <span>${item}</span>
+    </label>`).join('');
+}
+
+function frioLoadPrev() {
+  _DB_MEC.ref('frio/preventivo').once('value').then(snap=>{
+    const all=snap.val()||{};
+    const tbody=document.getElementById('frioPrTbody');
+    if (!tbody) return;
+    const rows=Object.entries(all).sort((a,b)=>b[1].ts-a[1].ts);
+    if (!rows.length) {
+      tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:rgba(255,255,255,.3);padding:20px">Sin revisiones registradas</td></tr>';
+      return;
+    }
+    tbody.innerHTML=rows.map(([k,r])=>{
+      const eq=(_frioEqs[r.equipoKey]||{}).nombre||'—';
+      const ok=Array.isArray(r.checklist)?r.checklist.filter(Boolean).length:'—';
+      const total=Array.isArray(r.checklist)?r.checklist.length:FRIO_CHECKLIST.length;
+      const pct=typeof ok==='number'?Math.round(ok/total*100):0;
+      const pctColor=pct>=80?'#2ecc71':pct>=50?'#f39c12':'#e74c3c';
+      return `<tr style="border-bottom:1px solid rgba(255,255,255,.05)">
+        <td style="padding:9px 10px;font-weight:600">${eq}</td>
+        <td style="padding:9px 10px;font-size:.85rem">${r.fecha||'—'}</td>
+        <td style="padding:9px 10px;font-size:.82rem">${r.tipo||'—'}</td>
+        <td style="padding:9px 10px;font-size:.85rem">${r.mecanico||'—'}</td>
+        <td style="padding:9px 10px;text-align:center"><span style="color:${pctColor};font-weight:700">${ok}/${total}</span></td>
+        <td style="padding:9px 10px;font-size:.8rem;color:rgba(255,255,255,.6)">${r.obs||''}</td>
+      </tr>`;
+    }).join('');
+  });
+}
+
+function frioGuardarPrev() {
+  const equipoKey=document.getElementById('frioPrEq').value;
+  const fecha=document.getElementById('frioPrFecha').value;
+  if (!equipoKey||!fecha) { frioToast('⚠️ Equipo y fecha son obligatorios'); return; }
+  const checklist=FRIO_CHECKLIST.map((_,i)=>!!(document.getElementById('frioPrChk_'+i)||{}).checked);
+  _DB_MEC.ref('frio/preventivo').push({
+    equipoKey, fecha,
+    tipo:document.getElementById('frioPrTipo').value,
+    mecanico:frioMecActual(),
+    checklist, obs:document.getElementById('frioPrObs').value.trim(),
+    ts:Date.now()
+  }).then(()=>{
+    document.getElementById('frioPrObs').value='';
+    FRIO_CHECKLIST.forEach((_,i)=>{const el=document.getElementById('frioPrChk_'+i);if(el)el.checked=false;});
+    frioLoadPrev();
+    frioToast('✅ Revisión preventiva guardada');
+  });
+}
+</script>
+
 </body>
 </html>
