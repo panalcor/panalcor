@@ -760,10 +760,15 @@ function addAusencia(){
 }
 
 function removeAusencia(id){
+  var aus = _ausencias.find(function(a){ return a.id===id; });
+  if(!aus) return;
+  var msg = '¿Eliminar la ausencia de '+aus.mec+'?\n'+tipoLabel(aus.tipo)+' — '+fmtDate(aus.desde)+(aus.desde!==aus.hasta?' → '+fmtDate(aus.hasta):'');
+  if(!confirm(msg)) return;
   _ausencias = _ausencias.filter(function(a){ return a.id!==id; });
   saveLS('prot_ausencias', _ausencias);
   renderAusencias();
   renderSemanas();
+  showToast('🗑 Ausencia eliminada');
 }
 
 function renderAusencias(){
