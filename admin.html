@@ -6445,13 +6445,6 @@ function initFrio() {
     _frioReady = true;
     DB.ref('frio/equipos').on('value', snap => {
       _frioEqs = snap.val() || {};
-      // Auto-importar equipos base si la lista está vacía
-      if (!Object.keys(_frioEqs).length) {
-        const payload = {};
-        FRIO_EQUIPOS_BASE.forEach((eq, i) => { payload['eq' + String(i).padStart(3,'0')] = eq; });
-        DB.ref('frio/equipos').set(payload).then(() => toast('✅ Equipos de frío cargados desde el Excel'));
-        return;
-      }
       frioRenderEqTable();
       frioPopularSelects();
     });
@@ -6506,12 +6499,21 @@ function frioPopularMecs(id) {
 }
 
 // ─── EQUIPOS ─────────────────────────────────────
+function frioImportarBase() {
+  if (!confirm('¿Cargar los 47 equipos del Excel FRIO 2024? Se añadirán a Firebase.')) return;
+  const payload = {};
+  FRIO_EQUIPOS_BASE.forEach((eq, i) => { payload['eq' + String(i).padStart(3,'0')] = eq; });
+  DB.ref('frio/equipos').set(payload)
+    .then(() => toast('✅ 47 equipos cargados correctamente'))
+    .catch(err => { alert('Error al guardar en Firebase: ' + err.message); console.error(err); });
+}
+
 function frioRenderEqTable() {
   const tbody = document.getElementById('frioEqTbody');
   if (!tbody) return;
   const keys = Object.keys(_frioEqs);
   if (!keys.length) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:rgba(255,255,255,.3);padding:24px">No hay equipos registrados. Pulsa "+ Nuevo Equipo".</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px"><div style="color:rgba(255,255,255,.35);margin-bottom:14px">No hay equipos registrados.</div><button onclick="frioImportarBase()" style="padding:10px 20px;border-radius:8px;font-family:\'Barlow\',sans-serif;font-weight:700;cursor:pointer;border:1px solid rgba(100,210,255,.5);background:rgba(100,210,255,.15);color:#64d2ff;font-size:.9rem">📥 Cargar equipos del Excel FRIO 2024</button></td></tr>';
     return;
   }
   const hoy = new Date().toISOString().slice(0,10);
