@@ -534,7 +534,9 @@ function cargarTurnos(){
       .filter(Boolean);
 
     renderMecSelects();
-    if(document.getElementById('panel-bolsas').classList.contains('active')) renderBolsas();
+    if(document.getElementById('panel-bolsas').classList.contains('active'))   renderBolsas();
+    if(document.getElementById('panel-sabados').classList.contains('active'))   renderSabadosTab();
+    if(document.getElementById('panel-calendario').classList.contains('active')) renderCalendario();
   }).catch(function(){
     // fallback a lista global
     var fallback = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE'];
@@ -1254,6 +1256,13 @@ function pGetAllMecIds(){
 
 function pInitSabForm(){
   var ids = pGetAllMecIds();
+  if(!ids.length){
+    ['pSabCbs','pFestCbs'].forEach(function(wrId){
+      var wr = document.getElementById(wrId);
+      if(wr) wr.innerHTML = '<span style="font-size:0.78rem;color:rgba(255,255,255,0.3)">Cargando mecánicos...</span>';
+    });
+    return;
+  }
   ['pSabCbs','pFestCbs'].forEach(function(wrId){
     var wr = document.getElementById(wrId);
     if(!wr) return;
