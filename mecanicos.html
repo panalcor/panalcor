@@ -37,9 +37,9 @@ html,body{height:100%;font-family:'Barlow',sans-serif;background:var(--navy-deep
 .topbar-date b{color:var(--gold);display:block;font-size:0.9rem}
 
 /* ── TABS ── */
-.tabs{display:flex;background:var(--navy-mid);border-bottom:2px solid rgba(255,255,255,0.07)}
+.tabs{display:flex;background:var(--navy-mid);border-bottom:2px solid rgba(255,255,255,0.07);overflow-x:auto}
 .tab{
-  flex:1;padding:14px 10px;text-align:center;cursor:pointer;
+  flex:1;min-width:90px;padding:14px 10px;text-align:center;cursor:pointer;white-space:nowrap;
   font-family:'Oswald',sans-serif;font-size:0.9rem;letter-spacing:0.1em;text-transform:uppercase;
   color:var(--text-muted);border-bottom:3px solid transparent;transition:all 0.2s;
 }
