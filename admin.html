@@ -5885,19 +5885,20 @@ function docsSetVista(v){
 }
 
 function docsCargarMaquinas(){
-  DB.ref('maquinas_extra').once('value').then(function(snap){
-    var val = snap.val() || {};
-    var maquinas = Object.values(val).filter(function(m){ return m && m.id && m.n; });
-    maquinas.sort(function(a,b){ return (a.n||'').localeCompare(b.n||''); });
+  // Combinar lista base del admin con las extra de Firebase (igual que poblarQRSel)
+  var poblar = function(){
+    var todas = MAQUINAS_BASE_ADMIN.concat(maquinasExtra).sort(function(a,b){ return (a.n||'').localeCompare(b.n||''); });
     var sel = document.getElementById('docsMaqSel');
     if(!sel) return;
-    if(!maquinas.length){
-      sel.innerHTML = '<option value="">Sin máquinas registradas</option>';
-      return;
-    }
     sel.innerHTML = '<option value="">— Selecciona máquina —</option>'
-      + maquinas.map(function(m){ return '<option value="'+escHtml(m.id)+'">'+escHtml(m.n)+'</option>'; }).join('');
-  });
+      + todas.map(function(m){ return '<option value="'+escHtml(m.id)+'">'+escHtml(m.n)+'</option>'; }).join('');
+  };
+  // Si maquinasExtra ya está cargado úsalo, si no cárgalo primero
+  if(maquinasExtra.length || typeof MAQUINAS_BASE_ADMIN !== 'undefined'){
+    loadMaquinasExtra(poblar);
+  } else {
+    poblar();
+  }
 }
 
 function docsCargarRepuestos(){
