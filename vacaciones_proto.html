@@ -563,20 +563,50 @@ function renderAusencias(){
     return;
   }
   var rows = _ausencias.map(function(a){
-    var dias = Math.round((parseLocal(a.hasta)-parseLocal(a.desde))/86400000)+1;
+    var diasHab = diasHabilesEnRango(a.desde, a.hasta);
+    var finde   = incluyeFinde(a.desde, a.hasta);
+    var diasCell = '<b>'+diasHab+'</b> día'+(diasHab!==1?'s':'')+' hábil'+(diasHab!==1?'es':'')
+      +(finde ? '<br><span style="font-size:0.72rem;color:rgba(255,255,255,0.3)">incl. fin de semana (informativo)</span>' : '');
     return '<tr>'
       +'<td><b>'+esc(a.mec)+'</b></td>'
       +'<td><span class="tipo-badge tipo-'+a.tipo+'">'+tipoLabel(a.tipo)+'</span></td>'
       +'<td>'+fmtDate(a.desde)+'</td>'
       +'<td>'+fmtDate(a.hasta)+'</td>'
-      +'<td style="color:rgba(255,255,255,0.4);font-size:0.82rem">'+dias+' día'+(dias!==1?'s':'')+'</td>'
+      +'<td style="font-size:0.82rem;line-height:1.5">'+diasCell+'</td>'
       +'<td style="color:rgba(255,255,255,0.4);font-size:0.82rem">'+esc(a.nota||'—')+'</td>'
       +'<td><button class="btn btn-red btn-sm" onclick="removeAusencia(\''+a.id+'\')">✕ Eliminar</button></td>'
       +'</tr>';
   }).join('');
   wrap.innerHTML = '<table class="aus-table"><thead><tr>'
-    +'<th>Mecánico</th><th>Tipo</th><th>Desde</th><th>Hasta</th><th>Días</th><th>Nota</th><th></th>'
+    +'<th>Mecánico</th><th>Tipo</th><th>Desde</th><th>Hasta</th><th>Días hábiles</th><th>Nota</th><th></th>'
     +'</tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+/* Cuenta días L-V no festivos entre dos fechas ISO */
+function diasHabilesEnRango(desde, hasta){
+  var festSet = getFestivosSet();
+  var count = 0;
+  var cur = parseLocal(desde);
+  var fin = parseLocal(hasta);
+  while(cur <= fin){
+    var dow = cur.getDay(); // 0=dom,6=sab
+    var iso = isoLocal(cur);
+    if(dow !== 0 && dow !== 6 && !festSet[iso]) count++;
+    cur.setDate(cur.getDate()+1);
+  }
+  return count;
+}
+
+/* Comprueba si el rango incluye algún sábado o domingo */
+function incluyeFinde(desde, hasta){
+  var cur = parseLocal(desde);
+  var fin = parseLocal(hasta);
+  while(cur <= fin){
+    var dow = cur.getDay();
+    if(dow === 0 || dow === 6) return true;
+    cur.setDate(cur.getDate()+1);
+  }
+  return false;
 }
 
 /* ════ LÓGICA SEMANAS AFECTADAS ════ */
