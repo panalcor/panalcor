@@ -144,6 +144,74 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 .panel{display:none}
 .panel.active{display:block}
 
+/* ── TURNOS CALENDARIO ── */
+.month-nav{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.month-nav h2{font-size:1.1rem;font-weight:900;color:var(--gold-light);letter-spacing:.06em;flex:1;text-align:center;text-transform:capitalize}
+.nav-btn{background:rgba(201,162,39,0.12);border:1px solid rgba(201,162,39,0.35);color:var(--gold);padding:7px 16px;border-radius:7px;cursor:pointer;font-size:0.9rem;font-weight:700;transition:all .2s}
+.nav-btn:hover{background:rgba(201,162,39,0.28)}
+.alert-banner{border-radius:8px;padding:10px 15px;margin-bottom:14px;font-size:0.83rem;display:none}
+.alert-banner.error{background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.35);color:#ff8a80}
+.tc-legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;padding:10px 14px;background:var(--navy-mid);border-radius:8px;border:1px solid rgba(255,255,255,0.06)}
+.tc-legend .leg-item{display:flex;align-items:center;gap:5px;font-size:0.68rem;color:rgba(255,255,255,0.55)}
+.sh-badge{font-size:0.6rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:2px 7px;border-radius:3px;line-height:1.4}
+.sh-mañana{background:rgba(52,152,219,0.22);color:#7bb8f0;border:1px solid rgba(52,152,219,0.3)}
+.sh-tarde{background:rgba(230,126,34,0.22);color:#f0a060;border:1px solid rgba(230,126,34,0.3)}
+.sh-noche{background:rgba(155,89,182,0.22);color:#c39bd3;border:1px solid rgba(155,89,182,0.3)}
+.st-badge{font-size:.57rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:1px 5px;border-radius:3px;line-height:1.4}
+.st-vacaciones{background:rgba(46,204,113,.18);color:#2ecc71;border:1px solid rgba(46,204,113,.28)}
+.st-asunto{background:rgba(243,156,18,.18);color:#f39c12;border:1px solid rgba(243,156,18,.28)}
+.st-baja{background:rgba(231,76,60,.2);color:#e74c3c;border:1px solid rgba(231,76,60,.3)}
+.st-sancion{background:rgba(192,57,43,.3);color:#ff6b5b;border:1px solid rgba(231,76,60,.45)}
+.st-libre{background:rgba(52,152,219,.18);color:#74b9ff;border:1px solid rgba(52,152,219,.28)}
+.tc-cal-wrap{overflow-x:auto;border-radius:10px;border:1px solid rgba(255,255,255,0.07)}
+.tc-cal-table{width:100%;border-collapse:collapse;min-width:860px}
+.tc-cal-table th{background:var(--navy-mid);padding:9px 6px;text-align:center;font-size:.63rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid rgba(201,162,39,.25);white-space:nowrap;position:sticky;top:0;z-index:2}
+.tc-cal-table th.week-col{text-align:left;padding-left:14px;min-width:120px}
+.tc-cal-table th.obs-col{text-align:left;padding-left:8px;min-width:180px}
+.tc-cal-table td{padding:4px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+.tc-cal-table tr.is-current td{background:rgba(201,162,39,.04)}
+.tc-cal-table tr:hover td{background:rgba(255,255,255,.02)}
+.week-label{padding-left:4px}
+.wk-num{font-size:.6rem;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;display:block}
+.wk-dates{font-size:.76rem;font-weight:600;white-space:nowrap}
+.week-cell{padding:5px 6px;border-radius:6px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:3px;border:1px solid transparent;min-height:46px;justify-content:center;min-width:82px}
+.week-cell:hover{border-color:rgba(201,162,39,.5);background:rgba(201,162,39,.07)}
+.week-cell.has-exc{border-color:rgba(243,156,18,.45);background:rgba(243,156,18,.05)}
+.exc-days{display:flex;flex-wrap:wrap;gap:2px;justify-content:center}
+.exc-chip{font-size:.55rem;font-weight:700;padding:1px 4px;border-radius:3px;cursor:pointer;letter-spacing:.03em;line-height:1.4}
+.exc-chip:hover{filter:brightness(1.3)}
+.exc-vacaciones{background:rgba(46,204,113,.25);color:#2ecc71}
+.exc-asunto{background:rgba(243,156,18,.25);color:#f39c12}
+.exc-baja{background:rgba(231,76,60,.25);color:#e74c3c}
+.exc-sancion{background:rgba(192,57,43,.35);color:#ff6b5b}
+.exc-libre{background:rgba(52,152,219,.22);color:#74b9ff}
+.obs-td{padding:5px 8px;font-size:.7rem;color:rgba(255,255,255,.38);line-height:1.55;vertical-align:middle}
+.cov-cell{font-size:.72rem;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.cov-ok{color:var(--green);background:rgba(46,204,113,.1)}
+.cov-warn{color:var(--yellow);background:rgba(243,156,18,.1)}
+.cov-bad{color:var(--red);background:rgba(231,76,60,.12)}
+.sab-col-cell{padding:4px 7px;vertical-align:middle;min-width:90px}
+.sab-col-tag{display:inline-block;font-size:.58rem;font-weight:700;background:rgba(201,162,39,.13);border:1px solid rgba(201,162,39,.28);color:var(--gold);padding:1px 5px;border-radius:3px;margin:1px;white-space:nowrap}
+.sab-col-empty{font-size:.65rem;color:rgba(255,255,255,.18)}
+.week-day-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;border:1px solid rgba(255,255,255,.07);margin-bottom:6px;cursor:pointer;transition:all .15s}
+.week-day-row:hover{border-color:rgba(201,162,39,.4);background:rgba(201,162,39,.06)}
+.wd-name{min-width:90px;font-size:.82rem;font-weight:600}
+.wd-badges{display:flex;gap:5px;flex:1;align-items:center}
+.wd-note{font-size:.68rem;color:rgba(255,255,255,.28);max-width:120px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wd-weekend{opacity:.45}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.modal-box{background:var(--navy-mid);border:1px solid rgba(201,162,39,.32);border-radius:14px;padding:24px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:1.05rem;font-weight:900;color:var(--gold-light);margin-bottom:3px}
+.modal-sub{font-size:.76rem;color:rgba(255,255,255,.38);margin-bottom:18px;letter-spacing:.05em}
+.modal-field{margin-bottom:13px}
+.modal-field label{display:block;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:5px}
+.modal-field select,.modal-field input,.modal-field textarea{width:100%;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,.18);border-radius:7px;padding:9px 12px;font-family:'Barlow',sans-serif;font-size:.92rem}
+.modal-field select:focus,.modal-field input:focus,.modal-field textarea:focus{outline:none;border-color:var(--gold)}
+.modal-field textarea{resize:vertical;min-height:56px}
+.modal-btns{display:flex;gap:10px;margin-top:16px}
+.modal-btns .btn{flex:1}
+.modal-info{font-size:.78rem;padding:8px 11px;border-radius:6px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:rgba(255,255,255,.5);margin-bottom:8px;line-height:1.5}
+.modal-info.warn{background:rgba(243,156,18,.08);border-color:rgba(243,156,18,.25);color:var(--yellow)}
 .sep{border:none;border-top:1px solid rgba(255,255,255,0.07);margin:16px 0}
 .info-box{background:rgba(52,152,219,0.08);border:1px solid rgba(52,152,219,0.25);border-radius:8px;padding:10px 14px;font-size:0.82rem;color:rgba(255,255,255,0.6);line-height:1.6;margin-bottom:14px}
 
@@ -199,6 +267,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
   <div class="tab"        id="tab-calendario" onclick="switchTab('calendario')">📅 Calendario</div>
   <div class="tab"        id="tab-bolsas"     onclick="switchTab('bolsas')">📊 Bolsas de días</div>
   <div class="tab"        id="tab-sabados"    onclick="switchTab('sabados')">📋 Sáb. · Dom. · Fest.</div>
+  <div class="tab"        id="tab-turnos"     onclick="switchTab('turnos')">🗓 Turnos</div>
   <div class="tab"        id="tab-semanas"    onclick="switchTab('semanas')">🔄 Semanas afectadas</div>
   <div class="tab"        id="tab-resumen"    onclick="switchTab('resumen')">📋 Resumen</div>
 </div>
@@ -377,6 +446,90 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 
 </div>
 
+<!-- ═══ TURNOS CALENDARIO SEMANAL ═══ -->
+<div class="panel" id="panel-turnos">
+  <div class="month-nav">
+    <button class="nav-btn" onclick="tcPrev()">◀</button>
+    <button class="nav-btn" onclick="tcHoy()" style="font-size:.78rem;padding:7px 12px;opacity:.75">Hoy</button>
+    <h2 id="tc-monthTitle">—</h2>
+    <button class="nav-btn" onclick="tcNext()">▶</button>
+  </div>
+  <div class="alert-banner error" id="tc-coverageAlert"></div>
+  <div class="tc-legend">
+    <div class="leg-item"><span class="sh-badge sh-mañana">MAÑ</span> Mañana</div>
+    <div class="leg-item"><span class="sh-badge sh-tarde">TAR</span> Tarde</div>
+    <div class="leg-item"><span class="sh-badge sh-noche">NOC</span> Noche</div>
+    <div class="leg-item"><span class="st-badge st-vacaciones">VAC</span> Vacaciones</div>
+    <div class="leg-item"><span class="st-badge st-asunto">ASU</span> Asunto</div>
+    <div class="leg-item"><span class="st-badge st-baja">BAJA</span> Baja</div>
+    <div class="leg-item"><span class="st-badge st-sancion">SAN</span> Sanción</div>
+    <div class="leg-item"><span class="st-badge st-libre">LIBRE</span> Día libre</div>
+    <div class="leg-item" style="margin-left:auto;font-size:.64rem;color:rgba(255,255,255,.25)">Celdas naranja = variación · COB: N·M·T</div>
+  </div>
+  <div class="tc-cal-wrap">
+    <table class="tc-cal-table">
+      <thead>
+        <tr>
+          <th class="week-col">SEMANA</th>
+          <th id="tc-th1">—</th><th id="tc-th2">—</th><th id="tc-th3">—</th>
+          <th id="tc-th4">—</th><th id="tc-th5">—</th>
+          <th style="min-width:80px">COBERTURA</th>
+          <th style="min-width:90px">SÁBADO</th>
+          <th class="obs-col">OBSERVACIONES</th>
+        </tr>
+      </thead>
+      <tbody id="tc-calBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL SEMANA -->
+<div class="modal-bg" id="weekModal" style="display:none" onclick="bgClose(event,'weekModal')">
+  <div class="modal-box" style="max-width:460px">
+    <div class="modal-title" id="weekModalTitle">Semana</div>
+    <div class="modal-sub" id="weekModalSub"></div>
+    <div id="weekModalDays"></div>
+    <div class="modal-btns" style="margin-top:12px">
+      <button class="btn btn-outline" onclick="closeModal('weekModal')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR DÍA -->
+<div class="modal-bg" id="cellModal" style="display:none" onclick="bgClose(event,'cellModal')">
+  <div class="modal-box">
+    <div class="modal-title" id="cellModalTitle">Mecánico</div>
+    <div class="modal-sub" id="cellModalSub"></div>
+    <div class="modal-field" id="turnoFieldWrap" style="display:none">
+      <label>Turno (solo Javier E. y Jose)</label>
+      <select id="editTurno">
+        <option value="mañana">☀️ Mañana</option>
+        <option value="tarde">🌅 Tarde</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label>Estado del día</label>
+      <select id="editEstado">
+        <option value="normal">✅ Normal</option>
+        <option value="vacaciones">🌴 Vacaciones</option>
+        <option value="asunto">📋 Asunto propio</option>
+        <option value="baja">🤒 Baja / Ausente</option>
+        <option value="sancion">🔴 Sanción</option>
+        <option value="libre">🔵 Día libre</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label>Notas</label>
+      <textarea id="editNota" placeholder="Notas opcionales..."></textarea>
+    </div>
+    <div class="modal-info" id="cellModalInfo" style="display:none"></div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="closeModal('cellModal')">Cancelar</button>
+      <button class="btn btn-gold" onclick="saveCellEdit()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ SEMANAS AFECTADAS ═══ -->
 <div class="panel" id="panel-semanas">
   <div class="card" style="margin-bottom:12px">
@@ -438,8 +591,20 @@ var _festivos   = loadLS('prot_festivos') || [];   // [{fecha:'2026-01-01', desc
 var _ausencias  = loadLS('prot_ausencias') || [];  // [{id, mec, tipo, desde, hasta, nota}]
 var _sustitutos = loadLS('prot_sustitutos') || {}; // {'mecAusente|YYYY-WW': 'mecSustituto'}
 
-// Datos de turnos.html (solo lectura)
+// Estado completo de turnos (sincronizado con Firebase turnos/)
 var _T = { mecanicos:{}, bolsas:{}, sabados:{}, festivos:{}, config:{ vacTotal:22, asuTotal:5 } };
+var S  = _T; // alias — ambos apuntan al mismo objeto
+
+var NOMBRES_DEFAULT = ['','RAFA','ALEX','GREGORIO','JAVIER E.','JOSE'];
+var PERFILES = ['','fijo_noche','fijo_mañana','rotativo','flexible','flexible'];
+var TC_MONTHS_SH = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+var TC_DAYS_SH   = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+var TC_DAYS_LONG = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+
+var tcOffset = 0;
+var editCell = null;
+var weekEditMecId  = null;
+var weekEditMonday = null;
 
 /* ════ HELPERS ════ */
 function loadLS(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }
@@ -520,33 +685,38 @@ function cargarDatos(){
 }
 
 function cargarTurnos(){
-  DB.ref('turnos').once('value').then(function(s){
-    var d = s.val() || {};
-    if(d.mecanicos) _T.mecanicos = d.mecanicos;
-    if(d.bolsas)    _T.bolsas    = d.bolsas;
-    if(d.sabados)   _T.sabados   = d.sabados;
-    if(d.festivos)  _T.festivos  = d.festivos;
-    if(d.config)    _T.config    = Object.assign({vacTotal:22,asuTotal:5}, d.config);
+  DB.ref('turnos').on('value', function(snap){
+    var d = snap.val() || {};
+    if(d.mecanicos)     _T.mecanicos     = d.mecanicos;
+    if(d.bolsas)        _T.bolsas        = d.bolsas;
+    if(d.sabados)       _T.sabados       = d.sabados;
+    if(d.festivos)      _T.festivos      = d.festivos;
+    if(d.dias)          _T.dias          = d.dias;
+    if(d.ausencias)     _T.ausencias     = d.ausencias;
+    if(d.horasNocheDom) _T.horasNocheDom = d.horasNocheDom;
+    if(d.config)        _T.config        = Object.assign({vacTotal:22,asuTotal:5,rotacionMec3:{},tarStarter:'4',alexCovStarter:'4'}, d.config);
+    [1,2,3,4,5].forEach(function(i){
+      var k = String(i);
+      if(!_T.mecanicos[k]) _T.mecanicos[k] = {nombre:NOMBRES_DEFAULT[i],perfil:PERFILES[i]};
+      if(!_T.bolsas[k])    _T.bolsas[k]    = {};
+      if(!_T.horasNocheDom[k]) _T.horasNocheDom[k] = 0;
+    });
+    if(!_T.dias)      _T.dias      = {};
+    if(!_T.ausencias) _T.ausencias = {};
 
-    // Usar nombres de turnos para los selects
-    _mecanicos = Object.keys(_T.mecanicos).sort(function(a,b){ return +a-+b; })
-      .map(function(k){ return _T.mecanicos[k].nombre || 'Mec '+k; })
-      .filter(Boolean);
-
+    _mecanicos = getAllMecIds().map(function(k){ return _T.mecanicos[k].nombre||'Mec '+k; }).filter(Boolean);
     renderMecSelects();
-    if(document.getElementById('panel-bolsas').classList.contains('active'))   renderBolsas();
-    if(document.getElementById('panel-sabados').classList.contains('active'))   renderSabadosTab();
+    if(document.getElementById('panel-bolsas').classList.contains('active'))    renderBolsas();
+    if(document.getElementById('panel-sabados').classList.contains('active'))    renderSabadosTab();
+    if(document.getElementById('panel-turnos').classList.contains('active'))     renderTurnosCal();
     if(document.getElementById('panel-calendario').classList.contains('active')) renderCalendario();
-  }).catch(function(){
-    // fallback a lista global
-    var fallback = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE'];
-    DB.ref('config/mecanicos').once('value').then(function(s){
-      var v = s.val();
-      _mecanicos = (v && v.length) ? v : fallback;
-      renderMecSelects();
-    }).catch(function(){ _mecanicos = fallback; renderMecSelects(); });
   });
 }
+
+function fbSet(path, value){ DB.ref('turnos/'+path).set(value); }
+function getAllMecIds(){ return Object.keys(_T.mecanicos).sort(function(a,b){ return +a-+b; }); }
+function getExtraMecIds(){ return getAllMecIds().filter(function(k){ return +k>5; }); }
+function ensureBolsa(k){ if(!_T.bolsas[k]) _T.bolsas[k]={}; }
 
 function renderMecSelects(){
   var opts = _mecanicos.map(function(m){ return '<option value="'+esc(m)+'">'+esc(m)+'</option>'; }).join('');
@@ -1160,6 +1330,243 @@ function hideSabTooltip(){
   document.getElementById('sabTooltip').style.display = 'none';
 }
 
+/* ════ CALENDARIO SEMANAL DE TURNOS ════ */
+function toDS(d){
+  var y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+dd;
+}
+function getWeekMonday(dateStr){
+  var d=new Date(dateStr+'T00:00:00'), dow=d.getDay(), diff=dow===0?-6:1-dow, m=new Date(d);
+  m.setDate(d.getDate()+diff); return m;
+}
+function getMec3Turno(dateStr){
+  var cfg=_T.config.rotacionMec3||{}; if(!cfg.inicio) return 'mañana';
+  var start=new Date(cfg.inicio+'T00:00:00'), date=new Date(dateStr+'T00:00:00');
+  var diffDays=Math.floor((date-start)/86400000), diffWeeks=Math.floor(diffDays/7);
+  var period=Math.floor(Math.abs(diffWeeks)/2), base=cfg.turnoInicio||'mañana', alt=base==='mañana'?'tarde':'mañana';
+  if(diffDays<0){ var negW=Math.floor((-diffDays-1)/7)+1, negP=Math.floor(negW/2); return negP%2===0?alt:base; }
+  return period%2===0?base:alt;
+}
+function getMec1Absences(weekMonday){
+  var count=0, absentDays=[];
+  for(var i=0;i<7;i++){
+    var d=new Date(weekMonday); d.setDate(weekMonday.getDate()+i);
+    var ds=toDS(d), e=(_T.dias[ds]||{})['1']?.estado;
+    if(e&&e!=='normal'){count++;absentDays.push(ds);}
+  }
+  return {count,absentDays};
+}
+function getTarWeekIndex(weekMonday){
+  var cfg=_T.config.rotacionMec3||{}; if(!cfg.inicio) return -1;
+  var mondayStr=toDS(weekMonday);
+  if(getMec3Turno(mondayStr)==='mañana') return -1;
+  var start=new Date(cfg.inicio+'T00:00:00');
+  var diffMs=weekMonday-start, diffWeeks=Math.max(0,Math.floor(diffMs/(7*86400000)));
+  var cyclePos=diffWeeks%4, startsMan=cfg.turnoInicio==='mañana';
+  var tarPos=startsMan?cyclePos-2:cyclePos;
+  return Math.floor(diffWeeks/4)*2+tarPos;
+}
+function getAlexCovMec(weekMonday){
+  var cfg=_T.config, starter=cfg.alexCovStarter||'4';
+  var seenWeeks=new Set();
+  Object.keys(_T.dias).forEach(function(ds){
+    var e=(_T.dias[ds]||{})['1']?.estado;
+    if(e&&e!=='normal') seenWeeks.add(toDS(getWeekMonday(ds)));
+  });
+  var idx=0;
+  [...seenWeeks].sort().forEach(function(monStr){
+    var mon=new Date(monStr+'T00:00:00');
+    if(mon>=weekMonday) return;
+    var ab=getMec1Absences(mon);
+    if(ab.count>=4&&getMec3Turno(monStr)==='mañana') idx++;
+  });
+  var sf=starter==='4';
+  return (idx%2===0)?(sf?'4':'5'):(sf?'5':'4');
+}
+function getWeekShifts(weekMonday){
+  var mondayStr=toDS(weekMonday), gregTurno=getMec3Turno(mondayStr);
+  var rafaAbs=getMec1Absences(weekMonday).count, alexNight=rafaAbs>=4;
+  var mec4,mec5;
+  if(gregTurno==='mañana'){
+    mec4='tarde';mec5='tarde';
+    if(alexNight){ var cov=getAlexCovMec(weekMonday); if(cov==='4') mec4='mañana'; else mec5='mañana'; }
+  } else {
+    var tarIdx=getTarWeekIndex(weekMonday), starter=_T.config.tarStarter||'4', javFirst=starter==='4';
+    var javMan=(tarIdx%2===0)?javFirst:!javFirst;
+    mec4=javMan?'mañana':'tarde'; mec5=javMan?'tarde':'mañana';
+    if(alexNight){mec4='mañana';mec5='mañana';}
+  }
+  return {'1':'noche','2':alexNight?'noche':'mañana','3':gregTurno,'4':mec4,'5':mec5};
+}
+
+function shiftLbl(t){ return t==='mañana'?'MAÑ':t==='tarde'?'TAR':'NOC'; }
+function estadoLbl(e){ return {vacaciones:'VAC',asunto:'ASU',baja:'BAJA',sancion:'SAN',libre:'LIBRE'}[e]||(e||'').toUpperCase(); }
+function tcGetWeekNumber(d){ var j4=new Date(d.getFullYear(),0,4); return Math.ceil(((d-j4)/86400000+j4.getDay()+1)/7); }
+
+function tcUpdateHeaders(){
+  for(var i=1;i<=5;i++){
+    var el=document.getElementById('tc-th'+i);
+    if(el) el.textContent=(_T.mecanicos[String(i)]||{}).nombre||'Mec '+i;
+  }
+}
+function tcPrev(){ tcOffset--; renderTurnosCal(); }
+function tcNext(){ tcOffset++; renderTurnosCal(); }
+function tcHoy(){ tcOffset=0; renderTurnosCal(); }
+
+function renderTurnosCal(){
+  tcUpdateHeaders();
+  var today=new Date(); today.setHours(0,0,0,0);
+  var wMon=new Date(today);
+  var dow=wMon.getDay(), diff=dow===0?-6:1-dow;
+  wMon.setDate(wMon.getDate()+diff-14+tcOffset*7);
+
+  var wLastSun=new Date(wMon); wLastSun.setDate(wMon.getDate()+6*7+6);
+  var tf=TC_MONTHS_SH, tit=wMon.getDate()+' '+tf[wMon.getMonth()]+' '+wMon.getFullYear()+' — '+wLastSun.getDate()+' '+tf[wLastSun.getMonth()]+' '+wLastSun.getFullYear();
+  document.getElementById('tc-monthTitle').textContent=tit;
+
+  var tbody=document.getElementById('tc-calBody');
+  tbody.innerHTML='';
+  var badWeeks=0;
+
+  for(var w=0;w<7;w++){
+    var wSun=new Date(wMon); wSun.setDate(wMon.getDate()+6);
+    var shifts=getWeekShifts(wMon);
+    var isCurrent=today>=wMon&&today<=wSun;
+    var excByMec={'1':[],'2':[],'3':[],'4':[],'5':[]};
+    var obsParts=[];
+
+    for(var mId=1;mId<=5;mId++){
+      var k=String(mId), defaultTurno=shifts[k];
+      for(var i=0;i<7;i++){
+        var d=new Date(wMon); d.setDate(wMon.getDate()+i);
+        var ds=toDS(d), dayData=(_T.dias[ds]||{})[k]||{};
+        var estado=dayData.estado||'normal', storedT=dayData.turno, nota=dayData.nota||'';
+        var isExc=false, parts=[];
+        if(estado!=='normal'){parts.push(estadoLbl(estado));isExc=true;}
+        if((mId===4||mId===5)&&storedT&&storedT!==defaultTurno){parts.push(shiftLbl(storedT));isExc=true;}
+        if(isExc){
+          excByMec[k].push({ds,dow:d.getDay(),estado,parts,nota});
+          obsParts.push((_T.mecanicos[k]||{}).nombre+': '+TC_DAYS_SH[d.getDay()]+' '+parts.join('/'));
+        }
+      }
+    }
+
+    var manCount=0,tarCount=0,nocCount=0;
+    for(var mId2=1;mId2<=5;mId2++){ var t=shifts[String(mId2)]; if(t==='mañana')manCount++;else if(t==='tarde')tarCount++;else if(t==='noche')nocCount++; }
+    if(tarCount===0||nocCount===0) badWeeks++;
+
+    var tr=document.createElement('tr');
+    if(isCurrent) tr.classList.add('is-current');
+
+    var wS=wMon.getDate()+' '+TC_MONTHS_SH[wMon.getMonth()], wE=wSun.getDate()+' '+TC_MONTHS_SH[wSun.getMonth()];
+    var tdW=document.createElement('td');
+    tdW.innerHTML='<div class="week-label"><span class="wk-num">Sem '+tcGetWeekNumber(wMon)+'</span><span class="wk-dates">'+wS+'–'+wE+'</span></div>';
+    tr.appendChild(tdW);
+
+    for(var mId3=1;mId3<=5;mId3++){
+      var k3=String(mId3), t3=shifts[k3], excs=excByMec[k3], hasExc=excs.length>0;
+      var excHtml='';
+      if(hasExc) excHtml='<div class="exc-days">'+excs.map(function(e){ return '<span class="exc-chip exc-'+e.estado+'" onclick="event.stopPropagation();openCellEdit(\''+k3+'\',\''+e.ds+'\')" title="'+e.parts.join(' | ')+'">'+TC_DAYS_SH[e.dow]+'</span>'; }).join('')+'</div>';
+      var td=document.createElement('td');
+      td.innerHTML='<div class="week-cell'+(hasExc?' has-exc':'')+'" onclick="openWeekModal(\''+k3+'\',\''+toDS(wMon)+'\')"><span class="sh-badge sh-'+t3+'">'+shiftLbl(t3)+'</span>'+excHtml+'</div>';
+      tr.appendChild(td);
+    }
+
+    var covCls=(tarCount===0||nocCount===0)?'cov-bad':manCount===0?'cov-warn':'cov-ok';
+    var manLbl=manCount===0?'<span title="Jefe cubre mañana">👤</span>':String(manCount);
+    var tdCov=document.createElement('td'); tdCov.style.textAlign='center';
+    tdCov.innerHTML='<span class="cov-cell '+covCls+'" style="font-size:.65rem" title="'+nocCount+' noche · '+manCount+' mañana · '+tarCount+' tarde">'+nocCount+'N · '+manLbl+'M · '+tarCount+'T</span>';
+    tr.appendChild(tdCov);
+
+    var satDate=new Date(wMon); satDate.setDate(wMon.getDate()+5);
+    var satDS=toDS(satDate), satMecs=(_T.sabados[satDS]||{}).mecanicos||[];
+    var tdSat=document.createElement('td'); tdSat.className='sab-col-cell';
+    tdSat.innerHTML=satMecs.length?satMecs.map(function(m){ return '<span class="sab-col-tag">'+esc((_T.mecanicos[String(m)]||{}).nombre||'Mec '+m)+'</span>'; }).join(''):'<span class="sab-col-empty">—</span>';
+    tr.appendChild(tdSat);
+
+    var tdObs=document.createElement('td'); tdObs.className='obs-td';
+    if(obsParts.length) tdObs.innerHTML=obsParts.map(function(p){ return '<span style="display:block">'+esc(p)+'</span>'; }).join('');
+    tr.appendChild(tdObs);
+
+    tbody.appendChild(tr);
+    wMon=new Date(wMon); wMon.setDate(wMon.getDate()+7);
+  }
+
+  var banner=document.getElementById('tc-coverageAlert');
+  if(badWeeks>0){ banner.style.display='block'; banner.textContent='⚠️ '+badWeeks+' semana(s) sin cobertura de tarde o noche — revisar rotación / ausencias.'; }
+  else banner.style.display='none';
+}
+
+function openWeekModal(mecId, mondayStr){
+  weekEditMecId=mecId; weekEditMonday=new Date(mondayStr+'T00:00:00');
+  var mec=_T.mecanicos[mecId], shifts=getWeekShifts(weekEditMonday), defaultTurno=shifts[mecId];
+  document.getElementById('weekModalTitle').textContent=(mec||{}).nombre||'Mec '+mecId;
+  var wSun=new Date(weekEditMonday); wSun.setDate(weekEditMonday.getDate()+6);
+  document.getElementById('weekModalSub').textContent=weekEditMonday.getDate()+' '+TC_MONTHS_SH[weekEditMonday.getMonth()]+' — '+wSun.getDate()+' '+TC_MONTHS_SH[wSun.getMonth()];
+  var cont=document.getElementById('weekModalDays'); cont.innerHTML='';
+  for(var i=0;i<7;i++){
+    var d=new Date(weekEditMonday); d.setDate(weekEditMonday.getDate()+i);
+    var ds=toDS(d), dayData=(_T.dias[ds]||{})[mecId]||{};
+    var estado=dayData.estado||'normal', storedT=dayData.turno||defaultTurno, nota=dayData.nota||'';
+    var isWE=d.getDay()===0||d.getDay()===6;
+    var div=document.createElement('div');
+    div.className='week-day-row'+(isWE?' wd-weekend':'');
+    div.innerHTML='<span class="wd-name">'+TC_DAYS_LONG[d.getDay()]+' '+d.getDate()+'</span><div class="wd-badges"><span class="sh-badge sh-'+storedT+'">'+shiftLbl(storedT)+'</span>'+(estado!=='normal'?'<span class="st-badge st-'+estado+'">'+estadoLbl(estado)+'</span>':'')+'</div>'+(nota?'<span class="wd-note" title="'+esc(nota)+'">📝</span>':'')+'<span style="font-size:.68rem;color:rgba(201,162,39,.6)">✎</span>';
+    div.onclick=function(ds2){ return function(){ closeModal('weekModal'); openCellEdit(mecId,ds2); }; }(ds);
+    cont.appendChild(div);
+  }
+  document.getElementById('weekModal').style.display='flex';
+}
+
+function openCellEdit(mecId, dateStr){
+  editCell={mecId,dateStr};
+  var mec=_T.mecanicos[mecId], d=new Date(dateStr+'T12:00:00');
+  var dFmt=TC_DAYS_LONG[d.getDay()]+' '+d.getDate()+' de '+['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][d.getMonth()]+' '+d.getFullYear();
+  document.getElementById('cellModalTitle').textContent=(mec||{}).nombre||'Mec '+mecId;
+  document.getElementById('cellModalSub').textContent=dFmt;
+  var mDat=(_T.dias[dateStr]||{})[mecId]||{}, est=mDat.estado||'normal', nota=mDat.nota||'';
+  var turnoWrap=document.getElementById('turnoFieldWrap');
+  if(mecId==='4'||mecId==='5'){
+    turnoWrap.style.display='block';
+    var wMon=getWeekMonday(dateStr), shifts=getWeekShifts(wMon), computed=shifts[mecId];
+    document.getElementById('editTurno').value=mDat.turno||computed;
+    turnoWrap.querySelector('label').textContent='Turno (por rotación: '+shiftLbl(computed)+')';
+  } else { turnoWrap.style.display='none'; }
+  document.getElementById('editEstado').value=est;
+  document.getElementById('editNota').value=nota;
+  var info=document.getElementById('cellModalInfo');
+  if(mecId==='1'){
+    var wMon2=getWeekMonday(dateStr), ab=getMec1Absences(wMon2);
+    var txt='Esta semana Rafa lleva '+ab.count+' ausencia(s). ';
+    txt+=ab.count>=4?'⚠️ Alex cubre TODA la semana de noche.':ab.count>0?'Alex cubre los días de ausencia.':'Si supera 3 días, Alex cubrirá toda la semana.';
+    info.textContent=txt; info.className=ab.count>=4?'modal-info warn':'modal-info'; info.style.display='block';
+  } else { info.style.display='none'; }
+  document.getElementById('cellModal').style.display='flex';
+}
+
+function saveCellEdit(){
+  if(!editCell) return;
+  var mecId=editCell.mecId, dateStr=editCell.dateStr;
+  var est=document.getElementById('editEstado').value, nota=document.getElementById('editNota').value.trim();
+  var entry={estado:est,nota};
+  if(mecId==='4'||mecId==='5'){
+    var wMon=getWeekMonday(dateStr), shifts=getWeekShifts(wMon), picked=document.getElementById('editTurno').value;
+    if(picked!==shifts[mecId]) entry.turno=picked;
+  }
+  if(!_T.dias[dateStr]) _T.dias[dateStr]={};
+  if(est==='normal'&&!nota&&!entry.turno){
+    delete _T.dias[dateStr][mecId];
+    if(!Object.keys(_T.dias[dateStr]).length) delete _T.dias[dateStr];
+  } else { _T.dias[dateStr][mecId]=entry; }
+  fbSet('dias',_T.dias);
+  closeModal('cellModal');
+  renderTurnosCal();
+  showToast('Guardado');
+}
+
+function closeModal(id){ document.getElementById(id).style.display='none'; editCell=null; }
+function bgClose(e,id){ if(e.target.classList.contains('modal-bg')) closeModal(id); }
+
 /* Busca la key numérica en _T.mecanicos que corresponde al nombre del mecánico */
 function getTurnosMecKey(nombre){
   var keys = Object.keys(_T.mecanicos);
@@ -1256,11 +1663,9 @@ function renderBolsas(){
 var MESES_SH_SAB = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 var DIAS_SAB = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 
-function pFbSet(path, value){ DB.ref('turnos/'+path).set(value); }
+function pFbSet(path, value){ fbSet(path, value); } // alias de compatibilidad
 
-function pGetAllMecIds(){
-  return Object.keys(_T.mecanicos).sort(function(a,b){ return +a - +b; });
-}
+function pGetAllMecIds(){ return getAllMecIds(); } // alias de compatibilidad
 
 function pInitSabForm(){
   var ids = pGetAllMecIds();
@@ -1526,6 +1931,7 @@ function switchTab(name){
   document.getElementById('panel-'+name).classList.add('active');
   document.getElementById('tab-'+name).classList.add('active');
   if(name==='calendario') renderCalendario();
+  if(name==='turnos')     renderTurnosCal();
   if(name==='sabados')    renderSabadosTab();
   if(name==='semanas')    renderSemanas();
   if(name==='bolsas')     renderBolsas();
