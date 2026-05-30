@@ -2086,8 +2086,17 @@ function exportarInformeTxt(){
 // INFORMES
 // ══════════════════════════════════════════════════
 function renderInformes(){
-  renderResumenMensual();
-  renderRepuestosUsados();
+  // Fetch fresh data from Firebase before rendering, in case localStorage is stale or empty
+  DB.ref('averias').once('value').then(function(snap){
+    var val = snap.val();
+    var nuevas = val ? Object.values(val).sort(function(a,b){ return b.ts - a.ts; }) : [];
+    localStorage.setItem('averias_v1', JSON.stringify(nuevas));
+    renderResumenMensual();
+    renderRepuestosUsados();
+  }).catch(function(){
+    renderResumenMensual();
+    renderRepuestosUsados();
+  });
 }
 
 function getAvFiltradas(){
