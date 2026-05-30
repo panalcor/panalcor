@@ -84,6 +84,14 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 .leg{display:inline-flex;align-items:center;gap:5px}
 .leg-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
 .cal-day.sem-hoy{border-color:rgba(201,162,39,0.3);background:rgba(201,162,39,0.04)}
+.cal-day.is-sabado{cursor:pointer}
+.cal-day.is-sabado:hover{border-color:rgba(201,162,39,0.6);background:rgba(201,162,39,0.1)}
+/* TOOLTIP SÁBADO */
+#sabTooltip{position:fixed;z-index:999;background:var(--navy-mid);border:1px solid rgba(201,162,39,0.45);border-radius:10px;padding:12px 16px;font-size:0.82rem;min-width:180px;max-width:260px;box-shadow:0 8px 28px rgba(0,0,0,0.5);pointer-events:none;display:none}
+#sabTooltip .tt-fecha{font-size:0.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+#sabTooltip .tt-mec{display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-weight:600}
+#sabTooltip .tt-mec:last-child{border-bottom:none}
+#sabTooltip .tt-empty{color:rgba(255,255,255,0.3);font-style:italic}
 
 /* FESTIVOS LIST */
 .festivo-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(201,162,39,0.12);border:1px solid rgba(201,162,39,0.3);border-radius:6px;padding:4px 10px;font-size:0.82rem;margin:3px}
@@ -327,6 +335,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 </div><!-- /content -->
 
 <div class="toast" id="toast"></div>
+<div id="sabTooltip">
+  <div class="tt-fecha" id="ttFecha"></div>
+  <div id="ttBody"></div>
+</div>
 
 <script>
 /* ════ FIREBASE ════ */
@@ -976,11 +988,13 @@ function renderCalendario(){
           +'</div>';
       }
 
+      var esSabado = dow === 6;
       var clases = 'cal-day';
       if(esFinde)   clases += ' is-finde';
       if(esFest)    clases += ' is-festivo';
       if(esHoy)     clases += ' is-today';
       if(esSemHoy)  clases += ' sem-hoy';
+      if(esSabado)  clases += ' is-sabado';
 
       var festDesc = esFest ? ((_festivos.find(function(f){return f.fecha===iso;})||{}).desc||'Festivo') : '';
       var numHtml  = '<div class="day-num'+(esHoy?' today-num':'')+'"><span>'+fecha.getDate()+'</span>'
@@ -995,11 +1009,68 @@ function renderCalendario(){
         ausHtml += '<span class="aus-tag aus-'+tipo+'" title="'+esc(tipoLabel(aus.tipo))+'">'+esc(aus.mec)+'</span>';
       });
 
-      html += '<div class="'+clases+'">' + numHtml + ausHtml + '</div>';
+      var sabAttr = esSabado ? ' data-sabiso="'+iso+'" onmouseenter="showSabTooltip(event,\''+iso+'\')" onmouseleave="hideSabTooltip()"' : '';
+      html += '<div class="'+clases+'"'+sabAttr+'>' + numHtml + ausHtml + '</div>';
     }
   }
 
   grid.innerHTML = html;
+}
+
+/* ════ TOOLTIP SÁBADOS ════ */
+function showSabTooltip(e, iso){
+  var tt     = document.getElementById('sabTooltip');
+  var fecha  = parseLocal(iso);
+  var hoyIso = isoLocal(new Date());
+  var pasado = iso < hoyIso;
+  var futuro = iso > hoyIso;
+  var esFest = !!getFestivosSet()[iso];
+
+  // Label temporal
+  var cuando = pasado ? 'Trabajaron' : (iso === hoyIso ? 'Trabajan hoy' : 'Trabajarán');
+
+  // Fecha formateada
+  var meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  document.getElementById('ttFecha').textContent =
+    '📅 Sáb. ' + fecha.getDate() + ' ' + meses[fecha.getMonth()] + ' ' + fecha.getFullYear()
+    + (esFest ? ' — FESTIVO' : '');
+
+  // Quién trabajó (de _T.sabados)
+  var sabData  = _T.sabados[iso];
+  var mecIds   = sabData ? (sabData.mecanicos || []) : [];
+  var body     = document.getElementById('ttBody');
+
+  if(!mecIds.length){
+    body.innerHTML = '<div class="tt-empty">'+(pasado ? 'Sin registro de trabajo' : 'Aún sin registro')+'</div>';
+  } else {
+    var esFestivo = !!_T.festivos[iso];
+    body.innerHTML = '<div style="font-size:0.68rem;color:rgba(255,255,255,0.35);margin-bottom:6px;letter-spacing:.06em;text-transform:uppercase">'
+      + cuando + (esFestivo ? ' <span style="color:#ffb347">(festivo — no computa)</span>' : '')
+      + ':</div>'
+      + mecIds.map(function(id){
+          var nom = (_T.mecanicos[String(id)] || {}).nombre || 'Mec '+id;
+          var noComputa = esFestivo;
+          return '<div class="tt-mec">'
+            + '<span style="width:7px;height:7px;border-radius:50%;background:'+(noComputa?'#ffb347':'#2ecc71')+';flex-shrink:0"></span>'
+            + '<span>'+ esc(nom) +'</span>'
+            + (noComputa ? '<span style="font-size:0.65rem;color:#ffb347;margin-left:auto">no computa</span>' : '')
+            + '</div>';
+        }).join('');
+  }
+
+  // Posicionar tooltip
+  tt.style.display = 'block';
+  var rect = e.currentTarget.getBoundingClientRect();
+  var x = rect.left + window.scrollX;
+  var y = rect.bottom + window.scrollY + 6;
+  // Evitar que salga por la derecha
+  if(x + 270 > window.innerWidth) x = window.innerWidth - 276;
+  tt.style.left = x + 'px';
+  tt.style.top  = y + 'px';
+}
+
+function hideSabTooltip(){
+  document.getElementById('sabTooltip').style.display = 'none';
 }
 
 /* Busca la key numérica en _T.mecanicos que corresponde al nombre del mecánico */
