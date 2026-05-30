@@ -59,27 +59,30 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 .btn-green{background:rgba(46,204,113,0.2);border:1px solid rgba(46,204,113,0.4);color:var(--green)}
 .btn-green:hover{background:rgba(46,204,113,0.35)}
 
-/* CALENDARIO */
-.cal-wrap{overflow-x:auto;border-radius:10px;border:1px solid rgba(255,255,255,0.07);margin-bottom:16px}
-.cal-table{width:100%;border-collapse:collapse;min-width:700px}
-.cal-table th{background:var(--navy-mid);padding:9px 10px;text-align:left;font-size:0.63rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid rgba(201,162,39,0.2);white-space:nowrap}
-.cal-table th.th-mec{text-align:center;min-width:110px}
-.cal-table td{padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:top}
-.cal-table tr.row-current td{background:rgba(201,162,39,0.05)}
-.cal-table tr.row-current .wk-label{color:var(--gold-light)}
-.cal-table tr:hover td{background:rgba(255,255,255,0.02)}
-.wk-label{font-size:0.72rem;font-weight:700;white-space:nowrap;line-height:1.4}
-.wk-dates{font-size:0.68rem;color:rgba(255,255,255,0.35);white-space:nowrap}
-.cal-cell{min-height:36px;display:flex;flex-wrap:wrap;gap:2px;justify-content:center;align-items:flex-start;padding:2px 0}
-.dc{font-size:0.58rem;font-weight:700;padding:2px 5px;border-radius:3px;white-space:nowrap;line-height:1.5;letter-spacing:.03em}
-.dc-VAC{background:rgba(46,204,113,0.22);color:#2ecc71;border:1px solid rgba(46,204,113,0.3)}
-.dc-AP{background:rgba(243,156,18,0.22);color:#f39c12;border:1px solid rgba(243,156,18,0.3)}
-.dc-PER{background:rgba(52,152,219,0.22);color:#74b9ff;border:1px solid rgba(52,152,219,0.3)}
-.dc-OTR{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.55);border:1px solid rgba(255,255,255,0.18)}
-.dc-FEST{background:rgba(255,140,0,0.18);color:#ffb347;border:1px solid rgba(255,140,0,0.3)}
-.dc-SUST{background:rgba(155,89,182,0.18);color:#c39bd3;border:1px solid rgba(155,89,182,0.3)}
-.cal-empty{color:rgba(255,255,255,0.12);font-size:0.65rem;text-align:center;padding:6px 0}
-.obs-cell{font-size:0.7rem;color:rgba(255,255,255,0.35);line-height:1.55;min-width:140px}
+/* CALENDARIO MENSUAL */
+.cal-nav{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.cal-nav h2{flex:1;text-align:center;font-size:1.1rem;font-weight:900;color:var(--gold-light);text-transform:capitalize;letter-spacing:.04em}
+.cal-nav-btn{background:rgba(201,162,39,0.12);border:1px solid rgba(201,162,39,0.35);color:var(--gold);padding:7px 16px;border-radius:7px;cursor:pointer;font-size:0.9rem;font-weight:700;transition:all .2s}
+.cal-nav-btn:hover{background:rgba(201,162,39,0.28)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-dow{text-align:center;font-size:0.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);padding:8px 4px;background:var(--navy-mid);border-radius:5px}
+.cal-dow.finde{color:rgba(255,255,255,0.3)}
+.cal-day{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:7px 6px;min-height:80px;vertical-align:top}
+.cal-day.other-month{opacity:0.3}
+.cal-day.is-today{border-color:var(--gold);background:rgba(201,162,39,0.07)}
+.cal-day.is-festivo{background:rgba(255,140,0,0.07);border-color:rgba(255,140,0,0.3)}
+.cal-day.is-finde{background:rgba(255,255,255,0.02);border-color:rgba(255,255,255,0.04)}
+.day-num{font-size:0.8rem;font-weight:700;color:rgba(255,255,255,0.5);margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.day-num.today-num{color:var(--gold-light)}
+.fest-dot{font-size:0.62rem;color:#ffb347;font-weight:700}
+.aus-tag{display:block;font-size:0.68rem;font-weight:700;padding:2px 6px;border-radius:4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.aus-VAC{background:rgba(46,204,113,0.2);color:#2ecc71;border-left:3px solid #2ecc71}
+.aus-AP{background:rgba(243,156,18,0.2);color:#f39c12;border-left:3px solid #f39c12}
+.aus-PER{background:rgba(52,152,219,0.2);color:#74b9ff;border-left:3px solid #74b9ff}
+.aus-OTR{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.55);border-left:3px solid rgba(255,255,255,0.3)}
+.cal-legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;font-size:0.78rem;color:rgba(255,255,255,0.5)}
+.leg{display:inline-flex;align-items:center;gap:5px}
+.leg-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
 
 /* FESTIVOS LIST */
 .festivo-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(201,162,39,0.12);border:1px solid rgba(201,162,39,0.3);border-radius:6px;padding:4px 10px;font-size:0.82rem;margin:3px}
@@ -261,25 +264,20 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold)}
 
 <!-- ═══ CALENDARIO ═══ -->
 <div class="panel" id="panel-calendario">
-  <div class="card" style="margin-bottom:12px;padding:12px 16px">
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <div style="font-size:0.78rem;color:rgba(255,255,255,0.4);line-height:1.6">
-        <span class="dc dc-VAC" style="margin-right:4px">VAC</span> Vacaciones &nbsp;
-        <span class="dc dc-AP"  style="margin-right:4px">AP</span> Asuntos propios &nbsp;
-        <span class="dc dc-PER" style="margin-right:4px">PER</span> Permiso &nbsp;
-        <span class="dc dc-OTR" style="margin-right:4px">OTR</span> Otro &nbsp;
-        <span class="dc dc-FEST" style="margin-right:4px">FEST</span> Festivo &nbsp;
-        <span class="dc dc-SUST" style="margin-right:4px">↔ SUST</span> Semana con reasignación
-      </div>
-      <button class="btn btn-outline btn-sm" onclick="renderCalendario()" style="margin-left:auto">🔄 Actualizar</button>
-    </div>
+  <div class="cal-nav">
+    <button class="cal-nav-btn" onclick="calMes(-1)">◀</button>
+    <button class="cal-nav-btn" onclick="calHoy()" style="font-size:0.78rem;padding:7px 12px">Hoy</button>
+    <h2 id="calTitulo">—</h2>
+    <button class="cal-nav-btn" onclick="calMes(+1)">▶</button>
   </div>
-  <div class="cal-wrap">
-    <table class="cal-table" id="calTable">
-      <thead id="calHead"></thead>
-      <tbody id="calBody"></tbody>
-    </table>
+  <div class="cal-legend">
+    <span class="leg"><span class="leg-dot" style="background:#2ecc71"></span>Vacaciones</span>
+    <span class="leg"><span class="leg-dot" style="background:#f39c12"></span>Asuntos propios</span>
+    <span class="leg"><span class="leg-dot" style="background:#74b9ff"></span>Permiso</span>
+    <span class="leg"><span class="leg-dot" style="background:rgba(255,255,255,0.3)"></span>Otro</span>
+    <span class="leg"><span class="leg-dot" style="background:#ffb347;border-radius:50%"></span>Festivo</span>
   </div>
+  <div class="cal-grid" id="calGrid"></div>
 </div>
 
 <!-- ═══ BOLSAS ═══ -->
@@ -913,145 +911,89 @@ function renderResumen(){
     +'</div>';
 }
 
-/* ════ CALENDARIO ════ */
-var DIAS_SH = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-var MESES_SH = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+/* ════ CALENDARIO MENSUAL ════ */
+var MESES_ES  = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+var DIAS_ES   = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+var _calAnio  = new Date().getFullYear();
+var _calMes   = new Date().getMonth(); // 0-11
 
-function renderCalendario(){
-  var festSet  = getFestivosSet();
-  var semanasAfect = calcSemanasAfectadas(); // semanas con reasignación
-  var semanasAfectSet = {};
-  semanasAfect.forEach(function(s){ semanasAfectSet[s.lunes+'|'+s.mec] = s.sustituto || '?'; });
-
-  // 10 semanas: -1 (anterior) + 0 (actual) + 8 siguientes
-  var hoy    = new Date();
-  var lunes0 = getLunes(hoy); // lunes de esta semana
-
-  var mecs = _mecanicos.length ? _mecanicos : ['Sin mecánicos'];
-
-  // Cabecera
-  var thead = document.getElementById('calHead');
-  thead.innerHTML = '<tr><th style="min-width:110px">SEMANA</th>'
-    + mecs.map(function(m){ return '<th class="th-mec">'+esc(m)+'</th>'; }).join('')
-    + '<th class="obs-cell" style="min-width:160px">OBSERVACIONES</th></tr>';
-
-  var tbody = document.getElementById('calBody');
-  tbody.innerHTML = '';
-
-  for(var w = -1; w <= 8; w++){
-    var lunes = new Date(lunes0);
-    lunes.setDate(lunes0.getDate() + w * 7);
-    var domingo = new Date(lunes);
-    domingo.setDate(lunes.getDate() + 6);
-
-    var lunIso = isoLocal(lunes);
-    var domIso = isoLocal(domingo);
-    var esCurrent = (w === 0);
-
-    // Días L-V de esta semana
-    var labDias = [];
-    for(var d = 0; d < 7; d++){
-      var dd = new Date(lunes); dd.setDate(lunes.getDate() + d);
-      labDias.push({ iso: isoLocal(dd), dow: dd.getDay(), fecha: dd });
-    }
-
-    var tr = document.createElement('tr');
-    if(esCurrent) tr.className = 'row-current';
-
-    // Celda semana
-    var wNum = getNumSemana(lunes);
-    var tdW  = document.createElement('td');
-    tdW.innerHTML = '<div class="wk-label"'+(esCurrent?' style="color:var(--gold-light)"':'')+'>'
-      + 'Sem ' + wNum + (esCurrent ? ' ★' : '')
-      + '</div>'
-      + '<div class="wk-dates">'
-      + lunes.getDate()+' '+MESES_SH[lunes.getMonth()]
-      + ' – '
-      + domingo.getDate()+' '+MESES_SH[domingo.getMonth()]+' '+domingo.getFullYear()
-      + '</div>';
-    tr.appendChild(tdW);
-
-    var obsPartes = [];
-
-    // Celda por mecánico
-    mecs.forEach(function(mec){
-      var tdM = document.createElement('td');
-      var chips = [];
-
-      // Festivos que caen en L-V
-      labDias.forEach(function(dia){
-        if(dia.dow === 0 || dia.dow === 6) return; // solo L-V para festivos laborables
-        if(festSet[dia.iso]){
-          var fDesc = (_festivos.find(function(f){ return f.fecha===dia.iso; })||{}).desc || 'Festivo';
-          chips.push({ tipo:'FEST', dia: DIAS_SH[dia.dow], titulo: fDesc });
-        }
-      });
-
-      // Ausencias del mecánico en esta semana
-      _ausencias.filter(function(a){ return a.mec === mec; }).forEach(function(aus){
-        labDias.forEach(function(dia){
-          if(dia.iso < aus.desde || dia.iso > aus.hasta) return;
-          // Sábado/domingo → solo si está explícitamente en rango (informativo)
-          var esFinde = dia.dow === 0 || dia.dow === 6;
-          // No duplicar con festivo
-          var yaFest = chips.some(function(c){ return c.tipo==='FEST' && c.dia===DIAS_SH[dia.dow]; });
-          if(!yaFest){
-            chips.push({ tipo: aus.tipo, dia: DIAS_SH[dia.dow], esFinde: esFinde });
-          }
-        });
-      });
-
-      // ¿Esta semana tiene reasignación para este mecánico?
-      var sustKey = lunIso+'|'+mec;
-      if(semanasAfectSet[sustKey] !== undefined){
-        chips.push({ tipo:'SUST', dia: '↔', titulo: 'Sust: '+(semanasAfectSet[sustKey]||'sin asignar') });
-        obsPartes.push(mec+' → '+(semanasAfectSet[sustKey]||'sin asignar'));
-      }
-
-      if(!chips.length){
-        tdM.innerHTML = '<div class="cal-empty">—</div>';
-      } else {
-        // Agrupar chips iguales por tipo (si hay varios días del mismo tipo los agrupa)
-        var grouped = {};
-        chips.forEach(function(c){
-          var k = c.tipo;
-          if(!grouped[k]) grouped[k] = { tipo:c.tipo, dias:[], titulo:c.titulo };
-          if(c.dia) grouped[k].dias.push(c.dia + (c.esFinde?'*':''));
-        });
-        var html = '<div class="cal-cell">';
-        Object.values(grouped).forEach(function(g){
-          var label = g.dias.length ? g.dias.join(' ') : g.tipo;
-          var title = g.titulo ? ' title="'+esc(g.titulo)+'"' : '';
-          html += '<span class="dc dc-'+g.tipo+'"'+title+'>'
-            + (g.tipo === 'SUST' ? g.titulo : label)
-            + '</span>';
-        });
-        html += '</div>';
-        tdM.innerHTML = html;
-      }
-      tr.appendChild(tdM);
-    });
-
-    // Observaciones
-    var tdObs = document.createElement('td');
-    tdObs.className = 'obs-cell';
-    // Festivos de la semana
-    var festsSemana = labDias.filter(function(d){ return festSet[d.iso]; }).map(function(d){
-      return DIAS_SH[d.dow]+': '+(((_festivos.find(function(f){ return f.fecha===d.iso; }))||{}).desc||'Festivo');
-    });
-    var obsAll = festsSemana.concat(obsPartes);
-    tdObs.innerHTML = obsAll.length
-      ? obsAll.map(function(o){ return '<span style="display:block">'+esc(o)+'</span>'; }).join('')
-      : '';
-    tr.appendChild(tdObs);
-
-    tbody.appendChild(tr);
-  }
+function calMes(delta){
+  _calMes += delta;
+  if(_calMes > 11){ _calMes = 0;  _calAnio++; }
+  if(_calMes <  0){ _calMes = 11; _calAnio--; }
+  renderCalendario();
+}
+function calHoy(){
+  _calAnio = new Date().getFullYear();
+  _calMes  = new Date().getMonth();
+  renderCalendario();
 }
 
-function getNumSemana(lunes){
-  var jan4 = new Date(lunes.getFullYear(), 0, 4);
-  return Math.ceil(((lunes - jan4) / 86400000 + jan4.getDay() + 1) / 7);
+function renderCalendario(){
+  var festSet = getFestivosSet();
+  var hoyIso  = isoLocal(new Date());
+  var grid    = document.getElementById('calGrid');
+
+  document.getElementById('calTitulo').textContent = MESES_ES[_calMes] + ' ' + _calAnio;
+
+  // Cabeceras días
+  var dowLabels = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  var html = dowLabels.map(function(d, i){
+    return '<div class="cal-dow'+(i>=5?' finde':'')+'">'+d+'</div>';
+  }).join('');
+
+  // Primer día del mes (ajustado a L=0)
+  var primerDia = new Date(_calAnio, _calMes, 1);
+  var dowPrimero = primerDia.getDay() === 0 ? 6 : primerDia.getDay() - 1; // L=0 … D=6
+  var diasEnMes  = new Date(_calAnio, _calMes + 1, 0).getDate();
+
+  // Días vacíos al inicio
+  for(var e = 0; e < dowPrimero; e++){
+    html += '<div class="cal-day other-month"></div>';
+  }
+
+  // Días del mes
+  for(var dia = 1; dia <= diasEnMes; dia++){
+    var fecha = new Date(_calAnio, _calMes, dia);
+    var iso   = isoLocal(fecha);
+    var dow   = fecha.getDay(); // 0=dom, 6=sab
+    var esFinde   = dow === 0 || dow === 6;
+    var esFestivo = !!festSet[iso];
+    var esHoy     = iso === hoyIso;
+
+    var clases = 'cal-day';
+    if(esFinde)   clases += ' is-finde';
+    if(esFestivo) clases += ' is-festivo';
+    if(esHoy)     clases += ' is-today';
+
+    var numHtml = '<div class="day-num'+(esHoy?' today-num':'')+'"><span>'+dia+'</span>'
+      + (esFestivo ? '<span class="fest-dot" title="'+esc((_festivos.find(function(f){return f.fecha===iso;})||{}).desc||'Festivo')+'">★</span>' : '')
+      + '</div>';
+
+    // Ausentes ese día
+    var ausHtml = '';
+    _ausencias.forEach(function(aus){
+      if(iso < aus.desde || iso > aus.hasta) return;
+      // Sábado/domingo: informativo, lo mostramos en gris
+      var tipo = (esFinde) ? 'OTR' : aus.tipo;
+      ausHtml += '<span class="aus-tag aus-'+tipo+'" title="'+esc(tipoLabel(aus.tipo))+'">'
+        + esc(aus.mec)
+        + '</span>';
+    });
+
+    html += '<div class="'+clases+'">' + numHtml + ausHtml + '</div>';
+  }
+
+  // Días vacíos al final para completar la última fila
+  var totalCeldas = dowPrimero + diasEnMes;
+  var resto = totalCeldas % 7;
+  if(resto > 0){
+    for(var f = 0; f < (7 - resto); f++){
+      html += '<div class="cal-day other-month"></div>';
+    }
+  }
+
+  grid.innerHTML = html;
 }
 
 /* Busca la key numérica en _T.mecanicos que corresponde al nombre del mecánico */
