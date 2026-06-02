@@ -6489,6 +6489,7 @@ function escAttr(s){ return String(s||'').replace(/'/g,'&#39;').replace(/"/g,'&q
       <div class="frio-field"><label>Fecha</label><input type="date" id="frioTmpFecha"></div>
       <div class="frio-field"><label>Hora</label><input type="time" id="frioTmpHora"></div>
       <div class="frio-field"><label>Temperatura (°C)</label><input type="number" id="frioTmpVal" step="0.1" placeholder="ej: -18.5"></div>
+      <div class="frio-field"><label>Humedad (%)</label><input type="number" id="frioTmpHum" step="1" min="0" max="100" placeholder="ej: 85"></div>
       <div class="frio-field"><label>Registrado por</label><input type="text" id="frioTmpQuien" placeholder="Nombre"></div>
       <div class="frio-field span2"><label>Observaciones</label><input type="text" id="frioTmpObs" placeholder="Alerta, anomalía..."></div>
     </div>
@@ -6503,7 +6504,7 @@ function escAttr(s){ return String(s||'').replace(/'/g,'&#39;').replace(/"/g,'&q
     </div>
     <div style="overflow-x:auto">
       <table class="data-table">
-        <thead><tr><th>Equipo</th><th>Fecha</th><th>Hora</th><th>Temp (°C)</th><th>Quién</th><th>Observaciones</th><th></th></tr></thead>
+        <thead><tr><th>Equipo</th><th>Fecha</th><th>Hora</th><th style="color:rgba(255,255,255,0.4)">Anterior</th><th>Temp (°C)</th><th>Humedad (%)</th><th>Quién</th><th>Observaciones</th><th></th></tr></thead>
         <tbody id="frioTmpTbody"></tbody>
       </table>
     </div>
@@ -6664,8 +6665,16 @@ function escAttr(s){ return String(s||'').replace(/'/g,'&#39;').replace(/"/g,'&q
         </select>
       </div>
       <div class="frio-field"><label>Carga refrigerante (kg)</label><input type="number" id="frioEqCarga" step="0.1" placeholder="ej: 2.5"></div>
+      <div class="frio-field"><label>Gas tipo N/P (Natural/Propano)</label>
+        <select id="frioEqGasNP">
+          <option value="">— No especificado —</option>
+          <option value="si">Sí — Gas N/P</option>
+          <option value="no">No — Gas sintético (HFC/HFO)</option>
+        </select>
+      </div>
       <div class="frio-field"><label>T. mín. trabajo (°C)</label><input type="number" id="frioEqTMin" step="0.5" placeholder="ej: -22"></div>
       <div class="frio-field"><label>T. máx. trabajo (°C)</label><input type="number" id="frioEqTMax" step="0.5" placeholder="ej: -18"></div>
+      <div class="frio-field"><label>Humedad ref. (%)</label><input type="number" id="frioEqHumRef" step="1" min="0" max="100" placeholder="ej: 85"></div>
       <div class="frio-field"><label>Potencia (kW)</label><input type="number" id="frioEqPot" step="0.1" placeholder="ej: 5.5"></div>
       <div class="frio-field"><label>Fecha instalación</label><input type="date" id="frioEqFechaInst"></div>
       <div class="frio-field"><label>Próx. revisión F-Gas</label><input type="date" id="frioEqProxRev"></div>
@@ -6985,7 +6994,8 @@ function frioEqModal(key) {
   document.getElementById('frioEqKey').value = key||'';
   document.getElementById('frioEqModalTitle').textContent = key ? '✏️ Editar Equipo' : '➕ Nuevo Equipo de Frío';
   const map = {frioEqNombre:'nombre',frioEqTipo:'tipo',frioEqUbic:'ubicacion',frioEqMarca:'marca',frioEqModelo:'modelo',
-    frioEqSerie:'serie',frioEqRefrig:'refrigerante',frioEqCarga:'cargaKg',frioEqTMin:'tMin',frioEqTMax:'tMax',
+    frioEqSerie:'serie',frioEqRefrig:'refrigerante',frioEqCarga:'cargaKg',frioEqGasNP:'gasNP',
+    frioEqTMin:'tMin',frioEqTMax:'tMax',frioEqHumRef:'humRef',
     frioEqPot:'potencia',frioEqFechaInst:'fechaInst',frioEqProxRev:'proxRev',frioEqEstado:'estado',frioEqNotas:'notas'};
   Object.entries(map).forEach(([id,field]) => { const el=document.getElementById(id); if(el) el.value=e[field]!==undefined?e[field]:''; });
   modal.style.display = 'flex';
@@ -7005,8 +7015,11 @@ function frioGuardarEq() {
     nombre, tipo,
     ubicacion:g('frioEqUbic').trim(), marca:g('frioEqMarca').trim(), modelo:g('frioEqModelo').trim(),
     serie:g('frioEqSerie').trim(), refrigerante:g('frioEqRefrig'),
-    cargaKg:parseFloat(g('frioEqCarga'))||'', tMin:g('frioEqTMin')!==''?parseFloat(g('frioEqTMin')):'',
-    tMax:g('frioEqTMax')!==''?parseFloat(g('frioEqTMax')):'', potencia:parseFloat(g('frioEqPot'))||'',
+    cargaKg:parseFloat(g('frioEqCarga'))||'', gasNP:g('frioEqGasNP'),
+    tMin:g('frioEqTMin')!==''?parseFloat(g('frioEqTMin')):'',
+    tMax:g('frioEqTMax')!==''?parseFloat(g('frioEqTMax')):'',
+    humRef:g('frioEqHumRef')!==''?parseFloat(g('frioEqHumRef')):'',
+    potencia:parseFloat(g('frioEqPot'))||'',
     fechaInst:g('frioEqFechaInst'), proxRev:g('frioEqProxRev'), estado:g('frioEqEstado')||'Operativo',
     notas:g('frioEqNotas').trim()
   }).then(() => { frioEqModalClose(); showToast('✅ Equipo guardado'); });
@@ -7026,9 +7039,22 @@ function frioLoadTemps() {
     if (!tbody) return;
     let rows = Object.entries(all).filter(([,r])=>!filtro||r.equipoKey===filtro).reverse();
     if (!rows.length) {
-      tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:rgba(255,255,255,.3);padding:20px">Sin registros de temperatura</td></tr>';
+      tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:rgba(255,255,255,.3);padding:20px">Sin registros de temperatura</td></tr>';
       return;
     }
+    // Calcular medida anterior por equipo (ordenadas por ts desc, así la siguiente es la anterior)
+    const anteriorPorEq = {};
+    rows.forEach(([k,r]) => {
+      if (!anteriorPorEq[r.equipoKey]) anteriorPorEq[r.equipoKey] = null; // primera = más reciente, no tiene anterior aquí
+    });
+    // Recorremos en orden cronológico (reverse de rows que ya está desc) para asignar anterior
+    const rowsAsc = [...rows].reverse();
+    const ultimoPorEq = {};
+    rowsAsc.forEach(([k,r]) => {
+      anteriorPorEq[k] = ultimoPorEq[r.equipoKey] || null;
+      ultimoPorEq[r.equipoKey] = r;
+    });
+
     tbody.innerHTML = rows.map(([k,r])=>{
       const eq = (_frioEqs[r.equipoKey]||{}).nombre||'—';
       const eqInfo = _frioEqs[r.equipoKey];
@@ -7038,11 +7064,15 @@ function frioLoadTemps() {
         const bajodeTMin = eqInfo.tMin!==''&&eqInfo.tMin!==undefined && r.temperatura < parseFloat(eqInfo.tMin)-2;
         if (sobreTMax||bajodeTMin) tempColor='#e74c3c';
       }
+      const ant = anteriorPorEq[k];
+      const antTxt = ant ? (ant.temperatura!==undefined ? ant.temperatura+'°C'+(ant.humedad!=null?' / '+ant.humedad+'%':'') : '—') : '—';
       return `<tr>
         <td style="font-weight:600">${eq}</td>
         <td style="font-size:.85rem">${r.fecha||'—'}</td>
         <td style="font-size:.85rem">${r.hora||'—'}</td>
+        <td style="font-size:.78rem;color:rgba(255,255,255,.4)">${antTxt}</td>
         <td style="font-weight:700;color:${tempColor}">${r.temperatura!==undefined?r.temperatura+' °C':'—'}</td>
+        <td style="font-size:.85rem;color:${r.humedad!=null?'#64d2ff':'rgba(255,255,255,.4)'}">${r.humedad!=null?r.humedad+' %':'—'}</td>
         <td style="font-size:.85rem">${r.quien||'—'}</td>
         <td style="font-size:.8rem;color:rgba(255,255,255,.6)">${r.obs||''}</td>
         <td><button onclick="frioDeleteTemp('${k}')" style="background:none;border:none;color:rgba(231,76,60,.6);cursor:pointer">🗑️</button></td>
@@ -7056,14 +7086,17 @@ function frioGuardarTemp() {
   const temperatura=document.getElementById('frioTmpVal').value;
   const fecha=document.getElementById('frioTmpFecha').value;
   if (!equipoKey||temperatura===''||!fecha) { showToast('⚠️ Equipo, fecha y temperatura son obligatorios'); return; }
+  const humVal = document.getElementById('frioTmpHum').value;
   DB.ref('frio/temperaturas').push({
     equipoKey, temperatura:parseFloat(temperatura), fecha,
+    humedad: humVal !== '' ? parseFloat(humVal) : null,
     hora:document.getElementById('frioTmpHora').value,
     quien:document.getElementById('frioTmpQuien').value.trim(),
     obs:document.getElementById('frioTmpObs').value.trim(),
     ts:Date.now()
   }).then(()=>{
     document.getElementById('frioTmpVal').value='';
+    document.getElementById('frioTmpHum').value='';
     document.getElementById('frioTmpObs').value='';
     frioLoadTemps();
     showToast('✅ Temperatura registrada');
