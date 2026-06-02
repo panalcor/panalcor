@@ -586,10 +586,48 @@ function confirmarAsignacion(){
   var multiInst=document.getElementById('modalInstWrap').style.display!=='none';
   var inst=multiInst?document.getElementById('modalInst').value:null;
 
-  var semanas = calcSemanasValidas(mes);
+  var semanas  = calcSemanasValidas(mes);
+  var catalogo = getCatalogo();
+
+  // ── Comprobar duplicados antes de guardar ──────────────────
+  DB.ref('asignaciones/'+mes).once('value').then(function(snap){
+    var existentes = snap.val() || {};
+    // Construir mapa catalogId → mecánicos ya asignados
+    var yaAsignados = {};
+    Object.values(existentes).forEach(function(t){
+      if (!yaAsignados[t.catalogId]) yaAsignados[t.catalogId] = [];
+      if (yaAsignados[t.catalogId].indexOf(t.mecanico) === -1)
+        yaAsignados[t.catalogId].push(t.mecanico);
+    });
+
+    // Detectar conflictos: misma tarea, distinto mecánico
+    var conflictos = [];
+    pendingItems.forEach(function(catId){
+      var asignados = yaAsignados[catId] || [];
+      var otrosMecs = asignados.filter(function(m){ return m !== mec; });
+      if (otrosMecs.length) {
+        var cat = catalogo.find(function(c){ return c.id === catId; });
+        conflictos.push((cat ? cat.tarea : catId) + ' → ya asignado a: ' + otrosMecs.join(', '));
+      }
+    });
+
+    if (conflictos.length) {
+      var msg = '⚠️ Las siguientes tareas ya están asignadas a otro mecánico este mes:\n\n'
+              + conflictos.join('\n')
+              + '\n\n¿Quieres asignarlas también a ' + mec + '?';
+      if (!confirm(msg)) return;
+    }
+
+    _ejecutarAsignacion(mec, mes, semanas, catalogo);
+  }).catch(function(){
+    // Si falla la consulta, continuar igualmente
+    _ejecutarAsignacion(mec, mes, semanas, catalogo);
+  });
+}
+
+function _ejecutarAsignacion(mec, mes, semanas, catalogo){
   var updates = {};
   var count   = 0;
-  var catalogo = getCatalogo(); // usa Firebase si está disponible, si no el local
 
   pendingItems.forEach(function(catId){
     var cat = catalogo.find(function(c){ return c.id === catId; });
@@ -645,6 +683,7 @@ function confirmarAsignacion(){
     if(document.getElementById('segMes').value===mes) cargarSeguimiento();
   }).catch(function(e){showToast('Error: '+e.message);});
 }
+
 
 // ── SEGUIMIENTO ──
 function cargarSeguimiento(){
