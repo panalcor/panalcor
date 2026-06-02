@@ -290,6 +290,8 @@ if('serviceWorker' in navigator){
       </select>
       <input type="search" id="catSearch" placeholder="Buscar tarea..." oninput="renderGestionCatalogo()" style="flex:1;min-width:160px">
       <button class="btn btn-gold" onclick="abrirModalCat(null)">+ Nueva tarea</button>
+      <button class="btn" onclick="exportarCatalogoJSON()" style="background:rgba(46,204,113,0.15);border:1px solid rgba(46,204,113,0.4);color:#2ecc71" title="Descargar copia de seguridad del catálogo actual">⬇️ Exportar copia</button>
+      <button class="btn" onclick="exportarCatalogoExcel()" style="background:rgba(52,152,219,0.15);border:1px solid rgba(52,152,219,0.4);color:#74b9ff" title="Exportar catálogo a Excel">📊 Exportar Excel</button>
       <!-- Botón importar base ocultado — ya se usó, volver a pulsarlo sobreescribiría el catálogo editado -->
       <!-- <button class="btn btn-blue" id="btnMigrar" onclick="migrarCatalogoAFirebase()">⬆️ Importar base</button> -->
     </div>
@@ -1038,6 +1040,46 @@ function renderTabAlarmas(data){
 }
 
 function escAl(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── Exportar catálogo ─────────────────────────────────────────
+function exportarCatalogoJSON() {
+  var cat = getCatalogo();
+  if (!cat.length) { showToast('⚠️ No hay tareas cargadas'); return; }
+  var fecha = new Date().toISOString().slice(0,10);
+  var json  = JSON.stringify(cat, null, 2);
+  var blob  = new Blob([json], {type:'application/json'});
+  var url   = URL.createObjectURL(blob);
+  var a     = document.createElement('a');
+  a.href    = url;
+  a.download = 'catalogo_tareas_' + fecha + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('✅ Copia JSON descargada (' + cat.length + ' tareas)');
+}
+
+function exportarCatalogoExcel() {
+  var cat = getCatalogo();
+  if (!cat.length) { showToast('⚠️ No hay tareas cargadas'); return; }
+  var fecha = new Date().toISOString().slice(0,10);
+  // Cabecera
+  var rows = [['ID','MÁQUINA','SUBTIPO','TAREA','FRECUENCIA','INSTANCIA']];
+  cat.forEach(function(t) {
+    rows.push([t.id||'', t.maquina||'', t.subtipo||'', t.tarea||'', t.frecuencia||'', t.instancia||'']);
+  });
+  // Generar CSV con separador ; para Excel en español
+  var csv = rows.map(function(r){
+    return r.map(function(c){ return '"'+String(c).replace(/"/g,'""')+'"'; }).join(';');
+  }).join('\r\n');
+  var bom  = '﻿'; // BOM para que Excel lo abra en UTF-8 correctamente
+  var blob = new Blob([bom + csv], {type:'text/csv;charset=utf-8'});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href   = url;
+  a.download = 'catalogo_tareas_' + fecha + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('✅ Excel descargado (' + cat.length + ' tareas)');
+}
 
 
 </script>
