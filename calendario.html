@@ -66,6 +66,7 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
 .day-cell.other-month{opacity:.3;pointer-events:none}
 .day-cell.today{border-color:rgba(201,162,39,.6);background:rgba(201,162,39,.07)}
 .day-cell.selected{border-color:var(--gold);box-shadow:0 0 0 2px rgba(201,162,39,.3)}
+.day-cell.has-tasks{background:rgba(52,152,219,.15);border-color:rgba(52,152,219,.35)}
 .day-cell.has-done{border-left:3px solid var(--green)}
 .day-cell.all-done{background:rgba(46,204,113,.07)}
 .day-cell.weekend .day-num{color:rgba(243,156,18,.7)}
@@ -391,6 +392,7 @@ function renderCalendario(){
     var cls = 'day-cell';
     if(isWE) cls += ' weekend';
     if(isHoy) cls += ' today';
+    if(total>0) cls += ' has-tasks';
     if(done.length>0) cls += ' has-done';
     if(done.length>0 && pend.length===0 && total>0) cls += ' all-done';
 
