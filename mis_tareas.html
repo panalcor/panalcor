@@ -826,16 +826,20 @@ function renderIntegralesMec(lista) {
   lista.forEach(function(it) {
     var enCurso = it.estado === 'en_curso';
     var nComp = Object.keys(it.componentes || {}).length;
+    var nCk   = Object.keys(it.checklist || {}).length;
+    var ckOk  = Object.values(it.checklist || {}).filter(function(c){ return c.estado && c.estado !== 'pendiente'; }).length;
     var bColor = enCurso ? '#3498db' : '#f39c12';
-    var bBg    = enCurso ? 'rgba(52,152,219,0.12)' : 'rgba(243,156,18,0.08)';
     var badge  = enCurso ? '🔵 En curso' : '🟡 Programado';
-    html += '<div style="flex:0 0 auto;min-width:180px;max-width:220px;background:var(--navy-mid);'
-          + 'border:1px solid '+bColor+'40;border-left:3px solid '+bColor+';border-radius:10px;padding:12px 14px">'
+    html += '<div onclick="abrirIntMec(\''+it.id+'\')" style="flex:0 0 auto;min-width:180px;max-width:220px;background:var(--navy-mid);'
+          + 'border:1px solid '+bColor+'40;border-left:3px solid '+bColor+';border-radius:10px;padding:12px 14px;cursor:pointer;'
+          + '-webkit-tap-highlight-color:transparent">'
           + '<div style="font-size:0.68rem;font-weight:700;color:'+bColor+';margin-bottom:6px">'+badge+'</div>'
           + '<div style="font-size:0.9rem;font-weight:700;color:#fff;line-height:1.3;margin-bottom:5px">' + escHtmlMec(it.maqNombre) + '</div>'
           + (it.descripcion ? '<div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-bottom:5px">'+escHtmlMec(it.descripcion)+'</div>' : '')
           + '<div style="font-size:0.75rem;color:rgba(255,255,255,0.5)">📅 ' + _intMesMec(it.mesPrevisto) + '</div>'
-          + '<div style="font-size:0.7rem;color:rgba(255,255,255,0.3);margin-top:2px">🔩 ' + nComp + ' componente' + (nComp!==1?'s':'') + '</div>'
+          + '<div style="font-size:0.7rem;color:rgba(255,255,255,0.3);margin-top:2px">🔩 ' + nComp + ' comp.'
+          + (nCk > 0 ? ' · ✅ '+ckOk+'/'+nCk : '') + '</div>'
+          + '<div style="margin-top:8px;font-size:0.7rem;color:'+bColor+';font-weight:700">Ver checklist →</div>'
           + '</div>';
   });
 
@@ -1102,6 +1106,224 @@ function renderMisAverias(){
 function toggleAvItem(id){
   var el = document.getElementById(id);
   if(el) el.classList.toggle('open');
+}
+</script>
+<!-- ══ MODAL INTEGRAL MECÁNICO ══ -->
+<div id="intMecModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:500;overflow-y:auto;padding:16px">
+  <div style="max-width:600px;margin:auto;background:#1a2d42;border:1px solid rgba(201,162,39,0.3);border-radius:16px;overflow:hidden">
+    <div style="background:linear-gradient(135deg,#0a1520,#1a2d42);border-bottom:1px solid rgba(201,162,39,0.2);padding:16px 18px;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div id="intMecTitle" style="font-size:1rem;font-weight:800;color:#f0c040"></div>
+        <div id="intMecSub"   style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:2px"></div>
+      </div>
+      <button onclick="cerrarIntMec()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem">✕</button>
+    </div>
+    <div id="intMecBody" style="padding:18px"></div>
+  </div>
+</div>
+
+<script>
+var CK_ESTADOS_MEC = {
+  pendiente: { label:'PENDIENTE', color:'#f39c12', bg:'rgba(243,156,18,0.18)', icon:'⏳' },
+  ok:        { label:'OK',        color:'#27ae60', bg:'rgba(39,174,96,0.2)',   icon:'✅' },
+  np:        { label:'N/P',       color:'#7f8c8d', bg:'rgba(127,140,141,0.2)', icon:'⚫' },
+  mal:       { label:'MAL',       color:'#e74c3c', bg:'rgba(231,76,60,0.2)',   icon:'❌' },
+  reparado:  { label:'REPARADO',  color:'#3498db', bg:'rgba(52,152,219,0.2)',  icon:'🔧' },
+  revisar:   { label:'REVISAR',   color:'#f1c40f', bg:'rgba(241,196,15,0.18)', icon:'⚠️' }
+};
+var _intMecActual = null;
+var _intMecData   = {};
+var _intMecRepRes = [];
+var _intMecRepSel = null;
+
+function abrirIntMec(id) {
+  DB.ref('integrales/'+id).on('value', function(snap) {
+    var it = snap.val();
+    if (!it) return;
+    _intMecData[id] = it;
+    _intMecActual = id;
+    renderIntMec(id);
+    document.getElementById('intMecModal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+  });
+}
+
+function cerrarIntMec() {
+  if (_intMecActual) DB.ref('integrales/'+_intMecActual).off();
+  document.getElementById('intMecModal').style.display = 'none';
+  document.body.style.overflow = '';
+  _intMecActual = null;
+  _intMecRepRes = [];
+  _intMecRepSel = null;
+}
+
+function renderIntMec(id) {
+  var it = _intMecData[id];
+  if (!it) return;
+  var meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  var mp = (it.mesPrevisto||'').split('-');
+  var mesLabel = meses[parseInt(mp[1]||1)-1] + ' ' + mp[0];
+  var enCurso = it.estado === 'en_curso';
+  var bColor  = enCurso ? '#3498db' : '#f39c12';
+
+  document.getElementById('intMecTitle').textContent = '🔩 ' + (it.maqNombre||'');
+  document.getElementById('intMecSub').textContent   = mesLabel + (it.descripcion ? ' · '+it.descripcion : '');
+
+  var ckItems = Object.values(it.checklist || {}).sort(function(a,b){ return (a.orden||0)-(b.orden||0); });
+  var ckTotal = ckItems.length;
+  var ckOk    = ckItems.filter(function(c){ return c.estado && c.estado !== 'pendiente'; }).length;
+  var ckPct   = ckTotal > 0 ? Math.round(ckOk/ckTotal*100) : 0;
+  var ckBarColor = ckPct===100 ? '#27ae60' : ckPct>50 ? '#3498db' : '#f39c12';
+
+  var html = '';
+
+  // ── Checklist ──
+  html += '<div style="margin-bottom:20px">';
+  html += '<div style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.06em;margin-bottom:10px">✅ CHECKLIST DE REVISIÓN'
+        + (ckTotal>0 ? ' <span style="font-weight:400;color:rgba(255,255,255,0.3)">'+ckOk+'/'+ckTotal+'</span>' : '') + '</div>';
+
+  if (ckTotal > 0) {
+    html += '<div style="background:rgba(255,255,255,0.07);border-radius:20px;height:6px;margin-bottom:12px;overflow:hidden">'
+          + '<div style="height:100%;width:'+ckPct+'%;background:'+ckBarColor+';border-radius:20px;transition:width .4s"></div>'
+          + '</div>';
+  }
+
+  if (!ckTotal) {
+    html += '<div style="color:rgba(255,255,255,0.25);font-size:0.82rem;padding:12px 0;text-align:center">Sin puntos de revisión definidos</div>';
+  } else {
+    ckItems.forEach(function(ck) {
+      var cfg = CK_ESTADOS_MEC[ck.estado||'pendiente'] || CK_ESTADOS_MEC.pendiente;
+      html += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:10px 12px;margin-bottom:8px">';
+      html += '<div style="font-size:0.88rem;font-weight:600;color:#fff;margin-bottom:8px">'+escHtmlMec(ck.desc)+'</div>';
+      // Botones estado
+      html += '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px">';
+      Object.keys(CK_ESTADOS_MEC).forEach(function(est) {
+        var c = CK_ESTADOS_MEC[est];
+        var activo = (ck.estado||'pendiente') === est;
+        html += '<button onclick="ckMecEstado(\''+id+'\',\''+ck._key+'\',\''+est+'\')" '
+              + 'style="border:1px solid '+(activo?c.color:'rgba(255,255,255,0.15)')+';background:'+(activo?c.bg:'transparent')+';'
+              + 'color:'+(activo?c.color:'rgba(255,255,255,0.3)')+';border-radius:5px;padding:4px 9px;cursor:pointer;'
+              + 'font-size:0.72rem;font-weight:700;font-family:Barlow,sans-serif;white-space:nowrap">'
+              + c.icon+' '+c.label+'</button>';
+      });
+      html += '</div>';
+      html += '<input type="text" placeholder="Nota (opcional)..." value="'+escHtmlMec(ck.notas||'')+'" '
+            + 'onblur="ckMecNota(\''+id+'\',\''+ck._key+'\',this.value)" '
+            + 'style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);'
+            + 'color:rgba(255,255,255,0.7);border-radius:6px;padding:5px 9px;font-family:Barlow,sans-serif;font-size:0.78rem">';
+      html += '</div>';
+    });
+  }
+  html += '</div>';
+
+  // ── Añadir componente ──
+  html += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:13px;margin-bottom:18px">';
+  html += '<div style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.06em;margin-bottom:10px">🔩 AÑADIR COMPONENTE USADO</div>';
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start">'
+        + '<div style="flex:1;min-width:180px;position:relative">'
+        + '<input type="text" id="intMecRepQ" placeholder="Buscar repuesto..." oninput="intMecBuscarRep()" autocomplete="off" '
+        + 'style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:9px 12px;font-family:Barlow,sans-serif;font-size:0.85rem">'
+        + '<div id="intMecRepDrop" style="display:none;position:absolute;top:100%;left:0;right:0;background:#0f2030;border:1px solid rgba(255,255,255,0.15);border-radius:0 0 8px 8px;z-index:20;max-height:180px;overflow-y:auto"></div>'
+        + '</div>'
+        + '<input type="number" id="intMecRepQty" min="1" value="1" '
+        + 'style="width:65px;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:9px 8px;font-family:Barlow,sans-serif;font-size:0.85rem;text-align:center">'
+        + '<button onclick="intMecAñadirComp(\''+id+'\')" '
+        + 'style="background:rgba(52,152,219,0.2);border:1px solid rgba(52,152,219,0.4);color:#74b9ff;border-radius:7px;padding:9px 14px;cursor:pointer;font-size:0.85rem;font-family:Barlow,sans-serif;font-weight:700">+ Añadir</button>'
+        + '</div>';
+  html += '<div id="intMecRepInfo" style="margin-top:6px;font-size:0.76rem;color:rgba(255,255,255,0.35)">Busca un repuesto para añadirlo</div>';
+
+  // Lista componentes existentes (solo lectura)
+  var comps = Object.values(it.componentes || {});
+  if (comps.length) {
+    html += '<div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.07);padding-top:10px">';
+    comps.forEach(function(c) {
+      html += '<div style="display:flex;justify-content:space-between;padding:5px 2px;font-size:0.8rem;color:rgba(255,255,255,0.6);border-bottom:1px solid rgba(255,255,255,0.04)">'
+            + '<span>'+escHtmlMec(c.desc)+'</span>'
+            + '<span style="color:var(--gold);font-weight:700">×'+c.qty+'</span></div>';
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // ── Observaciones ──
+  html += '<div>'
+        + '<div style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.06em;margin-bottom:8px">📝 OBSERVACIONES</div>'
+        + '<textarea id="intMecObs" rows="3" placeholder="Notas, incidencias, materiales extra..." '
+        + 'style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 12px;'
+        + 'font-family:Barlow,sans-serif;font-size:0.88rem;resize:vertical">'+escHtmlMec(it.observaciones||'')+'</textarea>'
+        + '<button onclick="intMecGuardarObs(\''+id+'\')" '
+        + 'style="margin-top:6px;background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.4);color:#f0c040;'
+        + 'border-radius:7px;padding:8px 18px;cursor:pointer;font-size:0.82rem;font-family:Barlow,sans-serif;font-weight:700">💾 Guardar observaciones</button>'
+        + '</div>';
+
+  document.getElementById('intMecBody').innerHTML = html;
+  _intMecRepRes = [];
+  _intMecRepSel = null;
+}
+
+// ── Checklist mecánico ────────────────────────────────────────
+function ckMecEstado(intId, ckKey, estado) {
+  DB.ref('integrales/'+intId+'/checklist/'+ckKey+'/estado').set(estado)
+    .catch(function(){ showToastMec('❌ Error'); });
+}
+function ckMecNota(intId, ckKey, nota) {
+  DB.ref('integrales/'+intId+'/checklist/'+ckKey+'/notas').set(nota.trim())
+    .catch(function(){ showToastMec('❌ Error al guardar nota'); });
+}
+
+// ── Componentes mecánico ──────────────────────────────────────
+function intMecBuscarRep() {
+  var q    = (document.getElementById('intMecRepQ').value||'').trim().toLowerCase();
+  var drop = document.getElementById('intMecRepDrop');
+  if (q.length < 2) { drop.style.display='none'; _intMecRepSel=null; return; }
+  var base = [];
+  try { base = JSON.parse(localStorage.getItem('repuestosCache')||'[]'); } catch(e){}
+  var res = base.filter(function(r){
+    return (r.desc||'').toLowerCase().includes(q) || String(r.ref||'').toLowerCase().includes(q);
+  }).slice(0,8);
+  _intMecRepRes = res;
+  if (!res.length) { drop.style.display='none'; return; }
+  drop.innerHTML = res.map(function(r,i){
+    return '<div onclick="intMecSelRep('+i+')" style="padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.07);font-size:0.82rem" '
+         + 'onmouseover="this.style.background=\'rgba(255,255,255,0.06)\'" onmouseout="this.style.background=\'\'">'
+         + '<span style="color:#fff;font-weight:500">'+escHtmlMec(r.desc)+'</span> '
+         + '<span style="color:var(--gold);font-size:0.75rem">#'+escHtmlMec(String(r.ref||''))+'</span>'
+         + '</div>';
+  }).join('');
+  drop.style.display = 'block';
+}
+function intMecSelRep(i) {
+  _intMecRepSel = _intMecRepRes[i];
+  document.getElementById('intMecRepQ').value = _intMecRepSel.desc;
+  document.getElementById('intMecRepDrop').style.display = 'none';
+  document.getElementById('intMecRepInfo').textContent = '✅ ' + _intMecRepSel.desc + ' — Ref. ' + (_intMecRepSel.ref||'—');
+}
+function intMecAñadirComp(intId) {
+  if (!_intMecRepSel) { showToastMec('⚠️ Selecciona un repuesto del buscador'); return; }
+  var qty = parseInt(document.getElementById('intMecRepQty').value)||1;
+  var it  = _intMecData[intId] || {};
+  var nComp = Object.keys(it.componentes||{}).length;
+  var key = 'c_'+Date.now();
+  var obj = { _ckey:key, desc:_intMecRepSel.desc, ref:String(_intMecRepSel.ref||''), qty:qty, orden:nComp };
+  DB.ref('integrales/'+intId+'/componentes/'+key).set(obj)
+    .then(function(){ showToastMec('✅ Componente añadido'); _intMecRepSel=null; document.getElementById('intMecRepQ').value=''; document.getElementById('intMecRepInfo').textContent='Busca un repuesto para añadirlo'; })
+    .catch(function(){ showToastMec('❌ Error'); });
+}
+
+// ── Observaciones mecánico ────────────────────────────────────
+function intMecGuardarObs(intId) {
+  var obs = (document.getElementById('intMecObs').value||'').trim();
+  DB.ref('integrales/'+intId+'/observaciones').set(obs)
+    .then(function(){ showToastMec('✅ Observaciones guardadas'); })
+    .catch(function(){ showToastMec('❌ Error'); });
+}
+
+function showToastMec(msg) {
+  var t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2500);
 }
 </script>
 </body>
