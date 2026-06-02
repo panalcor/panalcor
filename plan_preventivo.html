@@ -618,14 +618,14 @@ function confirmarAsignacion(){
       if (!confirm(msg)) return;
     }
 
-    _ejecutarAsignacion(mec, mes, semanas, catalogo);
+    _ejecutarAsignacion(mec, mes, semanas, catalogo, inst);
   }).catch(function(){
     // Si falla la consulta, continuar igualmente
-    _ejecutarAsignacion(mec, mes, semanas, catalogo);
+    _ejecutarAsignacion(mec, mes, semanas, catalogo, inst);
   });
 }
 
-function _ejecutarAsignacion(mec, mes, semanas, catalogo){
+function _ejecutarAsignacion(mec, mes, semanas, catalogo, inst){
   var updates = {};
   var count   = 0;
 
