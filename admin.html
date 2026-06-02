@@ -4696,6 +4696,15 @@ var INT_ESTADOS = {
   cancelada:  { label: 'Cancelada',  color: '#7f8c8d', bg: 'rgba(127,140,141,0.1)', icon: '⚫' }
 };
 
+var CK_ESTADOS = {
+  pendiente: { label: 'PENDIENTE', color: '#f39c12', bg: 'rgba(243,156,18,0.18)', icon: '⏳' },
+  ok:        { label: 'OK',        color: '#27ae60', bg: 'rgba(39,174,96,0.2)',   icon: '✅' },
+  np:        { label: 'N/P',       color: '#7f8c8d', bg: 'rgba(127,140,141,0.2)', icon: '⚫' },
+  mal:       { label: 'MAL',       color: '#e74c3c', bg: 'rgba(231,76,60,0.2)',   icon: '❌' },
+  reparado:  { label: 'REPARADO',  color: '#3498db', bg: 'rgba(52,152,219,0.2)',  icon: '🔧' },
+  revisar:   { label: 'REVISAR',   color: '#f1c40f', bg: 'rgba(241,196,15,0.18)', icon: '⚠️' }
+};
+
 function initIntegrales() {
   poblarSelectorIntMaq();
   if (_intListenerOn) { renderIntegrales(); return; }
@@ -4845,6 +4854,71 @@ function renderIntModal(id) {
   });
   html += '</div>';
 
+  // ── Checklist de revisión ──
+  var ckItems = Object.values(it.checklist || {}).sort(function(a,b){ return (a.orden||0)-(b.orden||0); });
+  var ckTotal  = ckItems.length;
+  var ckResueltos = ckItems.filter(function(c){ return c.estado && c.estado !== 'pendiente'; }).length;
+  var ckPct = ckTotal > 0 ? Math.round(ckResueltos/ckTotal*100) : 0;
+  var ckBarColor = ckPct === 100 ? '#27ae60' : ckPct > 50 ? '#3498db' : '#f39c12';
+
+  html += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px;margin-bottom:18px">';
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+        + '<div style="font-size:0.8rem;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.05em">✅ CHECKLIST DE REVISIÓN</div>'
+        + (ckTotal > 0 ? '<div style="font-size:0.72rem;color:rgba(255,255,255,0.35)">'+ckResueltos+' / '+ckTotal+' revisados</div>' : '')
+        + '</div>';
+
+  // Barra de progreso
+  if (ckTotal > 0) {
+    html += '<div style="background:rgba(255,255,255,0.08);border-radius:20px;height:6px;margin-bottom:14px;overflow:hidden">'
+          + '<div style="height:100%;width:'+ckPct+'%;background:'+ckBarColor+';border-radius:20px;transition:width .4s"></div>'
+          + '</div>';
+  }
+
+  // Items checklist
+  if (ckItems.length) {
+    ckItems.forEach(function(ck) {
+      var ckCfg = CK_ESTADOS[ck.estado||'pendiente'] || CK_ESTADOS.pendiente;
+      html += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:10px 12px;margin-bottom:8px">';
+      // Fila principal: descripción + botones estado
+      html += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">';
+      html += '<div style="flex:1;min-width:120px;font-size:0.85rem;font-weight:600;color:#fff">'+escHtml(ck.desc)+'</div>';
+      html += '<div style="display:flex;gap:4px;flex-wrap:wrap">';
+      Object.keys(CK_ESTADOS).forEach(function(est) {
+        var c = CK_ESTADOS[est];
+        var activo = (ck.estado||'pendiente') === est;
+        html += '<button onclick="ckCambiarEstado(\''+id+'\',\''+ck._key+'\',\''+est+'\')" '
+              + 'title="'+c.label+'" '
+              + 'style="border:1px solid '+(activo?c.color:'rgba(255,255,255,0.15)')+';background:'+(activo?c.bg:'transparent')+';'
+              + 'color:'+(activo?c.color:'rgba(255,255,255,0.3)')+';border-radius:5px;padding:3px 8px;cursor:pointer;font-size:0.72rem;font-weight:700;font-family:Barlow,sans-serif;white-space:nowrap">'
+              + c.icon+' '+c.label+'</button>';
+      });
+      html += '</div>';
+      html += '<button onclick="ckEliminar(\''+id+'\',\''+ck._key+'\')" '
+            + 'style="background:rgba(192,57,43,0.15);border:1px solid rgba(192,57,43,0.3);color:#e74c3c;border-radius:5px;width:24px;height:24px;cursor:pointer;font-size:0.8rem;flex-shrink:0" title="Eliminar">✕</button>';
+      html += '</div>';
+      // Nota
+      html += '<div style="margin-top:7px;display:flex;gap:6px">'
+            + '<input type="text" placeholder="Nota (opcional)..." value="'+escHtml(ck.notas||'')+'" '
+            + 'onblur="ckGuardarNota(\''+id+'\',\''+ck._key+'\',this.value)" '
+            + 'style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);border-radius:6px;padding:5px 9px;font-family:Barlow,sans-serif;font-size:0.78rem">'
+            + '</div>';
+      html += '</div>';
+    });
+  } else {
+    html += '<div style="text-align:center;color:rgba(255,255,255,0.25);padding:16px 0;font-size:0.82rem">Sin puntos de revisión. Añade items abajo.</div>';
+  }
+
+  // Añadir nuevo item
+  html += '<div style="display:flex;gap:8px;margin-top:10px">'
+        + '<input type="text" id="ckNuevoDesc" placeholder="Nuevo punto de revisión (ej: Correas, Rodamientos...)" '
+        + 'onkeydown="if(event.key===\'Enter\') ckAñadir(\''+id+'\')" '
+        + 'style="flex:1;background:var(--navy-dark);color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:8px 12px;font-family:Barlow,sans-serif;font-size:0.85rem">'
+        + '<button onclick="ckAñadir(\''+id+'\')" '
+        + 'style="background:rgba(52,152,219,0.2);border:1px solid rgba(52,152,219,0.4);color:#74b9ff;border-radius:7px;padding:8px 14px;cursor:pointer;font-size:0.85rem;font-family:Barlow,sans-serif;font-weight:700;white-space:nowrap">+ Añadir</button>'
+        + '</div>';
+
+  html += '</div>';
+
   // ── Buscador de componentes ──
   html += '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px;margin-bottom:18px">'
         + '<div style="font-size:0.8rem;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:10px;letter-spacing:0.05em">➕ AÑADIR COMPONENTE</div>'
@@ -4920,6 +4994,35 @@ function renderIntModal(id) {
   document.getElementById('intRepSelInfo').textContent = 'Busca un repuesto para añadirlo a la lista';
   _intRepSearch = [];
   _intRepSeleccionado = null;
+}
+
+// ── Checklist CRUD ────────────────────────────────────────────
+function ckAñadir(intId) {
+  var inp  = document.getElementById('ckNuevoDesc');
+  var desc = (inp ? inp.value : '').trim();
+  if (!desc) { showToast('⚠️ Escribe un punto de revisión'); return; }
+  var key  = 'ck_' + Date.now();
+  var nComp = Object.keys((_intData[intId]||{}).checklist||{}).length;
+  var obj  = { _key: key, desc: desc, estado: 'pendiente', notas: '', orden: nComp };
+  DB.ref('integrales/'+intId+'/checklist/'+key).set(obj)
+    .then(function(){ showToast('✅ Punto añadido'); })
+    .catch(function(){ showToast('❌ Error al añadir'); });
+}
+
+function ckCambiarEstado(intId, ckKey, estado) {
+  DB.ref('integrales/'+intId+'/checklist/'+ckKey+'/estado').set(estado)
+    .catch(function(){ showToast('❌ Error'); });
+}
+
+function ckGuardarNota(intId, ckKey, nota) {
+  DB.ref('integrales/'+intId+'/checklist/'+ckKey+'/notas').set(nota.trim())
+    .catch(function(){ showToast('❌ Error al guardar nota'); });
+}
+
+function ckEliminar(intId, ckKey) {
+  if (!confirm('¿Eliminar este punto de revisión?')) return;
+  DB.ref('integrales/'+intId+'/checklist/'+ckKey).remove()
+    .catch(function(){ showToast('❌ Error'); });
 }
 
 // ── Buscador de repuestos en modal ────────────────────────────
