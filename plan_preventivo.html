@@ -205,7 +205,7 @@ if('serviceWorker' in navigator){
     <div class="tbl-wrap">
       <table>
         <thead><tr>
-          <th>Máquina</th><th>Subtipo</th><th>Tarea</th><th>Frec.</th><th>Instancia</th>
+          <th>Máquina</th><th>Subtipo</th><th>Tarea</th><th>Frec.</th><th>Sem.</th><th>Instancia</th>
           <th>Mecánico</th><th>Estado</th><th>Fecha</th><th>Turno</th><th>Notas</th><th></th>
         </tr></thead>
         <tbody id="segTabla"></tbody>
@@ -520,6 +520,64 @@ function cerrarModal(){
   pendingItems=[];
 }
 
+// ── Cálculo de semanas válidas de un mes ─────────────────────
+// Una semana (Lun-Dom) es válida para un mes si tiene 4 o más días en ese mes.
+function calcSemanasValidas(mesISO) {
+  var p    = mesISO.split('-');
+  var anio = parseInt(p[0]);
+  var mes  = parseInt(p[1]) - 1; // 0-based
+  var primer = new Date(anio, mes, 1);
+  var ultimo = new Date(anio, mes + 1, 0).getDate();
+  var semanas = [];
+
+  // Encontrar el lunes de la semana que contiene el día 1
+  var dow = primer.getDay(); // 0=dom,1=lun,...
+  var diasHastaLunes = (dow === 0) ? -6 : 1 - dow;
+  var lunesInicio = new Date(anio, mes, 1 + diasHastaLunes);
+
+  var numSem = 1;
+  while (true) {
+    var domFin = new Date(lunesInicio.getTime() + 6 * 86400000);
+    // Contar días de esta semana que caen en el mes
+    var diasEnMes = 0;
+    for (var d = 0; d < 7; d++) {
+      var dia = new Date(lunesInicio.getTime() + d * 86400000);
+      if (dia.getMonth() === mes) diasEnMes++;
+    }
+    if (diasEnMes >= 4) {
+      // Calcular inicio y fin dentro del mes
+      var inicioMes = new Date(Math.max(lunesInicio.getTime(), new Date(anio, mes, 1).getTime()));
+      var finMes    = new Date(Math.min(domFin.getTime(),    new Date(anio, mes, ultimo).getTime()));
+      semanas.push({
+        num:    numSem,
+        inicio: inicioMes.toISOString().slice(0, 10),
+        fin:    finMes.toISOString().slice(0, 10),
+        dias:   diasEnMes
+      });
+      numSem++;
+    }
+    // Avanzar al siguiente lunes
+    lunesInicio = new Date(lunesInicio.getTime() + 7 * 86400000);
+    // Si el lunes ya está más allá del mes, terminamos
+    if (lunesInicio.getMonth() > mes || lunesInicio.getFullYear() > anio) break;
+  }
+  return semanas;
+}
+
+// Devuelve cuántas repeticiones genera una frecuencia para un conjunto de semanas válidas
+function repeticionesPorFrecuencia(frecuencia, semanas) {
+  switch (frecuencia) {
+    case 'DIARIO':      return null; // especial: se gestiona aparte
+    case 'SEMANAL':     return semanas.length;                          // 1 por semana válida
+    case 'QUINCENAL':   return Math.max(1, Math.round(semanas.length / 2)); // 1 cada 2 semanas
+    case 'MENSUAL':     return 1;
+    case 'TRIMESTRAL':  return 1;
+    case 'SEMESTRAL':   return 1;
+    case 'ANUAL':       return 1;
+    default:            return 1;
+  }
+}
+
 function confirmarAsignacion(){
   var mec=document.getElementById('modalMec').value;
   var mes=document.getElementById('modalMes').value;
@@ -527,24 +585,63 @@ function confirmarAsignacion(){
   if(!mes){showToast('⚠️ Selecciona un mes');return;}
   var multiInst=document.getElementById('modalInstWrap').style.display!=='none';
   var inst=multiInst?document.getElementById('modalInst').value:null;
-  var updates={};
-  var count=0;
+
+  var semanas = calcSemanasValidas(mes);
+  var updates = {};
+  var count   = 0;
+  var catalogo = getCatalogo(); // usa Firebase si está disponible, si no el local
+
   pendingItems.forEach(function(catId){
-    var cat=CATALOGO.find(function(c){return c.id===catId;});
+    var cat = catalogo.find(function(c){ return c.id === catId; });
     if(!cat) return;
-    var instancia=inst||cat.instancias[0];
-    var key=DB.ref('asignaciones/'+mes).push().key;
-    updates['asignaciones/'+mes+'/'+key]={
-      catalogId:catId,maquina:cat.maquina,subtipo:cat.subtipo||'',
-      tarea:cat.tarea,frecuencia:cat.frecuencia,instancia:instancia,
-      mecanico:mec,mes:mes,hecho:false,hechoEn:null,turno:null,notas:''
-    };
-    count++;
+    var instancia  = inst || (cat.instancias && cat.instancias[0]) || cat.instancia || cat.maquina;
+    var frecuencia = cat.frecuencia || 'MENSUAL';
+    var reps       = repeticionesPorFrecuencia(frecuencia, semanas);
+
+    if (reps === null) {
+      // DIARIO: una tarea por día laborable (lun-sab)
+      var p2 = mes.split('-');
+      var ultimoDia = new Date(parseInt(p2[0]), parseInt(p2[1]), 0).getDate();
+      for (var d = 1; d <= ultimoDia; d++) {
+        var dow2 = new Date(parseInt(p2[0]), parseInt(p2[1])-1, d).getDay();
+        if (dow2 === 0) continue; // domingo no
+        var key = DB.ref('asignaciones/'+mes).push().key;
+        updates['asignaciones/'+mes+'/'+key] = {
+          catalogId:catId, maquina:cat.maquina, subtipo:cat.subtipo||'',
+          tarea:cat.tarea, frecuencia:frecuencia, instancia:instancia,
+          mecanico:mec, mes:mes, hecho:false, hechoEn:null, turno:null, notas:'',
+          semana:null, diaNum:d
+        };
+        count++;
+      }
+    } else {
+      // Distribuir uniformemente entre las semanas
+      // Para SEMANAL: reps = semanas.length → una por semana
+      // Para QUINCENAL: reps = semanas/2 → semanas alternas (1ª, 3ª, ...)
+      var paso = semanas.length > 0 ? Math.max(1, Math.round(semanas.length / reps)) : 1;
+      for (var i = 0; i < reps; i++) {
+        var sem = semanas[i * paso] || semanas[semanas.length - 1] || null;
+        var key2 = DB.ref('asignaciones/'+mes).push().key;
+        var obj = {
+          catalogId:catId, maquina:cat.maquina, subtipo:cat.subtipo||'',
+          tarea:cat.tarea, frecuencia:frecuencia, instancia:instancia,
+          mecanico:mec, mes:mes, hecho:false, hechoEn:null, turno:null, notas:''
+        };
+        if (sem) {
+          obj.semana     = sem.num;
+          obj.semanaInfo = 'Semana '+sem.num+' ('+sem.inicio+' – '+sem.fin+')';
+        }
+        updates['asignaciones/'+mes+'/'+key2] = obj;
+        count++;
+      }
+    }
   });
+
   DB.ref().update(updates).then(function(){
     limpiarSeleccion();
     cerrarModal();
-    showToast('✅ '+count+' tarea(s) asignada(s) a '+mec);
+    var info = semanas.length ? ' · '+semanas.length+' semanas válidas en el mes' : '';
+    showToast('✅ '+count+' tarea(s) asignada(s) a '+mec+info);
     if(document.getElementById('segMes').value===mes) cargarSeguimiento();
   }).catch(function(e){showToast('Error: '+e.message);});
 }
@@ -601,6 +698,7 @@ function renderSeguimiento(){
       +'<td style="font-size:0.78rem;color:rgba(255,255,255,0.4)">'+(t.subtipo||'—')+'</td>'
       +'<td>'+t.tarea+'</td>'
       +'<td>'+freqBadge(t.frecuencia)+'</td>'
+      +'<td style="font-size:0.78rem;color:rgba(255,255,255,0.45);white-space:nowrap">'+(t.semana ? 'S'+t.semana : '—')+'</td>'
       +'<td style="font-size:0.82rem">'+t.instancia+'</td>'
       +'<td>'+t.mecanico+'</td>'
       +'<td><input type="checkbox" '+(t.hecho?'checked':'')+' onchange="toggleHecho(\''+mes+'\',\''+t._id+'\',this.checked)" style="width:17px;height:17px;cursor:pointer;accent-color:var(--green)"> <span class="'+(t.hecho?'badge-done':'badge-pend')+'">'+(t.hecho?'✓ Hecho':'Pendiente')+'</span></td>'
@@ -609,7 +707,7 @@ function renderSeguimiento(){
       +'<td style="font-size:0.8rem;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+(t.notas||'')+'">'+(t.notas||'—')+'</td>'
       +'<td><button class="btn btn-sm btn-red" onclick="eliminarAsig(\''+mes+'\',\''+t._id+'\')">🗑</button></td>'
       +'</tr>';
-  }).join(''):'<tr><td colspan="11" style="text-align:center;padding:24px;color:rgba(255,255,255,0.3)">Sin resultados</td></tr>';
+  }).join(''):'<tr><td colspan="12" style="text-align:center;padding:24px;color:rgba(255,255,255,0.3)">Sin resultados</td></tr>';
 }
 
 function toggleHecho(mes,id,checked){
