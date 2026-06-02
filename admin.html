@@ -6659,19 +6659,13 @@ function escAttr(s){ return String(s||'').replace(/'/g,'&#39;').replace(/"/g,'&q
       <div class="frio-field"><label>Refrigerante</label>
         <select id="frioEqRefrig">
           <option value="">— Selecciona —</option>
+          <option>N/P — No presente</option>
           <option>R404A</option><option>R448A</option><option>R452A</option>
-          <option>R290 (propano)</option><option>R134a</option><option>R407C</option>
+          <option>R134a</option><option>R407C</option>
           <option>R407F</option><option>R22 (legacy)</option><option>R717 (amoniaco)</option><option>Otro</option>
         </select>
       </div>
       <div class="frio-field"><label>Carga refrigerante (kg)</label><input type="number" id="frioEqCarga" step="0.1" placeholder="ej: 2.5"></div>
-      <div class="frio-field"><label>Gas tipo N/P (Natural/Propano)</label>
-        <select id="frioEqGasNP">
-          <option value="">— No especificado —</option>
-          <option value="si">Sí — Gas N/P</option>
-          <option value="no">No — Gas sintético (HFC/HFO)</option>
-        </select>
-      </div>
       <div class="frio-field"><label>T. mín. trabajo (°C)</label><input type="number" id="frioEqTMin" step="0.5" placeholder="ej: -22"></div>
       <div class="frio-field"><label>T. máx. trabajo (°C)</label><input type="number" id="frioEqTMax" step="0.5" placeholder="ej: -18"></div>
       <div class="frio-field"><label>Humedad ref. (%)</label><input type="number" id="frioEqHumRef" step="1" min="0" max="100" placeholder="ej: 85"></div>
@@ -6994,7 +6988,7 @@ function frioEqModal(key) {
   document.getElementById('frioEqKey').value = key||'';
   document.getElementById('frioEqModalTitle').textContent = key ? '✏️ Editar Equipo' : '➕ Nuevo Equipo de Frío';
   const map = {frioEqNombre:'nombre',frioEqTipo:'tipo',frioEqUbic:'ubicacion',frioEqMarca:'marca',frioEqModelo:'modelo',
-    frioEqSerie:'serie',frioEqRefrig:'refrigerante',frioEqCarga:'cargaKg',frioEqGasNP:'gasNP',
+    frioEqSerie:'serie',frioEqRefrig:'refrigerante',frioEqCarga:'cargaKg',
     frioEqTMin:'tMin',frioEqTMax:'tMax',frioEqHumRef:'humRef',
     frioEqPot:'potencia',frioEqFechaInst:'fechaInst',frioEqProxRev:'proxRev',frioEqEstado:'estado',frioEqNotas:'notas'};
   Object.entries(map).forEach(([id,field]) => { const el=document.getElementById(id); if(el) el.value=e[field]!==undefined?e[field]:''; });
@@ -7015,7 +7009,7 @@ function frioGuardarEq() {
     nombre, tipo,
     ubicacion:g('frioEqUbic').trim(), marca:g('frioEqMarca').trim(), modelo:g('frioEqModelo').trim(),
     serie:g('frioEqSerie').trim(), refrigerante:g('frioEqRefrig'),
-    cargaKg:parseFloat(g('frioEqCarga'))||'', gasNP:g('frioEqGasNP'),
+    cargaKg:parseFloat(g('frioEqCarga'))||'',
     tMin:g('frioEqTMin')!==''?parseFloat(g('frioEqTMin')):'',
     tMax:g('frioEqTMax')!==''?parseFloat(g('frioEqTMax')):'',
     humRef:g('frioEqHumRef')!==''?parseFloat(g('frioEqHumRef')):'',
