@@ -290,7 +290,8 @@ if('serviceWorker' in navigator){
       </select>
       <input type="search" id="catSearch" placeholder="Buscar tarea..." oninput="renderGestionCatalogo()" style="flex:1;min-width:160px">
       <button class="btn btn-gold" onclick="abrirModalCat(null)">+ Nueva tarea</button>
-      <button class="btn btn-blue" id="btnMigrar" onclick="migrarCatalogoAFirebase()" title="Importar las 401 tareas del catálogo base a Firebase (solo la primera vez)">⬆️ Importar base</button>
+      <!-- Botón importar base ocultado — ya se usó, volver a pulsarlo sobreescribiría el catálogo editado -->
+      <!-- <button class="btn btn-blue" id="btnMigrar" onclick="migrarCatalogoAFirebase()">⬆️ Importar base</button> -->
     </div>
     <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);margin-bottom:10px">
       <span id="catFuenteLabel"></span>
