@@ -4633,6 +4633,12 @@ function importarExcelRepuestos(input) {
       <label>📝 Descripción / Título (opcional)</label>
       <input type="text" id="intDesc" placeholder="ej. Revisión anual completa 2026" style="width:100%">
     </div>
+    <div class="field" style="margin-bottom:12px">
+      <label>👷 Mecánicos asignados</label>
+      <div id="intMecsWrap" style="display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:var(--navy-dark);border:1px solid rgba(255,255,255,0.15);border-radius:8px;min-height:42px">
+        <span style="color:rgba(255,255,255,0.3);font-size:0.82rem;align-self:center">Cargando mecánicos...</span>
+      </div>
+    </div>
     <div style="display:flex;gap:10px">
       <button onclick="crearIntegral()"
         style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:9px 22px;cursor:pointer;font-weight:700">
@@ -4705,8 +4711,15 @@ var CK_ESTADOS = {
   revisar:   { label: 'REVISAR',   color: '#f1c40f', bg: 'rgba(241,196,15,0.18)', icon: '⚠️' }
 };
 
+var _intMecsList = [];  // lista de mecánicos cargada de Firebase
+
 function initIntegrales() {
   poblarSelectorIntMaq();
+  // Cargar mecánicos para asignación
+  DB.ref('config/mecanicos').once('value').then(function(snap) {
+    _intMecsList = snap.val() || [];
+    _poblarChecksMecs();
+  });
   if (_intListenerOn) { renderIntegrales(); return; }
   _intListenerOn = true;
   DB.ref('integrales').on('value', function(snap) {
@@ -4714,6 +4727,21 @@ function initIntegrales() {
     renderIntegrales();
     if (_intActualId && _intData[_intActualId]) renderIntModal(_intActualId);
   });
+}
+
+function _poblarChecksMecs() {
+  var wrap = document.getElementById('intMecsWrap');
+  if (!wrap) return;
+  if (!_intMecsList.length) { wrap.innerHTML = '<span style="color:rgba(255,255,255,0.3);font-size:0.82rem">Sin mecánicos configurados</span>'; return; }
+  wrap.innerHTML = _intMecsList.map(function(m) {
+    return '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:rgba(255,255,255,0.05);'
+         + 'border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:5px 10px;font-size:0.82rem">'
+         + '<input type="checkbox" class="int-mec-check" value="'+m+'" style="accent-color:var(--gold)"> '+m+'</label>';
+  }).join('');
+}
+
+function _getMecsSeleccionados() {
+  return Array.from(document.querySelectorAll('.int-mec-check:checked')).map(function(c){ return c.value; });
 }
 
 function poblarSelectorIntMaq() {
@@ -4748,12 +4776,17 @@ function crearIntegral() {
   var desc   = (document.getElementById('intDesc').value || '').trim();
   var sel    = document.getElementById('intMaq');
   var maqNom = maqId ? sel.options[sel.selectedIndex].text : '';
+  var mecs   = _getMecsSeleccionados();
   if (!maqId || !mes) { showToast('⚠️ Selecciona máquina y mes'); return; }
   var id  = 'INT-' + Date.now();
+  // Inicializar confirmaciones vacías para cada mecánico
+  var confirmaciones = {};
+  mecs.forEach(function(m) { confirmaciones[m.replace(/\s/g,'_')] = { nombre: m, confirmado: false }; });
   var obj = {
     id: id, maqId: maqId, maqNombre: maqNom,
     mesPrevisto: mes, estado: 'programada',
-    descripcion: desc, componentes: {},
+    descripcion: desc, componentes: {}, checklist: {},
+    mecanicos: mecs, confirmaciones: confirmaciones,
     observaciones: '', createdAt: new Date().toISOString().substring(0,10), fechaCierre: ''
   };
   DB.ref('integrales/' + id).set(obj).then(function() {
@@ -4852,6 +4885,32 @@ function renderIntModal(id) {
           + 'color:'+(activo?c.color:'rgba(255,255,255,0.45)')+';border-radius:7px;padding:6px 14px;cursor:pointer;font-size:0.78rem;font-family:Barlow,sans-serif">'
           + c.icon + ' ' + c.label + '</button>';
   });
+  html += '</div>';
+
+  // ── Mecánicos asignados ──
+  var mecs = it.mecanicos || [];
+  var confs = it.confirmaciones || {};
+  html += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:13px;margin-bottom:18px">';
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+        + '<div style="font-size:0.8rem;font-weight:700;color:rgba(255,255,255,0.6);letter-spacing:0.05em">👷 MECÁNICOS ASIGNADOS</div>'
+        + '</div>';
+  // Checkboxes para añadir/quitar mecánicos
+  html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">';
+  _intMecsList.forEach(function(m) {
+    var asignado = mecs.indexOf(m) !== -1;
+    var conf = confs[m.replace(/\s/g,'_')];
+    var confirmado = conf && conf.confirmado;
+    html += '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:'
+          + (asignado ? (confirmado ? 'rgba(39,174,96,0.2)' : 'rgba(52,152,219,0.15)') : 'rgba(255,255,255,0.04)')
+          + ';border:1px solid '+(asignado ? (confirmado ? '#27ae60' : '#3498db') : 'rgba(255,255,255,0.12)')
+          + ';border-radius:6px;padding:5px 10px;font-size:0.82rem;transition:all .2s">'
+          + '<input type="checkbox" onchange="intToggleMec(\''+id+'\',\''+m+'\')" '+(asignado?'checked':'')
+          + ' style="accent-color:var(--gold)"> '
+          + m + (confirmado ? ' ✅' : (asignado ? ' ⏳' : ''))
+          + '</label>';
+  });
+  html += '</div>';
+  if (!mecs.length) html += '<div style="font-size:0.78rem;color:rgba(255,255,255,0.3)">Sin mecánicos asignados — marca los que participarán</div>';
   html += '</div>';
 
   // ── Checklist de revisión ──
@@ -4994,6 +5053,25 @@ function renderIntModal(id) {
   document.getElementById('intRepSelInfo').textContent = 'Busca un repuesto para añadirlo a la lista';
   _intRepSearch = [];
   _intRepSeleccionado = null;
+}
+
+// ── Asignación de mecánicos ───────────────────────────────────
+function intToggleMec(intId, nombre) {
+  var it   = _intData[intId];
+  if (!it) return;
+  var mecs = (it.mecanicos || []).slice();
+  var confs = JSON.parse(JSON.stringify(it.confirmaciones || {}));
+  var key  = nombre.replace(/\s/g,'_');
+  var idx  = mecs.indexOf(nombre);
+  if (idx === -1) {
+    mecs.push(nombre);
+    confs[key] = { nombre: nombre, confirmado: false };
+  } else {
+    mecs.splice(idx, 1);
+    delete confs[key];
+  }
+  DB.ref('integrales/'+intId).update({ mecanicos: mecs, confirmaciones: confs })
+    .catch(function(){ showToast('❌ Error'); });
 }
 
 // ── Checklist CRUD ────────────────────────────────────────────

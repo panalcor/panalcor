@@ -796,15 +796,18 @@ function _adminSessionValida(){
 function cargarIntegralesMec() {
   var wrap = document.getElementById('integralesWrap');
   if (!wrap) return;
-  DB.ref('integrales').once('value').then(function(snap) {
+  DB.ref('integrales').on('value', function(snap) {
     var data = snap.val() || {};
-    var lista = Object.values(data).filter(function(it) {
+    var todos = Object.values(data).filter(function(it) {
       return it.estado === 'programada' || it.estado === 'en_curso';
     }).sort(function(a, b) {
       return (a.mesPrevisto || '').localeCompare(b.mesPrevisto || '');
     });
-    renderIntegralesMec(lista);
-  }).catch(function() {});
+    // Separar: asignados a mí vs el resto
+    var mios   = todos.filter(function(it){ return (it.mecanicos||[]).indexOf(mecActual) !== -1; });
+    var otros  = todos.filter(function(it){ return (it.mecanicos||[]).indexOf(mecActual) === -1; });
+    renderIntegralesMec(mios, otros);
+  });
 }
 
 function _intMesMec(ym) {
@@ -814,36 +817,68 @@ function _intMesMec(ym) {
   return meses[parseInt(p[1]||1)-1] + ' ' + p[0];
 }
 
-function renderIntegralesMec(lista) {
+function renderIntegralesMec(mios, otros) {
   var wrap = document.getElementById('integralesWrap');
   if (!wrap) return;
-  if (!lista.length) { wrap.innerHTML = ''; return; }
+  if (!mios.length && !otros.length) { wrap.innerHTML = ''; return; }
 
-  var html = '<div style="margin-bottom:14px">'
-    + '<div style="font-size:1.05rem;font-weight:700;font-style:italic;letter-spacing:0.04em;color:#f39c12;margin-bottom:10px;padding-left:2px;text-shadow:0 0 12px rgba(243,156,18,0.4)">🔩 Mantenimientos integrales previstos &mdash; Sin asignaci&oacute;n</div>'
-    + '<div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch">';
+  var html = '<div style="margin-bottom:16px">';
 
-  lista.forEach(function(it) {
-    var enCurso = it.estado === 'en_curso';
-    var nComp = Object.keys(it.componentes || {}).length;
-    var nCk   = Object.keys(it.checklist || {}).length;
-    var ckOk  = Object.values(it.checklist || {}).filter(function(c){ return c.estado && c.estado !== 'pendiente'; }).length;
-    var bColor = enCurso ? '#3498db' : '#f39c12';
-    var badge  = enCurso ? '🔵 En curso' : '🟡 Programado';
-    html += '<div onclick="abrirIntMec(\''+it.id+'\')" style="flex:0 0 auto;min-width:180px;max-width:220px;background:var(--navy-mid);'
-          + 'border:1px solid '+bColor+'40;border-left:3px solid '+bColor+';border-radius:10px;padding:12px 14px;cursor:pointer;'
-          + '-webkit-tap-highlight-color:transparent">'
-          + '<div style="font-size:0.68rem;font-weight:700;color:'+bColor+';margin-bottom:6px">'+badge+'</div>'
-          + '<div style="font-size:0.9rem;font-weight:700;color:#fff;line-height:1.3;margin-bottom:5px">' + escHtmlMec(it.maqNombre) + '</div>'
-          + (it.descripcion ? '<div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-bottom:5px">'+escHtmlMec(it.descripcion)+'</div>' : '')
-          + '<div style="font-size:0.75rem;color:rgba(255,255,255,0.5)">📅 ' + _intMesMec(it.mesPrevisto) + '</div>'
-          + '<div style="font-size:0.7rem;color:rgba(255,255,255,0.3);margin-top:2px">🔩 ' + nComp + ' comp.'
-          + (nCk > 0 ? ' · ✅ '+ckOk+'/'+nCk : '') + '</div>'
-          + '<div style="margin-top:8px;font-size:0.7rem;color:'+bColor+';font-weight:700">Ver checklist →</div>'
-          + '</div>';
-  });
+  // ── Mis integrales (asignados) ──
+  if (mios.length) {
+    html += '<div style="font-size:0.78rem;font-weight:700;letter-spacing:0.08em;color:#74b9ff;margin-bottom:10px;padding-left:2px">🔩 MIS MANTENIMIENTOS INTEGRALES</div>';
+    mios.forEach(function(it) {
+      var enCurso = it.estado === 'en_curso';
+      var bColor  = enCurso ? '#3498db' : '#f39c12';
+      var badge   = enCurso ? '🔵 En curso' : '🟡 Programado';
+      var nCk     = Object.keys(it.checklist || {}).length;
+      var ckOk    = Object.values(it.checklist || {}).filter(function(c){ return c.estado && c.estado !== 'pendiente'; }).length;
+      var ckPct   = nCk > 0 ? Math.round(ckOk/nCk*100) : 0;
+      var conf    = (it.confirmaciones || {})[mecActual ? mecActual.replace(/\s/g,'_') : ''];
+      var yoConfirme = conf && conf.confirmado;
+      var todos   = (it.mecanicos || []);
+      var nConf   = todos.filter(function(m){ var c=(it.confirmaciones||{})[m.replace(/\s/g,'_')]; return c&&c.confirmado; }).length;
+      html += '<div onclick="abrirIntMec(\''+it.id+'\')" style="background:var(--navy-mid);border:1px solid '
+            + (yoConfirme ? 'rgba(39,174,96,0.5)' : bColor+'60')+';border-left:4px solid '
+            + (yoConfirme ? '#27ae60' : bColor)+';border-radius:11px;padding:14px 16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent">'
+            + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'
+            + '<div style="font-size:0.93rem;font-weight:700;color:#fff">'+escHtmlMec(it.maqNombre)+'</div>'
+            + '<span style="font-size:0.68rem;font-weight:700;color:'+bColor+';background:'+bColor+'20;padding:3px 8px;border-radius:5px">'+badge+'</span>'
+            + '</div>'
+            + (it.descripcion ? '<div style="font-size:0.75rem;color:rgba(255,255,255,0.45);margin-bottom:6px">'+escHtmlMec(it.descripcion)+'</div>' : '')
+            + '<div style="display:flex;gap:12px;font-size:0.75rem;color:rgba(255,255,255,0.45);margin-bottom:8px">'
+            + '<span>📅 '+_intMesMec(it.mesPrevisto)+'</span>'
+            + (nCk > 0 ? '<span>✅ '+ckOk+'/'+nCk+' revisados</span>' : '')
+            + '<span>👷 '+nConf+'/'+todos.length+' confirmados</span>'
+            + '</div>'
+            + (nCk > 0 ? '<div style="background:rgba(255,255,255,0.08);border-radius:20px;height:5px;overflow:hidden">'
+              + '<div style="height:100%;width:'+ckPct+'%;background:'+(ckPct===100?'#27ae60':bColor)+';border-radius:20px"></div>'
+              + '</div>' : '')
+            + '<div style="margin-top:8px;font-size:0.75rem;font-weight:700;color:'+(yoConfirme?'#27ae60':bColor)+'">'
+            + (yoConfirme ? '✅ Ya has confirmado' : '▶ Abrir y rellenar') + '</div>'
+            + '</div>';
+    });
+  }
 
-  html += '</div></div>';
+  // ── Otros integrales (informativos, sin asignar al mecánico) ──
+  if (otros.length) {
+    html += '<div style="font-size:0.72rem;font-weight:700;letter-spacing:0.08em;color:#f39c12;margin-bottom:8px;margin-top:'+(mios.length?'14px':'0')+'">🔩 Otros integrales previstos</div>';
+    html += '<div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch">';
+    otros.forEach(function(it) {
+      var enCurso = it.estado === 'en_curso';
+      var bColor  = enCurso ? '#3498db' : '#f39c12';
+      var nComp   = Object.keys(it.componentes || {}).length;
+      html += '<div style="flex:0 0 auto;min-width:160px;max-width:200px;background:var(--navy-mid);'
+            + 'border:1px solid '+bColor+'30;border-left:3px solid '+bColor+'60;border-radius:10px;padding:11px 13px;opacity:0.7">'
+            + '<div style="font-size:0.68rem;font-weight:700;color:'+bColor+';margin-bottom:5px">'+(enCurso?'🔵 En curso':'🟡 Programado')+'</div>'
+            + '<div style="font-size:0.85rem;font-weight:700;color:#fff;line-height:1.3;margin-bottom:4px">'+escHtmlMec(it.maqNombre)+'</div>'
+            + '<div style="font-size:0.72rem;color:rgba(255,255,255,0.4)">📅 '+_intMesMec(it.mesPrevisto)+'</div>'
+            + '</div>';
+    });
+    html += '</div>';
+  }
+
+  html += '</div>';
   wrap.innerHTML = html;
 }
 
@@ -1256,6 +1291,42 @@ function renderIntMec(id) {
         + 'border-radius:7px;padding:8px 18px;cursor:pointer;font-size:0.82rem;font-family:Barlow,sans-serif;font-weight:700">💾 Guardar observaciones</button>'
         + '</div>';
 
+  // ── Botón Finalizado ──
+  var mecs  = it.mecanicos || [];
+  var confs = it.confirmaciones || {};
+  var miKey = mecActual ? mecActual.replace(/\s/g,'_') : '';
+  var miConf = confs[miKey];
+  var yoConfirme = miConf && miConf.confirmado;
+  var nConf  = mecs.filter(function(m){ var c=confs[m.replace(/\s/g,'_')]; return c&&c.confirmado; }).length;
+  var todosConf = mecs.length > 0 && nConf === mecs.length;
+
+  html += '<div style="padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);margin-top:4px">';
+  // Estado de confirmaciones
+  if (mecs.length) {
+    html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">';
+    mecs.forEach(function(m) {
+      var c = confs[m.replace(/\s/g,'_')];
+      var ok = c && c.confirmado;
+      html += '<span style="font-size:0.75rem;padding:4px 10px;border-radius:20px;background:'
+            + (ok?'rgba(39,174,96,0.2)':'rgba(255,255,255,0.06)')+';color:'+(ok?'#2ecc71':'rgba(255,255,255,0.4)')
+            + ';border:1px solid '+(ok?'rgba(39,174,96,0.4)':'rgba(255,255,255,0.1)')+'">'+escHtmlMec(m)+(ok?' ✅':' ⏳')+'</span>';
+    });
+    html += '</div>';
+  }
+  if (yoConfirme) {
+    html += '<div style="background:rgba(39,174,96,0.12);border:1px solid rgba(39,174,96,0.35);border-radius:9px;padding:12px 16px;text-align:center;color:#2ecc71;font-weight:700;font-size:0.9rem">'
+          + '✅ Ya has confirmado este mantenimiento'
+          + (todosConf ? '<br><span style="font-size:0.78rem;opacity:0.8">Todos los mecánicos han confirmado — Integral completado</span>' : '')
+          + '</div>';
+  } else {
+    html += '<button onclick="intMecFinalizar(\''+id+'\')" '
+          + 'style="width:100%;padding:14px;background:linear-gradient(135deg,rgba(39,174,96,0.3),rgba(39,174,96,0.15));'
+          + 'border:2px solid rgba(39,174,96,0.6);color:#2ecc71;border-radius:10px;cursor:pointer;'
+          + 'font-family:Barlow,sans-serif;font-size:1rem;font-weight:900;letter-spacing:0.03em">'
+          + '✅ MARCAR COMO FINALIZADO</button>';
+  }
+  html += '</div>';
+
   document.getElementById('intMecBody').innerHTML = html;
   _intMecRepRes = [];
   _intMecRepSel = null;
@@ -1308,6 +1379,31 @@ function intMecAñadirComp(intId) {
   DB.ref('integrales/'+intId+'/componentes/'+key).set(obj)
     .then(function(){ showToastMec('✅ Componente añadido'); _intMecRepSel=null; document.getElementById('intMecRepQ').value=''; document.getElementById('intMecRepInfo').textContent='Busca un repuesto para añadirlo'; })
     .catch(function(){ showToastMec('❌ Error'); });
+}
+
+// ── Finalizar integral ────────────────────────────────────────
+function intMecFinalizar(intId) {
+  if (!confirm('¿Confirmas que has completado tu parte de este mantenimiento integral?\n\nEsta acción no se puede deshacer.')) return;
+  var it    = _intMecData[intId];
+  if (!it || !mecActual) return;
+  var key   = mecActual.replace(/\s/g,'_');
+  var hoy   = new Date().toISOString().substring(0,10);
+  var updates = {};
+  updates['confirmaciones/'+key] = { nombre: mecActual, confirmado: true, fecha: hoy };
+  // Si todos los mecánicos confirman → marcar completada
+  var mecs  = it.mecanicos || [];
+  var confs = JSON.parse(JSON.stringify(it.confirmaciones || {}));
+  confs[key] = { nombre: mecActual, confirmado: true, fecha: hoy };
+  var todosOk = mecs.length > 0 && mecs.every(function(m){ var c=confs[m.replace(/\s/g,'_')]; return c&&c.confirmado; });
+  if (todosOk) {
+    updates['estado'] = 'completada';
+    updates['fechaCierre'] = hoy;
+  }
+  DB.ref('integrales/'+intId).update(updates)
+    .then(function(){
+      showToastMec(todosOk ? '🎉 ¡Integral completado! Todos han confirmado' : '✅ Tu confirmación guardada');
+    })
+    .catch(function(){ showToastMec('❌ Error al confirmar'); });
 }
 
 // ── Observaciones mecánico ────────────────────────────────────
