@@ -743,6 +743,12 @@ function _buildBtns(rol){
        + '<div class="btn-sublabel">Registro de incidencias</div></div>'
        + badge + '</a>';
   }
+  if(rol === 'mecanico' || adm){
+    h += '<button class="btn" onclick="abrirBuscadorRepInicio()" style="border-color:rgba(52,152,219,0.35);background:rgba(52,152,219,0.07);cursor:pointer;font-family:inherit">'
+       + '<div class="btn-icon" style="color:#74b9ff">🔍</div>'
+       + '<div class="btn-label" style="color:#74b9ff">Repuestos</div>'
+       + '<div class="btn-sublabel" style="color:rgba(52,152,219,0.6)">Buscar referencia</div></button>';
+  }
   return h;
 }
 
@@ -796,6 +802,97 @@ function procesarRepuestos(buf){
     mostrarEstado('❌ Error al leer el archivo. Comprueba que es el repuestos.xlsx correcto.','#e74c3c',true);
   }
 }
+</script>
+
+<!-- ══ PANEL BUSCADOR REPUESTOS ══ -->
+<div id="repInicioPanel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:600;overflow-y:auto;padding:16px">
+  <div style="max-width:560px;margin:auto;background:#1a2d42;border:1px solid rgba(52,152,219,0.35);border-radius:16px;overflow:hidden">
+    <div style="background:linear-gradient(135deg,#0a1520,#1a2d42);border-bottom:1px solid rgba(52,152,219,0.2);padding:16px 18px;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:1rem;font-weight:800;color:#74b9ff">🔍 Buscar Repuesto</div>
+      <button onclick="cerrarBuscadorRepInicio()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem">✕</button>
+    </div>
+    <div style="padding:16px">
+      <div style="position:relative;margin-bottom:8px">
+        <input id="repInicioQ" type="text" autocomplete="off"
+          placeholder="Descripción, referencia o ubicación..."
+          oninput="buscarRepInicio()"
+          style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(52,152,219,0.4);border-radius:9px;padding:12px 42px 12px 14px;font-family:'Barlow',sans-serif;font-size:0.95rem;outline:none">
+        <span style="position:absolute;right:13px;top:50%;transform:translateY(-50%);font-size:1.1rem;pointer-events:none">🔍</span>
+      </div>
+      <div id="repInicioCount" style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-bottom:12px;padding-left:2px">Escribe para buscar entre los repuestos</div>
+      <div id="repInicioList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var _repInicioData = [];
+var _repInicioCargado = false;
+
+function abrirBuscadorRepInicio() {
+  document.getElementById('repInicioPanel').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  setTimeout(function(){ document.getElementById('repInicioQ').focus(); }, 150);
+  if (!_repInicioCargado) _cargarRepInicio();
+}
+function cerrarBuscadorRepInicio() {
+  document.getElementById('repInicioPanel').style.display = 'none';
+  document.body.style.overflow = '';
+  document.getElementById('repInicioQ').value = '';
+  document.getElementById('repInicioList').innerHTML = '';
+  document.getElementById('repInicioCount').textContent = 'Escribe para buscar entre los repuestos';
+}
+function _cargarRepInicio() {
+  var cached = localStorage.getItem('repuestosCache');
+  if (cached) {
+    try {
+      _repInicioData = JSON.parse(cached);
+      _repInicioCargado = true;
+      document.getElementById('repInicioCount').textContent = _repInicioData.length + ' repuestos — escribe para filtrar';
+      return;
+    } catch(e) {}
+  }
+  document.getElementById('repInicioCount').textContent = 'Descargando catálogo...';
+  var dbRef = firebase.database().ref('repuestos_base');
+  dbRef.once('value').then(function(snap) {
+    var val = snap.val();
+    if (Array.isArray(val)) {
+      _repInicioData = val.filter(function(r){ return r && (r.desc || r.ref); });
+    } else if (val && typeof val === 'object') {
+      _repInicioData = Object.values(val).filter(function(r){ return r && (r.desc || r.ref); });
+    }
+    localStorage.setItem('repuestosCache', JSON.stringify(_repInicioData));
+    _repInicioCargado = true;
+    document.getElementById('repInicioCount').textContent = _repInicioData.length + ' repuestos — escribe para filtrar';
+  }).catch(function() {
+    document.getElementById('repInicioCount').textContent = 'Error al cargar — comprueba la conexión';
+  });
+}
+function buscarRepInicio() {
+  var q = (document.getElementById('repInicioQ').value || '').trim().toLowerCase();
+  var countEl = document.getElementById('repInicioCount');
+  var listEl  = document.getElementById('repInicioList');
+  if (!q) { listEl.innerHTML = ''; countEl.textContent = _repInicioData.length + ' repuestos — escribe para filtrar'; return; }
+  if (!_repInicioData.length) { countEl.textContent = 'Cargando...'; return; }
+  var res = _repInicioData.filter(function(r) {
+    return (r.desc      || '').toLowerCase().includes(q)
+        || String(r.ref || '').toLowerCase().includes(q)
+        || (r.ubicacion || '').toLowerCase().includes(q);
+  });
+  countEl.textContent = res.length ? res.length + ' resultado' + (res.length !== 1 ? 's' : '') : 'Sin resultados para "' + q + '"';
+  if (!res.length) { listEl.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.25);padding:30px 0;font-size:0.88rem">Sin resultados</div>'; return; }
+  listEl.innerHTML = res.slice(0, 60).map(function(r) {
+    var sc = (typeof r.stock === 'number') ? (r.stock > 0 ? '#2ecc71' : 'rgba(255,255,255,0.3)') : 'rgba(255,255,255,0.3)';
+    return '<div style="padding:11px 14px;border-bottom:1px solid rgba(255,255,255,0.06)">'
+      + '<div style="font-size:0.88rem;font-weight:600;color:#fff;line-height:1.35">' + _escR(r.desc||'—') + '</div>'
+      + '<div style="margin-top:4px;display:flex;gap:12px;flex-wrap:wrap">'
+      + '<span style="font-size:0.75rem;color:#f0c040;font-weight:700">Ref. ' + _escR(String(r.ref||'—')) + '</span>'
+      + (r.ubicacion ? '<span style="font-size:0.75rem;color:rgba(255,255,255,0.45)">📍 ' + _escR(r.ubicacion) + '</span>' : '')
+      + (r.stock !== undefined && r.stock !== null ? '<span style="font-size:0.75rem;color:'+sc+'">Stock: '+r.stock+'</span>' : '')
+      + '</div></div>';
+  }).join('');
+}
+function _escR(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 </script>
 </body>
 </html>
