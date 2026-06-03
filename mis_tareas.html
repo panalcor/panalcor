@@ -13,6 +13,7 @@
 <title>Mis Tareas — PANALCOR</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -467,6 +468,8 @@ function generarMeses(){
 
 /* ══ ARRANQUE ══ */
 function arrancarApp(){
+  // Registrar token FCM para notificaciones push
+  if (mecActual) fcmRegistrar(mecActual);
   document.getElementById('app').style.display = 'block';
   document.getElementById('hdrName').textContent = '👷 ' + mecActual;
 
@@ -1422,5 +1425,6 @@ function showToastMec(msg) {
   setTimeout(function(){ t.classList.remove('show'); }, 2500);
 }
 </script>
+<script src="fcm.js"></script>
 </body>
 </html>

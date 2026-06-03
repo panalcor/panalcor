@@ -5088,6 +5088,15 @@ function intToggleMec(intId, nombre) {
     delete confs[key];
   }
   DB.ref('integrales/'+intId).update({ mecanicos: mecs, confirmaciones: confs })
+    .then(function(){
+      // Notificar al mecánico si se acaba de añadir
+      if (idx === -1) {
+        fcmEnviar(nombre,
+          '🔩 Integral asignado',
+          'Se te ha asignado el mantenimiento integral de ' + (it.maqNombre || '') + ' — ' + (_intMesLabel(it.mesPrevisto||'')),
+          'mis_tareas.html', '🔩');
+      }
+    })
     .catch(function(){ showToast('❌ Error'); });
 }
 
@@ -7293,7 +7302,7 @@ function frioUpdateItemPeriod(sel, key, esCustom) {
   });
 }
 </script>
-
+<script src="fcm.js"></script>
 </body>
 </html>
 

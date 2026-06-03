@@ -681,6 +681,14 @@ function _ejecutarAsignacion(mec, mes, semanas, catalogo, inst){
     var info = semanas.length ? ' · '+semanas.length+' semanas válidas en el mes' : '';
     showToast('✅ '+count+' tarea(s) asignada(s) a '+mec+info);
     if(document.getElementById('segMes').value===mes) cargarSeguimiento();
+    // Notificar al mecánico
+    var p = mes.split('-');
+    var meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    var mesLabel = meses[parseInt(p[1]||1)-1] + ' ' + p[0];
+    fcmEnviar(mec,
+      '📋 Tareas asignadas',
+      'Tienes ' + count + ' tarea' + (count>1?'s':'') + ' de mantenimiento asignada' + (count>1?'s':'') + ' para ' + mesLabel,
+      'mis_tareas.html', '📋');
   }).catch(function(e){showToast('Error: '+e.message);});
 }
 
@@ -1220,5 +1228,6 @@ function exportarCatalogoExcel() {
 
 
 </script>
+<script src="fcm.js"></script>
 </body>
 </html>

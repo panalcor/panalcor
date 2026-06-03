@@ -16,6 +16,7 @@
 <!-- Firebase SDK (compat — no build tools necesario) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -1342,6 +1343,15 @@ function guardarAveria(){
   fbSet(av.id, av).then(function(){
     clearTimeout(_tsFallback);
     if(!_tsShown){ _tsShown=true; showToast('✅ Avería guardada y sincronizada ☁️'); }
+    // Notificar a los mecánicos asignados (excepto al que la registra)
+    var mecActualLocal = localStorage.getItem('mecSesion') ? JSON.parse(localStorage.getItem('mecSesion')).nombre : null;
+    (av.mecanicos || []).forEach(function(m) {
+      if (m === mecActualLocal) return; // no notificarse a uno mismo
+      fcmEnviar(m,
+        '🔧 Nueva avería asignada',
+        av.maqNombre + ' — ' + av.parte + ': ' + av.descripcion.substring(0, 60),
+        'averias.html?retomar=' + av.id, '🔧');
+    });
   }).catch(function(){
     clearTimeout(_tsFallback);
     if(!_tsShown){ _tsShown=true; showToast('✅ Avería guardada localmente'); }
@@ -2014,6 +2024,6 @@ function cerrarInstrucciones(){
     <div class="inst-modal-body" id="instModalBody"></div>
   </div>
 </div>
-
+<script src="fcm.js"></script>
 </body>
 </html>

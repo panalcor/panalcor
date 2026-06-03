@@ -13,6 +13,7 @@
 <title>PANALCOR — Acceso rápido</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -1134,6 +1135,19 @@ function buscarRepLanding() {
 function escHtmlL(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+</script>
+<script src="fcm.js"></script>
+<script>
+// Registrar FCM cuando el mecánico hace login en landing
+var _fcmLandingDone = false;
+var _origIrA = typeof irA === 'function' ? irA : null;
+function _fcmTryRegister() {
+  if (_fcmLandingDone || !mecActual) return;
+  _fcmLandingDone = true;
+  fcmRegistrar(mecActual);
+}
+// Se activa cuando se muestra la pantalla de elección
+document.addEventListener('click', function() { setTimeout(_fcmTryRegister, 500); }, { once: false });
 </script>
 </body>
 </html>
