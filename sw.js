@@ -75,6 +75,9 @@ self.addEventListener('activate', function(e) {
 });
 
 self.addEventListener('fetch', function(e) {
+  // Solo cachear peticiones http/https
+  if (!e.request.url.startsWith('http')) return;
+
   if (e.request.url.includes('firebase') ||
       e.request.url.includes('googleapis') ||
       e.request.url.includes('gstatic') ||
@@ -85,8 +88,11 @@ self.addEventListener('fetch', function(e) {
   }
   e.respondWith(
     fetch(e.request).then(function(res) {
-      var clone = res.clone();
-      caches.open(CACHE).then(function(c){ c.put(e.request, clone); });
+      // Solo cachear respuestas válidas
+      if (res && res.status === 200 && res.type !== 'opaque') {
+        var clone = res.clone();
+        caches.open(CACHE).then(function(c){ c.put(e.request, clone); });
+      }
       return res;
     }).catch(function() {
       return caches.match(e.request);
