@@ -1321,9 +1321,14 @@ function renderIntMec(id) {
   if (comps.length) {
     html += '<div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.07);padding-top:10px">';
     comps.forEach(function(c) {
-      html += '<div style="display:flex;justify-content:space-between;padding:5px 2px;font-size:0.8rem;color:rgba(255,255,255,0.6);border-bottom:1px solid rgba(255,255,255,0.04)">'
-            + '<span>'+escHtmlMec(c.desc)+'</span>'
-            + '<span style="color:var(--gold);font-weight:700">×'+c.qty+'</span></div>';
+      var tipo      = c.tipo || 'obligatorio';
+      var esOblig   = tipo === 'obligatorio';
+      var tipoColor = esOblig ? '#e74c3c' : '#e67e22';
+      var tipoIcon  = esOblig ? '🔴' : '🟠';
+      var tipoLabel = esOblig ? 'Cambio obligatorio' : 'Revisar — puede necesitar cambio';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 4px;font-size:0.8rem;border-bottom:1px solid rgba(255,255,255,0.04);border-left:2px solid '+tipoColor+';padding-left:8px;margin-bottom:2px" title="'+tipoLabel+'">'
+            + '<span style="color:rgba(255,255,255,0.75)">'+tipoIcon+' '+escHtmlMec(c.desc)+'</span>'
+            + '<span style="color:var(--gold);font-weight:700;flex-shrink:0;margin-left:8px">×'+c.qty+'</span></div>';
     });
     html += '</div>';
   }

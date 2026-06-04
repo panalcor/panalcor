@@ -5017,6 +5017,10 @@ function renderIntModal(id) {
         + '<div id="intRepDrop" style="display:none;position:absolute;top:100%;left:0;right:0;background:#0f2030;border:1px solid rgba(255,255,255,0.15);border-radius:0 0 8px 8px;z-index:10;max-height:200px;overflow-y:auto"></div>'
         + '</div>'
         + '<input type="number" id="intRepQty" min="1" value="1" placeholder="Cant." style="width:70px;background:var(--navy-dark);color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:9px 10px;font-family:Barlow,sans-serif;font-size:0.88rem;text-align:center">'
+        + '<select id="intRepTipo" style="background:var(--navy-dark);color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:9px 10px;font-family:Barlow,sans-serif;font-size:0.82rem;cursor:pointer">'
+        + '<option value="obligatorio">🔴 Obligatorio</option>'
+        + '<option value="revisar">🟠 Revisar</option>'
+        + '</select>'
         + '</div>'
         + '<div id="intRepSelInfo" style="margin-top:8px;font-size:0.78rem;color:rgba(255,255,255,0.4)">Busca un repuesto para añadirlo a la lista</div>'
         + '</div>';
@@ -5038,16 +5042,27 @@ function renderIntModal(id) {
           + '<th style="padding:9px 12px;text-align:left;color:rgba(255,255,255,0.45);font-weight:600">Descripción</th>'
           + '<th style="padding:9px 8px;text-align:center;color:rgba(255,255,255,0.45);font-weight:600;width:80px">Ref.</th>'
           + '<th style="padding:9px 8px;text-align:center;color:rgba(255,255,255,0.45);font-weight:600;width:60px">Cant.</th>'
+          + '<th style="padding:9px 8px;text-align:center;color:rgba(255,255,255,0.45);font-weight:600;width:100px">Tipo</th>'
           + '<th style="padding:9px 8px;text-align:center;width:40px"></th>'
           + '</tr></thead><tbody>';
     comps.forEach(function(c, i) {
+      var tipo     = c.tipo || 'obligatorio';
+      var esOblig  = tipo === 'obligatorio';
+      var tipoColor = esOblig ? '#e74c3c' : '#e67e22';
+      var tipoBg    = esOblig ? 'rgba(231,76,60,0.15)' : 'rgba(230,126,34,0.15)';
+      var tipoLabel = esOblig ? '🔴 Obligatorio' : '🟠 Revisar';
+      var borderLeft = 'border-left:3px solid '+tipoColor+';';
       var bg = i%2===0 ? '' : 'background:rgba(255,255,255,0.02);';
-      html += '<tr style="border-top:1px solid rgba(255,255,255,0.05);'+bg+'">'
+      html += '<tr style="border-top:1px solid rgba(255,255,255,0.05);'+bg+borderLeft+'">'
             + '<td style="padding:10px 12px;font-weight:500;color:#fff">' + escHtml(c.desc) + '</td>'
             + '<td style="padding:10px 8px;text-align:center"><code style="color:var(--gold);font-size:0.78rem">' + escHtml(c.ref||'—') + '</code></td>'
             + '<td style="padding:10px 8px;text-align:center"><input type="number" min="1" value="'+c.qty+'" '
             + 'onchange="actualizarQtyComp(\''+id+'\',\''+c._ckey+'\',this.value)" '
             + 'style="width:50px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:6px;padding:4px;text-align:center;font-family:Barlow,sans-serif;font-size:0.85rem"></td>'
+            + '<td style="padding:8px;text-align:center">'
+            + '<button onclick="toggleTipoComp(\''+id+'\',\''+c._ckey+'\',\''+tipo+'\')" title="Pulsa para cambiar tipo" '
+            + 'style="background:'+tipoBg+';border:1px solid '+tipoColor+'60;color:'+tipoColor+';border-radius:6px;padding:4px 8px;cursor:pointer;font-size:0.72rem;font-weight:700;font-family:Barlow,sans-serif;white-space:nowrap">'+tipoLabel+'</button>'
+            + '</td>'
             + '<td style="padding:10px 8px;text-align:center"><button onclick="quitarComp(\''+id+'\',\''+c._ckey+'\')" '
             + 'style="background:rgba(192,57,43,0.2);border:1px solid rgba(192,57,43,0.4);color:#e74c3c;border-radius:5px;width:26px;height:26px;cursor:pointer;font-size:0.85rem" title="Quitar">✕</button></td>'
             + '</tr>';
@@ -5226,15 +5241,17 @@ document.addEventListener('click', function(e) {
 
 function agregarCompIntegral(id) {
   if (!_intRepSeleccionado) { showToast('⚠️ Selecciona un repuesto primero'); return; }
-  var qty = parseInt(document.getElementById('intRepQty').value || '1') || 1;
-  var r = _intRepSeleccionado;
-  var ckey = 'C-' + Date.now();
-  var comp = { _ckey: ckey, desc: r.desc, ref: r.ref||'', qty: qty, orden: Date.now() };
+  var qty   = parseInt(document.getElementById('intRepQty').value || '1') || 1;
+  var tipo  = document.getElementById('intRepTipo').value || 'obligatorio';
+  var r     = _intRepSeleccionado;
+  var ckey  = 'C-' + Date.now();
+  var comp  = { _ckey: ckey, desc: r.desc, ref: r.ref||'', qty: qty, tipo: tipo, orden: Date.now() };
   DB.ref('integrales/'+id+'/componentes/'+ckey).set(comp).then(function() {
     _intRepSeleccionado = null;
     document.getElementById('intRepBuscar').value = '';
     document.getElementById('intRepSelInfo').textContent = 'Busca un repuesto para añadirlo a la lista';
     document.getElementById('intRepQty').value = '1';
+    document.getElementById('intRepTipo').value = 'obligatorio';
   }).catch(function(){ showToast('❌ Error al añadir'); });
 }
 
@@ -5245,6 +5262,12 @@ function quitarComp(intId, ckey) {
 function actualizarQtyComp(intId, ckey, val) {
   var qty = parseInt(val) || 1;
   DB.ref('integrales/'+intId+'/componentes/'+ckey+'/qty').set(qty).catch(function(){});
+}
+
+function toggleTipoComp(intId, ckey, tipoActual) {
+  var nuevoTipo = tipoActual === 'obligatorio' ? 'revisar' : 'obligatorio';
+  DB.ref('integrales/'+intId+'/componentes/'+ckey+'/tipo').set(nuevoTipo)
+    .catch(function(){ showToast('❌ Error'); });
 }
 
 function cambiarEstadoInt(id, estado) {
