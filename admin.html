@@ -7362,6 +7362,8 @@ function frioUpdateItemPeriod(sel, key, esCustom) {
 // ══════════════════════════════════════════════════════════════════
 var _pedidosListener = null;
 
+var _pedidosConocidos = null; // null = primera carga, no notificar
+
 function initPedidos() {
   if (_pedidosListener) return;
   _pedidosListener = DB.ref('pedidos').orderByChild('ts');
@@ -7370,14 +7372,73 @@ function initPedidos() {
     var lista = Object.entries(data).map(function(e){ return Object.assign({_id:e[0]}, e[1]); })
       .sort(function(a,b){ return b.ts - a.ts; });
     var pendientes = lista.filter(function(p){ return p.estado === 'pendiente'; });
+
     // Badge en pestaña
     var badge = document.getElementById('badgePedidos');
     if (badge) {
       badge.style.display = pendientes.length ? 'inline' : 'none';
       badge.textContent = pendientes.length;
     }
+
+    // Notificación visible si llega una solicitud nueva (no en la primera carga)
+    if (_pedidosConocidos !== null) {
+      var idsConocidos = _pedidosConocidos;
+      var nuevos = pendientes.filter(function(p){ return idsConocidos.indexOf(p._id) === -1; });
+      nuevos.forEach(function(p) {
+        _mostrarAlertaPedido(p);
+      });
+    }
+    _pedidosConocidos = pendientes.map(function(p){ return p._id; });
+
     renderPedidos(lista);
   });
+}
+
+function _mostrarAlertaPedido(p) {
+  // Eliminar alertas anteriores del mismo tipo
+  var prev = document.getElementById('_alertaPedido');
+  if (prev) prev.remove();
+
+  var el = document.createElement('div');
+  el.id = '_alertaPedido';
+  el.style.cssText = [
+    'position:fixed','top:70px','right:20px',
+    'background:#1a2d42','border:2px solid #f39c12',
+    'border-radius:14px','padding:16px 20px',
+    'z-index:9999','max-width:320px','width:90%',
+    'box-shadow:0 8px 32px rgba(243,156,18,0.35)',
+    'font-family:Barlow,sans-serif',
+    'animation:slideInRight .3s ease',
+    'cursor:pointer'
+  ].join(';');
+
+  if (!document.getElementById('_pedidoAlertStyle')) {
+    var s = document.createElement('style');
+    s.id = '_pedidoAlertStyle';
+    s.textContent = '@keyframes slideInRight{from{opacity:0;transform:translateX(60px)}to{opacity:1;transform:translateX(0)}}';
+    document.head.appendChild(s);
+  }
+
+  el.innerHTML =
+    '<div style="display:flex;align-items:flex-start;gap:12px">'
+    + '<div style="font-size:1.8rem;flex-shrink:0">📦</div>'
+    + '<div style="flex:1">'
+      + '<div style="font-size:0.88rem;font-weight:900;color:#f0c040;margin-bottom:4px">Nueva solicitud de repuesto</div>'
+      + '<div style="font-size:0.85rem;color:#fff;font-weight:600;margin-bottom:3px">' + escHtml(p.desc||'') + '</div>'
+      + '<div style="font-size:0.78rem;color:rgba(255,255,255,0.55)">👷 ' + escHtml(p.mecanico||'—') + ' · Cant: ' + (p.cantidad||1) + '</div>'
+      + (p.motivo ? '<div style="font-size:0.75rem;color:rgba(255,255,255,0.4);margin-top:3px;font-style:italic">"' + escHtml(p.motivo) + '"</div>' : '')
+      + '<div style="margin-top:10px;display:flex;gap:8px">'
+        + '<button onclick="switchTab(\'rep\');this.closest(\'#_alertaPedido\').remove()" '
+          + 'style="background:rgba(243,156,18,0.2);border:1px solid rgba(243,156,18,0.5);color:#f0c040;border-radius:7px;padding:6px 14px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.8rem;font-weight:700">Ver solicitud →</button>'
+        + '<button onclick="this.closest(\'#_alertaPedido\').remove()" '
+          + 'style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);border-radius:7px;padding:6px 12px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.8rem">Cerrar</button>'
+      + '</div>'
+    + '</div>'
+    + '</div>';
+
+  document.body.appendChild(el);
+  // Auto-cerrar a los 15 segundos
+  setTimeout(function(){ if (el.parentNode) el.remove(); }, 15000);
 }
 
 function cargarPedidos() { initPedidos(); }
