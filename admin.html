@@ -229,6 +229,7 @@ if('serviceWorker' in navigator){
   <div class="tab" onclick="switchTab('docs')" id="tab-docs">📁 Documentos</div>
   <div class="tab" onclick="switchTab('frio')" id="tab-frio">❄️ Frío</div>
   <div class="tab" onclick="switchTab('est')"  id="tab-est">🟢 Estado</div>
+  <div class="tab" onclick="switchTab('sug')"  id="tab-sug">💬 Sugerencias <span id="badgeSug" style="display:none;background:#e74c3c;color:#fff;border-radius:50%;padding:1px 6px;font-size:0.7rem;font-weight:900;margin-left:4px">0</span></div>
   <a href="calendario.html" target="_blank" class="tab" style="text-decoration:none">📅 Calendario</a>
   <a href="manual.html" target="_blank" class="tab" style="text-decoration:none">📖 Manual</a>
 </div>
@@ -3236,6 +3237,7 @@ function switchTab(name){
   if(name==='enc') cargarAvisosEncargados();
   if(name==='int') { cargarCatalogoRepuestos(); initIntegrales(); }
   if(name==='est') initEstado();
+  if(name==='sug') initSugerencias();
   if(name==='cur') initCursos();
   if(name==='frio') initFrio();
 }
@@ -6707,6 +6709,24 @@ function escAttr(s){ return String(s||'').replace(/'/g,'&#39;').replace(/"/g,'&q
 
 </div><!-- /panel-frio -->
 
+<!-- ═══ PANEL SUGERENCIAS ═══ -->
+<div class="panel" id="panel-sug" style="display:none">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px">
+    <div>
+      <h2 style="font-size:1.1rem;font-weight:800;color:var(--gold)">💬 Buzón de sugerencias</h2>
+      <p style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-top:3px">Mensajes privados de los mecánicos. Solo tú los ves.</p>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <select id="sugFiltro" onchange="renderSugerencias()" style="background:var(--navy-dark);color:var(--white);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:7px 12px;font-family:'Barlow',sans-serif;font-size:0.82rem">
+        <option value="">Todas</option>
+        <option value="nueva">Nuevas / Sin respuesta</option>
+        <option value="respondida">Respondidas</option>
+      </select>
+    </div>
+  </div>
+  <div id="sugList"><div style="text-align:center;color:rgba(255,255,255,0.3);padding:40px;font-size:0.85rem">Cargando sugerencias...</div></div>
+</div>
+
 <script>
 // ══════════════════════════════════════
 // FRÍO — admin
@@ -7399,6 +7419,100 @@ function gestionarPedido(id, nuevoEstado) {
         fcmEnviar(p.mecanico, titulo, cuerpo, 'panalcor_inicio.html', '📦');
       });
   }).catch(function(){ showToast('❌ Error'); });
+}
+</script>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// BUZÓN DE SUGERENCIAS — Admin
+// ══════════════════════════════════════════════════════════════════
+var _sugListener = null;
+var _sugData = {};
+
+function initSugerencias() {
+  if (_sugListener) { renderSugerencias(); return; }
+  _sugListener = DB.ref('sugerencias').orderByChild('ts');
+  _sugListener.on('value', function(snap) {
+    _sugData = {};
+    var val = snap.val() || {};
+    Object.keys(val).forEach(function(k){ _sugData[k] = Object.assign({_id:k}, val[k]); });
+    // Badge
+    var nuevas = Object.values(_sugData).filter(function(s){ return s.estado === 'nueva'; }).length;
+    var badge = document.getElementById('badgeSug');
+    if (badge) { badge.style.display = nuevas ? 'inline' : 'none'; badge.textContent = nuevas; }
+    renderSugerencias();
+  });
+}
+
+// Arrancar el listener al cargar admin para que el badge funcione siempre
+(function(){ setTimeout(function(){
+  if (typeof DB !== 'undefined') {
+    DB.ref('sugerencias').on('value', function(snap){
+      var val = snap.val() || {};
+      var nuevas = Object.values(val).filter(function(s){ return s.estado === 'nueva'; }).length;
+      var badge = document.getElementById('badgeSug');
+      if (badge) { badge.style.display = nuevas ? 'inline' : 'none'; badge.textContent = nuevas; }
+    });
+  }
+}, 3000); })();
+
+function renderSugerencias() {
+  var el = document.getElementById('sugList');
+  if (!el) return;
+  var filtro = (document.getElementById('sugFiltro') || {}).value || '';
+  var lista = Object.values(_sugData).sort(function(a,b){ return b.ts - a.ts; });
+  if (filtro) lista = lista.filter(function(s){ return s.estado === filtro; });
+  if (!lista.length) {
+    el.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.3);padding:40px;font-size:0.85rem">No hay sugerencias' + (filtro ? ' con ese filtro' : '') + '</div>';
+    return;
+  }
+  el.innerHTML = lista.map(function(s) {
+    var esNueva = s.estado === 'nueva';
+    var fecha = s.ts ? new Date(s.ts).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+    var autor = s.anonimo ? '<span style="color:rgba(255,255,255,0.35);font-style:italic">Anónimo</span>' : '<span style="color:var(--gold);font-weight:700">👷 ' + escHtml(s.autor||'—') + '</span>';
+    return '<div style="background:var(--navy-dark);border:1px solid rgba(255,255,255,0.08);border-left:3px solid '+(esNueva?'#f39c12':'#27ae60')+';border-radius:11px;padding:16px 18px;margin-bottom:12px">'
+      + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">'
+        + autor
+        + '<span style="font-size:0.72rem;color:rgba(255,255,255,0.35)">📅 ' + fecha + '</span>'
+        + '<span style="font-size:0.7rem;font-weight:700;padding:2px 9px;border-radius:20px;background:'+(esNueva?'rgba(243,156,18,0.15)':'rgba(39,174,96,0.15)')+';color:'+(esNueva?'#f39c12':'#27ae60')+'">'+(esNueva?'🆕 Nueva':'✅ Respondida')+'</span>'
+      + '</div>'
+      + '<div style="font-size:0.92rem;color:#fff;line-height:1.5;margin-bottom:12px;white-space:pre-wrap">' + escHtml(s.texto||'') + '</div>'
+      + (s.respuesta ? '<div style="background:rgba(39,174,96,0.08);border:1px solid rgba(39,174,96,0.2);border-radius:8px;padding:10px 14px;font-size:0.83rem;color:rgba(255,255,255,0.7);margin-bottom:10px"><span style="color:#2ecc71;font-weight:700">Tu respuesta:</span> ' + escHtml(s.respuesta) + '</div>' : '')
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+        + (esNueva ? '<button onclick="marcarLeidaSug(\''+s._id+'\')" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.55);border-radius:7px;padding:6px 14px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.78rem">✓ Marcar leída</button>' : '')
+        + '<button onclick="responderSug(\''+s._id+'\',\''+escHtml(s.autor||'')+'\','+s.anonimo+')" style="background:rgba(201,162,39,0.12);border:1px solid rgba(201,162,39,0.3);color:var(--gold);border-radius:7px;padding:6px 14px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.78rem;font-weight:700">💬 '+(s.respuesta?'Editar respuesta':'Responder')+'</button>'
+        + '<button onclick="eliminarSug(\''+s._id+'\')" style="background:rgba(192,57,43,0.1);border:1px solid rgba(192,57,43,0.25);color:#e74c3c;border-radius:7px;padding:6px 14px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.78rem">🗑</button>'
+      + '</div>'
+    + '</div>';
+  }).join('');
+}
+
+function marcarLeidaSug(id) {
+  DB.ref('sugerencias/'+id).update({ estado: 'leida' });
+}
+
+function responderSug(id, autor, anonimo) {
+  var s = _sugData[id];
+  var respActual = s ? (s.respuesta || '') : '';
+  var nombre = anonimo ? 'este mecánico' : (autor || 'el mecánico');
+  var resp = prompt('Respuesta para ' + nombre + ':', respActual);
+  if (resp === null) return;
+  resp = resp.trim();
+  DB.ref('sugerencias/'+id).update({ respuesta: resp, estado: 'respondida', tsRespuesta: Date.now() })
+    .then(function() {
+      showToast('✅ Respuesta guardada');
+      // Notificar al mecánico si no es anónimo
+      if (!anonimo && autor) {
+        fcmEnviar(autor, '💬 El admin ha respondido tu sugerencia',
+          resp.substring(0, 80) + (resp.length > 80 ? '...' : ''),
+          'panalcor_inicio.html', '💬');
+      }
+    }).catch(function(){ showToast('❌ Error'); });
+}
+
+function eliminarSug(id) {
+  if (!confirm('¿Eliminar esta sugerencia?')) return;
+  DB.ref('sugerencias/'+id).remove().then(function(){ showToast('🗑 Eliminada'); });
 }
 </script>
 
