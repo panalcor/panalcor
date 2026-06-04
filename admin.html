@@ -166,6 +166,232 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 .kpi-period-btn{padding:5px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:transparent;color:rgba(255,255,255,0.5);font-family:'Barlow',sans-serif;font-size:0.78rem;cursor:pointer;transition:all .15s}
 .kpi-period-btn:hover{border-color:var(--gold);color:var(--gold)}
 .kpi-period-btn.active{background:var(--gold);border-color:var(--gold);color:#0d1b2a;font-weight:700}
+
+/* ── PROYECTOS ──────────────────────────────────────────────── */
+/* ── PROYECTOS — estilo propio ──────────────────────────────── */
+#panel-proy {
+  background: linear-gradient(135deg, #0d1b2a 0%, #0f1e30 100%);
+  min-height: 80vh;
+}
+.proy-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(255,80,120,0.2);
+}
+.proy-title {
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #ff5078, #ff8c42, #ffd700);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.1;
+}
+.proy-title span {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  -webkit-text-fill-color: rgba(255,255,255,0.35);
+  background: none;
+  margin-bottom: 4px;
+}
+.proy-btn-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #ff5078, #ff8c42);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  box-shadow: 0 4px 24px rgba(255,80,120,0.4);
+  transition: all .2s;
+}
+.proy-btn-new:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(255,80,120,0.55); }
+.proy-filtros {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.proy-filtro-btn {
+  padding: 6px 16px;
+  border-radius: 30px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: transparent;
+  color: rgba(255,255,255,0.45);
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+  letter-spacing: 0.05em;
+}
+.proy-filtro-btn.active, .proy-filtro-btn:hover {
+  background: rgba(255,80,120,0.15);
+  border-color: rgba(255,80,120,0.5);
+  color: #ff5078;
+}
+.proy-kanban {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+.proy-col-header {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.proy-card {
+  position: relative;
+  background: rgba(255,255,255,0.04);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 14px;
+  cursor: pointer;
+  transition: all .25s;
+  border: 1px solid rgba(255,255,255,0.07);
+  overflow: hidden;
+}
+.proy-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.proy-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+  border-color: rgba(255,255,255,0.15);
+}
+.proy-card-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.3;
+  margin-bottom: 8px;
+}
+.proy-card-desc {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+.proy-card-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.proy-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 30px;
+  letter-spacing: 0.05em;
+}
+.proy-progress-wrap {
+  background: rgba(255,255,255,0.08);
+  border-radius: 30px;
+  height: 5px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.proy-progress-bar {
+  height: 100%;
+  border-radius: 30px;
+  background: linear-gradient(90deg, #ff5078, #ff8c42);
+  transition: width .5s ease;
+}
+.proy-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.3);
+}
+.proy-inversion-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.proy-empty {
+  text-align: center;
+  padding: 80px 20px;
+  color: rgba(255,255,255,0.2);
+}
+.proy-empty .ico { font-size: 4rem; margin-bottom: 16px; }
+.proy-empty p { font-size: 1rem; line-height: 1.6; }
+/* Modal proyectos */
+#proyModal .proy-modal-inner {
+  background: linear-gradient(160deg, #111f30, #0d1b2a);
+  border: 1px solid rgba(255,80,120,0.3);
+  border-radius: 20px;
+  max-width: 640px;
+  width: 100%;
+  margin: auto;
+  overflow: hidden;
+}
+#proyModal .proy-modal-header {
+  background: linear-gradient(135deg, rgba(255,80,120,0.15), rgba(255,140,66,0.08));
+  border-bottom: 1px solid rgba(255,80,120,0.2);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.proy-field label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 6px;
+}
+.proy-field input, .proy-field textarea, .proy-field select {
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #fff;
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+  transition: border-color .2s;
+}
+.proy-field input:focus, .proy-field textarea:focus, .proy-field select:focus {
+  outline: none;
+  border-color: rgba(255,80,120,0.5);
+}
+.proy-field select option { background: #0d1b2a; }
+@media(max-width:600px){
+  .proy-title { font-size: 1.4rem; }
+  .proy-kanban { grid-template-columns: 1fr; }
+}
 </style>
 <script>
 if('serviceWorker' in navigator){
@@ -6958,232 +7184,6 @@ function escAttr(s){ return String(s||'').replace(/'/g,'&#39;').replace(/"/g,'&q
 
 <!-- ═══ PANEL PROYECTOS ═══ -->
 <div class="panel" id="panel-proy" style="display:none">
-<style>
-/* ── PROYECTOS — estilo propio ──────────────────────────────── */
-#panel-proy {
-  background: linear-gradient(135deg, #0d1b2a 0%, #0f1e30 100%);
-  min-height: 80vh;
-}
-.proy-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 32px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid rgba(255,80,120,0.2);
-}
-.proy-title {
-  font-size: 2rem;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  background: linear-gradient(135deg, #ff5078, #ff8c42, #ffd700);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  line-height: 1.1;
-}
-.proy-title span {
-  display: block;
-  font-size: 0.85rem;
-  font-weight: 400;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  -webkit-text-fill-color: rgba(255,255,255,0.35);
-  background: none;
-  margin-bottom: 4px;
-}
-.proy-btn-new {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #ff5078, #ff8c42);
-  border: none;
-  border-radius: 12px;
-  color: #fff;
-  font-family: 'Barlow', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  box-shadow: 0 4px 24px rgba(255,80,120,0.4);
-  transition: all .2s;
-}
-.proy-btn-new:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(255,80,120,0.55); }
-.proy-filtros {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 24px;
-}
-.proy-filtro-btn {
-  padding: 6px 16px;
-  border-radius: 30px;
-  border: 1px solid rgba(255,255,255,0.15);
-  background: transparent;
-  color: rgba(255,255,255,0.45);
-  font-family: 'Barlow', sans-serif;
-  font-size: 0.8rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all .2s;
-  letter-spacing: 0.05em;
-}
-.proy-filtro-btn.active, .proy-filtro-btn:hover {
-  background: rgba(255,80,120,0.15);
-  border-color: rgba(255,80,120,0.5);
-  color: #ff5078;
-}
-.proy-kanban {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
-}
-.proy-col-header {
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.proy-card {
-  position: relative;
-  background: rgba(255,255,255,0.04);
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 14px;
-  cursor: pointer;
-  transition: all .25s;
-  border: 1px solid rgba(255,255,255,0.07);
-  overflow: hidden;
-}
-.proy-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-}
-.proy-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
-  border-color: rgba(255,255,255,0.15);
-}
-.proy-card-title {
-  font-size: 1rem;
-  font-weight: 800;
-  color: #fff;
-  line-height: 1.3;
-  margin-bottom: 8px;
-}
-.proy-card-desc {
-  font-size: 0.8rem;
-  color: rgba(255,255,255,0.45);
-  line-height: 1.5;
-  margin-bottom: 12px;
-}
-.proy-card-meta {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-}
-.proy-badge {
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 30px;
-  letter-spacing: 0.05em;
-}
-.proy-progress-wrap {
-  background: rgba(255,255,255,0.08);
-  border-radius: 30px;
-  height: 5px;
-  overflow: hidden;
-  margin-bottom: 10px;
-}
-.proy-progress-bar {
-  height: 100%;
-  border-radius: 30px;
-  background: linear-gradient(90deg, #ff5078, #ff8c42);
-  transition: width .5s ease;
-}
-.proy-card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.72rem;
-  color: rgba(255,255,255,0.3);
-}
-.proy-inversion-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 4px;
-}
-.proy-empty {
-  text-align: center;
-  padding: 80px 20px;
-  color: rgba(255,255,255,0.2);
-}
-.proy-empty .ico { font-size: 4rem; margin-bottom: 16px; }
-.proy-empty p { font-size: 1rem; line-height: 1.6; }
-/* Modal proyectos */
-#proyModal .proy-modal-inner {
-  background: linear-gradient(160deg, #111f30, #0d1b2a);
-  border: 1px solid rgba(255,80,120,0.3);
-  border-radius: 20px;
-  max-width: 640px;
-  width: 100%;
-  margin: auto;
-  overflow: hidden;
-}
-#proyModal .proy-modal-header {
-  background: linear-gradient(135deg, rgba(255,80,120,0.15), rgba(255,140,66,0.08));
-  border-bottom: 1px solid rgba(255,80,120,0.2);
-  padding: 20px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.proy-field label {
-  display: block;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.4);
-  margin-bottom: 6px;
-}
-.proy-field input, .proy-field textarea, .proy-field select {
-  width: 100%;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 10px;
-  padding: 10px 14px;
-  color: #fff;
-  font-family: 'Barlow', sans-serif;
-  font-size: 0.9rem;
-  box-sizing: border-box;
-  transition: border-color .2s;
-}
-.proy-field input:focus, .proy-field textarea:focus, .proy-field select:focus {
-  outline: none;
-  border-color: rgba(255,80,120,0.5);
-}
-.proy-field select option { background: #0d1b2a; }
-@media(max-width:600px){
-  .proy-title { font-size: 1.4rem; }
-  .proy-kanban { grid-template-columns: 1fr; }
-}
-</style>
 
   <div class="proy-header">
     <div class="proy-title">
