@@ -755,6 +755,12 @@ function _buildBtns(rol){
        + '<div class="btn-label" style="color:#c39bd3">Formación</div>'
        + '<div class="btn-sublabel" style="color:rgba(155,89,182,0.6)">Cursos y manuales</div></a>';
   }
+  if(rol === 'mecanico' || adm){
+    h += '<button class="btn" onclick="abrirPedidoInicio()" style="border-color:rgba(243,156,18,0.35);background:rgba(243,156,18,0.07);cursor:pointer;font-family:inherit">'
+       + '<div class="btn-icon" style="color:#f0c040">📦</div>'
+       + '<div class="btn-label" style="color:#f0c040">Pedir repuesto</div>'
+       + '<div class="btn-sublabel" style="color:rgba(243,156,18,0.6)">Solicitud al admin</div></button>';
+  }
   return h;
 }
 
@@ -899,6 +905,74 @@ function buscarRepInicio() {
   }).join('');
 }
 function _escR(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── Solicitud de pedido ───────────────────────────────────────────
+function abrirPedidoInicio() {
+  document.getElementById('pedidoInicioModal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  setTimeout(function(){ document.getElementById('piDesc').focus(); }, 150);
+}
+function cerrarPedidoInicio() {
+  document.getElementById('pedidoInicioModal').style.display = 'none';
+  document.body.style.overflow = '';
+  ['piDesc','piRef','piMotivo'].forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('piCant').value = '1';
+}
+function enviarPedidoInicio() {
+  var sesion = null;
+  try { sesion = JSON.parse(localStorage.getItem('mecSesion')); } catch(e){}
+  var nombre = sesion && sesion.nombre ? sesion.nombre : null;
+  var desc   = (document.getElementById('piDesc').value   || '').trim();
+  var ref    = (document.getElementById('piRef').value    || '').trim();
+  var cant   = parseInt(document.getElementById('piCant').value)  || 1;
+  var motivo = (document.getElementById('piMotivo').value || '').trim();
+  if (!desc)   { alert('Escribe el nombre del repuesto'); return; }
+  if (!nombre) { alert('No se detecta sesión. Vuelve a entrar.'); return; }
+  firebase.database().ref('pedidos').push({
+    desc: desc, ref: ref, cantidad: cant, motivo: motivo,
+    mecanico: nombre, estado: 'pendiente', ts: Date.now()
+  }).then(function() {
+    cerrarPedidoInicio();
+    alert('✅ Solicitud enviada al administrador');
+  }).catch(function() { alert('Error al enviar. Comprueba la conexión.'); });
+}
 </script>
+
+<!-- Modal pedido inicio -->
+<div id="pedidoInicioModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:700;overflow-y:auto;padding:16px">
+  <div style="max-width:460px;margin:auto;background:#1a2d42;border:1px solid rgba(243,156,18,0.4);border-radius:16px;overflow:hidden">
+    <div style="background:linear-gradient(135deg,#0a1520,#1a2d42);border-bottom:1px solid rgba(243,156,18,0.2);padding:16px 18px;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:1rem;font-weight:800;color:#f0c040">📦 Solicitar repuesto</div>
+      <button onclick="cerrarPedidoInicio()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem">✕</button>
+    </div>
+    <div style="padding:18px">
+      <div style="margin-bottom:12px">
+        <label style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);display:block;margin-bottom:5px">DESCRIPCIÓN *</label>
+        <input id="piDesc" type="text" placeholder="Ej: Rodamiento 6205, Correa B-65..." autocomplete="off"
+          style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:0.9rem">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div>
+          <label style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);display:block;margin-bottom:5px">REFERENCIA</label>
+          <input id="piRef" type="text" placeholder="Opcional"
+            style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:0.9rem">
+        </div>
+        <div>
+          <label style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);display:block;margin-bottom:5px">CANTIDAD</label>
+          <input id="piCant" type="number" min="1" value="1"
+            style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:0.9rem;text-align:center">
+        </div>
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);display:block;margin-bottom:5px">MOTIVO / MÁQUINA</label>
+        <textarea id="piMotivo" rows="2" placeholder="Para qué es, en qué máquina..."
+          style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:0.9rem;resize:none"></textarea>
+      </div>
+      <button onclick="enviarPedidoInicio()" style="width:100%;padding:13px;background:linear-gradient(135deg,rgba(243,156,18,0.3),rgba(243,156,18,0.15));border:2px solid rgba(243,156,18,0.6);color:#f0c040;border-radius:10px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.95rem;font-weight:900">
+        📦 ENVIAR SOLICITUD
+      </button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

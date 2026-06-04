@@ -220,7 +220,7 @@ if('serviceWorker' in navigator){
   <div class="tab" onclick="switchTab('ia')"   id="tab-ia">🤖 Análisis IA</div>
   <div class="tab" onclick="switchTab('inf')"  id="tab-inf">📋 Informes</div>
   <div class="tab" onclick="switchTab('maq')"  id="tab-maq">🏭 Máquinas</div>
-  <div class="tab" onclick="switchTab('rep')"  id="tab-rep">🔧 Repuestos</div>
+  <div class="tab" onclick="switchTab('rep')"  id="tab-rep">🔧 Repuestos <span id="badgePedidos" style="display:none;background:#e74c3c;color:#fff;border-radius:50%;padding:1px 6px;font-size:0.7rem;font-weight:900;margin-left:4px">0</span></div>
   <div class="tab" onclick="switchTab('cfg')"  id="tab-cfg">⚙️ Configuración</div>
   <div class="tab" onclick="switchTab('enc')"  id="tab-enc">📢 Encargados</div>
   <div class="tab" onclick="switchTab('int')"  id="tab-int">🔩 Integrales</div>
@@ -788,6 +788,15 @@ if('serviceWorker' in navigator){
 <!-- ═══ REPUESTOS ═══ -->
 <div class="panel" id="panel-rep">
 
+  <!-- Solicitudes de pedido -->
+  <div class="card" id="pedidosCard" style="margin-bottom:18px;border:1px solid rgba(243,156,18,0.3)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="sec-title" style="margin:0">📦 Solicitudes de repuesto <span id="pedidosCount" style="font-size:0.75rem;color:rgba(255,255,255,0.4);font-weight:400"></span></div>
+      <button onclick="cargarPedidos()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);border-radius:7px;padding:5px 12px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.8rem">🔄 Actualizar</button>
+    </div>
+    <div id="pedidosList"><div style="color:rgba(255,255,255,0.3);font-size:0.85rem;text-align:center;padding:20px">Cargando solicitudes...</div></div>
+  </div>
+
   <!-- Formulario añadir -->
   <div class="card config-section" style="max-width:100%">
     <div class="sec-title">➕ Añadir / actualizar repuesto</div>
@@ -1295,6 +1304,7 @@ function initApp(){
   cargarMecanicosParaRec();
   cargarRecordatorios();
   cargarSinFirma();
+  initPedidos(); // badge de solicitudes pendientes
   renderResumenDia();
   renderTiempoResolucion();
   renderCompTurnos();
@@ -3216,7 +3226,7 @@ function switchTab(name){
   if(name==='mec') { renderMecanicos(); loadPersonal(renderPersonal); }
   if(name==='inf') renderInformes();
   if(name==='maq') { loadMaquinasExtra(renderMaquinas); poblarQRSel(); poblarEstadoMaqSel(); }
-  if(name==='rep') { cargarCatalogoRepuestos(); }
+  if(name==='rep') { cargarCatalogoRepuestos(); initPedidos(); }
   if(name==='docs') { docsInit(); }
   if(name==='cfg') cargarTareasDiariasAdmin();
   if(name==='cfg') cargarFechasRealizacion();
@@ -7302,6 +7312,96 @@ function frioUpdateItemPeriod(sel, key, esCustom) {
   });
 }
 </script>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// SOLICITUDES DE PEDIDO
+// ══════════════════════════════════════════════════════════════════
+var _pedidosListener = null;
+
+function initPedidos() {
+  if (_pedidosListener) return;
+  _pedidosListener = DB.ref('pedidos').orderByChild('ts');
+  _pedidosListener.on('value', function(snap) {
+    var data = snap.val() || {};
+    var lista = Object.entries(data).map(function(e){ return Object.assign({_id:e[0]}, e[1]); })
+      .sort(function(a,b){ return b.ts - a.ts; });
+    var pendientes = lista.filter(function(p){ return p.estado === 'pendiente'; });
+    // Badge en pestaña
+    var badge = document.getElementById('badgePedidos');
+    if (badge) {
+      badge.style.display = pendientes.length ? 'inline' : 'none';
+      badge.textContent = pendientes.length;
+    }
+    renderPedidos(lista);
+  });
+}
+
+function cargarPedidos() { initPedidos(); }
+
+function renderPedidos(lista) {
+  var el = document.getElementById('pedidosList');
+  var cnt = document.getElementById('pedidosCount');
+  if (!el) return;
+  var pendientes = lista.filter(function(p){ return p.estado === 'pendiente'; }).length;
+  if (cnt) cnt.textContent = '(' + lista.length + ' total · ' + pendientes + ' pendiente' + (pendientes!==1?'s':'') + ')';
+
+  if (!lista.length) {
+    el.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:0.85rem;text-align:center;padding:20px">No hay solicitudes de repuesto</div>';
+    return;
+  }
+
+  el.innerHTML = lista.map(function(p) {
+    var estadoColor = p.estado==='pendiente' ? '#f39c12' : p.estado==='aprobado' ? '#27ae60' : '#e74c3c';
+    var estadoIcon  = p.estado==='pendiente' ? '⏳' : p.estado==='aprobado' ? '✅' : '❌';
+    var fecha = p.ts ? new Date(p.ts).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+    return '<div style="background:var(--navy-dark);border:1px solid rgba(255,255,255,0.07);border-left:3px solid '+estadoColor+';border-radius:10px;padding:13px 16px;margin-bottom:10px">'
+      + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">'
+        + '<div style="flex:1;min-width:200px">'
+          + '<div style="font-size:0.92rem;font-weight:700;color:#fff;margin-bottom:3px">' + escHtml(p.desc||'Sin descripción') + '</div>'
+          + '<div style="display:flex;gap:12px;font-size:0.78rem;color:rgba(255,255,255,0.45);flex-wrap:wrap;margin-bottom:6px">'
+            + (p.ref ? '<span>Ref. <b style="color:var(--gold)">' + escHtml(p.ref) + '</b></span>' : '')
+            + '<span>Cantidad: <b>' + (p.cantidad||1) + '</b></span>'
+            + '<span>👷 ' + escHtml(p.mecanico||'—') + '</span>'
+            + '<span>📅 ' + fecha + '</span>'
+          + '</div>'
+          + (p.motivo ? '<div style="font-size:0.8rem;color:rgba(255,255,255,0.5);font-style:italic">"' + escHtml(p.motivo) + '"</div>' : '')
+          + (p.respuesta ? '<div style="margin-top:6px;font-size:0.8rem;background:rgba(39,174,96,0.1);border:1px solid rgba(39,174,96,0.25);border-radius:6px;padding:6px 10px;color:#2ecc71">💬 ' + escHtml(p.respuesta) + '</div>' : '')
+        + '</div>'
+        + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">'
+          + '<span style="font-size:0.72rem;font-weight:700;color:'+estadoColor+';background:'+estadoColor+'20;padding:3px 10px;border-radius:20px">'+estadoIcon+' '+p.estado.toUpperCase()+'</span>'
+          + (p.estado==='pendiente' ? ''
+            + '<button onclick="gestionarPedido(\''+p._id+'\',\'aprobado\')" style="background:rgba(39,174,96,0.15);border:1px solid rgba(39,174,96,0.4);color:#2ecc71;border-radius:7px;padding:5px 12px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.78rem;font-weight:700">✅ Aprobar</button>'
+            + '<button onclick="gestionarPedido(\''+p._id+'\',\'rechazado\')" style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);color:#e74c3c;border-radius:7px;padding:5px 12px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.78rem;font-weight:700">❌ Rechazar</button>'
+            : '')
+        + '</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function gestionarPedido(id, nuevoEstado) {
+  var respuesta = '';
+  if (nuevoEstado === 'rechazado') {
+    respuesta = prompt('Motivo del rechazo (opcional):') || '';
+  } else {
+    respuesta = prompt('Mensaje para el mecánico (opcional, ej: "Pedido el martes"):') || '';
+  }
+  DB.ref('pedidos/'+id).once('value').then(function(snap) {
+    var p = snap.val();
+    if (!p) return;
+    return DB.ref('pedidos/'+id).update({ estado: nuevoEstado, respuesta: respuesta, tsGestion: Date.now() })
+      .then(function() {
+        showToast(nuevoEstado === 'aprobado' ? '✅ Solicitud aprobada' : '❌ Solicitud rechazada');
+        // Notificar al mecánico
+        var titulo = nuevoEstado === 'aprobado' ? '✅ Pedido aprobado' : '❌ Pedido rechazado';
+        var cuerpo = (p.desc || '') + (respuesta ? ' — ' + respuesta : '');
+        fcmEnviar(p.mecanico, titulo, cuerpo, 'panalcor_inicio.html', '📦');
+      });
+  }).catch(function(){ showToast('❌ Error'); });
+}
+</script>
+
 <script src="fcm.js"></script>
 </body>
 </html>

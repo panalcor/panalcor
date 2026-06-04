@@ -239,6 +239,7 @@ if('serviceWorker' in navigator){
     <div class="vista-tabs">
       <button class="vtab active" id="vtab-tareas"  onclick="switchVista('tareas')">📋 Mis Tareas</button>
       <button class="vtab"        id="vtab-averias" onclick="switchVista('averias')">🔧 Mis Averías</button>
+      <button class="vtab" onclick="abrirPedidoModal()" style="background:rgba(243,156,18,0.12);border-color:rgba(243,156,18,0.35);color:#f0c040">📦 Pedir</button>
     </div>
     <div id="mesWrap">
       <div class="mes-row">
@@ -285,6 +286,43 @@ if('serviceWorker' in navigator){
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ══ MODAL SOLICITUD PEDIDO ══ -->
+<div id="pedidoModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:600;overflow-y:auto;padding:16px">
+  <div style="max-width:480px;margin:auto;background:#1a2d42;border:1px solid rgba(243,156,18,0.35);border-radius:16px;overflow:hidden">
+    <div style="background:linear-gradient(135deg,#0a1520,#1a2d42);border-bottom:1px solid rgba(243,156,18,0.2);padding:16px 18px;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:1rem;font-weight:800;color:#f0c040">📦 Solicitar repuesto</div>
+      <button onclick="cerrarPedidoModal()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem">✕</button>
+    </div>
+    <div style="padding:18px">
+      <div style="margin-bottom:12px">
+        <label style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.05em;display:block;margin-bottom:5px">DESCRIPCIÓN DEL REPUESTO *</label>
+        <input id="pedDesc" type="text" placeholder="Ej: Rodamiento 6205, Correa B-65..." autocomplete="off"
+          style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 12px;font-family:Barlow,sans-serif;font-size:0.9rem">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div>
+          <label style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.05em;display:block;margin-bottom:5px">REFERENCIA</label>
+          <input id="pedRef" type="text" placeholder="Ref. del catálogo (opcional)"
+            style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 12px;font-family:Barlow,sans-serif;font-size:0.9rem">
+        </div>
+        <div>
+          <label style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.05em;display:block;margin-bottom:5px">CANTIDAD</label>
+          <input id="pedCant" type="number" min="1" value="1"
+            style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 12px;font-family:Barlow,sans-serif;font-size:0.9rem;text-align:center">
+        </div>
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.05em;display:block;margin-bottom:5px">MOTIVO / PARA QUÉ MÁQUINA</label>
+        <textarea id="pedMotivo" rows="2" placeholder="Ej: Para reparar la formadora 3, se rompen seguido..."
+          style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 12px;font-family:Barlow,sans-serif;font-size:0.9rem;resize:none"></textarea>
+      </div>
+      <button onclick="enviarPedido()" style="width:100%;padding:12px;background:linear-gradient(135deg,rgba(243,156,18,0.3),rgba(243,156,18,0.15));border:2px solid rgba(243,156,18,0.6);color:#f0c040;border-radius:10px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.95rem;font-weight:900">
+        📦 ENVIAR SOLICITUD
+      </button>
+    </div>
   </div>
 </div>
 
@@ -1415,6 +1453,41 @@ function intMecGuardarObs(intId) {
   DB.ref('integrales/'+intId+'/observaciones').set(obs)
     .then(function(){ showToastMec('✅ Observaciones guardadas'); })
     .catch(function(){ showToastMec('❌ Error'); });
+}
+
+// ══ SOLICITUDES DE PEDIDO ══════════════════════════════════════
+function abrirPedidoModal() {
+  document.getElementById('pedidoModal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  setTimeout(function(){ document.getElementById('pedDesc').focus(); }, 150);
+}
+function cerrarPedidoModal() {
+  document.getElementById('pedidoModal').style.display = 'none';
+  document.body.style.overflow = '';
+  document.getElementById('pedDesc').value = '';
+  document.getElementById('pedRef').value  = '';
+  document.getElementById('pedCant').value = '1';
+  document.getElementById('pedMotivo').value = '';
+}
+function enviarPedido() {
+  var desc   = (document.getElementById('pedDesc').value   || '').trim();
+  var ref    = (document.getElementById('pedRef').value    || '').trim();
+  var cant   = parseInt(document.getElementById('pedCant').value)  || 1;
+  var motivo = (document.getElementById('pedMotivo').value || '').trim();
+  if (!desc) { showToastMec('⚠️ Escribe el nombre del repuesto'); return; }
+  if (!mecActual) { showToastMec('⚠️ No se detecta el mecánico'); return; }
+  DB.ref('pedidos').push({
+    desc:     desc,
+    ref:      ref,
+    cantidad: cant,
+    motivo:   motivo,
+    mecanico: mecActual,
+    estado:   'pendiente',
+    ts:       Date.now()
+  }).then(function() {
+    cerrarPedidoModal();
+    showToastMec('✅ Solicitud enviada al administrador');
+  }).catch(function() { showToastMec('❌ Error al enviar'); });
 }
 
 function showToastMec(msg) {
