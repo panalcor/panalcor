@@ -506,8 +506,8 @@ function generarMeses(){
 
 /* ══ ARRANQUE ══ */
 function arrancarApp(){
-  // Registrar token FCM para notificaciones push
-  if (mecActual) fcmRegistrar(mecActual);
+  // Registrar token FCM para notificaciones push (no crítico)
+  try { if (mecActual && typeof fcmRegistrar === 'function') fcmRegistrar(mecActual); } catch(e) {}
   document.getElementById('app').style.display = 'block';
   document.getElementById('hdrName').textContent = '👷 ' + mecActual;
 
@@ -1513,11 +1513,11 @@ function showToastMec(msg) {
   setTimeout(function(){ t.classList.remove('show'); }, 2500);
 }
 </script>
-<script src="fcm.js"></script>
-<script src="offline.js"></script>
+<script src="fcm.js" defer></script>
+<script src="offline.js" defer></script>
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    if (window.OfflinePANALCOR) OfflinePANALCOR.init();
+  window.addEventListener('load', function() {
+    try { if (window.OfflinePANALCOR) OfflinePANALCOR.init(); } catch(e) {}
   });
 </script>
 </body>

@@ -76,13 +76,7 @@
 
   // ── keepSynced para datos críticos ───────────────────────────────
   function initKeepSynced() {
-    if (typeof firebase === 'undefined' || !firebase.apps.length) return;
-    try {
-      var db = firebase.database();
-      // Mantener en caché local los datos que más se necesitan offline
-      db.ref('averias').keepSynced(true);
-      db.ref('repuestos_base').keepSynced(false); // solo si hay espacio
-    } catch(e) {}
+    // keepSynced desactivado — puede causar descargas masivas de datos
   }
 
   // ── Cola offline para acciones críticas ─────────────────────────

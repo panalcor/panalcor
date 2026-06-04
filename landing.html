@@ -1215,11 +1215,11 @@ function escHtmlL(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 </script>
-<script src="fcm.js"></script>
-<script src="offline.js"></script>
+<script src="fcm.js" defer></script>
+<script src="offline.js" defer></script>
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    if (window.OfflinePANALCOR) OfflinePANALCOR.init();
+  window.addEventListener('load', function() {
+    try { if (window.OfflinePANALCOR) OfflinePANALCOR.init(); } catch(e) {}
   });
 </script>
 <script>
