@@ -235,7 +235,8 @@ if('serviceWorker' in navigator){
       </div>
     </button>
 
-    <button class="choice-btn" style="background:linear-gradient(135deg,rgba(155,89,182,0.2),rgba(142,68,173,0.12));border:2px solid rgba(155,89,182,0.45);color:var(--white);box-shadow:0 4px 20px rgba(155,89,182,0.12)" onclick="irA('historial')">
+    <!-- Historial solo visible si se llega desde QR de máquina -->
+    <button id="btnHistorial" class="choice-btn" style="display:none;background:linear-gradient(135deg,rgba(155,89,182,0.2),rgba(142,68,173,0.12));border:2px solid rgba(155,89,182,0.45);color:var(--white);box-shadow:0 4px 20px rgba(155,89,182,0.12)" onclick="irA('historial')">
       <div class="ch-ico">📋</div>
       <div class="ch-body">
         <div class="ch-title">Historial</div>
@@ -735,6 +736,9 @@ function mostrarChoice(){
     var n = (mecActual||'').toUpperCase();
     btnFrio.style.display = (n==='GREGORIO'||n==='JOSE') ? '' : 'none';
   }
+  // Historial solo si hay máquina activa (viene del QR)
+  var btnHist = document.getElementById('btnHistorial');
+  if(btnHist) btnHist.style.display = maqActual ? '' : 'none';
   document.getElementById('choiceWho').textContent = maqActual ? '\u{1F3ED} ' + maqActual.n : '';
   var bar  = document.getElementById('mecTopBar');
   var name = document.getElementById('mecTopBarName');
