@@ -46,12 +46,13 @@ self.addEventListener('notificationclick', function(e) {
 });
 
 // ── Cache shell ───────────────────────────────────────────────────
-const CACHE = 'panalcor-v7';
+const CACHE = 'panalcor-v8';
 const SHELL = [
   'panalcor_inicio.html','maquina.html','landing.html','admin.html',
   'averias.html','mis_tareas.html','plan_preventivo.html','preventivo.html',
   'encargados.html','turnos.html','historial_maquina.html','parte_trabajo.html',
-  'calendario.html','manual.html','manifest.json',
+  'calendario.html','manual.html','mecanicos.html','manifest.json',
+  'fcm.js','offline.js',
   'icons/icon-192.png','icons/icon-512.png'
 ];
 

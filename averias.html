@@ -2025,5 +2025,11 @@ function cerrarInstrucciones(){
   </div>
 </div>
 <script src="fcm.js"></script>
+<script src="offline.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    if (window.OfflinePANALCOR) OfflinePANALCOR.init();
+  });
+</script>
 </body>
 </html>

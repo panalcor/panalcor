@@ -755,16 +755,24 @@ function confirmarCheck(){
   if(!checkId) return;
   var notas = document.getElementById('checkNotas').value.trim();
 
-  DB.ref('asignaciones/'+mesActual+'/'+checkId).update({
+  var updateData = {
     hecho: true,
     hechoEn: new Date().toISOString(),
     turno: turnoSel || null,
     notas: notas
-  }).then(function(){
+  };
+  DB.ref('asignaciones/'+mesActual+'/'+checkId).update(updateData)
+  .then(function(){
     showToast('✅ Tarea completada');
     cerrarCheckModal();
   }).catch(function(){
-    showToast('❌ Error al guardar');
+    // Sin conexión: guardar en cola offline
+    if (window.OfflinePANALCOR) {
+      OfflinePANALCOR.encolar('tarea_hecha', { mes: mesActual, id: checkId, hecho: true, hechoEn: updateData.hechoEn });
+    }
+    // Actualizar vista local igual
+    showToast('📵 Sin conexión — se sincronizará cuando vuelva la red');
+    cerrarCheckModal();
   });
 }
 
@@ -1476,18 +1484,20 @@ function enviarPedido() {
   var motivo = (document.getElementById('pedMotivo').value || '').trim();
   if (!desc) { showToastMec('⚠️ Escribe el nombre del repuesto'); return; }
   if (!mecActual) { showToastMec('⚠️ No se detecta el mecánico'); return; }
-  DB.ref('pedidos').push({
-    desc:     desc,
-    ref:      ref,
-    cantidad: cant,
-    motivo:   motivo,
-    mecanico: mecActual,
-    estado:   'pendiente',
-    ts:       Date.now()
-  }).then(function() {
+  var datosPedido = { desc:desc, ref:ref, cantidad:cant, motivo:motivo, mecanico:mecActual, estado:'pendiente', ts:Date.now() };
+  DB.ref('pedidos').push(datosPedido)
+  .then(function() {
     cerrarPedidoModal();
     showToastMec('✅ Solicitud enviada al administrador');
-  }).catch(function() { showToastMec('❌ Error al enviar'); });
+  }).catch(function() {
+    if (window.OfflinePANALCOR) {
+      OfflinePANALCOR.encolar('pedido', datosPedido);
+      cerrarPedidoModal();
+      showToastMec('📵 Sin conexión — la solicitud se enviará cuando vuelva la red');
+    } else {
+      showToastMec('❌ Error al enviar');
+    }
+  });
 }
 
 function showToastMec(msg) {
@@ -1499,5 +1509,11 @@ function showToastMec(msg) {
 }
 </script>
 <script src="fcm.js"></script>
+<script src="offline.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    if (window.OfflinePANALCOR) OfflinePANALCOR.init();
+  });
+</script>
 </body>
 </html>
