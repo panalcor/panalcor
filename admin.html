@@ -461,6 +461,59 @@ if('serviceWorker' in navigator){
     <canvas id="cMecanicos" height="70"></canvas>
   </div>
 
+  <!-- ── COMPARATIVA MENSUAL ── -->
+  <div class="card" style="margin-top:20px;max-width:732px" id="comparativaCard">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+      <div class="sec-title" style="margin:0">📊 Comparativa mensual</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="cmpRango" onchange="renderComparativa()" style="background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:6px 10px;font-family:'Barlow',sans-serif;font-size:0.82rem">
+          <option value="3">Últimos 3 meses</option>
+          <option value="6" selected>Últimos 6 meses</option>
+          <option value="12">Último año</option>
+        </select>
+        <button onclick="renderComparativa()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);border-radius:7px;padding:6px 12px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.8rem">🔄</button>
+      </div>
+    </div>
+
+    <!-- Fila 1: Averías + MTTR -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div class="chart-wrap" style="margin:0">
+        <div class="chart-title">📉 Averías por mes</div>
+        <canvas id="cCmpAverias" height="120"></canvas>
+      </div>
+      <div class="chart-wrap" style="margin:0">
+        <div class="chart-title">⏱️ MTTR medio (horas)</div>
+        <canvas id="cCmpMttr" height="120"></canvas>
+      </div>
+    </div>
+
+    <!-- Fila 2: Preventivo + Mecánicos -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="chart-wrap" style="margin:0">
+        <div class="chart-title">✅ % Preventivo cumplido</div>
+        <canvas id="cCmpPrev" height="120"></canvas>
+      </div>
+      <div class="chart-wrap" style="margin:0">
+        <div class="chart-title">👷 Averías por mecánico/mes</div>
+        <canvas id="cCmpMecs" height="120"></canvas>
+      </div>
+    </div>
+
+    <!-- Tabla resumen -->
+    <div style="margin-top:14px;overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:0.8rem" id="cmpTabla">
+        <thead><tr style="background:rgba(255,255,255,0.05)">
+          <th style="padding:8px 10px;text-align:left;color:rgba(255,255,255,0.5);font-weight:600">Mes</th>
+          <th style="padding:8px 8px;text-align:center;color:rgba(255,255,255,0.5);font-weight:600">Averías</th>
+          <th style="padding:8px 8px;text-align:center;color:rgba(255,255,255,0.5);font-weight:600">MTTR</th>
+          <th style="padding:8px 8px;text-align:center;color:rgba(255,255,255,0.5);font-weight:600">% Prev.</th>
+          <th style="padding:8px 8px;text-align:center;color:rgba(255,255,255,0.5);font-weight:600">Resueltas</th>
+        </tr></thead>
+        <tbody id="cmpTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- ── GESTIÓN DE PERSONAL ── -->
   <div class="card" style="margin-top:20px">
     <div class="sec-title">👷 Personal de Mantenimiento</div>
@@ -1364,6 +1417,7 @@ function renderDashboard(){
   renderChartTipos(av);
   renderChartMaquinas(av);
   renderChartTurnos(av);
+  renderComparativa();
 
   // Alertas
   renderAlertasDash(av);
@@ -1633,6 +1687,171 @@ function renderChartTurnos(av){
 }
 
 function destroyChart(id){ if(charts[id]){charts[id].destroy();delete charts[id];} }
+
+// ══════════════════════════════════════════════════════════════════
+// COMPARATIVA MENSUAL
+// ══════════════════════════════════════════════════════════════════
+function renderComparativa() {
+  var av      = getAverias();
+  var n       = parseInt((document.getElementById('cmpRango')||{}).value || '6');
+  var meses   = [];
+  var hoy     = new Date();
+  var MESES_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+  // Generar los N últimos meses
+  for (var i = n - 1; i >= 0; i--) {
+    var d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+    meses.push(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'));
+  }
+
+  var labels = meses.map(function(m) {
+    var p = m.split('-');
+    return MESES_ES[parseInt(p[1])-1] + ' ' + p[0].slice(2);
+  });
+
+  // ── Datos averías por mes ────────────────────────────────────────
+  var avPorMes = {};
+  var mttrPorMes = {};
+  var resueltasPorMes = {};
+  meses.forEach(function(m) { avPorMes[m]=0; mttrPorMes[m]=[]; resueltasPorMes[m]=0; });
+
+  av.forEach(function(a) {
+    var mes = a.fecha ? a.fecha.substring(0,7) : null;
+    if (!mes || !avPorMes.hasOwnProperty(mes)) return;
+    avPorMes[mes]++;
+    if (a.tiempoMin) mttrPorMes[mes].push(a.tiempoMin);
+    if (a.estado === 'RESUELTA') resueltasPorMes[mes]++;
+  });
+
+  var dataAverias  = meses.map(function(m){ return avPorMes[m]; });
+  var dataMttr     = meses.map(function(m){
+    var arr = mttrPorMes[m];
+    if (!arr.length) return 0;
+    return Math.round(arr.reduce(function(s,v){ return s+v; },0) / arr.length / 60 * 10) / 10;
+  });
+  var dataResueltas = meses.map(function(m){ return resueltasPorMes[m]; });
+
+  // ── Datos preventivo por mes (desde Firebase asignaciones) ──────
+  var promesas = meses.map(function(mes) {
+    return DB.ref('asignaciones/'+mes).once('value').then(function(snap) {
+      var data = snap.val() || {};
+      var tareas = Object.values(data);
+      var total  = tareas.length;
+      var hechas = tareas.filter(function(t){ return t.hecho; }).length;
+      return { mes: mes, pct: total > 0 ? Math.round(hechas/total*100) : null };
+    }).catch(function(){ return { mes: mes, pct: null }; });
+  });
+
+  Promise.all(promesas).then(function(prevData) {
+    var dataPrev = meses.map(function(m) {
+      var d = prevData.find(function(p){ return p.mes === m; });
+      return d ? d.pct : null;
+    });
+
+    // ── Mecánicos por mes ─────────────────────────────────────────
+    var mecSet = new Set();
+    av.forEach(function(a){ (a.mecanicos||[]).forEach(function(m){ mecSet.add(m); }); });
+    var mecsArr = Array.from(mecSet).slice(0,6); // máx 6 para no saturar
+    var COLORS  = ['#3498db','#e74c3c','#2ecc71','#f39c12','#9b59b6','#1abc9c'];
+
+    var mecDatasets = mecsArr.map(function(mec, idx) {
+      return {
+        label: mec,
+        data: meses.map(function(mes) {
+          return av.filter(function(a){
+            return a.fecha && a.fecha.substring(0,7) === mes && (a.mecanicos||[]).indexOf(mec) !== -1;
+          }).length;
+        }),
+        backgroundColor: COLORS[idx] + '99',
+        borderColor: COLORS[idx],
+        borderWidth: 1
+      };
+    });
+
+    var commonOpts = {
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color:'#888', font:{size:10} }, grid: { color:'rgba(255,255,255,0.05)' } },
+        y: { ticks: { color:'#888', font:{size:10} }, grid: { color:'rgba(255,255,255,0.05)' } }
+      }
+    };
+
+    // Gráfico 1: Averías
+    destroyChart('cCmpAverias');
+    charts.cCmpAverias = new Chart(document.getElementById('cCmpAverias'), {
+      type: 'bar',
+      data: { labels: labels, datasets: [{
+        data: dataAverias,
+        backgroundColor: 'rgba(231,76,60,0.6)',
+        borderColor: '#e74c3c', borderWidth: 1
+      }]},
+      options: commonOpts
+    });
+
+    // Gráfico 2: MTTR
+    destroyChart('cCmpMttr');
+    charts.cCmpMttr = new Chart(document.getElementById('cCmpMttr'), {
+      type: 'line',
+      data: { labels: labels, datasets: [{
+        data: dataMttr,
+        borderColor: '#f39c12', backgroundColor: 'rgba(243,156,18,0.1)',
+        fill: true, tension: 0.3, pointRadius: 4, pointBackgroundColor: '#f39c12'
+      }]},
+      options: commonOpts
+    });
+
+    // Gráfico 3: % Preventivo
+    destroyChart('cCmpPrev');
+    charts.cCmpPrev = new Chart(document.getElementById('cCmpPrev'), {
+      type: 'bar',
+      data: { labels: labels, datasets: [{
+        data: dataPrev,
+        backgroundColor: dataPrev.map(function(v){
+          if (v === null) return 'rgba(100,100,100,0.3)';
+          return v >= 80 ? 'rgba(39,174,96,0.7)' : v >= 50 ? 'rgba(243,156,18,0.7)' : 'rgba(231,76,60,0.7)';
+        }),
+        borderWidth: 1
+      }]},
+      options: Object.assign({}, commonOpts, {
+        scales: Object.assign({}, commonOpts.scales, {
+          y: { min:0, max:100, ticks: { color:'#888', font:{size:10}, callback: function(v){ return v+'%'; } }, grid: { color:'rgba(255,255,255,0.05)' } }
+        })
+      })
+    });
+
+    // Gráfico 4: Mecánicos por mes
+    destroyChart('cCmpMecs');
+    charts.cCmpMecs = new Chart(document.getElementById('cCmpMecs'), {
+      type: 'bar',
+      data: { labels: labels, datasets: mecDatasets },
+      options: {
+        maintainAspectRatio: false,
+        plugins: { legend: { display: true, labels: { color:'#ccc', font:{size:9}, boxWidth:12 } } },
+        scales: commonOpts.scales
+      }
+    });
+
+    // Tabla resumen
+    var tbody = document.getElementById('cmpTbody');
+    if (tbody) {
+      tbody.innerHTML = meses.map(function(m, i) {
+        var pct = dataPrev[i];
+        var pctTxt = pct !== null ? pct+'%' : '—';
+        var pctColor = pct === null ? 'rgba(255,255,255,0.3)' : pct >= 80 ? '#2ecc71' : pct >= 50 ? '#f39c12' : '#e74c3c';
+        var mttrTxt  = dataMttr[i] > 0 ? dataMttr[i]+'h' : '—';
+        var bg = i%2===0 ? '' : 'background:rgba(255,255,255,0.02)';
+        return '<tr style="border-top:1px solid rgba(255,255,255,0.05);'+bg+'">'
+          + '<td style="padding:7px 10px;font-weight:600;color:#fff">'+labels[i]+'</td>'
+          + '<td style="padding:7px 8px;text-align:center;color:'+(dataAverias[i]>0?'#e74c3c':'rgba(255,255,255,0.3)')+'">'+dataAverias[i]+'</td>'
+          + '<td style="padding:7px 8px;text-align:center;color:rgba(255,255,255,0.6)">'+mttrTxt+'</td>'
+          + '<td style="padding:7px 8px;text-align:center;color:'+pctColor+';font-weight:700">'+pctTxt+'</td>'
+          + '<td style="padding:7px 8px;text-align:center;color:rgba(255,255,255,0.5)">'+dataResueltas[i]+'</td>'
+          + '</tr>';
+      }).join('');
+    }
+  });
+}
 
 // ══════════════════════════════════════════════════
 // MECÁNICOS
