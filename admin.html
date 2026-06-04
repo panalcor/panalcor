@@ -229,6 +229,7 @@ if('serviceWorker' in navigator){
   <div class="tab" onclick="switchTab('docs')" id="tab-docs">📁 Documentos</div>
   <div class="tab" onclick="switchTab('frio')" id="tab-frio">❄️ Frío</div>
   <div class="tab" onclick="switchTab('est')"  id="tab-est">🟢 Estado</div>
+  <div class="tab" onclick="switchTab('proy')" id="tab-proy" style="color:#ff5078">🚀 Proyectos</div>
   <div class="tab" onclick="switchTab('sug')"  id="tab-sug">💬 Sugerencias <span id="badgeSug" style="display:none;background:#e74c3c;color:#fff;border-radius:50%;padding:1px 6px;font-size:0.7rem;font-weight:900;margin-left:4px">0</span></div>
   <a href="calendario.html" target="_blank" class="tab" style="text-decoration:none">📅 Calendario</a>
   <a href="manual.html" target="_blank" class="tab" style="text-decoration:none">📖 Manual</a>
@@ -246,6 +247,9 @@ if('serviceWorker' in navigator){
     <a href="personal.html" onclick="sessionStorage.setItem('turnosAuth','1')" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:linear-gradient(135deg,rgba(46,204,113,0.2),rgba(46,204,113,0.08));border:1px solid rgba(46,204,113,0.4);border-radius:8px;color:#2ecc71;text-decoration:none;font-family:'Barlow',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.04em;transition:all .2s" onmouseover="this.style.background='linear-gradient(135deg,rgba(46,204,113,0.35),rgba(46,204,113,0.15))'" onmouseout="this.style.background='linear-gradient(135deg,rgba(46,204,113,0.2),rgba(46,204,113,0.08))'">
       📅 Gestión de Turnos
     </a>
+    <button onclick="switchTab('proy')" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:linear-gradient(135deg,rgba(255,80,120,0.2),rgba(255,80,120,0.06));border:1px solid rgba(255,80,120,0.45);border-radius:8px;color:#ff5078;font-family:'Barlow',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.04em;cursor:pointer;transition:all .2s" onmouseover="this.style.background='linear-gradient(135deg,rgba(255,80,120,0.35),rgba(255,80,120,0.15))'" onmouseout="this.style.background='linear-gradient(135deg,rgba(255,80,120,0.2),rgba(255,80,120,0.06))'">
+      🚀 Proyectos
+    </button>
     <button onclick="toggleRecordatoriosDash()" id="btnRecDash" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:linear-gradient(135deg,rgba(155,89,182,0.2),rgba(155,89,182,0.08));border:1px solid rgba(155,89,182,0.4);border-radius:8px;color:#c39bd3;font-family:'Barlow',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.04em;cursor:pointer;transition:all .2s" onmouseover="this.style.background='linear-gradient(135deg,rgba(155,89,182,0.35),rgba(155,89,182,0.15))'" onmouseout="this.style.background='linear-gradient(135deg,rgba(155,89,182,0.2),rgba(155,89,182,0.08))'">
       🔔 Recordatorios <span id="recDashBadge" style="background:rgba(155,89,182,0.4);border-radius:10px;padding:1px 7px;font-size:0.75rem"></span>
     </button>
@@ -3457,6 +3461,7 @@ function switchTab(name){
   if(name==='int') { cargarCatalogoRepuestos(); initIntegrales(); }
   if(name==='est') initEstado();
   if(name==='sug') initSugerencias();
+  if(name==='proy') initProyectos();
   if(name==='cur') initCursos();
   if(name==='frio') initFrio();
 }
@@ -6951,6 +6956,356 @@ function escAttr(s){ return String(s||'').replace(/'/g,'&#39;').replace(/"/g,'&q
 
 </div><!-- /panel-frio -->
 
+<!-- ═══ PANEL PROYECTOS ═══ -->
+<div class="panel" id="panel-proy" style="display:none">
+<style>
+/* ── PROYECTOS — estilo propio ──────────────────────────────── */
+#panel-proy {
+  background: linear-gradient(135deg, #0d1b2a 0%, #0f1e30 100%);
+  min-height: 80vh;
+}
+.proy-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(255,80,120,0.2);
+}
+.proy-title {
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #ff5078, #ff8c42, #ffd700);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.1;
+}
+.proy-title span {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  -webkit-text-fill-color: rgba(255,255,255,0.35);
+  background: none;
+  margin-bottom: 4px;
+}
+.proy-btn-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #ff5078, #ff8c42);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  box-shadow: 0 4px 24px rgba(255,80,120,0.4);
+  transition: all .2s;
+}
+.proy-btn-new:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(255,80,120,0.55); }
+.proy-filtros {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.proy-filtro-btn {
+  padding: 6px 16px;
+  border-radius: 30px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: transparent;
+  color: rgba(255,255,255,0.45);
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+  letter-spacing: 0.05em;
+}
+.proy-filtro-btn.active, .proy-filtro-btn:hover {
+  background: rgba(255,80,120,0.15);
+  border-color: rgba(255,80,120,0.5);
+  color: #ff5078;
+}
+.proy-kanban {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+.proy-col-header {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.proy-card {
+  position: relative;
+  background: rgba(255,255,255,0.04);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 14px;
+  cursor: pointer;
+  transition: all .25s;
+  border: 1px solid rgba(255,255,255,0.07);
+  overflow: hidden;
+}
+.proy-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.proy-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+  border-color: rgba(255,255,255,0.15);
+}
+.proy-card-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.3;
+  margin-bottom: 8px;
+}
+.proy-card-desc {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+.proy-card-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.proy-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 30px;
+  letter-spacing: 0.05em;
+}
+.proy-progress-wrap {
+  background: rgba(255,255,255,0.08);
+  border-radius: 30px;
+  height: 5px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.proy-progress-bar {
+  height: 100%;
+  border-radius: 30px;
+  background: linear-gradient(90deg, #ff5078, #ff8c42);
+  transition: width .5s ease;
+}
+.proy-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.3);
+}
+.proy-inversion-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.proy-empty {
+  text-align: center;
+  padding: 80px 20px;
+  color: rgba(255,255,255,0.2);
+}
+.proy-empty .ico { font-size: 4rem; margin-bottom: 16px; }
+.proy-empty p { font-size: 1rem; line-height: 1.6; }
+/* Modal proyectos */
+#proyModal .proy-modal-inner {
+  background: linear-gradient(160deg, #111f30, #0d1b2a);
+  border: 1px solid rgba(255,80,120,0.3);
+  border-radius: 20px;
+  max-width: 640px;
+  width: 100%;
+  margin: auto;
+  overflow: hidden;
+}
+#proyModal .proy-modal-header {
+  background: linear-gradient(135deg, rgba(255,80,120,0.15), rgba(255,140,66,0.08));
+  border-bottom: 1px solid rgba(255,80,120,0.2);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.proy-field label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 6px;
+}
+.proy-field input, .proy-field textarea, .proy-field select {
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #fff;
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+  transition: border-color .2s;
+}
+.proy-field input:focus, .proy-field textarea:focus, .proy-field select:focus {
+  outline: none;
+  border-color: rgba(255,80,120,0.5);
+}
+.proy-field select option { background: #0d1b2a; }
+@media(max-width:600px){
+  .proy-title { font-size: 1.4rem; }
+  .proy-kanban { grid-template-columns: 1fr; }
+}
+</style>
+
+  <div class="proy-header">
+    <div class="proy-title">
+      <span>Panel de</span>
+      Proyectos 🚀
+    </div>
+    <button class="proy-btn-new" onclick="abrirProyModal(null)">+ Nuevo proyecto</button>
+  </div>
+
+  <div class="proy-filtros" id="proyFiltros">
+    <button class="proy-filtro-btn active" data-f="" onclick="proyFiltrar(this,'')">Todos</button>
+    <button class="proy-filtro-btn" data-f="idea" onclick="proyFiltrar(this,'idea')">💡 Ideas</button>
+    <button class="proy-filtro-btn" data-f="planificado" onclick="proyFiltrar(this,'planificado')">📋 Planificados</button>
+    <button class="proy-filtro-btn" data-f="en_curso" onclick="proyFiltrar(this,'en_curso')">🔵 En curso</button>
+    <button class="proy-filtro-btn" data-f="completado" onclick="proyFiltrar(this,'completado')">✅ Completados</button>
+    <button class="proy-filtro-btn" data-f="pausado" onclick="proyFiltrar(this,'pausado')">⏸️ Pausados</button>
+  </div>
+
+  <div id="proyGrid" class="proy-kanban">
+    <div class="proy-empty"><div class="ico">🚀</div><p>Cargando proyectos...</p></div>
+  </div>
+</div>
+
+<!-- ═══ MODAL PROYECTO ═══ -->
+<div id="proyModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:500;overflow-y:auto;padding:20px">
+  <div class="proy-modal-inner">
+    <div class="proy-modal-header">
+      <div style="font-size:1.05rem;font-weight:800;color:#ff5078" id="proyModalTit">🚀 Nuevo proyecto</div>
+      <button onclick="cerrarProyModal()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem">✕</button>
+    </div>
+    <div style="padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:14px" id="proyModalBody">
+      <input type="hidden" id="proyId">
+      <div class="proy-field" style="grid-column:1/-1">
+        <label>Título del proyecto *</label>
+        <input type="text" id="proyTitulo" placeholder="Ej: Renovación sistema de frío nave 2">
+      </div>
+      <div class="proy-field" style="grid-column:1/-1">
+        <label>Descripción / Qué se quiere conseguir</label>
+        <textarea id="proyDesc" rows="3" placeholder="Describe el objetivo del proyecto..." style="resize:none"></textarea>
+      </div>
+      <div class="proy-field">
+        <label>Estado</label>
+        <select id="proyEstado">
+          <option value="idea">💡 Idea</option>
+          <option value="planificado">📋 Planificado</option>
+          <option value="en_curso">🔵 En curso</option>
+          <option value="pausado">⏸️ Pausado</option>
+          <option value="completado">✅ Completado</option>
+          <option value="cancelado">❌ Cancelado</option>
+        </select>
+      </div>
+      <div class="proy-field">
+        <label>Prioridad</label>
+        <select id="proyPrioridad">
+          <option value="alta">🔴 Alta</option>
+          <option value="media" selected>🟠 Media</option>
+          <option value="baja">🟢 Baja</option>
+        </select>
+      </div>
+      <div class="proy-field">
+        <label>Categoría</label>
+        <select id="proyCategoria">
+          <option>Seguridad</option>
+          <option>Eficiencia</option>
+          <option>Ahorro coste</option>
+          <option>Mejora preventivo</option>
+          <option>Instalación</option>
+          <option>Formación</option>
+          <option>Otro</option>
+        </select>
+      </div>
+      <div class="proy-field">
+        <label>% Avance</label>
+        <input type="number" id="proyAvance" min="0" max="100" value="0" placeholder="0-100">
+      </div>
+      <div class="proy-field">
+        <label>Fecha inicio</label>
+        <input type="date" id="proyFechaIni">
+      </div>
+      <div class="proy-field">
+        <label>Fecha objetivo</label>
+        <input type="date" id="proyFechaObj">
+      </div>
+      <div class="proy-field">
+        <label>Coste estimado (€)</label>
+        <input type="number" id="proyCosteEst" step="100" placeholder="0">
+      </div>
+      <div class="proy-field">
+        <label>Coste real (€)</label>
+        <input type="number" id="proyCosteReal" step="100" placeholder="0">
+      </div>
+      <div class="proy-field" style="display:flex;flex-direction:column;gap:10px;justify-content:flex-end">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;font-size:0.85rem;color:rgba(255,255,255,0.6)">
+          <input type="checkbox" id="proyNecesitaInv" style="width:16px;height:16px;accent-color:#ff5078">
+          Necesita inversión
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;font-size:0.85rem;color:rgba(255,255,255,0.6)">
+          <input type="checkbox" id="proyPresentada" style="width:16px;height:16px;accent-color:#ff5078">
+          Presentada a dirección
+        </label>
+      </div>
+      <div class="proy-field" style="grid-column:1/-1">
+        <label>Mecánicos implicados</label>
+        <div id="proyMecsWrap" style="display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:10px;min-height:42px"></div>
+      </div>
+      <div class="proy-field" style="grid-column:1/-1">
+        <label>Notas / Hitos</label>
+        <textarea id="proyNotas" rows="3" placeholder="Avances, reuniones, decisiones importantes..." style="resize:none"></textarea>
+      </div>
+      <div class="proy-field" style="grid-column:1/-1">
+        <label>Link / Documento</label>
+        <input type="url" id="proyLink" placeholder="https://...">
+      </div>
+      <div style="grid-column:1/-1;display:flex;gap:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.08)">
+        <button onclick="guardarProy()" style="flex:1;padding:12px;background:linear-gradient(135deg,#ff5078,#ff8c42);border:none;border-radius:10px;color:#fff;font-family:'Barlow',sans-serif;font-size:0.95rem;font-weight:800;cursor:pointer;box-shadow:0 4px 20px rgba(255,80,120,0.35)">💾 Guardar proyecto</button>
+        <button onclick="cerrarProyModal()" style="padding:12px 20px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:10px;color:rgba(255,255,255,0.5);font-family:'Barlow',sans-serif;font-size:0.9rem;cursor:pointer">Cancelar</button>
+        <button id="proyBtnElim" onclick="eliminarProy()" style="display:none;padding:12px;background:rgba(192,57,43,0.15);border:1px solid rgba(192,57,43,0.35);border-radius:10px;color:#e74c3c;font-family:'Barlow',sans-serif;font-size:0.9rem;cursor:pointer">🗑</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ PANEL SUGERENCIAS ═══ -->
 <div class="panel" id="panel-sug" style="display:none">
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px">
@@ -7814,6 +8169,182 @@ function responderSug(id, autor, anonimo) {
 function eliminarSug(id) {
   if (!confirm('¿Eliminar esta sugerencia?')) return;
   DB.ref('sugerencias/'+id).remove().then(function(){ showToast('🗑 Eliminada'); });
+}
+</script>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// PROYECTOS
+// ══════════════════════════════════════════════════════════════════
+var _proyData     = {};
+var _proyListener = null;
+var _proyFiltroActivo = '';
+
+var PROY_ESTADOS = {
+  idea:        { label:'💡 Idea',       color:'#a29bfe', bg:'rgba(162,155,254,0.18)' },
+  planificado: { label:'📋 Planificado',color:'#74b9ff', bg:'rgba(116,185,255,0.18)' },
+  en_curso:    { label:'🔵 En curso',   color:'#00cec9', bg:'rgba(0,206,201,0.18)'   },
+  pausado:     { label:'⏸️ Pausado',    color:'#fdcb6e', bg:'rgba(253,203,110,0.18)' },
+  completado:  { label:'✅ Completado', color:'#55efc4', bg:'rgba(85,239,196,0.18)'  },
+  cancelado:   { label:'❌ Cancelado',  color:'#636e72', bg:'rgba(99,110,114,0.18)'  }
+};
+var PROY_PRIORIDAD = {
+  alta:  { label:'🔴 Alta',  color:'#ff7675' },
+  media: { label:'🟠 Media', color:'#fdcb6e' },
+  baja:  { label:'🟢 Baja',  color:'#55efc4' }
+};
+var PROY_GRAD = {
+  idea:'#a29bfe,#6c5ce7', planificado:'#74b9ff,#0984e3',
+  en_curso:'#00cec9,#00b894', pausado:'#fdcb6e,#e17055',
+  completado:'#55efc4,#00b894', cancelado:'#636e72,#2d3436'
+};
+
+function initProyectos() {
+  _poblarMecsProyModal();
+  if (_proyListener) { renderProyectos(); return; }
+  _proyListener = DB.ref('proyectos').orderByChild('ts');
+  _proyListener.on('value', function(snap) {
+    _proyData = {};
+    var val = snap.val() || {};
+    Object.keys(val).forEach(function(k){ _proyData[k] = Object.assign({_id:k}, val[k]); });
+    renderProyectos();
+  });
+}
+
+function _poblarMecsProyModal() {
+  var wrap = document.getElementById('proyMecsWrap');
+  if (!wrap || wrap.children.length) return;
+  wrap.innerHTML = _intMecsList.length
+    ? _intMecsList.map(function(m){
+        return '<label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:4px 10px;font-size:0.82rem">'
+             + '<input type="checkbox" class="proy-mec-check" value="'+m+'" style="accent-color:#ff5078"> '+m+'</label>';
+      }).join('')
+    : '<span style="color:rgba(255,255,255,0.3);font-size:0.82rem">Sin mecánicos configurados</span>';
+}
+
+function proyFiltrar(btn, filtro) {
+  document.querySelectorAll('.proy-filtro-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  _proyFiltroActivo = filtro;
+  renderProyectos();
+}
+
+function renderProyectos() {
+  var grid = document.getElementById('proyGrid');
+  if (!grid) return;
+  var lista = Object.values(_proyData).sort(function(a,b){
+    var ord = {en_curso:0,planificado:1,idea:2,pausado:3,completado:4,cancelado:5};
+    var oa = ord[a.estado]!==undefined?ord[a.estado]:9;
+    var ob = ord[b.estado]!==undefined?ord[b.estado]:9;
+    return oa-ob || b.ts-a.ts;
+  });
+  if (_proyFiltroActivo) lista = lista.filter(function(p){ return p.estado===_proyFiltroActivo; });
+
+  if (!lista.length) {
+    grid.innerHTML = '<div class="proy-empty"><div class="ico">🚀</div><p>Todavía no hay proyectos aquí.<br>Pulsa <b>+ Nuevo proyecto</b> para empezar.</p></div>';
+    return;
+  }
+
+  grid.innerHTML = lista.map(function(p) {
+    var est   = PROY_ESTADOS[p.estado]  || PROY_ESTADOS.idea;
+    var prio  = PROY_PRIORIDAD[p.prioridad] || PROY_PRIORIDAD.media;
+    var grad  = PROY_GRAD[p.estado] || '666,444';
+    var avance = parseInt(p.avance)||0;
+    var fechaObj = p.fechaObj ? new Date(p.fechaObj).toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'2-digit'}) : null;
+    var vencido  = p.fechaObj && p.estado !== 'completado' && p.fechaObj < new Date().toISOString().slice(0,10);
+    var costeTxt = p.costeReal ? p.costeReal.toLocaleString('es-ES')+'€' : (p.costeEst ? '~'+p.costeEst.toLocaleString('es-ES')+'€' : null);
+
+    return '<div class="proy-card" onclick="abrirProyModal(\''+p._id+'\')" style="border-color:'+est.color+'25">'
+      + '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,'+grad+')"></div>'
+      + '<div class="proy-card-title">'+escHtml(p.titulo||'Sin título')+'</div>'
+      + (p.desc ? '<div class="proy-card-desc">'+escHtml(p.desc.substring(0,80))+(p.desc.length>80?'...':'')+'</div>' : '')
+      + '<div class="proy-card-meta">'
+        + '<span class="proy-badge" style="background:'+est.bg+';color:'+est.color+'">'+est.label+'</span>'
+        + '<span class="proy-badge" style="background:rgba(255,255,255,0.06);color:'+prio.color+'">'+prio.label+'</span>'
+        + (p.categoria ? '<span class="proy-badge" style="background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5)">'+escHtml(p.categoria)+'</span>' : '')
+      + '</div>'
+      + '<div class="proy-progress-wrap"><div class="proy-progress-bar" style="width:'+avance+'%'+(avance===100?';background:linear-gradient(90deg,#55efc4,#00b894)':'')+'"></div></div>'
+      + '<div class="proy-card-footer">'
+        + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
+          + (p.necesitaInv ? '<span class="proy-inversion-tag" style="background:rgba(255,80,120,0.15);color:#ff5078">💰 Inversión</span>' : '')
+          + (p.presentada  ? '<span class="proy-inversion-tag" style="background:rgba(85,239,196,0.12);color:#55efc4">📊 Presentada</span>' : '')
+          + (costeTxt ? '<span>'+costeTxt+'</span>' : '')
+        + '</div>'
+        + (fechaObj ? '<span style="color:'+(vencido?'#ff7675':'rgba(255,255,255,0.3)')+'">📅 '+fechaObj+'</span>' : '')
+      + '</div>'
+      + '<div style="font-size:0.72rem;color:rgba(255,255,255,0.2);margin-top:8px;text-align:right">'+avance+'% completado</div>'
+    + '</div>';
+  }).join('');
+}
+
+function abrirProyModal(id) {
+  var p = id ? (_proyData[id]||{}) : {};
+  document.getElementById('proyId').value       = id||'';
+  document.getElementById('proyTitulo').value   = p.titulo||'';
+  document.getElementById('proyDesc').value     = p.desc||'';
+  document.getElementById('proyEstado').value   = p.estado||'idea';
+  document.getElementById('proyPrioridad').value= p.prioridad||'media';
+  document.getElementById('proyCategoria').value= p.categoria||'Seguridad';
+  document.getElementById('proyAvance').value   = p.avance||0;
+  document.getElementById('proyFechaIni').value = p.fechaIni||'';
+  document.getElementById('proyFechaObj').value = p.fechaObj||'';
+  document.getElementById('proyCosteEst').value = p.costeEst||'';
+  document.getElementById('proyCosteReal').value= p.costeReal||'';
+  document.getElementById('proyNecesitaInv').checked = !!p.necesitaInv;
+  document.getElementById('proyPresentada').checked  = !!p.presentada;
+  document.getElementById('proyNotas').value    = p.notas||'';
+  document.getElementById('proyLink').value     = p.link||'';
+  document.getElementById('proyModalTit').textContent = id ? '✏️ Editar proyecto' : '🚀 Nuevo proyecto';
+  document.getElementById('proyBtnElim').style.display = id ? '' : 'none';
+  // Mecánicos
+  _poblarMecsProyModal();
+  var mecs = p.mecanicos || [];
+  document.querySelectorAll('.proy-mec-check').forEach(function(c){ c.checked = mecs.indexOf(c.value) !== -1; });
+  document.getElementById('proyModal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function cerrarProyModal() {
+  document.getElementById('proyModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function guardarProy() {
+  var titulo = document.getElementById('proyTitulo').value.trim();
+  if (!titulo) { showToast('⚠️ El título es obligatorio'); return; }
+  var id = document.getElementById('proyId').value || DB.ref('proyectos').push().key;
+  var mecs = Array.from(document.querySelectorAll('.proy-mec-check:checked')).map(function(c){ return c.value; });
+  var obj = {
+    titulo:     titulo,
+    desc:       document.getElementById('proyDesc').value.trim(),
+    estado:     document.getElementById('proyEstado').value,
+    prioridad:  document.getElementById('proyPrioridad').value,
+    categoria:  document.getElementById('proyCategoria').value,
+    avance:     parseInt(document.getElementById('proyAvance').value)||0,
+    fechaIni:   document.getElementById('proyFechaIni').value,
+    fechaObj:   document.getElementById('proyFechaObj').value,
+    costeEst:   parseFloat(document.getElementById('proyCosteEst').value)||0,
+    costeReal:  parseFloat(document.getElementById('proyCosteReal').value)||0,
+    necesitaInv:document.getElementById('proyNecesitaInv').checked,
+    presentada: document.getElementById('proyPresentada').checked,
+    mecanicos:  mecs,
+    notas:      document.getElementById('proyNotas').value.trim(),
+    link:       document.getElementById('proyLink').value.trim(),
+    ts:         _proyData[id] ? _proyData[id].ts : Date.now()
+  };
+  DB.ref('proyectos/'+id).set(obj).then(function(){
+    cerrarProyModal();
+    showToast('✅ Proyecto guardado');
+  }).catch(function(){ showToast('❌ Error al guardar'); });
+}
+
+function eliminarProy() {
+  var id = document.getElementById('proyId').value;
+  if (!id || !confirm('¿Eliminar este proyecto?')) return;
+  DB.ref('proyectos/'+id).remove().then(function(){
+    cerrarProyModal();
+    showToast('🗑 Proyecto eliminado');
+  });
 }
 </script>
 
