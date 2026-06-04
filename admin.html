@@ -8211,15 +8211,27 @@ function initProyectos() {
   });
 }
 
-function _poblarMecsProyModal() {
+function _poblarMecsProyModal(mecsSeleccionados) {
   var wrap = document.getElementById('proyMecsWrap');
-  if (!wrap || wrap.children.length) return;
-  wrap.innerHTML = _intMecsList.length
-    ? _intMecsList.map(function(m){
-        return '<label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:4px 10px;font-size:0.82rem">'
-             + '<input type="checkbox" class="proy-mec-check" value="'+m+'" style="accent-color:#ff5078"> '+m+'</label>';
-      }).join('')
-    : '<span style="color:rgba(255,255,255,0.3);font-size:0.82rem">Sin mecánicos configurados</span>';
+  if (!wrap) return;
+  wrap.innerHTML = '<span style="color:rgba(255,255,255,0.3);font-size:0.82rem">Cargando...</span>';
+
+  // Cargar siempre de Firebase para tener la lista actualizada
+  DB.ref('config/mecanicos').once('value').then(function(snap) {
+    var lista = snap.val() || [];
+    if (!lista.length) {
+      wrap.innerHTML = '<span style="color:rgba(255,255,255,0.3);font-size:0.82rem">Sin mecánicos configurados</span>';
+      return;
+    }
+    var sel = mecsSeleccionados || [];
+    wrap.innerHTML = lista.map(function(m) {
+      var checked = sel.indexOf(m) !== -1 ? 'checked' : '';
+      return '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:5px 12px;font-size:0.85rem;transition:all .15s" onmouseover="this.style.borderColor=\'rgba(255,80,120,0.4)\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,0.1)\'">'
+           + '<input type="checkbox" class="proy-mec-check" value="'+m+'" '+checked+' style="accent-color:#ff5078;width:15px;height:15px"> '+m+'</label>';
+    }).join('');
+  }).catch(function() {
+    wrap.innerHTML = '<span style="color:rgba(255,255,255,0.3);font-size:0.82rem">Error al cargar mecánicos</span>';
+  });
 }
 
 function proyFiltrar(btn, filtro) {
