@@ -931,7 +931,7 @@ function _cargarMisSugerencias() {
   var nombre = sesion && sesion.nombre ? sesion.nombre : null;
   if (!nombre) return;
   var wrap = document.getElementById('siRespuestasWrap');
-  firebase.database().ref('sugerencias').orderByChild('autor').equalTo(nombre).once('value').then(function(snap) {
+  DB.ref('sugerencias').orderByChild('autor').equalTo(nombre).once('value').then(function(snap) {
     var data = snap.val() || {};
     var respondidas = Object.values(data).filter(function(s){ return s.respuesta && !s.anonimo; });
     if (!respondidas.length) { wrap.innerHTML = ''; return; }
@@ -951,7 +951,7 @@ function enviarSugInicio() {
   var texto   = (document.getElementById('siTexto').value || '').trim();
   var anonimo = document.getElementById('siAnonimo').checked;
   if (!texto) { alert('Escribe tu sugerencia antes de enviar'); return; }
-  firebase.database().ref('sugerencias').push({
+  DB.ref('sugerencias').push({
     texto:   texto,
     anonimo: anonimo,
     autor:   anonimo ? '' : (nombre || 'Desconocido'),
@@ -962,7 +962,7 @@ function enviarSugInicio() {
   }).then(function() {
     cerrarSugInicio();
     alert('✅ Sugerencia enviada. Gracias.');
-  }).catch(function() { alert('Error al enviar. Comprueba la conexión.'); });
+  }).catch(function(e) { alert('Error al enviar: ' + (e && e.message ? e.message : 'sin conexión')); });
 }
 
 // ── Solicitud de pedido ───────────────────────────────────────────
@@ -987,13 +987,13 @@ function enviarPedidoInicio() {
   var motivo = (document.getElementById('piMotivo').value || '').trim();
   if (!desc)   { alert('Escribe el nombre del repuesto'); return; }
   if (!nombre) { alert('No se detecta sesión. Vuelve a entrar.'); return; }
-  firebase.database().ref('pedidos').push({
+  DB.ref('pedidos').push({
     desc: desc, ref: ref, cantidad: cant, motivo: motivo,
     mecanico: nombre, estado: 'pendiente', ts: Date.now()
   }).then(function() {
     cerrarPedidoInicio();
     alert('✅ Solicitud enviada al administrador');
-  }).catch(function() { alert('Error al enviar. Comprueba la conexión.'); });
+  }).catch(function(e) { alert('Error al enviar: ' + (e && e.message ? e.message : 'sin conexión')); });
 }
 </script>
 
