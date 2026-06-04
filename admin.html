@@ -7362,34 +7362,32 @@ function frioUpdateItemPeriod(sel, key, esCustom) {
 // ══════════════════════════════════════════════════════════════════
 var _pedidosListener = null;
 
-var _pedidosConocidos = null; // null = primera carga, no notificar
+var _pedidosInitTs = Date.now(); // momento en que se abre el admin
 
 function initPedidos() {
   if (_pedidosListener) return;
+
+  // ── child_added: detecta pedidos nuevos en tiempo real ──────────
+  // Solo notifica los que lleguen DESPUÉS de que el admin abra la página
+  DB.ref('pedidos').orderByChild('ts').startAt(_pedidosInitTs).on('child_added', function(snap) {
+    var p = Object.assign({ _id: snap.key }, snap.val());
+    if (p.estado === 'pendiente') {
+      _mostrarAlertaPedido(p);
+    }
+  });
+
+  // ── value: mantiene la lista y el badge actualizados ────────────
   _pedidosListener = DB.ref('pedidos').orderByChild('ts');
   _pedidosListener.on('value', function(snap) {
     var data = snap.val() || {};
     var lista = Object.entries(data).map(function(e){ return Object.assign({_id:e[0]}, e[1]); })
       .sort(function(a,b){ return b.ts - a.ts; });
     var pendientes = lista.filter(function(p){ return p.estado === 'pendiente'; });
-
-    // Badge en pestaña
     var badge = document.getElementById('badgePedidos');
     if (badge) {
       badge.style.display = pendientes.length ? 'inline' : 'none';
       badge.textContent = pendientes.length;
     }
-
-    // Notificación visible si llega una solicitud nueva (no en la primera carga)
-    if (_pedidosConocidos !== null) {
-      var idsConocidos = _pedidosConocidos;
-      var nuevos = pendientes.filter(function(p){ return idsConocidos.indexOf(p._id) === -1; });
-      nuevos.forEach(function(p) {
-        _mostrarAlertaPedido(p);
-      });
-    }
-    _pedidosConocidos = pendientes.map(function(p){ return p._id; });
-
     renderPedidos(lista);
   });
 }
