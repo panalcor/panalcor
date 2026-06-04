@@ -61,14 +61,22 @@
   // Detecta también cuando hay red pero Firebase no responde
   function initFirebaseOnline() {
     if (typeof firebase === 'undefined' || !firebase.apps.length) return;
+    var _fbBannerTimer = null;
     try {
       firebase.database().ref('.info/connected').on('value', function(snap) {
-        if (snap.val() === false && navigator.onLine) {
-          // Hay red pero no Firebase → modo degradado
-          mostrarBanner('⚡ Conectando con el servidor... Los datos pueden no estar actualizados');
-        } else if (snap.val() === true) {
-          if (_estaOffline) return; // ya lo gestiona el listener offline
-          ocultarBanner();
+        if (snap.val() === true) {
+          // Conectado — cancelar cualquier banner pendiente y ocultar si estaba visible
+          if (_fbBannerTimer) { clearTimeout(_fbBannerTimer); _fbBannerTimer = null; }
+          if (!_estaOffline) ocultarBanner();
+        } else if (snap.val() === false && navigator.onLine) {
+          // Sin Firebase pero con red — esperar 3s antes de mostrar aviso
+          if (_fbBannerTimer) return;
+          _fbBannerTimer = setTimeout(function() {
+            _fbBannerTimer = null;
+            if (!_estaOffline && navigator.onLine) {
+              mostrarBanner('⚡ Conectando con el servidor... Los datos pueden no estar actualizados');
+            }
+          }, 3000);
         }
       });
     } catch(e) {}
