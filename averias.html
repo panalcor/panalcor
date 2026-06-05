@@ -1061,6 +1061,12 @@ function init(){
   // ── Parámetros URL ──
   const params = new URLSearchParams(window.location.search);
 
+  // ?tab=otros (o cualquier pestaña) → abrir directamente
+  const tabParam = params.get('tab');
+  if(tabParam && document.getElementById('panel-'+tabParam)){
+    setTimeout(function(){ switchTab(tabParam); }, 100);
+  }
+
   // ?retomar=AVR-xxx  → retomar avería pendiente (desde mis_tareas)
   const retId = params.get('retomar');
   if(retId){ setTimeout(function(){ retomarAveria(retId); }, 300); }
