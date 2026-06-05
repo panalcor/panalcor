@@ -8046,10 +8046,11 @@ function renderPedidos(lista) {
         + '</div>'
         + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">'
           + '<span style="font-size:0.72rem;font-weight:700;color:'+estadoColor+';background:'+estadoColor+'20;padding:3px 10px;border-radius:20px">'+estadoIcon+' '+p.estado.toUpperCase()+'</span>'
-          + (p.estado==='pendiente' ? ''
-            + '<button onclick="gestionarPedido(\''+p._id+'\',\'aprobado\')" style="background:rgba(39,174,96,0.15);border:1px solid rgba(39,174,96,0.4);color:#2ecc71;border-radius:7px;padding:5px 12px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.78rem;font-weight:700">✅ Aprobar</button>'
-            + '<button onclick="gestionarPedido(\''+p._id+'\',\'rechazado\')" style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);color:#e74c3c;border-radius:7px;padding:5px 12px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.78rem;font-weight:700">❌ Rechazar</button>'
-            : '')
+          + (p.estado==='pendiente'
+            ? '<button onclick="gestionarPedido(\''+p._id+'\',\'aprobado\')" style="background:rgba(39,174,96,0.15);border:1px solid rgba(39,174,96,0.4);color:#2ecc71;border-radius:7px;padding:5px 12px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.78rem;font-weight:700">✅ Aprobar</button>'
+              + '<button onclick="gestionarPedido(\''+p._id+'\',\'rechazado\')" style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);color:#e74c3c;border-radius:7px;padding:5px 12px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.78rem;font-weight:700">❌ Rechazar</button>'
+            : '<button onclick="borrarPedido(\''+p._id+'\')" style="background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.25);color:rgba(231,76,60,0.7);border-radius:7px;padding:5px 12px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.78rem;font-weight:700">🗑 Borrar</button>'
+            )
         + '</div>'
       + '</div>'
       + '</div>';
@@ -8075,6 +8076,13 @@ function gestionarPedido(id, nuevoEstado) {
         fcmEnviar(p.mecanico, titulo, cuerpo, 'panalcor_inicio.html', '📦');
       });
   }).catch(function(){ showToast('❌ Error'); });
+}
+
+function borrarPedido(id) {
+  if (!confirm('¿Borrar esta solicitud? No se puede deshacer.')) return;
+  DB.ref('pedidos/'+id).remove()
+    .then(function(){ showToast('🗑 Solicitud borrada'); })
+    .catch(function(){ showToast('❌ Error al borrar'); });
 }
 </script>
 
