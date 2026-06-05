@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PANALCOR — Frío (Mecánicos)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy-deep:#0a1520;
+    --navy-mid:#0f1e2e;
+    --navy-light:#162840;
+    --ice:#64d2ff;
+    --gold:#f0c040;
+    --gold-light:#f7d060;
+    --white:#e8f4ff;
+    --red:#e74c3c;
+    --green:#2ecc71;
+    --orange:#f39c12;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-serif;min-height:100vh}
+  .topbar{background:var(--navy-mid);border-bottom:1px solid rgba(100,210,255,.15);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:100}
+  .topbar-title{font-size:1.1rem;font-weight:900;color:var(--ice);letter-spacing:.02em}
+  .topbar-sub{font-size:.75rem;color:rgba(255,255,255,.45);margin-top:2px}
+  .topbar-right{display:flex;align-items:center;gap:10px}
+  .btn-sm{background:transparent;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.55);border-radius:8px;padding:7px 14px;font-family:'Barlow',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block;transition:all .2s}
+  .btn-sm:hover{border-color:rgba(100,210,255,.4);color:#64d2ff}
+  .btn-ice{border-color:rgba(100,210,255,.4);color:#64d2ff;background:rgba(100,210,255,.08)}
+  .container{max-width:900px;margin:0 auto;padding:20px 16px}
+  /* Login */
+  #loginPanel{display:flex;align-items:center;justify-content:center;min-height:80vh}
+  .login-card{background:var(--navy-mid);border:1px solid rgba(100,210,255,.2);border-radius:16px;padding:36px 32px;width:100%;max-width:380px;text-align:center}
+  .login-title{font-size:1.5rem;font-weight:900;color:var(--ice);margin-bottom:6px}
+  .login-sub{font-size:.85rem;color:rgba(255,255,255,.45);margin-bottom:28px}
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;text-align:left}
+  .field label{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45)}
+  select,input[type=text],input[type=number],input[type=date],input[type=time],textarea{
+    background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,.15);border-radius:8px;
+    padding:10px 12px;font-family:'Barlow',sans-serif;font-size:.9rem;width:100%;
+    outline:none;transition:border-color .2s}
+  select:focus,input:focus,textarea:focus{border-color:rgba(100,210,255,.5)}
+  textarea{resize:vertical;min-height:70px}
+  .btn-main{width:100%;padding:13px;border-radius:10px;font-family:'Barlow',sans-serif;font-size:1rem;font-weight:800;cursor:pointer;border:none;background:var(--ice);color:#0a1520;letter-spacing:.03em;transition:opacity .2s}
+  .btn-main:hover{opacity:.85}
+  /* App */
+  #appPanel{display:none}
+  .subnav{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+  .tab-btn{background:transparent;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.45);border-radius:8px;padding:9px 16px;font-family:'Barlow',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .2s}
+  .tab-btn.active{background:rgba(100,210,255,.12);border-color:rgba(100,210,255,.4);color:#64d2ff}
+  .card{background:var(--navy-mid);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:20px;margin-bottom:16px}
+  .sec-title{font-size:1rem;font-weight:800;color:var(--white);margin-bottom:16px}
+  .frio-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:16px}
+  .frio-field{display:flex;flex-direction:column;gap:5px}
+  .frio-field label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4)}
+  table{width:100%;border-collapse:collapse;font-size:.83rem}
+  th{text-align:left;padding:8px 10px;font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.4);border-bottom:1px solid rgba(255,255,255,.07)}
+  td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+  tr:hover td{background:rgba(255,255,255,.02)}
+  .badge{display:inline-block;padding:3px 9px;border-radius:8px;font-size:.7rem;font-weight:700}
+  .badge-ok{background:rgba(46,204,113,.15);color:#2ecc71;border:1px solid rgba(46,204,113,.3)}
+  .badge-warn{background:rgba(243,156,18,.15);color:#f39c12;border:1px solid rgba(243,156,18,.3)}
+  .badge-red{background:rgba(231,76,60,.15);color:#e74c3c;border:1px solid rgba(231,76,60,.3)}
+  .badge-grey{background:rgba(149,165,166,.12);color:#95a5a6;border:1px solid rgba(149,165,166,.25)}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(20,35,55,.97);border:1px solid rgba(100,210,255,.3);color:var(--white);padding:12px 24px;border-radius:10px;font-size:.9rem;font-weight:700;z-index:9999;pointer-events:none;opacity:0;transition:opacity .3s;max-width:90vw;text-align:center}
+  .toast.show{opacity:1}
+  @media(max-width:500px){.frio-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script>
+var FB_CFG = {
+  apiKey:            "AIzaSyBiiiTp1oELbkD2sESmh3xRjpgI37DxvYQ",
+  authDomain:        "panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:       "https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:         "panalcor-mantenimiento",
+  storageBucket:     "panalcor-mantenimiento.appspot.com",
+  messagingSenderId: "1061821849642",
+  appId:             "1:1061821849642:web:6dbafe66cdbc3eb5de58c2"
+};
+if (!firebase.apps.length) firebase.initializeApp(FB_CFG);
+var DB = firebase.database();
+</script>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div>
+    <div class="topbar-title">❄️ PANALCOR — Frío</div>
+    <div class="topbar-sub" id="topbarSub">Módulo de frío — mecánicos</div>
+  </div>
+  <div class="topbar-right">
+    <a href="panalcor_inicio.html" class="btn-sm">← Inicio</a>
+    <button onclick="cerrarSesion()" class="btn-sm">Cerrar sesión</button>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="loginPanel">
+  <div class="login-card">
+    <div class="login-title">❄️ Frío</div>
+    <div class="login-sub">Acceso mecánicos de frío</div>
+    <div class="field">
+      <label>Tu nombre</label>
+      <select id="loginNombre">
+        <option value="">— Selecciona —</option>
+        <option>GREGORIO</option>
+        <option>JOSE</option>
+      </select>
+    </div>
+    <button class="btn-main" onclick="entrar()">Entrar</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appPanel">
+  <div class="container">
+    <div class="subnav">
+      <button class="tab-btn active" id="tab-lectura" onclick="cambiarTab('lectura')">🌡️ Nueva Lectura</button>
+      <button class="tab-btn" id="tab-mis" onclick="cambiarTab('mis')">📋 Mis Lecturas</button>
+      <button class="tab-btn" id="tab-equipos" onclick="cambiarTab('equipos')">🏭 Equipos</button>
+    </div>
+
+    <!-- ── NUEVA LECTURA ── -->
+    <div id="sec-lectura">
+      <div class="card">
+        <div class="sec-title">🌡️ Registrar lectura</div>
+
+        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px">Identificación</div>
+        <div class="frio-grid">
+          <div class="frio-field"><label>Equipo *</label><select id="mLecEq"><option value="">— Selecciona —</option></select></div>
+          <div class="frio-field"><label>Fecha *</label><input type="date" id="mLecFecha"></div>
+          <div class="frio-field"><label>Hora *</label><input type="time" id="mLecHora"></div>
+          <div class="frio-field"><label>Tipo de revisión</label>
+            <select id="mLecTipo">
+              <option>Revisión diaria</option><option>Revisión semanal</option>
+              <option>Revisión tras avería</option><option>Tras desescarche</option>
+              <option>Revisión preventiva</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px">Temperaturas y presiones</div>
+        <div class="frio-grid">
+          <div class="frio-field"><label>T. cámara / producto (°C) *</label><input type="number" id="mLecTCam" step="0.1" placeholder="ej: -21.5"></div>
+          <div class="frio-field"><label>T. exterior (°C)</label><input type="number" id="mLecTExt" step="0.1" placeholder="ej: 28.0"></div>
+          <div class="frio-field"><label>P. baja — aspiración (bar)</label><input type="number" id="mLecPBaja" step="0.01" placeholder="ej: 1.43"></div>
+          <div class="frio-field"><label>P. alta — descarga (bar)</label><input type="number" id="mLecPAlta" step="0.01" placeholder="ej: 17.1"></div>
+        </div>
+
+        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px">Desescarche</div>
+        <div class="frio-grid">
+          <div class="frio-field"><label>¿Desescarche realizado?</label>
+            <select id="mLecDesesc">
+              <option value="no">No</option>
+              <option value="ok">Sí — Correcto</option>
+              <option value="incompleto">Sí — Incompleto</option>
+              <option value="fallo">Sí — Fallo</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px">Estado visual</div>
+        <div class="frio-grid">
+          <div class="frio-field"><label>Indicios de fuga</label>
+            <select id="mLecFuga">
+              <option value="no">✅ Sin indicios</option>
+              <option value="posible">⚠️ Posible</option>
+              <option value="confirmada">🔴 Confirmada</option>
+            </select>
+          </div>
+          <div class="frio-field"><label>Ventiladores condensador</label>
+            <select id="mLecVentCond">
+              <option value="ok">✅ Todos OK</option><option value="uno_parado">⚠️ Uno parado</option>
+              <option value="ruido">⚠️ Ruido</option><option value="fallo">❌ Fallo</option>
+            </select>
+          </div>
+          <div class="frio-field"><label>Condensador (suciedad)</label>
+            <select id="mLecCond">
+              <option value="limpio">✅ Limpio</option>
+              <option value="algo">⚠️ Algo sucio</option>
+              <option value="sucio">🔴 Muy sucio</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="frio-field" style="margin-bottom:16px"><label>Observaciones</label>
+          <textarea id="mLecObs" placeholder="Ruidos, anomalías, cambios..."></textarea>
+        </div>
+
+        <button onclick="mGuardarLectura()" style="background:rgba(100,210,255,.15);border:1px solid rgba(100,210,255,.45);color:#64d2ff;border-radius:9px;padding:11px 22px;font-family:'Barlow',sans-serif;font-size:.9rem;font-weight:800;cursor:pointer">💾 Guardar lectura</button>
+      </div>
+    </div>
+
+    <!-- ── MIS LECTURAS ── -->
+    <div id="sec-mis" style="display:none">
+      <div class="card">
+        <div class="sec-title">📋 Mis últimas lecturas</div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr>
+              <th>Equipo</th><th>Fecha</th><th>T.Cámara</th><th>P.Baja</th><th>P.Alta</th><th>Fuga</th><th></th>
+            </tr></thead>
+            <tbody id="misTbody"><tr><td colspan="7" style="text-align:center;color:rgba(255,255,255,.3);padding:20px">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── EQUIPOS ── -->
+    <div id="sec-equipos" style="display:none">
+      <div class="card">
+        <div class="sec-title">🏭 Equipos de frío</div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr>
+              <th>Nombre</th><th>Tipo</th><th>Estado</th><th>Refrigerante</th><th>Próx.Rev.FGas</th>
+            </tr></thead>
+            <tbody id="eqTbody"><tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,.3);padding:20px">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toastEl" class="toast"></div>
+
+<script>
+// ─────────────────────────────────────
+// Utils
+// ─────────────────────────────────────
+function escHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function showToast(msg, dur) {
+  var el = document.getElementById('toastEl');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(function(){ el.classList.remove('show'); }, dur||2800);
+}
+function numOrNull(id) {
+  var v = document.getElementById(id);
+  if (!v || v.value === '') return null;
+  return parseFloat(v.value);
+}
+
+// ─────────────────────────────────────
+// Sesión
+// ─────────────────────────────────────
+var _sesion = null;
+var _frioEqs = {};
+
+function entrar() {
+  var nombre = document.getElementById('loginNombre').value.trim();
+  if (!nombre) { showToast('⚠️ Selecciona tu nombre'); return; }
+  localStorage.setItem('frioMecSesion', nombre);
+  iniciarApp(nombre);
+}
+
+function cerrarSesion() {
+  localStorage.removeItem('frioMecSesion');
+  document.getElementById('loginPanel').style.display='flex';
+  document.getElementById('appPanel').style.display='none';
+}
+
+function iniciarApp(nombre) {
+  _sesion = nombre;
+  document.getElementById('loginPanel').style.display='none';
+  document.getElementById('appPanel').style.display='block';
+  document.getElementById('topbarSub').textContent = 'Bienvenido, ' + nombre;
+  // Fecha y hora por defecto
+  var hoy = new Date().toISOString().slice(0,10);
+  var ahora = new Date().toTimeString().slice(0,5);
+  var fd = document.getElementById('mLecFecha'); if(fd && !fd.value) fd.value = hoy;
+  var fh = document.getElementById('mLecHora');  if(fh && !fh.value) fh.value = ahora;
+  // Cargar equipos
+  DB.ref('frio/equipos').once('value').then(function(snap){
+    _frioEqs = snap.val() || {};
+    poblarEquipos();
+    renderEqTabla();
+  });
+}
+
+function poblarEquipos() {
+  var sel = document.getElementById('mLecEq');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— Selecciona —</option>' +
+    Object.keys(_frioEqs).map(function(k){ return '<option value="'+k+'">'+escHtml(_frioEqs[k].nombre)+'</option>'; }).join('');
+}
+
+// ─────────────────────────────────────
+// Tabs
+// ─────────────────────────────────────
+function cambiarTab(tab) {
+  ['lectura','mis','equipos'].forEach(function(t){
+    var s = document.getElementById('sec-'+t); if(s) s.style.display = t===tab?'':'none';
+    var b = document.getElementById('tab-'+t); if(b) b.classList.toggle('active', t===tab);
+  });
+  if (tab === 'mis') cargarMisLecturas();
+  if (tab === 'equipos') renderEqTabla();
+}
+
+// ─────────────────────────────────────
+// Nueva lectura
+// ─────────────────────────────────────
+function mGuardarLectura() {
+  var eqId  = document.getElementById('mLecEq').value;
+  var fecha = document.getElementById('mLecFecha').value;
+  var hora  = document.getElementById('mLecHora').value;
+  var tCam  = document.getElementById('mLecTCam').value;
+  if (!eqId || !fecha || !hora) { showToast('⚠️ Rellena equipo, fecha y hora'); return; }
+  if (!tCam) { showToast('⚠️ Indica la temperatura de cámara'); return; }
+  var eq = _frioEqs[eqId] || {};
+  var id = 'LEC-' + Date.now();
+  var obj = {
+    id: id,
+    eqId: eqId,
+    eqNombre: eq.nombre || eqId,
+    fecha: fecha,
+    hora: hora,
+    quien: _sesion,
+    tipo: document.getElementById('mLecTipo').value,
+    tCam: parseFloat(tCam),
+    tExt: numOrNull('mLecTExt'),
+    pBaja: numOrNull('mLecPBaja'),
+    pAlta: numOrNull('mLecPAlta'),
+    desesc: document.getElementById('mLecDesesc').value,
+    fuga: document.getElementById('mLecFuga').value,
+    ventCond: document.getElementById('mLecVentCond').value,
+    condSuciedad: document.getElementById('mLecCond').value,
+    obs: document.getElementById('mLecObs').value.trim(),
+    ts: Date.now()
+  };
+  DB.ref('frio/lecturas/' + id).set(obj).then(function(){
+    showToast('✅ Lectura guardada');
+    // Limpiar
+    ['mLecEq','mLecTCam','mLecTExt','mLecPBaja','mLecPAlta','mLecObs'].forEach(function(i){
+      var el = document.getElementById(i); if(el) el.value='';
+    });
+    ['mLecDesesc','mLecFuga','mLecVentCond','mLecCond','mLecTipo'].forEach(function(i){
+      var el = document.getElementById(i); if(el) el.selectedIndex=0;
+    });
+    var hoy = new Date().toISOString().slice(0,10);
+    var ahora = new Date().toTimeString().slice(0,5);
+    document.getElementById('mLecFecha').value = hoy;
+    document.getElementById('mLecHora').value  = ahora;
+    if (obj.fuga === 'confirmada') showToast('🚨 FUGA CONFIRMADA — Notifica al responsable');
+  }).catch(function(){ showToast('❌ Error al guardar'); });
+}
+
+// ─────────────────────────────────────
+// Mis lecturas
+// ─────────────────────────────────────
+function cargarMisLecturas() {
+  var tb = document.getElementById('misTbody');
+  if (!tb) return;
+  tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:rgba(255,255,255,.3);padding:20px">Cargando...</td></tr>';
+  DB.ref('frio/lecturas').orderByChild('ts').limitToLast(200).once('value').then(function(snap){
+    var todas = Object.values(snap.val() || {});
+    var mias = todas.filter(function(l){ return l.quien === _sesion; }).reverse().slice(0, 30);
+    if (!mias.length) {
+      tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:rgba(255,255,255,.3);padding:20px">Sin lecturas todavía</td></tr>';
+      return;
+    }
+    tb.innerHTML = mias.map(function(l){
+      var fugaIcon = {'no':'✅','posible':'⚠️','confirmada':'🔴'}[l.fuga] || '—';
+      return '<tr>'
+        +'<td><b>'+escHtml(l.eqNombre||l.eqId)+'</b></td>'
+        +'<td>'+escHtml(l.fecha)+' '+escHtml(l.hora)+'</td>'
+        +'<td>'+(l.tCam!=null?'<b>'+l.tCam+'°C</b>':'—')+'</td>'
+        +'<td>'+(l.pBaja!=null?l.pBaja+' bar':'—')+'</td>'
+        +'<td>'+(l.pAlta!=null?l.pAlta+' bar':'—')+'</td>'
+        +'<td>'+fugaIcon+'</td>'
+        +'<td><button onclick="mBorrarLectura(\''+l.id+'\')" style="background:rgba(231,76,60,.08);border:1px solid rgba(231,76,60,.25);color:rgba(231,76,60,.7);border-radius:6px;padding:4px 9px;cursor:pointer;font-family:\'Barlow\',sans-serif;font-size:.73rem;font-weight:700">🗑</button></td>'
+        +'</tr>';
+    }).join('');
+  }).catch(function(){
+    tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:rgba(255,255,255,.3);padding:20px">Error al cargar</td></tr>';
+  });
+}
+
+function mBorrarLectura(id) {
+  if (!confirm('¿Borrar esta lectura?')) return;
+  DB.ref('frio/lecturas/'+id).remove().then(function(){
+    showToast('🗑 Lectura borrada');
+    cargarMisLecturas();
+  });
+}
+
+// ─────────────────────────────────────
+// Equipos (solo lectura)
+// ─────────────────────────────────────
+function renderEqTabla() {
+  var tb = document.getElementById('eqTbody');
+  if (!tb) return;
+  var eqs = Object.keys(_frioEqs);
+  if (!eqs.length) {
+    tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,.3);padding:20px">Cargando equipos...</td></tr>';
+    // Si aún no han cargado, intentar otra vez
+    if (!Object.keys(_frioEqs).length) {
+      DB.ref('frio/equipos').once('value').then(function(snap){
+        _frioEqs = snap.val() || {};
+        poblarEquipos();
+        renderEqTabla();
+      });
+      return;
+    }
+  }
+  var hoy = new Date();
+  tb.innerHTML = eqs.map(function(k){
+    var eq = _frioEqs[k];
+    var estado = eq.estado || '—';
+    var estadoBadge = estado === 'Operativo' ? '<span class="badge badge-ok">✅ Operativo</span>'
+      : estado === 'Avería' ? '<span class="badge badge-red">⚡ Avería</span>'
+      : estado === 'En revisión' ? '<span class="badge badge-warn">🔧 En revisión</span>'
+      : estado === 'Parado' ? '<span class="badge badge-grey">⛔ Parado</span>'
+      : '<span class="badge badge-grey">'+escHtml(estado)+'</span>';
+    var proxRev = eq.proxRevFgas || eq.proxRev || null;
+    var proxBadge = '—';
+    if (proxRev) {
+      var diff = Math.round((new Date(proxRev) - hoy) / 86400000);
+      if (diff < 0) proxBadge = '<span class="badge badge-red">⛔ '+escHtml(proxRev)+'</span>';
+      else if (diff <= 30) proxBadge = '<span class="badge badge-warn">⚠️ '+escHtml(proxRev)+'</span>';
+      else proxBadge = '<span class="badge badge-ok">✅ '+escHtml(proxRev)+'</span>';
+    }
+    return '<tr>'
+      +'<td><b>'+escHtml(eq.nombre||k)+'</b>'+(eq.ubicacion?'<br><span style="font-size:.75rem;color:rgba(255,255,255,.35)">'+escHtml(eq.ubicacion)+'</span>':'')+'</td>'
+      +'<td>'+escHtml(eq.tipo||'—')+'</td>'
+      +'<td>'+estadoBadge+'</td>'
+      +'<td>'+escHtml(eq.refrigerante||'—')+(eq.cargaRefrig?' ('+eq.cargaRefrig+'kg)':'')+'</td>'
+      +'<td>'+proxBadge+'</td>'
+      +'</tr>';
+  }).join('');
+}
+
+// ─────────────────────────────────────
+// Arranque
+// ─────────────────────────────────────
+(function(){
+  var saved = localStorage.getItem('frioMecSesion');
+  if (saved) {
+    iniciarApp(saved);
+  }
+})();
+</script>
+</body>
+</html>

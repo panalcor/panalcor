@@ -6893,7 +6893,9 @@ function escAttr(s){ return String(s||'').replace(/'/g,'&#39;').replace(/"/g,'&q
 <!-- Sub-nav -->
 <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap">
   <button onclick="frioSec('equipos')" id="frioBtn-equipos" class="frio-nav-btn active">🏭 Equipos</button>
-  <button onclick="frioSec('temps')"   id="frioBtn-temps"   class="frio-nav-btn">🌡️ Temperaturas</button>
+  <button onclick="frioSec('lecturas')" id="frioBtn-lecturas" class="frio-nav-btn">🌡️ Lecturas</button>
+  <button onclick="frioSec('gas')"     id="frioBtn-gas"     class="frio-nav-btn">⛽ Libro Gas</button>
+  <button onclick="frioSec('fugas')"   id="frioBtn-fugas"   class="frio-nav-btn">🔍 Control Fugas</button>
   <button onclick="frioSec('averias')" id="frioBtn-averias" class="frio-nav-btn">⚡ Averías</button>
   <button onclick="frioSec('prev')"    id="frioBtn-prev"    class="frio-nav-btn">🔧 Preventivo</button>
 </div>
@@ -6975,34 +6977,277 @@ function escAttr(s){ return String(s||'').replace(/'/g,'&#39;').replace(/"/g,'&q
   </div>
 </div>
 
-<!-- ── TEMPERATURAS ── -->
-<div id="frioSec-temps" style="display:none">
+<!-- ── LECTURAS COMPLETAS ── -->
+<div id="frioSec-lecturas" style="display:none">
   <div class="card" style="margin-bottom:14px;border:1px solid rgba(100,210,255,.12)">
-    <div class="sec-title" style="margin-bottom:14px">🌡️ Registrar Temperatura</div>
-    <div class="frio-grid">
-      <div class="frio-field"><label>Equipo</label><select id="frioTmpEq"><option value="">— Selecciona —</option></select></div>
-      <div class="frio-field"><label>Fecha</label><input type="date" id="frioTmpFecha"></div>
-      <div class="frio-field"><label>Hora</label><input type="time" id="frioTmpHora"></div>
-      <div class="frio-field"><label>Temperatura (°C)</label><input type="number" id="frioTmpVal" step="0.1" placeholder="ej: -18.5"></div>
-      <div class="frio-field"><label>Humedad (%)</label><input type="number" id="frioTmpHum" step="1" min="0" max="100" placeholder="ej: 85"></div>
-      <div class="frio-field"><label>Registrado por</label><input type="text" id="frioTmpQuien" placeholder="Nombre"></div>
-      <div class="frio-field span2"><label>Observaciones</label><input type="text" id="frioTmpObs" placeholder="Alerta, anomalía..."></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div class="sec-title" style="margin:0">🌡️ Nueva Lectura</div>
+      <span id="frioLecEditLabel" style="display:none;font-size:.8rem;background:rgba(240,192,64,.15);border:1px solid rgba(240,192,64,.3);color:#f0c040;border-radius:8px;padding:4px 12px">✏️ Editando lectura</span>
     </div>
-    <button onclick="frioGuardarTemp()" class="btn-export" style="background:rgba(100,210,255,.12);border:1px solid rgba(100,210,255,.4);color:#64d2ff">💾 Guardar temperatura</button>
+
+    <!-- Identificación -->
+    <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px">📍 Identificación</div>
+    <div class="frio-grid" style="margin-bottom:16px">
+      <div class="frio-field"><label>Equipo *</label><select id="frioLecEq"><option value="">— Selecciona —</option></select></div>
+      <div class="frio-field"><label>Fecha *</label><input type="date" id="frioLecFecha"></div>
+      <div class="frio-field"><label>Hora *</label><input type="time" id="frioLecHora"></div>
+      <div class="frio-field"><label>Registrado por *</label><select id="frioLecQuien"><option value="">— Selecciona —</option></select></div>
+      <div class="frio-field"><label>Tipo de revisión</label>
+        <select id="frioLecTipo">
+          <option>Revisión diaria</option><option>Revisión semanal</option>
+          <option>Revisión tras avería</option><option>Tras desescarche</option>
+          <option>Revisión preventiva</option><option>Control F-Gas</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Condiciones exteriores -->
+    <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px">🌍 Condiciones exteriores</div>
+    <div class="frio-grid" style="margin-bottom:16px">
+      <div class="frio-field"><label>T. exterior (°C)</label><input type="number" id="frioLecTExt" step="0.1" placeholder="ej: 28.5"></div>
+      <div class="frio-field"><label>Humedad exterior (%)</label><input type="number" id="frioLecHumExt" step="1" min="0" max="100"></div>
+      <div class="frio-field"><label>T. sala compresores (°C)</label><input type="number" id="frioLecTSala" step="0.1" placeholder="ej: 32.0"></div>
+    </div>
+
+    <!-- Temperaturas del circuito -->
+    <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px">🌡️ Temperaturas circuito</div>
+    <div class="frio-grid" style="margin-bottom:16px">
+      <div class="frio-field"><label>T. cámara / producto (°C) *</label><input type="number" id="frioLecTCam" step="0.1" placeholder="ej: -21.5"></div>
+      <div class="frio-field"><label>T. retorno aire (°C)</label><input type="number" id="frioLecTRet" step="0.1"></div>
+      <div class="frio-field"><label>T. impulsión aire (°C)</label><input type="number" id="frioLecTImp" step="0.1"></div>
+      <div class="frio-field"><label>T. evaporación (°C)</label><input type="number" id="frioLecTEvap" step="0.1"></div>
+      <div class="frio-field"><label>T. aspiración compresor (°C)</label><input type="number" id="frioLecTAsp" step="0.1"></div>
+      <div class="frio-field"><label>T. descarga compresor (°C)</label><input type="number" id="frioLecTDesc" step="0.1" placeholder="normal &lt;110°C"></div>
+      <div class="frio-field"><label>T. condensación (°C)</label><input type="number" id="frioLecTCond" step="0.1"></div>
+      <div class="frio-field"><label>T. líquido salida (°C)</label><input type="number" id="frioLecTLiq" step="0.1"></div>
+      <div class="frio-field"><label>Humedad interior (%)</label><input type="number" id="frioLecHumInt" step="1" min="0" max="100"></div>
+    </div>
+
+    <!-- Presiones -->
+    <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px">🔵 Presiones</div>
+    <div class="frio-grid" style="margin-bottom:16px">
+      <div class="frio-field"><label>P. baja — aspiración (bar)</label><input type="number" id="frioLecPBaja" step="0.01" placeholder="ej: 1.43"></div>
+      <div class="frio-field"><label>P. alta — descarga (bar)</label><input type="number" id="frioLecPAlta" step="0.01" placeholder="ej: 17.1"></div>
+      <div class="frio-field"><label>P. aceite compresor (bar)</label><input type="number" id="frioLecPAceite" step="0.01"></div>
+    </div>
+
+    <!-- Desescarche -->
+    <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px">❄️ Desescarche</div>
+    <div class="frio-grid" style="margin-bottom:16px">
+      <div class="frio-field"><label>¿Desescarche realizado?</label>
+        <select id="frioLecDesesc">
+          <option value="no">No</option>
+          <option value="ok">Sí — Correcto</option>
+          <option value="incompleto">Sí — Incompleto</option>
+          <option value="fallo">Sí — Fallo</option>
+        </select>
+      </div>
+      <div class="frio-field"><label>Duración (min)</label><input type="number" id="frioLecDesescMin" step="1" placeholder="ej: 35"></div>
+      <div class="frio-field"><label>Nº desescarches hoy</label><input type="number" id="frioLecDesescNum" step="1" min="0" placeholder="ej: 4"></div>
+      <div class="frio-field"><label>Estado evaporador</label>
+        <select id="frioLecEvapEst">
+          <option value="">— N/A —</option>
+          <option value="limpio">✅ Limpio</option>
+          <option value="algo">⚠️ Algo de escarcha</option>
+          <option value="exceso">🔴 Exceso — revisar</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Estado visual -->
+    <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px">👁️ Estado visual</div>
+    <div class="frio-grid" style="margin-bottom:16px">
+      <div class="frio-field"><label>Ventiladores condensador</label>
+        <select id="frioLecVentCond">
+          <option value="ok">✅ Todos OK</option><option value="uno_parado">⚠️ Uno parado</option>
+          <option value="ruido">⚠️ Ruido anormal</option><option value="fallo">❌ Fallo</option>
+        </select>
+      </div>
+      <div class="frio-field"><label>Ventiladores evaporador</label>
+        <select id="frioLecVentEvap">
+          <option value="ok">✅ Todos OK</option><option value="uno_parado">⚠️ Uno parado</option>
+          <option value="ruido">⚠️ Ruido anormal</option><option value="fallo">❌ Fallo</option>
+        </select>
+      </div>
+      <div class="frio-field"><label>Condensador (suciedad)</label>
+        <select id="frioLecCond">
+          <option value="limpio">✅ Limpio</option>
+          <option value="algo">⚠️ Algo sucio</option>
+          <option value="sucio">🔴 Muy sucio — limpiar</option>
+        </select>
+      </div>
+      <div class="frio-field"><label>Indicios de fuga</label>
+        <select id="frioLecFuga">
+          <option value="no">✅ Sin indicios</option>
+          <option value="posible">⚠️ Posible (aceite en uniones)</option>
+          <option value="confirmada">🔴 Fuga confirmada — actuar</option>
+        </select>
+      </div>
+      <div class="frio-field"><label>Estado juntas / puertas</label>
+        <select id="frioLecJuntas">
+          <option value="ok">✅ Buenas</option>
+          <option value="desgaste">⚠️ Desgaste — revisar</option>
+          <option value="fallo">❌ Entrada de aire</option>
+        </select>
+      </div>
+      <div class="frio-field"><label>Mirilla humedad (sight glass)</label>
+        <select id="frioLecMirilla">
+          <option value="">— N/A —</option>
+          <option value="verde">🟢 Verde — seco</option>
+          <option value="amarillo">🟡 Amarillo — revisar filtro</option>
+          <option value="rojo">🔴 Rojo — cambiar filtro</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Observaciones -->
+    <div class="frio-field" style="margin-bottom:14px"><label>Observaciones</label>
+      <textarea id="frioLecObs" placeholder="Anomalías, ruidos, vibraciones, cambios de comportamiento..."></textarea>
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button onclick="frioGuardarLectura()" class="btn-export" style="background:rgba(100,210,255,.15);border:1px solid rgba(100,210,255,.45);color:#64d2ff">💾 Guardar lectura</button>
+      <button onclick="frioLimpiarLectura()" style="background:transparent;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.4);border-radius:8px;padding:9px 16px;font-family:'Barlow',sans-serif;font-size:.85rem;cursor:pointer">↺ Limpiar</button>
+    </div>
   </div>
+
+  <!-- Historial lecturas -->
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-      <div class="sec-title" style="margin:0">📋 Historial de Temperaturas</div>
-      <select id="frioTmpFiltro" onchange="frioLoadTemps()" style="background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,.15);border-radius:7px;padding:7px 12px;font-family:'Barlow',sans-serif;font-size:.85rem">
-        <option value="">Todos los equipos</option>
-      </select>
+      <div class="sec-title" style="margin:0">📋 Historial de Lecturas</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <select id="frioLecFilEq" onchange="frioLoadLecturas()" style="background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,.15);border-radius:7px;padding:6px 10px;font-family:'Barlow',sans-serif;font-size:.82rem">
+          <option value="">Todos los equipos</option>
+        </select>
+        <select id="frioLecFilQuien" onchange="frioLoadLecturas()" style="background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,.15);border-radius:7px;padding:6px 10px;font-family:'Barlow',sans-serif;font-size:.82rem">
+          <option value="">Todos</option>
+        </select>
+      </div>
     </div>
     <div style="overflow-x:auto">
       <table class="data-table">
-        <thead><tr><th>Equipo</th><th>Fecha</th><th>Hora</th><th style="color:rgba(255,255,255,0.4)">Anterior</th><th>Temp (°C)</th><th>Humedad (%)</th><th>Quién</th><th>Observaciones</th><th></th></tr></thead>
-        <tbody id="frioTmpTbody"></tbody>
+        <thead><tr>
+          <th>Equipo</th><th>Fecha</th><th>T.Cámara</th><th>T.Ext</th>
+          <th>P.Baja</th><th>P.Alta</th><th>Desescarche</th><th>Fuga</th><th>Quién</th><th></th>
+        </tr></thead>
+        <tbody id="frioLecTbody"><tr><td colspan="10" style="text-align:center;color:rgba(255,255,255,.3);padding:20px">Sin lecturas aún</td></tr></tbody>
       </table>
     </div>
+  </div>
+</div>
+
+<!-- ── LIBRO DE GAS ── -->
+<div id="frioSec-gas" style="display:none">
+
+  <!-- Selector de equipo -->
+  <div class="card" style="margin-bottom:14px;border:1px solid rgba(100,210,255,.12)">
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <div class="sec-title" style="margin:0">⛽ Libro de Registro de Gas</div>
+      <div class="frio-field" style="flex:1;min-width:200px;margin:0">
+        <select id="frioGasEqSel" onchange="frioGasCargar()" style="background:var(--navy-deep);color:var(--white);border:1px solid rgba(100,210,255,.3);border-radius:7px;padding:8px 12px;font-family:'Barlow',sans-serif;font-size:.9rem;width:100%">
+          <option value="">— Selecciona equipo —</option>
+        </select>
+      </div>
+    </div>
+    <!-- KPIs del equipo seleccionado -->
+    <div id="frioGasKpis" style="display:none;margin-top:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px">
+      <div style="background:var(--navy-deep);border:1px solid rgba(100,210,255,.15);border-radius:10px;padding:12px;text-align:center">
+        <div id="frioGasKpiRefrig" style="font-size:.75rem;color:rgba(255,255,255,.4);margin-bottom:4px">Refrigerante</div>
+        <div id="frioGasKpiRefrigVal" style="font-size:1rem;font-weight:800;color:#64d2ff">—</div>
+      </div>
+      <div style="background:var(--navy-deep);border:1px solid rgba(100,210,255,.15);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:.75rem;color:rgba(255,255,255,.4);margin-bottom:4px">Carga nominal</div>
+        <div id="frioGasKpiNominal" style="font-size:1rem;font-weight:800;color:#64d2ff">—</div>
+      </div>
+      <div style="background:var(--navy-deep);border:1px solid rgba(100,210,255,.15);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:.75rem;color:rgba(255,255,255,.4);margin-bottom:4px">Carga actual (calc.)</div>
+        <div id="frioGasKpiActual" style="font-size:1rem;font-weight:800;color:#2ecc71">—</div>
+      </div>
+      <div style="background:var(--navy-deep);border:1px solid rgba(100,210,255,.15);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:.75rem;color:rgba(255,255,255,.4);margin-bottom:4px">t CO₂ eq.</div>
+        <div id="frioGasKpiCO2" style="font-size:1rem;font-weight:800;color:#f0c040">—</div>
+      </div>
+      <div style="background:var(--navy-deep);border:1px solid rgba(100,210,255,.15);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:.75rem;color:rgba(255,255,255,.4);margin-bottom:4px">Frec. control fugas</div>
+        <div id="frioGasKpiFrecuencia" style="font-size:.9rem;font-weight:800;color:#f39c12">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario nueva operación -->
+  <div class="card" style="margin-bottom:14px;border:1px solid rgba(240,192,64,.15)">
+    <div class="sec-title" style="margin-bottom:14px;color:var(--gold-light)">➕ Registrar operación de gas</div>
+    <div class="frio-grid">
+      <div class="frio-field"><label>Tipo de operación *</label>
+        <select id="frioGasTipo">
+          <option value="">— Selecciona —</option>
+          <option>Control de fugas</option>
+          <option>Carga inicial</option>
+          <option>Recarga</option>
+          <option>Recuperación</option>
+          <option>Trasvase</option>
+        </select>
+      </div>
+      <div class="frio-field"><label>Fecha *</label><input type="date" id="frioGasFecha"></div>
+      <div class="frio-field"><label>Resultado (si es control fugas)</label>
+        <select id="frioGasResultado">
+          <option value="">— N/A —</option>
+          <option value="ok">✅ Sin fugas</option>
+          <option value="fuga_reparada">⚠️ Fuga detectada — reparada</option>
+          <option value="fuga_pendiente">🔴 Fuga detectada — pendiente</option>
+        </select>
+      </div>
+      <div class="frio-field"><label>Kg añadidos (+)</label><input type="number" id="frioGasKgAdd" step="0.01" min="0" placeholder="0.00"></div>
+      <div class="frio-field"><label>Kg recuperados (-)</label><input type="number" id="frioGasKgRec" step="0.01" min="0" placeholder="0.00"></div>
+      <div class="frio-field"><label>Origen del gas</label>
+        <select id="frioGasOrigen">
+          <option value="">— N/A —</option>
+          <option>Virgen</option><option>Reciclado</option><option>Regenerado</option>
+        </select>
+      </div>
+      <div class="frio-field"><label>Técnico (nombre)</label><input type="text" id="frioGasTecnico" placeholder="Nombre del técnico F-Gas"></div>
+      <div class="frio-field"><label>Nº certificado F-Gas</label><input type="text" id="frioGasCert" placeholder="ej: F-I-00234"></div>
+      <div class="frio-field"><label>Empresa</label><input type="text" id="frioGasEmpresa" placeholder="ej: INFRISA"></div>
+      <div class="frio-field span2"><label>Observaciones</label><input type="text" id="frioGasObs" placeholder="Detalles, lugar de fuga, reparación..."></div>
+    </div>
+    <button onclick="frioGasGuardar()" class="btn-export" style="background:rgba(240,192,64,.12);border:1px solid rgba(240,192,64,.4);color:var(--gold-light)">💾 Registrar operación</button>
+  </div>
+
+  <!-- Historial operaciones del equipo -->
+  <div class="card">
+    <div class="sec-title" style="margin-bottom:12px">📋 Historial operaciones — <span id="frioGasEqNombre" style="color:#64d2ff;font-weight:400">selecciona un equipo</span></div>
+    <div style="overflow-x:auto">
+      <table class="data-table">
+        <thead><tr><th>Fecha</th><th>Operación</th><th>Kg +/-</th><th>Origen</th><th>Resultado</th><th>Técnico</th><th>Cert.</th><th>Empresa</th><th>Obs.</th><th></th></tr></thead>
+        <tbody id="frioGasTbody"><tr><td colspan="10" style="text-align:center;color:rgba(255,255,255,.3);padding:20px">Selecciona un equipo</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── CONTROL DE FUGAS ── -->
+<div id="frioSec-fugas" style="display:none">
+  <div class="card" style="margin-bottom:14px;border:1px solid rgba(100,210,255,.12)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <div class="sec-title" style="margin:0">🔍 Control de Fugas — Estado general</div>
+      <button onclick="frioFugasActualizar()" style="background:rgba(100,210,255,.08);border:1px solid rgba(100,210,255,.2);color:rgba(100,210,255,.6);border-radius:7px;padding:6px 14px;font-family:'Barlow',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer">🔄 Actualizar</button>
+    </div>
+    <!-- KPI resumen -->
+    <div id="frioFugasKpis" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:16px"></div>
+    <!-- Tabla -->
+    <div style="overflow-x:auto">
+      <table class="data-table">
+        <thead><tr>
+          <th>Equipo</th><th>Refrigerante</th><th>Carga</th><th>t CO₂ eq.</th>
+          <th>Frec. legal</th><th>Último control</th><th>Próximo</th><th>Estado</th><th>Acción</th>
+        </tr></thead>
+        <tbody id="frioFugasTbody"><tr><td colspan="9" style="text-align:center;color:rgba(255,255,255,.3);padding:24px">Cargando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+  <div style="font-size:.78rem;color:rgba(255,255,255,.35);padding:0 4px">
+    💡 <b>Cálculo t CO₂ eq.</b> = kg gas × PCA / 1000 ·
+    &lt;50t → revisión anual · 50-500t → semestral · ≥500t → trimestral (Reglamento UE 2024/573)
   </div>
 </div>
 
@@ -7435,7 +7680,7 @@ function initFrio() {
 }
 
 function frioSec(sec) {
-  ['equipos','temps','averias','prev'].forEach(s => {
+  ['equipos','lecturas','gas','fugas','averias','prev'].forEach(s => {
     const el = document.getElementById('frioSec-' + s);
     const btn = document.getElementById('frioBtn-' + s);
     if (el) el.style.display = s === sec ? '' : 'none';
@@ -7443,10 +7688,17 @@ function frioSec(sec) {
   });
   const hoy = new Date().toISOString().slice(0,10);
   const ahora = new Date().toTimeString().slice(0,5);
-  if (sec === 'temps') {
-    const fd = document.getElementById('frioTmpFecha'); if (fd && !fd.value) fd.value = hoy;
-    const fh = document.getElementById('frioTmpHora');  if (fh && !fh.value) fh.value = ahora;
-    frioLoadTemps();
+  if (sec === 'lecturas') {
+    const fd = document.getElementById('frioLecFecha'); if (fd && !fd.value) fd.value = hoy;
+    const fh = document.getElementById('frioLecHora');  if (fh && !fh.value) fh.value = ahora;
+    frioLecPoblarSelects();
+    frioLoadLecturas();
+  }
+  if (sec === 'gas') {
+    frioGasPoblarSelect();
+  }
+  if (sec === 'fugas') {
+    frioFugasActualizar();
   }
   if (sec === 'averias') {
     const fa = document.getElementById('frioAvFecha');
@@ -7471,6 +7723,25 @@ function frioPopularSelects() {
   const filtro = document.getElementById('frioTmpFiltro');
   if (filtro) filtro.innerHTML = '<option value="">Todos los equipos</option>' +
     Object.keys(_frioEqs).map(k => `<option value="${k}">${_frioEqs[k].nombre}</option>`).join('');
+  frioLecPoblarSelects();
+  frioGasPoblarSelect();
+}
+
+function frioLecPoblarSelects() {
+  const opts = '<option value="">— Selecciona —</option>' +
+    Object.keys(_frioEqs).map(k => `<option value="${k}">${_frioEqs[k].nombre}</option>`).join('');
+  const eq = document.getElementById('frioLecEq'); if (eq) eq.innerHTML = opts;
+  const filEq = document.getElementById('frioLecFilEq');
+  if (filEq) filEq.innerHTML = '<option value="">Todos los equipos</option>' +
+    Object.keys(_frioEqs).map(k => `<option value="${k}">${_frioEqs[k].nombre}</option>`).join('');
+  // Mecánicos
+  const quien = document.getElementById('frioLecQuien');
+  if (quien && quien.options.length <= 1) {
+    const nombres = window._mecData ? window._mecData.map(m=>m.nombre) : ['GREGORIO','JOSE','JAVIER H','ALEX','RAFA','RUBIEL','ALBERTO','JAVIER E'];
+    quien.innerHTML = '<option value="">— Selecciona —</option>' + nombres.map(n=>`<option>${n}</option>`).join('');
+    const filQ = document.getElementById('frioLecFilQuien');
+    if (filQ) filQ.innerHTML = '<option value="">Todos</option>' + nombres.map(n=>`<option>${n}</option>`).join('');
+  }
 }
 
 function frioPopularMecs(id) {
@@ -8084,6 +8355,341 @@ function borrarPedido(id) {
   DB.ref('pedidos/'+id).remove()
     .then(function(){ showToast('🗑 Solicitud borrada'); })
     .catch(function(){ showToast('❌ Error al borrar'); });
+}
+</script>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// FRÍO — LECTURAS COMPLETAS
+// ══════════════════════════════════════════════════════════════════
+var _frioLecEditId = null;
+var _PCA_MAP = {
+  'R404A':3922,'R448A':1387,'R449A':1397,'R452A':2140,'R134a':1430,
+  'R407C':1774,'R407F':1825,'R22 (legacy)':1810,'R717 (amoniaco)':0,
+  'R290 (propano)':3,'R744 (CO2)':1,'R32':675
+};
+
+function frioGuardarLectura() {
+  var eqId = document.getElementById('frioLecEq').value;
+  var fecha = document.getElementById('frioLecFecha').value;
+  var hora  = document.getElementById('frioLecHora').value;
+  var quien = document.getElementById('frioLecQuien').value;
+  var tCam  = document.getElementById('frioLecTCam').value;
+  if (!eqId || !fecha || !hora || !quien) { showToast('⚠️ Rellena los campos obligatorios (*)'); return; }
+  if (!tCam) { showToast('⚠️ Indica al menos la temperatura de cámara'); return; }
+  var id = _frioLecEditId || ('LEC-' + Date.now());
+  var eq = _frioEqs[eqId] || {};
+  var obj = {
+    id, eqId, eqNombre: eq.nombre||eqId, fecha, hora, quien,
+    tipo: document.getElementById('frioLecTipo').value,
+    tExt:   _numOrNull('frioLecTExt'), humExt: _numOrNull('frioLecHumExt'),
+    tSala:  _numOrNull('frioLecTSala'),
+    tCam:   parseFloat(tCam), tRet:  _numOrNull('frioLecTRet'),
+    tImp:   _numOrNull('frioLecTImp'), tEvap: _numOrNull('frioLecTEvap'),
+    tAsp:   _numOrNull('frioLecTAsp'), tDesc: _numOrNull('frioLecTDesc'),
+    tCond:  _numOrNull('frioLecTCond'), tLiq:  _numOrNull('frioLecTLiq'),
+    humInt: _numOrNull('frioLecHumInt'),
+    pBaja:  _numOrNull('frioLecPBaja'), pAlta: _numOrNull('frioLecPAlta'),
+    pAceite: _numOrNull('frioLecPAceite'),
+    desesc: document.getElementById('frioLecDesesc').value,
+    desescMin: _numOrNull('frioLecDesescMin'), desescNum: _numOrNull('frioLecDesescNum'),
+    evapEst: document.getElementById('frioLecEvapEst').value,
+    ventCond: document.getElementById('frioLecVentCond').value,
+    ventEvap: document.getElementById('frioLecVentEvap').value,
+    condSuciedad: document.getElementById('frioLecCond').value,
+    fuga: document.getElementById('frioLecFuga').value,
+    juntas: document.getElementById('frioLecJuntas').value,
+    mirilla: document.getElementById('frioLecMirilla').value,
+    obs: document.getElementById('frioLecObs').value.trim(),
+    ts: Date.now()
+  };
+  DB.ref('frio/lecturas/' + id).set(obj).then(function() {
+    showToast(_frioLecEditId ? '✅ Lectura actualizada' : '✅ Lectura guardada');
+    _frioLecEditId = null;
+    frioLimpiarLectura();
+    frioLoadLecturas();
+    // Si hay fuga confirmada → aviso
+    if (obj.fuga === 'confirmada') showToast('🚨 FUGA CONFIRMADA — Registra en Libro de Gas');
+  }).catch(function(){ showToast('❌ Error al guardar'); });
+}
+
+function _numOrNull(id) {
+  var v = document.getElementById(id);
+  if (!v || v.value === '' || v.value === null) return null;
+  return parseFloat(v.value);
+}
+
+function frioLimpiarLectura() {
+  var ids = ['frioLecEq','frioLecQuien','frioLecTipo','frioLecTExt','frioLecHumExt','frioLecTSala',
+    'frioLecTCam','frioLecTRet','frioLecTImp','frioLecTEvap','frioLecTAsp','frioLecTDesc',
+    'frioLecTCond','frioLecTLiq','frioLecHumInt','frioLecPBaja','frioLecPAlta','frioLecPAceite',
+    'frioLecDesescMin','frioLecDesescNum','frioLecObs'];
+  ids.forEach(function(id){ var el = document.getElementById(id); if(el) el.value = ''; });
+  var selects = ['frioLecDesesc','frioLecEvapEst','frioLecVentCond','frioLecVentEvap','frioLecCond','frioLecFuga','frioLecJuntas','frioLecMirilla'];
+  selects.forEach(function(id){ var el = document.getElementById(id); if(el) el.selectedIndex = 0; });
+  var hoy = new Date().toISOString().slice(0,10);
+  var ahora = new Date().toTimeString().slice(0,5);
+  var fd = document.getElementById('frioLecFecha'); if(fd) fd.value = hoy;
+  var fh = document.getElementById('frioLecHora');  if(fh) fh.value = ahora;
+  _frioLecEditId = null;
+  var lbl = document.getElementById('frioLecEditLabel'); if(lbl) lbl.style.display='none';
+}
+
+function frioLoadLecturas() {
+  var filEq    = (document.getElementById('frioLecFilEq')    || {}).value || '';
+  var filQuien = (document.getElementById('frioLecFilQuien') || {}).value || '';
+  DB.ref('frio/lecturas').orderByChild('ts').limitToLast(100).once('value').then(function(snap) {
+    var lista = Object.values(snap.val() || {}).reverse();
+    if (filEq)    lista = lista.filter(function(l){ return l.eqId === filEq; });
+    if (filQuien) lista = lista.filter(function(l){ return l.quien === filQuien; });
+    var tb = document.getElementById('frioLecTbody');
+    if (!tb) return;
+    if (!lista.length) { tb.innerHTML='<tr><td colspan="10" style="text-align:center;color:rgba(255,255,255,.3);padding:20px">Sin lecturas</td></tr>'; return; }
+    tb.innerHTML = lista.map(function(l) {
+      var tCamColor = '';
+      var eq = _frioEqs[l.eqId] || {};
+      if (l.tCam != null) {
+        if (eq.tMax != null && l.tCam > eq.tMax) tCamColor = 'color:#e74c3c;font-weight:700';
+        else if (eq.tMin != null && l.tCam < eq.tMin) tCamColor = 'color:#64d2ff;font-weight:700';
+        else tCamColor = 'color:#2ecc71';
+      }
+      var fugaIcon = {'no':'✅','posible':'⚠️','confirmada':'🔴'}[l.fuga] || '—';
+      var desescIcon = {'no':'—','ok':'✅','incompleto':'⚠️','fallo':'❌'}[l.desesc] || '—';
+      return '<tr>'
+        +'<td><b>'+escHtml(l.eqNombre||l.eqId)+'</b></td>'
+        +'<td>'+l.fecha+' '+l.hora+'</td>'
+        +'<td style="'+tCamColor+'">'+(l.tCam!=null?l.tCam+'°C':'—')+'</td>'
+        +'<td>'+(l.tExt!=null?l.tExt+'°C':'—')+'</td>'
+        +'<td>'+(l.pBaja!=null?l.pBaja+' bar':'—')+'</td>'
+        +'<td>'+(l.pAlta!=null?l.pAlta+' bar':'—')+'</td>'
+        +'<td>'+desescIcon+'</td>'
+        +'<td>'+fugaIcon+'</td>'
+        +'<td>'+escHtml(l.quien||'—')+'</td>'
+        +'<td><button onclick="frioLecEditar(\''+l.id+'\')" style="background:rgba(100,210,255,.1);border:1px solid rgba(100,210,255,.3);color:#64d2ff;border-radius:6px;padding:4px 10px;cursor:pointer;font-family:\'Barlow\',sans-serif;font-size:.75rem;font-weight:700">✏️</button>'
+        +' <button onclick="frioLecBorrar(\''+l.id+'\')" style="background:rgba(231,76,60,.08);border:1px solid rgba(231,76,60,.25);color:rgba(231,76,60,.7);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:\'Barlow\',sans-serif;font-size:.75rem;font-weight:700">🗑</button></td>'
+        +'</tr>';
+    }).join('');
+  }).catch(function(){});
+}
+
+function frioLecEditar(id) {
+  DB.ref('frio/lecturas/'+id).once('value').then(function(snap){
+    var l = snap.val(); if(!l) return;
+    _frioLecEditId = id;
+    var setVal = function(eid, v) { var el=document.getElementById(eid); if(el && v!=null) el.value=v; };
+    setVal('frioLecEq', l.eqId); setVal('frioLecFecha', l.fecha); setVal('frioLecHora', l.hora);
+    setVal('frioLecQuien', l.quien); setVal('frioLecTipo', l.tipo);
+    setVal('frioLecTExt', l.tExt); setVal('frioLecHumExt', l.humExt); setVal('frioLecTSala', l.tSala);
+    setVal('frioLecTCam', l.tCam); setVal('frioLecTRet', l.tRet); setVal('frioLecTImp', l.tImp);
+    setVal('frioLecTEvap', l.tEvap); setVal('frioLecTAsp', l.tAsp); setVal('frioLecTDesc', l.tDesc);
+    setVal('frioLecTCond', l.tCond); setVal('frioLecTLiq', l.tLiq); setVal('frioLecHumInt', l.humInt);
+    setVal('frioLecPBaja', l.pBaja); setVal('frioLecPAlta', l.pAlta); setVal('frioLecPAceite', l.pAceite);
+    setVal('frioLecDesesc', l.desesc); setVal('frioLecDesescMin', l.desescMin); setVal('frioLecDesescNum', l.desescNum);
+    setVal('frioLecEvapEst', l.evapEst); setVal('frioLecVentCond', l.ventCond); setVal('frioLecVentEvap', l.ventEvap);
+    setVal('frioLecCond', l.condSuciedad); setVal('frioLecFuga', l.fuga); setVal('frioLecJuntas', l.juntas);
+    setVal('frioLecMirilla', l.mirilla); setVal('frioLecObs', l.obs);
+    var lbl = document.getElementById('frioLecEditLabel'); if(lbl) lbl.style.display='';
+    document.getElementById('frioSec-lecturas').scrollIntoView({behavior:'smooth'});
+  });
+}
+
+function frioLecBorrar(id) {
+  if (!confirm('¿Borrar esta lectura?')) return;
+  DB.ref('frio/lecturas/'+id).remove().then(function(){ showToast('🗑 Lectura borrada'); frioLoadLecturas(); });
+}
+
+// ══════════════════════════════════════════════
+// FRÍO — LIBRO DE GAS
+// ══════════════════════════════════════════════
+var _PCA = {'R404A':3922,'R448A':1387,'R449A':1397,'R452A':2140,'R134a':1430,'R407C':1774,'R407F':1825,'R22 (legacy)':1810,'R717 (amoniaco)':0,'R290 (propano)':3,'R744 (CO2)':1,'R32':675};
+
+function frioGasPoblarSelect() {
+  var sel = document.getElementById('frioGasEqSel');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— Selecciona equipo —</option>' +
+    Object.keys(_frioEqs).map(k => '<option value="'+k+'">'+_frioEqs[k].nombre+'</option>').join('');
+}
+
+function frioGasCargar() {
+  var eqId = document.getElementById('frioGasEqSel').value;
+  var eq = _frioEqs[eqId] || {};
+  var nombre = document.getElementById('frioGasEqNombre');
+  if (nombre) nombre.textContent = eq.nombre || '—';
+  // KPIs
+  var kpis = document.getElementById('frioGasKpis');
+  if (kpis) kpis.style.display = eqId ? 'grid' : 'none';
+  if (eqId && eq.refrigerante) {
+    var ref = eq.refrigerante || '—';
+    var nominal = parseFloat(eq.cargaRefrig) || 0;
+    document.getElementById('frioGasKpiRefrigVal').textContent = ref;
+    document.getElementById('frioGasKpiNominal').textContent = nominal ? nominal+'kg' : '—';
+    // Calcular carga actual desde operaciones
+    DB.ref('frio/gas/'+eqId).once('value').then(function(snap){
+      var ops = Object.values(snap.val() || {}).sort(function(a,b){ return a.ts-b.ts; });
+      var actual = nominal;
+      ops.forEach(function(op){
+        if (op.kgAdd) actual += parseFloat(op.kgAdd)||0;
+        if (op.kgRec) actual -= parseFloat(op.kgRec)||0;
+      });
+      actual = Math.max(0, Math.round(actual*100)/100);
+      document.getElementById('frioGasKpiActual').textContent = actual+'kg';
+      var pca = _PCA[ref] || 0;
+      var co2 = pca ? Math.round(actual*pca/10)/100 : null;
+      document.getElementById('frioGasKpiCO2').textContent = co2 ? co2+'t' : '—';
+      var frec = co2 ? (co2>=500?'Cada 3 meses':co2>=50?'Cada 6 meses':'Anual') : '—';
+      document.getElementById('frioGasKpiFrecuencia').textContent = frec;
+      // Renderizar tabla
+      frioGasRenderTabla(ops, eqId);
+    });
+  } else {
+    frioGasRenderTabla([], eqId);
+  }
+  // Fecha hoy
+  var fd = document.getElementById('frioGasFecha'); if(fd && !fd.value) fd.value = new Date().toISOString().slice(0,10);
+}
+
+function frioGasRenderTabla(ops, eqId) {
+  var tb = document.getElementById('frioGasTbody');
+  if (!tb) return;
+  if (!eqId) { tb.innerHTML='<tr><td colspan="10" style="text-align:center;color:rgba(255,255,255,.3);padding:20px">Selecciona un equipo</td></tr>'; return; }
+  var lista = ops.slice().reverse();
+  if (!lista.length) { tb.innerHTML='<tr><td colspan="10" style="text-align:center;color:rgba(255,255,255,.3);padding:20px">Sin operaciones registradas</td></tr>'; return; }
+  tb.innerHTML = lista.map(function(op){
+    var kgStr = '';
+    if (op.kgAdd && parseFloat(op.kgAdd)>0) kgStr = '<span style="color:#2ecc71">+'+op.kgAdd+'</span>';
+    if (op.kgRec && parseFloat(op.kgRec)>0) kgStr += (kgStr?' ':'')+'<span style="color:#e74c3c">-'+op.kgRec+'</span>';
+    if (!kgStr) kgStr = '—';
+    var resIcon = {'ok':'✅ Sin fugas','fuga_reparada':'⚠️ Fuga — reparada','fuga_pendiente':'🔴 Fuga — pendiente'}[op.resultado] || '—';
+    return '<tr>'
+      +'<td>'+escHtml(op.fecha||'—')+'</td>'
+      +'<td><b>'+escHtml(op.tipo||'—')+'</b></td>'
+      +'<td>'+kgStr+'</td>'
+      +'<td>'+escHtml(op.origen||'—')+'</td>'
+      +'<td>'+resIcon+'</td>'
+      +'<td>'+escHtml(op.tecnico||'—')+'</td>'
+      +'<td style="font-size:.78rem;color:rgba(255,255,255,.5)">'+escHtml(op.cert||'—')+'</td>'
+      +'<td>'+escHtml(op.empresa||'—')+'</td>'
+      +'<td style="font-size:.8rem;color:rgba(255,255,255,.55)">'+escHtml(op.obs||'—')+'</td>'
+      +'<td><button onclick="frioGasBorrar(\''+eqId+'\',\''+op._key+'\')" style="background:rgba(231,76,60,.08);border:1px solid rgba(231,76,60,.25);color:rgba(231,76,60,.7);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:\'Barlow\',sans-serif;font-size:.75rem;font-weight:700">🗑</button></td>'
+      +'</tr>';
+  }).join('');
+}
+
+function frioGasGuardar() {
+  var eqId  = document.getElementById('frioGasEqSel').value;
+  var tipo  = document.getElementById('frioGasTipo').value;
+  var fecha = document.getElementById('frioGasFecha').value;
+  if (!eqId)  { showToast('⚠️ Selecciona un equipo'); return; }
+  if (!tipo)  { showToast('⚠️ Selecciona tipo de operación'); return; }
+  if (!fecha) { showToast('⚠️ Indica la fecha'); return; }
+  var key = 'GAS-' + Date.now();
+  var obj = {
+    _key: key, tipo, fecha,
+    resultado: document.getElementById('frioGasResultado').value,
+    kgAdd:  document.getElementById('frioGasKgAdd').value  || null,
+    kgRec:  document.getElementById('frioGasKgRec').value  || null,
+    origen: document.getElementById('frioGasOrigen').value || null,
+    tecnico: document.getElementById('frioGasTecnico').value.trim() || null,
+    cert:    document.getElementById('frioGasCert').value.trim()    || null,
+    empresa: document.getElementById('frioGasEmpresa').value.trim() || null,
+    obs:     document.getElementById('frioGasObs').value.trim()     || null,
+    ts: Date.now()
+  };
+  // Si es control de fugas y sin fuga → actualizar proxRev en equipo
+  if (tipo === 'Control de fugas') {
+    var eq = _frioEqs[eqId] || {};
+    var ref = eq.refrigerante || '';
+    var carga = parseFloat(eq.cargaRefrig) || 0;
+    var pca = _PCA[ref] || 0;
+    var co2 = pca ? carga*pca/1000 : 0;
+    var meses = co2>=500?3:co2>=50?6:12;
+    var proxDate = new Date(fecha);
+    proxDate.setMonth(proxDate.getMonth() + meses);
+    DB.ref('frio/equipos/'+eqId+'/proxRevFgas').set(proxDate.toISOString().slice(0,10)).catch(()=>{});
+  }
+  DB.ref('frio/gas/'+eqId+'/'+key).set(obj).then(function(){
+    showToast('✅ Operación registrada en el Libro de Gas');
+    // Limpiar campos operación
+    ['frioGasTipo','frioGasResultado','frioGasOrigen'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+    ['frioGasKgAdd','frioGasKgRec','frioGasTecnico','frioGasCert','frioGasEmpresa','frioGasObs'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+    frioGasCargar();
+  }).catch(function(){ showToast('❌ Error al guardar'); });
+}
+
+function frioGasBorrar(eqId, key) {
+  if (!confirm('¿Borrar esta operación?')) return;
+  DB.ref('frio/gas/'+eqId+'/'+key).remove().then(function(){ showToast('🗑 Operación borrada'); frioGasCargar(); });
+}
+
+// ══════════════════════════════════════════════
+// FRÍO — CONTROL DE FUGAS
+// ══════════════════════════════════════════════
+function frioFugasActualizar() {
+  var tb   = document.getElementById('frioFugasTbody');
+  var kpis = document.getElementById('frioFugasKpis');
+  if (!tb) return;
+  var eqs = Object.keys(_frioEqs).map(function(k){ return Object.assign({_key:k}, _frioEqs[k]); });
+  // Solo equipos con refrigerante (no N/P)
+  var conGas = eqs.filter(function(e){ return e.refrigerante && e.refrigerante !== 'N/P — No presente'; });
+  if (!conGas.length) { tb.innerHTML='<tr><td colspan="9" style="text-align:center;color:rgba(255,255,255,.3);padding:24px">Sin equipos con gas configurado</td></tr>'; return; }
+
+  var hoy = new Date();
+  var totalVencidos=0, totalProximos=0, totalOk=0;
+
+  tb.innerHTML = conGas.map(function(eq){
+    var ref    = eq.refrigerante || '—';
+    var carga  = parseFloat(eq.cargaRefrig) || 0;
+    var pca    = _PCA[ref] || 0;
+    var co2    = pca && carga ? Math.round(carga*pca/10)/100 : null;
+    var meses  = co2 ? (co2>=500?3:co2>=50?6:12) : 12;
+    var frecTxt= co2 ? (co2>=500?'Cada 3 meses':co2>=50?'Cada 6 meses':'Anual') : 'Anual';
+    var proxRev = eq.proxRevFgas || null;
+    var estadoHTML = '';
+    if (!proxRev) {
+      estadoHTML = '<span style="background:rgba(149,165,166,.15);color:#95a5a6;border:1px solid rgba(149,165,166,.3);border-radius:10px;padding:2px 9px;font-size:.7rem;font-weight:700">Sin fecha</span>';
+    } else {
+      var diff = Math.round((new Date(proxRev) - hoy) / 86400000);
+      if (diff < 0) {
+        estadoHTML = '<span style="background:rgba(231,76,60,.18);color:#ff6b6b;border:1px solid rgba(231,76,60,.4);border-radius:10px;padding:2px 9px;font-size:.7rem;font-weight:700">⛔ VENCIDO ('+Math.abs(diff)+'d)</span>';
+        totalVencidos++;
+      } else if (diff <= 30) {
+        estadoHTML = '<span style="background:rgba(243,156,18,.15);color:#f39c12;border:1px solid rgba(243,156,18,.3);border-radius:10px;padding:2px 9px;font-size:.7rem;font-weight:700">⚠️ '+diff+' días</span>';
+        totalProximos++;
+      } else {
+        estadoHTML = '<span style="background:rgba(46,204,113,.15);color:#2ecc71;border:1px solid rgba(46,204,113,.3);border-radius:10px;padding:2px 9px;font-size:.7rem;font-weight:700">✅ OK</span>';
+        totalOk++;
+      }
+    }
+    return '<tr>'
+      +'<td><b>'+escHtml(eq.nombre||eq._key)+'</b></td>'
+      +'<td>'+escHtml(ref)+'</td>'
+      +'<td>'+(carga?carga+'kg':'—')+'</td>'
+      +'<td style="color:'+(co2&&co2>=50?'#f39c12':'#2ecc71')+'">'+(co2?co2+'t':'—')+'</td>'
+      +'<td><span style="font-size:.75rem;background:rgba(100,210,255,.1);color:#64d2ff;border:1px solid rgba(100,210,255,.25);border-radius:8px;padding:2px 8px">'+frecTxt+'</span></td>'
+      +'<td>'+escHtml(eq.ultimoControlFgas||'—')+'</td>'
+      +'<td>'+escHtml(proxRev||'—')+'</td>'
+      +'<td>'+estadoHTML+'</td>'
+      +'<td><button onclick="frioFugasRegistrar(\''+eq._key+'\')" style="background:rgba(100,210,255,.1);border:1px solid rgba(100,210,255,.3);color:#64d2ff;border-radius:6px;padding:5px 10px;cursor:pointer;font-family:\'Barlow\',sans-serif;font-size:.75rem;font-weight:700">⛽ Registrar</button></td>'
+      +'</tr>';
+  }).join('');
+
+  // KPIs
+  if (kpis) kpis.innerHTML =
+    '<div style="background:var(--navy-mid);border:1px solid rgba(231,76,60,.3);border-radius:10px;padding:14px;text-align:center"><div style="font-size:1.6rem;font-weight:900;color:#e74c3c">'+totalVencidos+'</div><div style="font-size:.72rem;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em">Vencidos</div></div>'
+   +'<div style="background:var(--navy-mid);border:1px solid rgba(243,156,18,.3);border-radius:10px;padding:14px;text-align:center"><div style="font-size:1.6rem;font-weight:900;color:#f39c12">'+totalProximos+'</div><div style="font-size:.72rem;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em">Próximos 30d</div></div>'
+   +'<div style="background:var(--navy-mid);border:1px solid rgba(46,204,113,.3);border-radius:10px;padding:14px;text-align:center"><div style="font-size:1.6rem;font-weight:900;color:#2ecc71">'+totalOk+'</div><div style="font-size:.72rem;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em">Al día</div></div>'
+   +'<div style="background:var(--navy-mid);border:1px solid rgba(100,210,255,.15);border-radius:10px;padding:14px;text-align:center"><div style="font-size:1.6rem;font-weight:900;color:#64d2ff">'+conGas.length+'</div><div style="font-size:.72rem;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em">Equipos con gas</div></div>';
+}
+
+function frioFugasRegistrar(eqId) {
+  // Ir a Libro de Gas con ese equipo preseleccionado
+  frioSec('gas');
+  setTimeout(function(){
+    var sel = document.getElementById('frioGasEqSel');
+    if (sel) { sel.value = eqId; frioGasCargar(); }
+    var tip = document.getElementById('frioGasTipo');
+    if (tip) tip.value = 'Control de fugas';
+  }, 100);
 }
 </script>
 
