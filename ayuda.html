@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PANALCOR — Ayuda & Normativa</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-deep:#07111c;--navy-dark:#0c1a28;--navy-mid:#0f2035;--navy-light:#162840;
+    --ice:#64d2ff;--gold:#f0c040;--green:#2ecc71;--red:#e74c3c;--orange:#f39c12;--white:#e8f0f8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-serif;font-size:15px;line-height:1.6}
+
+  /* ── TOPBAR ── */
+  .topbar{background:var(--navy-dark);border-bottom:1px solid rgba(100,210,255,.12);padding:12px 20px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100}
+  .topbar-title{font-size:1.05rem;font-weight:900;color:var(--ice);letter-spacing:.04em}
+  .topbar-back{background:rgba(100,210,255,.08);border:1px solid rgba(100,210,255,.25);color:rgba(100,210,255,.7);border-radius:8px;padding:6px 14px;font-family:'Barlow',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;text-decoration:none}
+  .topbar-back:hover{background:rgba(100,210,255,.15);color:var(--ice)}
+
+  /* ── LAYOUT ── */
+  .layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 54px)}
+  @media(max-width:800px){.layout{grid-template-columns:1fr}.sidebar{display:none}}
+
+  /* ── SIDEBAR ── */
+  .sidebar{background:var(--navy-dark);border-right:1px solid rgba(100,210,255,.08);padding:20px 14px;position:sticky;top:54px;height:calc(100vh - 54px);overflow-y:auto}
+  .sidebar-section{margin-bottom:18px}
+  .sidebar-section-title{font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.3);margin-bottom:8px;padding-left:4px}
+  .sidebar a{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;color:rgba(255,255,255,.55);text-decoration:none;font-size:.83rem;font-weight:600;transition:all .15s;margin-bottom:2px}
+  .sidebar a:hover,.sidebar a.active{background:rgba(100,210,255,.1);color:var(--ice)}
+  .sidebar a .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+  .dot-blue{background:var(--ice)}
+  .dot-gold{background:var(--gold)}
+  .dot-green{background:var(--green)}
+  .dot-orange{background:var(--orange)}
+  .dot-red{background:var(--red)}
+
+  /* ── BUSCADOR ── */
+  .search-wrap{padding:20px 24px 0}
+  .search-box{display:flex;align-items:center;gap:10px;background:var(--navy-mid);border:1px solid rgba(100,210,255,.3);border-radius:12px;padding:12px 16px;margin-bottom:6px}
+  .search-box input{background:transparent;border:none;outline:none;color:var(--white);font-family:'Barlow',sans-serif;font-size:1rem;flex:1}
+  .search-box input::placeholder{color:rgba(255,255,255,.3)}
+  .search-box .ico{font-size:1.2rem;color:rgba(100,210,255,.5)}
+  #searchCount{font-size:.78rem;color:rgba(255,255,255,.35);padding-left:4px;margin-bottom:16px}
+  .highlight{background:rgba(240,192,64,.3);color:#f0c040;border-radius:3px;padding:0 2px}
+
+  /* ── CONTENIDO ── */
+  .content{padding:24px;max-width:860px}
+
+  /* ── ARTÍCULO ── */
+  .article{margin-bottom:32px;scroll-margin-top:70px}
+  .article-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid rgba(100,210,255,.12)}
+  .article-icon{font-size:1.5rem}
+  .article-title{font-size:1.1rem;font-weight:900;color:var(--ice)}
+  .article-badge{font-size:.65rem;background:rgba(100,210,255,.12);border:1px solid rgba(100,210,255,.3);color:var(--ice);padding:2px 9px;border-radius:20px;font-weight:700;letter-spacing:.08em}
+
+  /* ── BLOQUES ── */
+  .norm-block{background:var(--navy-mid);border-left:3px solid var(--ice);border-radius:0 10px 10px 0;padding:14px 18px;margin-bottom:12px}
+  .norm-block.warn{border-left-color:var(--orange)}
+  .norm-block.danger{border-left-color:var(--red)}
+  .norm-block.ok{border-left-color:var(--green)}
+  .norm-block.gold{border-left-color:var(--gold)}
+  .nb-title{font-size:.88rem;font-weight:800;color:var(--white);margin-bottom:6px}
+  .nb-body{font-size:.82rem;color:rgba(255,255,255,.6);line-height:1.7}
+  .nb-body b,.nb-body strong{color:var(--white)}
+  .nb-body .hl{color:var(--gold);font-weight:700}
+  .nb-body .ice{color:var(--ice);font-weight:700}
+  .nb-body .red{color:var(--red);font-weight:700}
+  .nb-body .green{color:var(--green);font-weight:700}
+
+  /* ── TABLA ── */
+  .nt{width:100%;border-collapse:collapse;font-size:.82rem;margin:10px 0}
+  .nt th{background:rgba(100,210,255,.1);color:var(--ice);padding:8px 12px;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid rgba(100,210,255,.15)}
+  .nt td{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:top}
+  .nt tr.hl-row td{background:rgba(231,76,60,.06)}
+  .nt tr.hl-warn td{background:rgba(243,156,18,.05)}
+  .nt tr.hl-ok td{background:rgba(46,204,113,.04)}
+
+  /* ── BADGE ── */
+  .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.7rem;font-weight:700}
+  .b-red{background:rgba(231,76,60,.18);color:#ff6b6b;border:1px solid rgba(231,76,60,.4)}
+  .b-orange{background:rgba(243,156,18,.15);color:#f39c12;border:1px solid rgba(243,156,18,.3)}
+  .b-green{background:rgba(46,204,113,.15);color:#2ecc71;border:1px solid rgba(46,204,113,.3)}
+  .b-blue{background:rgba(100,210,255,.12);color:#64d2ff;border:1px solid rgba(100,210,255,.3)}
+  .b-gold{background:rgba(240,192,64,.12);color:#f0c040;border:1px solid rgba(240,192,64,.3)}
+
+  /* ── ALERTA ── */
+  .alert{display:flex;gap:12px;padding:13px 16px;border-radius:10px;margin-bottom:14px;font-size:.84rem}
+  .alert.warn{background:rgba(243,156,18,.07);border:1px solid rgba(243,156,18,.3);color:#f0c040}
+  .alert.danger{background:rgba(231,76,60,.07);border:1px solid rgba(231,76,60,.3);color:#ff7675}
+  .alert.ok{background:rgba(46,204,113,.07);border:1px solid rgba(46,204,113,.3);color:#2ecc71}
+  .alert.info{background:rgba(100,210,255,.06);border:1px solid rgba(100,210,255,.2);color:#64d2ff}
+  .alert-icon{font-size:1.1rem;flex-shrink:0;margin-top:1px}
+
+  /* ── SIN RESULTADOS ── */
+  #noResults{display:none;text-align:center;padding:60px 20px;color:rgba(255,255,255,.3)}
+  #noResults .nr-ico{font-size:3rem;margin-bottom:12px}
+  #noResults .nr-txt{font-size:.95rem}
+
+  /* ── VOLVER ARRIBA ── */
+  #btnTop{position:fixed;bottom:24px;right:24px;background:rgba(100,210,255,.15);border:1px solid rgba(100,210,255,.4);color:#64d2ff;border-radius:50%;width:44px;height:44px;font-size:1.2rem;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:200;transition:all .2s}
+  #btnTop:hover{background:rgba(100,210,255,.25)}
+
+  hr.sep{border:none;border-top:1px solid rgba(100,210,255,.07);margin:28px 0}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <a class="topbar-back" href="admin.html">← Admin</a>
+  <div style="font-size:1.3rem">📖</div>
+  <div class="topbar-title">Normativa & Ayuda — PANALCOR</div>
+  <div style="margin-left:auto;font-size:.78rem;color:rgba(255,255,255,.3)">Actualizado Jun 2025</div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">🇪🇺 Normativa europea</div>
+    <a href="#fgas" onclick="setActive(this)"><div class="dot dot-blue"></div>F-Gas UE 2024/573</a>
+    <a href="#phasedown" onclick="setActive(this)"><div class="dot dot-orange"></div>Phase-down HFCs</a>
+    <a href="#pca" onclick="setActive(this)"><div class="dot dot-gold"></div>Tabla PCA refrigerantes</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">🇪🇸 Normativa española</div>
+    <a href="#rsif" onclick="setActive(this)"><div class="dot dot-blue"></div>RD 552/2019 — RSIF</a>
+    <a href="#rd115" onclick="setActive(this)"><div class="dot dot-green"></div>RD 115/2017 — Certificación</a>
+    <a href="#libro" onclick="setActive(this)"><div class="dot dot-gold"></div>Libro de Registro</a>
+    <a href="#sanciones" onclick="setActive(this)"><div class="dot dot-red"></div>Sanciones</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">🔧 Operativa</div>
+    <a href="#fugas" onclick="setActive(this)"><div class="dot dot-orange"></div>Control de fugas</a>
+    <a href="#manipulacion" onclick="setActive(this)"><div class="dot dot-blue"></div>Manipulación de gas</a>
+    <a href="#presiones" onclick="setActive(this)"><div class="dot dot-green"></div>Presiones de trabajo</a>
+    <a href="#seguridad" onclick="setActive(this)"><div class="dot dot-red"></div>Seguridad en planta</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">📋 Referencia rápida</div>
+    <a href="#check-titular" onclick="setActive(this)"><div class="dot dot-gold"></div>Checklist titular</a>
+    <a href="#contactos" onclick="setActive(this)"><div class="dot dot-green"></div>Contactos útiles</a>
+  </div>
+</div>
+
+<!-- CONTENIDO -->
+<div>
+  <!-- BUSCADOR -->
+  <div class="search-wrap">
+    <div class="search-box">
+      <div class="ico">🔍</div>
+      <input type="text" id="searchInput" placeholder="Buscar en normativa... (ej: R404A, control fugas, certificado, presión...)" oninput="buscar(this.value)" autocomplete="off">
+      <button onclick="limpiarBusqueda()" style="background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:1.1rem;padding:0 4px" title="Limpiar">✕</button>
+    </div>
+    <div id="searchCount"></div>
+  </div>
+
+  <div class="content" id="mainContent">
+    <div id="noResults">
+      <div class="nr-ico">🔍</div>
+      <div class="nr-txt">Sin resultados para "<span id="noResultsTerm"></span>"</div>
+      <div style="font-size:.8rem;margin-top:8px;color:rgba(255,255,255,.2)">Prueba con otras palabras clave</div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- F-GAS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="fgas">
+      <div class="article-header">
+        <div class="article-icon">🇪🇺</div>
+        <div>
+          <div class="article-title">Reglamento (UE) 2024/573 — F-Gas</div>
+          <span class="article-badge">EN VIGOR DESDE 11/03/2024</span>
+        </div>
+      </div>
+
+      <div class="alert info">
+        <div class="alert-icon">ℹ️</div>
+        <div>Deroga el anterior Reglamento 517/2014. Es la norma europea más importante sobre <strong>gases fluorados de efecto invernadero (HFC)</strong>. Afecta a todo operador que posea equipos con refrigerantes fluorados.</div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-title">¿A quién aplica?</div>
+        <div class="nb-body">
+          A cualquier empresa o persona que <b>posea, opere o mantenga</b> equipos que contengan gases fluorados. En PANALCOR aplica como <b>operador</b> (titular de los equipos) y a INFRISA como empresa frigorista que los mantiene.<br><br>
+          <b>Obligaciones del operador (PANALCOR):</b><br>
+          • Garantizar que los controles de fugas se realizan en los plazos legales<br>
+          • Conservar el Libro de Registro de cada equipo mínimo <span class="hl">5 años</span><br>
+          • Asegurarse de que solo personal certificado F-Gas manipula el gas<br>
+          • Comunicar a las autoridades las fugas significativas
+        </div>
+      </div>
+
+      <div class="norm-block warn">
+        <div class="nb-title">🚨 Prohibición de liberación intencionada</div>
+        <div class="nb-body">
+          Está <span class="red">terminantemente prohibido</span> liberar gases fluorados a la atmósfera si no es técnicamente necesario. Esto incluye purgar líneas sin recuperar el gas, dejar escapar refrigerante al realizar reparaciones, o no recuperar el gas al desguazar un equipo.<br><br>
+          Toda recuperación debe hacerse con <b>equipo recuperador homologado</b> y el gas debe entregarse a un <b>centro de gestión autorizado</b>.
+        </div>
+      </div>
+
+      <div class="norm-block ok">
+        <div class="nb-title">✅ Novedades clave respecto a 517/2014</div>
+        <div class="nb-body">
+          • Los umbrales de control de fugas pasan a expresarse en <span class="hl">toneladas CO₂ equivalentes</span> (antes en kg directos)<br>
+          • Equipos con <span class="hl">detector automático de fugas homologado</span> pueden duplicar el intervalo de revisión<br>
+          • Nuevos requisitos de <b>etiquetado</b> de equipos y recipientes<br>
+          • Obligación de usar <b>gas reciclado o regenerado</b> para recargas a partir de 2025 en ciertos casos<br>
+          • Refuerzo del sistema de certificación de empresas y técnicos
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PHASE-DOWN -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="phasedown">
+      <div class="article-header">
+        <div class="article-icon">📉</div>
+        <div>
+          <div class="article-title">Phase-down de HFCs — Calendario de prohibiciones</div>
+          <span class="article-badge">PLANIFICACIÓN A LARGO PLAZO</span>
+        </div>
+      </div>
+
+      <div class="alert warn">
+        <div class="alert-icon">⚠️</div>
+        <div>El phase-down reduce progresivamente la cantidad de HFCs que se pueden poner en el mercado europeo. Esto <strong>encarece los refrigerantes</strong> como R404A, R134a y R407C. Planificar con tiempo la sustitución de equipos.</div>
+      </div>
+
+      <div class="norm-block warn">
+        <div class="nb-title">📅 Fechas clave para PANALCOR</div>
+        <div class="nb-body">
+          <table class="nt">
+            <thead><tr><th>Año</th><th>Restricción</th><th>Impacto en PANALCOR</th></tr></thead>
+            <tbody>
+              <tr class="hl-row">
+                <td><b>2020</b></td>
+                <td>Prohibida recarga de equipos herméticos comerciales con R404A virgen</td>
+                <td>⛔ Si algún equipo tiene R404A, solo se puede recargar con gas reciclado/regenerado</td>
+              </tr>
+              <tr class="hl-warn">
+                <td><b>2025</b></td>
+                <td>Reducción HFCs al 45% (fase 4 del phase-down). Gas más escaso y caro.</td>
+                <td>⚠️ Prever coste mayor en recargas. Evaluar sustitución de R404A por R448A</td>
+              </tr>
+              <tr class="hl-warn">
+                <td><b>2030</b></td>
+                <td>Prohibida venta de nuevos equipos de refrigeración con gas PCA > 150 (excepto enfriadoras)</td>
+                <td>⚠️ Equipos nuevos solo con R290, R744, R717, R32, R454B… Planificar renovación</td>
+              </tr>
+              <tr>
+                <td><b>2032</b></td>
+                <td>Reducción HFCs al 30%</td>
+                <td>Gas muy escaso. Coste muy elevado de R404A y similares</td>
+              </tr>
+              <tr class="hl-row">
+                <td><b>2035</b></td>
+                <td>Prohibición ampliada de HFCs de alto PCA en nuevas instalaciones</td>
+                <td>⛔ Prácticamente imposible comprar gas HFC para equipos nuevos</td>
+              </tr>
+            </tbody>
+          </table>
+          <br>💡 <b>Recomendación:</b> Al renovar cualquier equipo, optar por <span class="green">R448A</span> (sustituto directo de R404A, PCA=1387), <span class="green">R290</span> (propano, PCA=3) o <span class="green">R744</span> (CO₂, PCA=1).
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- TABLA PCA -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="pca">
+      <div class="article-header">
+        <div class="article-icon">📊</div>
+        <div>
+          <div class="article-title">Tabla de PCA (GWP) — Refrigerantes</div>
+          <span class="article-badge">REFERENCIA TÉCNICA</span>
+        </div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-title">¿Qué es el PCA (Potencial de Calentamiento Atmosférico)?</div>
+        <div class="nb-body">
+          El PCA (o GWP en inglés) mide cuánto calienta un gas el planeta comparado con el CO₂ en 100 años. El CO₂ tiene PCA=1.<br><br>
+          <b>Para calcular toneladas CO₂ equivalentes:</b> kg de gas × PCA / 1000 = t CO₂ eq.<br>
+          <span class="hl">Ejemplo:</span> 40 kg de R404A → 40 × 3.922 / 1000 = <span class="red">156.9 t CO₂ eq.</span> → Revisión fugas cada <b>6 meses</b>
+        </div>
+      </div>
+
+      <table class="nt">
+        <thead><tr><th>Refrigerante</th><th>PCA</th><th>Tipo</th><th>Estado legal 2025</th><th>Alternativa recomendada</th></tr></thead>
+        <tbody>
+          <tr class="hl-row"><td><b>R404A</b></td><td>3.922</td><td>HFC mezcla</td><td><span class="badge b-red">PHASEOUT — no virgen</span></td><td>R448A · R449A · R452A</td></tr>
+          <tr class="hl-row"><td>R22</td><td>1.810</td><td>HCFC</td><td><span class="badge b-red">PROHIBIDO desde 2015</span></td><td>R407C · R448A</td></tr>
+          <tr class="hl-warn"><td>R134a</td><td>1.430</td><td>HFC puro</td><td><span class="badge b-orange">RESTRINGIDO</span></td><td>R1234yf · R513A</td></tr>
+          <tr class="hl-warn"><td>R407C</td><td>1.774</td><td>HFC mezcla</td><td><span class="badge b-orange">VIGILAR</span></td><td>R448A · R449A</td></tr>
+          <tr class="hl-warn"><td>R407F</td><td>1.825</td><td>HFC mezcla</td><td><span class="badge b-orange">VIGILAR</span></td><td>R448A</td></tr>
+          <tr class="hl-warn"><td>R452A</td><td>2.140</td><td>HFO/HFC</td><td><span class="badge b-orange">TRANSITORIO</span></td><td>R448A · R449A</td></tr>
+          <tr class="hl-ok"><td><b>R448A</b></td><td>1.387</td><td>HFO/HFC</td><td><span class="badge b-green">VÁLIDO ✅</span></td><td>—</td></tr>
+          <tr class="hl-ok"><td>R449A</td><td>1.397</td><td>HFO/HFC</td><td><span class="badge b-green">VÁLIDO ✅</span></td><td>—</td></tr>
+          <tr class="hl-ok"><td>R32</td><td>675</td><td>HFC puro</td><td><span class="badge b-green">VÁLIDO ✅</span></td><td>—</td></tr>
+          <tr class="hl-ok"><td><b>R290 (propano)</b></td><td>3</td><td>HC natural</td><td><span class="badge b-green">FUTURO ✅</span></td><td>—</td></tr>
+          <tr class="hl-ok"><td><b>R744 (CO₂)</b></td><td>1</td><td>Natural</td><td><span class="badge b-green">FUTURO ✅</span></td><td>—</td></tr>
+          <tr class="hl-ok"><td>R717 (amoniaco)</td><td>0</td><td>Natural</td><td><span class="badge b-green">FUTURO ✅</span></td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- RSIF -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="rsif">
+      <div class="article-header">
+        <div class="article-icon">🇪🇸</div>
+        <div>
+          <div class="article-title">Real Decreto 552/2019 — RSIF</div>
+          <span class="article-badge">REGLAMENTO DE SEGURIDAD PARA INSTALACIONES FRIGORÍFICAS</span>
+        </div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-title">Clasificación de instalaciones por nivel de riesgo</div>
+        <div class="nb-body">
+          <table class="nt">
+            <thead><tr><th>Nivel</th><th>Criterio</th><th>Ejemplos en PANALCOR</th><th>Revisión obligatoria</th></tr></thead>
+            <tbody>
+              <tr class="hl-ok"><td><b>Nivel 1</b></td><td>Pequeña carga · refrigerante A1 (no inflamable, baja toxicidad)</td><td>Pequeñas cámaras, mostradores</td><td>Anual</td></tr>
+              <tr class="hl-warn"><td><b>Nivel 2</b></td><td>Carga media o refrigerante A2L</td><td>Fermentadoras, cámaras grandes, túneles medianos</td><td>Semestral</td></tr>
+              <tr class="hl-row"><td><b>Nivel 3</b></td><td>Gran carga o refrigerante A3/B2L (propano, amoniaco)</td><td>Túneles de congelación grandes, salas de compresores</td><td>Trimestral</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="norm-block warn">
+        <div class="nb-title">📝 Documentación obligatoria que debe tener PANALCOR</div>
+        <div class="nb-body">
+          ① <b>Proyecto o memoria técnica</b> de cada instalación (elaborado por empresa frigorista al instalar)<br>
+          ② <b>Certificado de instalación</b> emitido por OCA u organismo de control autorizado<br>
+          ③ <b>Libro de mantenimiento</b> de la instalación (diferente del Libro de Registro de gas)<br>
+          ④ <b>Contrato de mantenimiento vigente</b> con empresa frigorista habilitada (INFRISA, etc.)<br>
+          ⑤ <b>Plan de emergencia</b> para instalaciones de Nivel 2 y 3<br>
+          ⑥ <b>Ficha de datos de seguridad (FDS)</b> de cada refrigerante usado en planta<br>
+          ⑦ <b>Libro de Registro de Gases Fluorados</b> (exigido por RD 115/2017)<br><br>
+          ⚠️ Toda esta documentación debe estar <span class="hl">accesible en planta</span> y disponible ante inspección.
+        </div>
+      </div>
+
+      <div class="norm-block ok">
+        <div class="nb-title">✅ Responsabilidades del titular (PANALCOR como operador)</div>
+        <div class="nb-body">
+          • Mantener los equipos en correcto estado de funcionamiento<br>
+          • Contratar el mantenimiento con empresa frigorista <b>habilitada y registrada</b><br>
+          • Conservar toda la documentación durante la vida útil de la instalación + 5 años<br>
+          • Comunicar a la Comunidad Autónoma cualquier <b>modificación significativa</b><br>
+          • Garantizar que las fichas de seguridad de refrigerantes son accesibles al personal<br>
+          • Formar al personal sobre <b>riesgos del refrigerante</b> empleado<br>
+          • Contar con <b>EPI adecuados</b> en la sala de máquinas (gafas, guantes criogénicos, detector portátil)
+        </div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-title">🏢 Obligaciones de la empresa frigorista (INFRISA, JACGA…)</div>
+        <div class="nb-body">
+          • Estar inscrita en el <b>Registro de Empresas Frigoristas</b> de la CC.AA.<br>
+          • Enviar informe firmado por técnico habilitado tras cada revisión<br>
+          • Comunicar a PANALCOR cualquier anomalía o riesgo detectado<br>
+          • Registrar cada operación en el Libro de Registro de Gases Fluorados<br>
+          • Llevar equipos de recuperación de gas homologados en cada intervención
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- RD 115/2017 -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="rd115">
+      <div class="article-header">
+        <div class="article-icon">🎓</div>
+        <div>
+          <div class="article-title">Real Decreto 115/2017 — Certificación F-Gas</div>
+          <span class="article-badge">PROFESIONALES Y EMPRESAS</span>
+        </div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-title">Categorías de certificado profesional F-Gas en España</div>
+        <div class="nb-body">
+          <table class="nt">
+            <thead><tr><th>Categoría</th><th>Qué permite</th><th>Límite de carga</th></tr></thead>
+            <tbody>
+              <tr class="hl-ok"><td><b>Cat. I</b></td><td>Todo tipo de operaciones: instalación, mantenimiento, reparación, fugas, recuperación, carga y recarga</td><td><b>Sin límite</b></td></tr>
+              <tr class="hl-ok"><td><b>Cat. II</b></td><td>Instalación, mantenimiento, reparación, fugas, recuperación en equipos pequeños</td><td>Hasta 3 kg (hermético: 6 kg)</td></tr>
+              <tr><td><b>Cat. III</b></td><td>Solo recuperación de gas de equipos existentes</td><td>Sin límite solo recuperación</td></tr>
+              <tr><td><b>Cat. IV</b></td><td>Solo recuperación de gas en sistemas herméticos pequeños</td><td>Hasta 3 kg</td></tr>
+            </tbody>
+          </table>
+          <br>👷 Los técnicos de INFRISA que trabajan en PANALCOR deben tener mínimo <span class="hl">Categoría I</span> para los túneles y equipos grandes.
+        </div>
+      </div>
+
+      <div class="norm-block warn">
+        <div class="nb-title">⚠️ Lo que PANALCOR puede exigir a INFRISA en cada visita</div>
+        <div class="nb-body">
+          • <b>Nombre y número de certificado F-Gas</b> del técnico que realiza la operación<br>
+          • <b>Albarán o parte de trabajo</b> con descripción de lo realizado y cantidad de gas manipulado<br>
+          • <b>Actualización del Libro de Registro</b> del equipo intervenido<br>
+          • Si hay recarga: <b>albarán de compra del gas</b> (que identifique si es virgen, reciclado o regenerado)<br><br>
+          ⚠️ Si un técnico de INFRISA no puede acreditar su certificado, PANALCOR tiene derecho a <b>negar el acceso a la instalación</b>.
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- LIBRO DE REGISTRO -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="libro">
+      <div class="article-header">
+        <div class="article-icon">📋</div>
+        <div>
+          <div class="article-title">Libro de Registro de Gases Fluorados</div>
+          <span class="article-badge">OBLIGATORIO POR LEY · RD 115/2017</span>
+        </div>
+      </div>
+
+      <div class="alert danger">
+        <div class="alert-icon">🚨</div>
+        <div>La ausencia del Libro de Registro o su falta de actualización es una <strong>infracción grave</strong> sancionable con multas de hasta <strong>50.000 €</strong> (Ley 34/2007).</div>
+      </div>
+
+      <div class="norm-block ok">
+        <div class="nb-title">✅ Qué debe contener cada entrada del Libro de Registro</div>
+        <div class="nb-body">
+          Para <b>cada operación realizada</b> en un equipo con gas fluorado:<br><br>
+          ① <b>Fecha</b> de la operación<br>
+          ② <b>Tipo de operación:</b> control de fugas / carga / recarga / recuperación / trasvase<br>
+          ③ <b>Tipo de refrigerante</b> (R448A, R404A, etc.)<br>
+          ④ <b>Cantidad en kg</b> añadidos o recuperados<br>
+          ⑤ <b>Origen del gas:</b> virgen, reciclado o regenerado<br>
+          ⑥ <b>Nombre del técnico</b> que realizó la operación<br>
+          ⑦ <b>Número de certificado F-Gas</b> del técnico<br>
+          ⑧ <b>Empresa</b> a la que pertenece el técnico<br>
+          ⑨ <b>Resultado del control de fugas</b> (si aplica): positivo/negativo<br>
+          ⑩ <b>Observaciones</b> relevantes (lugar de la fuga, reparación realizada…)<br><br>
+          Conservar mínimo <span class="hl">5 años</span> y tener disponible ante cualquier inspección.
+        </div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-title">💡 Libro de Registro digital vs papel</div>
+        <div class="nb-body">
+          La normativa admite el formato <b>digital</b> siempre que:<br>
+          • Sea accesible y no pueda modificarse sin dejar rastro<br>
+          • Pueda presentarse ante la autoridad competente en cualquier momento<br>
+          • Esté vinculado inequívocamente al equipo que describe<br><br>
+          El módulo <span class="hl">Libro de Gas</span> de PANALCOR está diseñado para cumplir estos requisitos, almacenando cada registro en Firebase con sello de tiempo y usuario.
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- CONTROL DE FUGAS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="fugas">
+      <div class="article-header">
+        <div class="article-icon">🔍</div>
+        <div>
+          <div class="article-title">Control de Fugas — Frecuencias y procedimiento</div>
+          <span class="article-badge">F-GAS UE 2024/573 · ART. 5</span>
+        </div>
+      </div>
+
+      <div class="norm-block warn">
+        <div class="nb-title">📅 Frecuencias obligatorias de control de fugas</div>
+        <div class="nb-body">
+          <table class="nt">
+            <thead><tr><th>Carga del equipo (t CO₂ eq.)</th><th>Sin detector automático</th><th>Con detector automático homologado</th></tr></thead>
+            <tbody>
+              <tr class="hl-ok"><td>< 5 t CO₂ eq.</td><td colspan="2" style="color:rgba(255,255,255,.4);text-align:center">Sin obligación de control periódico</td></tr>
+              <tr class="hl-ok"><td>5 – 50 t CO₂ eq.</td><td><span class="badge b-blue">Cada 12 meses</span></td><td><span class="badge b-green">Cada 24 meses</span></td></tr>
+              <tr class="hl-warn"><td>50 – 500 t CO₂ eq.</td><td><span class="badge b-orange">Cada 6 meses</span></td><td><span class="badge b-blue">Cada 12 meses</span></td></tr>
+              <tr class="hl-row"><td>≥ 500 t CO₂ eq.</td><td><span class="badge b-red">Cada 3 meses</span></td><td><span class="badge b-orange">Cada 6 meses</span></td></tr>
+            </tbody>
+          </table>
+          <br>
+          <b>Cómo calcular t CO₂ eq.:</b> kg de gas × PCA / 1000<br>
+          <span class="hl">Ejemplo:</span> 40 kg R404A → 40 × 3.922 / 1.000 = <span class="red">156,9 t</span> → Revisión cada <b>6 meses</b>
+        </div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-title">📋 ¿Qué debe hacer el técnico en un control de fugas?</div>
+        <div class="nb-body">
+          ① Inspección visual de conexiones, válvulas y tuberías<br>
+          ② Uso de <b>detector de fugas electrónico</b> calibrado u otro método aprobado<br>
+          ③ Si se detecta fuga: <b>reparación inmediata</b> o parada del equipo<br>
+          ④ Tras reparación: nuevo control de fugas a los <b>30 días</b> para confirmar la estanqueidad<br>
+          ⑤ <b>Registrar el resultado</b> en el Libro de Registro (positivo/negativo + fecha + técnico)<br><br>
+          ⚠️ Si la fuga no puede repararse de inmediato, el operador (PANALCOR) debe <b>comunicarlo a la autoridad competente</b> si la pérdida supera el 10% de la carga anual.
+        </div>
+      </div>
+
+      <div class="norm-block ok">
+        <div class="nb-title">✅ Detectores automáticos de fugas — Beneficios</div>
+        <div class="nb-body">
+          Instalar un <b>detector automático homologado</b> conectado al equipo permite:<br>
+          • <span class="green">Doblar el intervalo</span> entre controles manuales<br>
+          • Detectar fugas en tiempo real → menos pérdida de gas → menos coste<br>
+          • Cumplir de manera más fácil con la normativa<br><br>
+          Deben revisarse y calibrarse al menos <b>1 vez al año</b>.
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- MANIPULACIÓN DE GAS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="manipulacion">
+      <div class="article-header">
+        <div class="article-icon">🔧</div>
+        <div>
+          <div class="article-title">Manipulación de Gas — Procedimientos correctos</div>
+          <span class="article-badge">OPERATIVA TÉCNICA</span>
+        </div>
+      </div>
+
+      <div class="norm-block ok">
+        <div class="nb-title">✅ Procedimiento correcto de recarga</div>
+        <div class="nb-body">
+          ① Verificar que el técnico tiene <b>certificado F-Gas vigente</b> (categoría adecuada)<br>
+          ② Comprobar el tipo de refrigerante del equipo y que el gas a cargar es compatible<br>
+          ③ Verificar el estado del circuito antes de cargar (presiones, fugas)<br>
+          ④ Cargar siempre en <b>fase líquida</b> para mezclas (R448A, R407C…)<br>
+          ⑤ Pesar el gas cargado con <b>báscula calibrada</b> y anotar los kg exactos<br>
+          ⑥ Registrar en el Libro de Registro: fecha, kg, origen del gas, técnico + nº certificado<br>
+          ⑦ Realizar control de fugas tras la recarga
+        </div>
+      </div>
+
+      <div class="norm-block warn">
+        <div class="nb-title">⚠️ Procedimiento correcto de recuperación</div>
+        <div class="nb-body">
+          Antes de abrir cualquier circuito frigorífico para reparar:<br><br>
+          ① Recuperar <b>todo el gas</b> con equipo recuperador homologado<br>
+          ② Almacenar en <b>recipiente etiquetado</b> con tipo de gas y cantidad<br>
+          ③ Registrar en el Libro: kg recuperados, destino (reciclaje/regeneración/destrucción)<br>
+          ④ El gas recuperado debe entregarse a un <b>gestor autorizado</b> si no va a reutilizarse<br><br>
+          ❌ <span class="red">Nunca</span> liberar gas a la atmósfera aunque sea "poco".
+        </div>
+      </div>
+
+      <div class="norm-block danger">
+        <div class="nb-title">🚫 Lo que está prohibido hacer</div>
+        <div class="nb-body">
+          ❌ Purgar líneas frigoríficas sin recuperar el gas<br>
+          ❌ Cargar gas sin saber el tipo exacto de refrigerante del equipo<br>
+          ❌ Mezclar diferentes tipos de refrigerante en el mismo equipo<br>
+          ❌ Recargar con R404A virgen en equipos herméticos comerciales (prohibido desde 2020)<br>
+          ❌ Manipular el gas sin certificado F-Gas<br>
+          ❌ No registrar en el Libro de Registro una operación de gas<br>
+          ❌ Comprar gas fluorado sin certificado de empresa/técnico
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PRESIONES DE TRABAJO -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="presiones">
+      <div class="article-header">
+        <div class="article-icon">🌡️</div>
+        <div>
+          <div class="article-title">Presiones y Temperaturas de Trabajo — Referencia</div>
+          <span class="article-badge">REFERENCIA TÉCNICA OPERATIVA</span>
+        </div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-title">📊 Presiones de saturación — Refrigerantes más usados en PANALCOR</div>
+        <div class="nb-body">
+          <table class="nt">
+            <thead><tr><th>Refrigerante</th><th>T evaporación</th><th>P. baja (bar)</th><th>T condensación</th><th>P. alta (bar)</th></tr></thead>
+            <tbody>
+              <tr><td rowspan="3"><b>R448A</b></td><td>-40°C</td><td>0.82 bar</td><td>+30°C</td><td>14.8 bar</td></tr>
+              <tr><td>-30°C</td><td>1.43 bar</td><td>+35°C</td><td>17.1 bar</td></tr>
+              <tr><td>-20°C</td><td>2.35 bar</td><td>+40°C</td><td>19.7 bar</td></tr>
+              <tr><td rowspan="3"><b>R404A</b></td><td>-40°C</td><td>1.02 bar</td><td>+30°C</td><td>16.0 bar</td></tr>
+              <tr><td>-30°C</td><td>1.73 bar</td><td>+35°C</td><td>18.4 bar</td></tr>
+              <tr><td>-20°C</td><td>2.76 bar</td><td>+40°C</td><td>21.2 bar</td></tr>
+              <tr><td rowspan="2"><b>R134a</b></td><td>-10°C</td><td>2.01 bar</td><td>+35°C</td><td>8.87 bar</td></tr>
+              <tr><td>0°C</td><td>2.93 bar</td><td>+40°C</td><td>10.2 bar</td></tr>
+            </tbody>
+          </table>
+          <br>💡 <b>Presiones aproximadas.</b> Consultar siempre las tablas del fabricante del refrigerante para valores exactos. Las presiones varían según el superheat/subcooling y las condiciones de la instalación.
+        </div>
+      </div>
+
+      <div class="norm-block ok">
+        <div class="nb-title">🌡️ Temperaturas de trabajo típicas en PANALCOR</div>
+        <div class="nb-body">
+          <table class="nt">
+            <thead><tr><th>Equipo</th><th>T. objetivo (°C)</th><th>Alarma mín.</th><th>Alarma máx.</th></tr></thead>
+            <tbody>
+              <tr><td>Túneles de congelación</td><td>-22°C</td><td>-28°C</td><td>-18°C</td></tr>
+              <tr><td>Túnel prefío</td><td>-2°C</td><td>-5°C</td><td>0°C</td></tr>
+              <tr><td>Cámaras frigoríficas positivas</td><td>+2°C</td><td>0°C</td><td>+4°C</td></tr>
+              <tr><td>Fermentadoras</td><td>+5°C</td><td>+2°C</td><td>+8°C</td></tr>
+              <tr><td>Sala compresores (ambiente)</td><td>&lt; +35°C</td><td>—</td><td>+40°C</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="norm-block warn">
+        <div class="nb-title">⚠️ Señales de anomalía en el circuito</div>
+        <div class="nb-body">
+          🔴 <b>Baja presión inusual:</b> posible fuga, falta de gas o restricción en la línea de líquido<br>
+          🔴 <b>Alta presión inusual:</b> condensador sucio, ventiladores parados, temperatura ambiente alta, refrigerante en exceso<br>
+          🔴 <b>No alcanza temperatura de consigna:</b> falta de gas, válvula de expansión defectuosa, evaporador helado<br>
+          🔴 <b>Compresor muy caliente:</b> escasez de gas, retorno de líquido, fallo de aceite<br>
+          🟡 <b>Oscilaciones de presión:</b> válvula de expansión mal ajustada, inestabilidad del refrigerante
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SEGURIDAD -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="seguridad">
+      <div class="article-header">
+        <div class="article-icon">🦺</div>
+        <div>
+          <div class="article-title">Seguridad en Planta — EPIs y Emergencias</div>
+          <span class="article-badge">RSIF + PRL</span>
+        </div>
+      </div>
+
+      <div class="norm-block ok">
+        <div class="nb-title">✅ EPIs recomendados en sala de máquinas / trabajos con gas</div>
+        <div class="nb-body">
+          🥽 <b>Gafas de protección química</b> — Protege de salpicaduras de refrigerante líquido<br>
+          🧤 <b>Guantes criogénicos</b> — Ante contacto con refrigerante a baja temperatura<br>
+          😷 <b>Mascarilla o equipo de respiración</b> — En espacios cerrados o con posible concentración de gas<br>
+          👔 <b>Ropa de trabajo sin costuras abiertas</b> — El líquido criogénico puede penetrar<br>
+          📡 <b>Detector portátil de refrigerante</b> — Antes de entrar a una sala con posible fuga<br>
+        </div>
+      </div>
+
+      <div class="norm-block danger">
+        <div class="nb-title">🚨 Actuación en caso de fuga importante de refrigerante</div>
+        <div class="nb-body">
+          ① <b>Evacuar la zona</b> inmediatamente — Los refrigerantes desplazan el oxígeno en espacios cerrados<br>
+          ② <b>Ventilar</b> el espacio abriendo puertas y ventanas si es seguro<br>
+          ③ <b>Cortar el equipo</b> desde fuera de la zona afectada si es posible<br>
+          ④ <b>Llamar a INFRISA</b> para intervención urgente<br>
+          ⑤ Si hay afectados: <b>aire fresco</b>, posición semisentada, llamar al 112<br>
+          ⑥ <b>No fumar ni encender llamas</b> en ningún caso (algunos refrigerantes son inflamables: R290)<br><br>
+          ⚠️ <b>Teléfono de emergencias:</b> 112<br>
+          ⚠️ <b>INFRISA urgencias:</b> — (anotar aquí)<br>
+          ⚠️ <b>Centro de información toxicológica:</b> 91 562 04 20
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- SANCIONES -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="sanciones">
+      <div class="article-header">
+        <div class="article-icon">⚖️</div>
+        <div>
+          <div class="article-title">Sanciones por incumplimiento</div>
+          <span class="article-badge">LEY 34/2007 · F-GAS 2024/573</span>
+        </div>
+      </div>
+
+      <table class="nt">
+        <thead><tr><th>Infracción</th><th>Gravedad</th><th>Multa máxima</th></tr></thead>
+        <tbody>
+          <tr class="hl-row"><td>Liberar gases fluorados a la atmósfera intencionadamente</td><td><span class="badge b-red">MUY GRAVE</span></td><td>300.000 €</td></tr>
+          <tr class="hl-row"><td>Manipular gas sin certificado F-Gas</td><td><span class="badge b-red">MUY GRAVE</span></td><td>300.000 €</td></tr>
+          <tr class="hl-warn"><td>No tener o no actualizar el Libro de Registro</td><td><span class="badge b-orange">GRAVE</span></td><td>50.000 €</td></tr>
+          <tr class="hl-warn"><td>No realizar controles de fugas en el plazo legal</td><td><span class="badge b-orange">GRAVE</span></td><td>50.000 €</td></tr>
+          <tr class="hl-warn"><td>Usar R404A virgen para recargar equipos herméticos (prohibido desde 2020)</td><td><span class="badge b-orange">GRAVE</span></td><td>50.000 €</td></tr>
+          <tr><td>No conservar la documentación el tiempo mínimo</td><td><span class="badge b-gold">LEVE</span></td><td>5.000 €</td></tr>
+          <tr><td>No tener contrato de mantenimiento vigente</td><td><span class="badge b-gold">LEVE</span></td><td>5.000 €</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- CHECKLIST TITULAR -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="check-titular">
+      <div class="article-header">
+        <div class="article-icon">✅</div>
+        <div>
+          <div class="article-title">Checklist — Cumplimiento para PANALCOR</div>
+          <span class="article-badge">REFERENCIA RÁPIDA</span>
+        </div>
+      </div>
+
+      <div class="norm-block ok">
+        <div class="nb-title">Documentación en planta</div>
+        <div class="nb-body">
+          ☐ Proyecto / memoria técnica de cada instalación frigorífica<br>
+          ☐ Certificado de instalación por OCA u organismo autorizado<br>
+          ☐ Libro de mantenimiento de cada instalación<br>
+          ☐ Contrato de mantenimiento vigente (INFRISA, JACGA…)<br>
+          ☐ Plan de emergencia (instalaciones Nivel 2-3)<br>
+          ☐ Ficha de seguridad (FDS) de cada refrigerante en planta<br>
+          ☐ Libro de Registro de Gases Fluorados por equipo (actualizado)
+        </div>
+      </div>
+
+      <div class="norm-block warn">
+        <div class="nb-title">Control de fugas al día</div>
+        <div class="nb-body">
+          ☐ Calculadas las t CO₂ eq. de cada equipo<br>
+          ☐ Asignada la frecuencia legal a cada equipo (anual / semestral / trimestral)<br>
+          ☐ Próximas fechas registradas en el sistema (PANALCOR app)<br>
+          ☐ Alertas activas para 30 días y 7 días antes del vencimiento<br>
+          ☐ Ningún equipo con control de fugas vencido
+        </div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-title">Operativa con INFRISA</div>
+        <div class="nb-body">
+          ☐ Certificado F-Gas de cada técnico archivado<br>
+          ☐ Libro de Registro actualizado tras cada visita<br>
+          ☐ Albaranes de compra de gas archivados<br>
+          ☐ Informes de revisión RSIF firmados y archivados<br>
+          ☐ INFRISA inscrita en el Registro de Empresas Frigoristas de la CC.AA.
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- CONTACTOS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="contactos">
+      <div class="article-header">
+        <div class="article-icon">📞</div>
+        <div>
+          <div class="article-title">Contactos Útiles</div>
+          <span class="article-badge">REFERENCIA RÁPIDA</span>
+        </div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-body">
+          🚨 <b>Emergencias:</b> 112<br>
+          ☠️ <b>Centro de información toxicológica:</b> 91 562 04 20<br>
+          🏭 <b>INFRISA (mantenimiento):</b> — completar —<br>
+          ⚡ <b>JACGA (electricidad):</b> — completar —<br>
+          🏛️ <b>Industria CC.AA.:</b> — completar —<br><br>
+          📄 <b>Referencias legales:</b><br>
+          • <a href="https://www.boe.es/buscar/doc.php?id=DOUE-L-2024-80236" target="_blank" style="color:var(--ice)">Reglamento (UE) 2024/573 F-Gas — BOE</a><br>
+          • <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2019-15228" target="_blank" style="color:var(--ice)">RD 552/2019 RSIF — BOE</a><br>
+          • <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-1679" target="_blank" style="color:var(--ice)">RD 115/2017 Gases Fluorados — BOE</a>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+</div><!-- /layout -->
+
+<!-- BOTÓN ARRIBA -->
+<button id="btnTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Volver arriba">↑</button>
+
+<script>
+// ── BUSCADOR ──────────────────────────────────────────────────────
+var originalContent = {};
+var articles = document.querySelectorAll('.article');
+
+// Guardar texto original de cada artículo
+articles.forEach(function(a) {
+  originalContent[a.id] = a.innerHTML;
+});
+
+function buscar(q) {
+  q = (q || '').trim();
+  var count = 0;
+  var noRes = document.getElementById('noResults');
+  var countEl = document.getElementById('searchCount');
+
+  if (!q) {
+    articles.forEach(function(a) {
+      a.innerHTML = originalContent[a.id];
+      a.style.display = '';
+    });
+    noRes.style.display = 'none';
+    countEl.textContent = '';
+    return;
+  }
+
+  var re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
+
+  articles.forEach(function(a) {
+    // Buscar en texto plano
+    var texto = a.textContent || a.innerText;
+    if (re.test(texto)) {
+      count++;
+      a.style.display = '';
+      // Restaurar HTML original y luego resaltar
+      a.innerHTML = originalContent[a.id];
+      resaltarEnNodo(a, re);
+    } else {
+      a.style.display = 'none';
+    }
+  });
+
+  if (count === 0) {
+    noRes.style.display = 'block';
+    document.getElementById('noResultsTerm').textContent = q;
+    countEl.textContent = '';
+  } else {
+    noRes.style.display = 'none';
+    countEl.textContent = count + ' sección' + (count !== 1 ? 'es' : '') + ' encontrada' + (count !== 1 ? 's' : '') + ' para "' + q + '"';
+  }
+}
+
+function resaltarEnNodo(nodo, re) {
+  if (nodo.nodeType === 3) { // text node
+    var nuevo = nodo.textContent.replace(re, '<mark class="highlight">$1</mark>');
+    if (nuevo !== nodo.textContent) {
+      var span = document.createElement('span');
+      span.innerHTML = nuevo;
+      nodo.parentNode.replaceChild(span, nodo);
+    }
+  } else if (nodo.nodeType === 1 && nodo.nodeName !== 'SCRIPT' && nodo.nodeName !== 'STYLE' && nodo.nodeName !== 'INPUT') {
+    Array.from(nodo.childNodes).forEach(function(hijo) {
+      resaltarEnNodo(hijo, re);
+    });
+  }
+}
+
+function limpiarBusqueda() {
+  document.getElementById('searchInput').value = '';
+  buscar('');
+}
+
+// ── SIDEBAR ACTIVO ────────────────────────────────────────────────
+function setActive(el) {
+  document.querySelectorAll('.sidebar a').forEach(function(a){ a.classList.remove('active'); });
+  el.classList.add('active');
+}
+
+// ── SCROLL → ACTIVO EN SIDEBAR ───────────────────────────────────
+window.addEventListener('scroll', function() {
+  // Botón arriba
+  document.getElementById('btnTop').style.display = window.scrollY > 300 ? 'flex' : 'none';
+
+  // Detectar artículo visible
+  var scrollY = window.scrollY + 80;
+  articles.forEach(function(a) {
+    if (a.offsetTop <= scrollY && (a.offsetTop + a.offsetHeight) > scrollY) {
+      var link = document.querySelector('.sidebar a[href="#'+a.id+'"]');
+      if (link) {
+        document.querySelectorAll('.sidebar a').forEach(function(x){ x.classList.remove('active'); });
+        link.classList.add('active');
+      }
+    }
+  });
+});
+
+// ── ATAJO TECLADO: / para enfocar búsqueda ───────────────────────
+document.addEventListener('keydown', function(e) {
+  if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+    e.preventDefault();
+    document.getElementById('searchInput').focus();
+  }
+  if (e.key === 'Escape') {
+    limpiarBusqueda();
+    document.getElementById('searchInput').blur();
+  }
+});
+</script>
+</body>
+</html>
