@@ -283,6 +283,7 @@ if('serviceWorker' in navigator){
   <div class="tab active" onclick="switchTab('nueva')" id="tab-nueva">🔴 Nueva Avería</div>
   <div class="tab" onclick="switchTab('historial')" id="tab-historial">📋 Historial</div>
   <div class="tab" onclick="switchTab('stats')" id="tab-stats">📊 Estadísticas</div>
+  <div class="tab" onclick="switchTab('otros')" id="tab-otros">🔨 Otros Trabajos</div>
 </div>
 
 <!-- ══════════ PANEL NUEVA AVERÍA ══════════ -->
@@ -602,6 +603,177 @@ if('serviceWorker' in navigator){
         </table>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ══════════ PANEL OTROS TRABAJOS ══════════ -->
+<div class="panel" id="panel-otros" style="max-width:780px">
+
+  <!-- Formulario nuevo trabajo -->
+  <div class="card card-gold" id="otrosFormCard">
+    <div class="sec-title">🔨 Registrar trabajo</div>
+
+    <!-- Tipo de trabajo -->
+    <div class="field">
+      <label>Tipo de trabajo</label>
+      <div class="tipo-grid" id="otrosTipoGrid">
+        <div style="background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.35);border-radius:8px">
+          <input type="radio" name="otrosTipo" id="ot1" value="AVERÍA" class="tipo-radio">
+          <label for="ot1" class="tipo-label">🔴 Avería</label>
+        </div>
+        <div style="background:rgba(52,152,219,0.12);border:1px solid rgba(52,152,219,0.35);border-radius:8px">
+          <input type="radio" name="otrosTipo" id="ot2" value="REPARACIÓN" class="tipo-radio">
+          <label for="ot2" class="tipo-label">🔧 Reparación</label>
+        </div>
+        <div style="background:rgba(46,204,113,0.12);border:1px solid rgba(46,204,113,0.35);border-radius:8px">
+          <input type="radio" name="otrosTipo" id="ot3" value="MEJORA" class="tipo-radio">
+          <label for="ot3" class="tipo-label">⬆️ Mejora</label>
+        </div>
+        <div style="background:rgba(155,89,182,0.12);border:1px solid rgba(155,89,182,0.35);border-radius:8px">
+          <input type="radio" name="otrosTipo" id="ot4" value="FABRICACIÓN" class="tipo-radio">
+          <label for="ot4" class="tipo-label">🏗️ Fabricación</label>
+        </div>
+        <div style="background:rgba(243,156,18,0.12);border:1px solid rgba(243,156,18,0.35);border-radius:8px">
+          <input type="radio" name="otrosTipo" id="ot5" value="MANTENIMIENTO" class="tipo-radio">
+          <label for="ot5" class="tipo-label">🛠️ Mantenimiento</label>
+        </div>
+        <div style="background:rgba(149,165,166,0.12);border:1px solid rgba(149,165,166,0.35);border-radius:8px">
+          <input type="radio" name="otrosTipo" id="ot6" value="OTRO" class="tipo-radio">
+          <label for="ot6" class="tipo-label">❓ Otro</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Máquina / elemento -->
+    <div class="field">
+      <label>Máquina / Elemento</label>
+      <div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">
+        <select id="otrosMaquina" style="flex:1;min-width:200px">
+          <option value="">— Selecciona —</option>
+        </select>
+        <button type="button" onclick="otrosAddMaquina()"
+          style="background:rgba(240,192,64,0.12);border:1px solid rgba(240,192,64,0.4);color:var(--gold);
+                 border-radius:8px;padding:10px 14px;font-family:'Barlow',sans-serif;font-size:0.82rem;
+                 font-weight:700;cursor:pointer;white-space:nowrap">
+          ➕ No está en la lista
+        </button>
+      </div>
+      <div id="otrosNuevaMaqWrap" style="display:none;margin-top:10px;padding:14px;background:rgba(240,192,64,0.06);border:1px solid rgba(240,192,64,0.2);border-radius:8px">
+        <div style="font-size:0.82rem;color:var(--gold);font-weight:700;margin-bottom:10px">➕ Añadir nueva máquina/elemento a la lista</div>
+        <div class="row3">
+          <div class="field">
+            <label>Nombre</label>
+            <input type="text" id="otrosNuevaMaqNombre" placeholder="ej: CARRO 1, MESA TRABAJO...">
+          </div>
+          <div class="field">
+            <label>Tipo</label>
+            <select id="otrosNuevaMaqTipo">
+              <option value="">— Tipo —</option>
+              <option>CARRO</option><option>MESA/BANCADA</option><option>ESTRUCTURA</option>
+              <option>INSTALACIÓN</option><option>HERRAMIENTA</option><option>ÚTIL/ACCESORIO</option>
+              <option>ZONA/ÁREA</option><option>OTRO</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Área</label>
+            <select id="otrosNuevaMaqArea">
+              <option value="">— Área —</option>
+              <option>OBRADOR</option><option>HORNOS</option><option>FRIO/CLIMA</option>
+              <option>ENVASADO</option><option>EXPEDICION</option><option>SILOS</option>
+              <option>SALA COMPRESORES</option><option>TALLER</option><option>EXTERIOR</option><option>OTRA</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button type="button" onclick="otrosGuardarNuevaMaq()"
+            style="background:rgba(240,192,64,0.2);border:1px solid rgba(240,192,64,0.5);color:var(--gold);
+                   border-radius:8px;padding:9px 18px;font-family:'Barlow',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer">
+            💾 Guardar y seleccionar
+          </button>
+          <button type="button" onclick="document.getElementById('otrosNuevaMaqWrap').style.display='none'"
+            style="background:transparent;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.5);
+                   border-radius:8px;padding:9px 14px;font-family:'Barlow',sans-serif;font-size:0.85rem;cursor:pointer">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Descripción -->
+    <div class="field">
+      <label>Descripción del trabajo</label>
+      <textarea id="otrosDesc" rows="3" placeholder="Describe qué se ha hecho, qué problema había, qué se ha mejorado..."
+        style="width:100%;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.2);
+               border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:0.9rem;resize:vertical"></textarea>
+    </div>
+
+    <!-- Fecha, hora, mecánicos -->
+    <div class="row3">
+      <div class="field">
+        <label>Fecha</label>
+        <input type="date" id="otrosFecha">
+      </div>
+      <div class="field">
+        <label>Hora inicio</label>
+        <input type="time" id="otrosHoraIni">
+      </div>
+      <div class="field">
+        <label>Hora fin</label>
+        <input type="time" id="otrosHoraFin">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Mecánicos que intervienen</label>
+      <div id="otrosMecsWrap" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px"></div>
+    </div>
+
+    <!-- Materiales usados -->
+    <div class="field">
+      <label>Materiales / repuestos usados <span style="font-size:0.78rem;color:rgba(255,255,255,0.4);font-weight:400">(opcional)</span></label>
+      <textarea id="otrosMateriales" rows="2" placeholder="Ej: 2 rodamientos 6205, 1 correa B52, pintura..."
+        style="width:100%;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.2);
+               border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:0.9rem;resize:vertical"></textarea>
+    </div>
+
+    <!-- Observaciones -->
+    <div class="field">
+      <label>Observaciones</label>
+      <textarea id="otrosObs" rows="2" placeholder="Cualquier nota adicional..."
+        style="width:100%;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.2);
+               border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:0.9rem;resize:vertical"></textarea>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
+      <button type="button" onclick="otrosGuardar()"
+        style="background:var(--gold);color:#0a1520;border:none;border-radius:8px;padding:12px 28px;
+               font-family:'Barlow',sans-serif;font-size:0.95rem;font-weight:900;cursor:pointer">
+        💾 Guardar trabajo
+      </button>
+      <button type="button" onclick="otrosLimpiar()"
+        style="background:transparent;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.5);
+               border-radius:8px;padding:12px 18px;font-family:'Barlow',sans-serif;font-size:0.9rem;cursor:pointer">
+        ↺ Limpiar
+      </button>
+    </div>
+  </div>
+
+  <!-- Historial otros trabajos -->
+  <div class="card" style="margin-top:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div class="sec-title" style="margin:0">📋 Historial de trabajos</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <select id="otrosFilTipo" onchange="otrosRender()"
+          style="background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:7px 10px;font-family:'Barlow',sans-serif;font-size:0.82rem">
+          <option value="">Todos los tipos</option>
+          <option>AVERÍA</option><option>REPARACIÓN</option><option>MEJORA</option>
+          <option>FABRICACIÓN</option><option>MANTENIMIENTO</option><option>OTRO</option>
+        </select>
+        <input type="text" id="otrosFilBuscar" oninput="otrosRender()" placeholder="🔍 Buscar..."
+          style="background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:7px 10px;font-family:'Barlow',sans-serif;font-size:0.82rem;width:160px">
+      </div>
+    </div>
+    <div id="otrosList"><div style="text-align:center;color:rgba(255,255,255,0.3);padding:32px;font-size:0.9rem">No hay trabajos registrados aún</div></div>
   </div>
 </div>
 
@@ -1714,6 +1886,7 @@ function switchTab(name){
   document.getElementById('tab-'+name).classList.add('active');
   if(name==='historial') renderHistorial();
   if(name==='stats') renderStats();
+  if(name==='otros') initOtros();
 }
 
 // ══════════════════════════════════════════════
@@ -1740,6 +1913,238 @@ document.addEventListener('click',e=>{
   if(!e.target.closest('.mat-search-wrap'))
     document.getElementById('matDropdown').style.display='none';
 });
+
+// ══════════════════════════════════════════════
+// OTROS TRABAJOS
+// ══════════════════════════════════════════════
+var _otrosTrabajos = [];
+var _otrosEditId = null;
+
+var _OTROS_TIPO_COLOR = {
+  'AVERÍA':        { bg:'rgba(231,76,60,0.15)',   border:'rgba(231,76,60,0.4)',   color:'#e74c3c' },
+  'REPARACIÓN':    { bg:'rgba(52,152,219,0.15)',  border:'rgba(52,152,219,0.4)',  color:'#5dade2' },
+  'MEJORA':        { bg:'rgba(46,204,113,0.15)',  border:'rgba(46,204,113,0.4)',  color:'#2ecc71' },
+  'FABRICACIÓN':   { bg:'rgba(155,89,182,0.15)',  border:'rgba(155,89,182,0.4)', color:'#9b59b6' },
+  'MANTENIMIENTO': { bg:'rgba(243,156,18,0.15)',  border:'rgba(243,156,18,0.4)', color:'#f39c12' },
+  'OTRO':          { bg:'rgba(149,165,166,0.15)', border:'rgba(149,165,166,0.4)',color:'#95a5a6' }
+};
+var _OTROS_TIPO_ICON = {
+  'AVERÍA':'🔴','REPARACIÓN':'🔧','MEJORA':'⬆️','FABRICACIÓN':'🏗️','MANTENIMIENTO':'🛠️','OTRO':'❓'
+};
+
+function initOtros() {
+  // Poblar mecánicos
+  var wrap = document.getElementById('otrosMecsWrap');
+  if (wrap && !wrap.children.length) {
+    MECANICOS.forEach(function(m) {
+      var lbl = document.createElement('label');
+      lbl.style.cssText = 'display:flex;align-items:center;gap:5px;cursor:pointer;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:5px 10px;font-size:0.82rem';
+      lbl.innerHTML = '<input type="checkbox" class="otros-mec-chk" value="'+m+'" style="accent-color:var(--gold)"> '+m;
+      wrap.appendChild(lbl);
+    });
+  }
+  // Poblar máquinas
+  var sel = document.getElementById('otrosMaquina');
+  if (sel && sel.options.length <= 1) {
+    MAQUINAS.sort(function(a,b){ return a.n.localeCompare(b.n); }).forEach(function(m) {
+      var o = document.createElement('option');
+      o.value = m.id;
+      o.textContent = m.n + (m.a ? ' · '+m.a : '');
+      sel.appendChild(o);
+    });
+  }
+  // Poner fecha de hoy
+  var fh = document.getElementById('otrosFecha');
+  if (fh && !fh.value) fh.value = new Date().toISOString().slice(0,10);
+
+  // Cargar desde Firebase
+  DB.ref('otros_trabajos').orderByChild('ts').once('value').then(function(snap) {
+    var val = snap.val() || {};
+    _otrosTrabajos = Object.values(val).sort(function(a,b){ return b.ts - a.ts; });
+    otrosRender();
+  }).catch(function() { otrosRender(); });
+}
+
+function otrosAddMaquina() {
+  document.getElementById('otrosNuevaMaqWrap').style.display = 'block';
+}
+
+function otrosGuardarNuevaMaq() {
+  var nombre = (document.getElementById('otrosNuevaMaqNombre').value || '').trim().toUpperCase();
+  var tipo   = document.getElementById('otrosNuevaMaqTipo').value;
+  var area   = document.getElementById('otrosNuevaMaqArea').value;
+  if (!nombre) { showToast('⚠️ Escribe un nombre'); return; }
+
+  // Generar ID
+  var maxId = MAQUINAS.reduce(function(mx, m) {
+    var n = parseInt((m.id || '').replace('MAQ-', '')) || 0;
+    return n > mx ? n : mx;
+  }, 0);
+  var newId = 'MAQ-' + String(maxId + 1).padStart(3, '0');
+  var nuevaMaq = { id: newId, n: nombre, t: tipo || 'OTRO', a: area || '', f: '' };
+
+  // Añadir a lista global y Firebase
+  MAQUINAS.push(nuevaMaq);
+  DB.ref('maquinas_extra/' + newId).set(nuevaMaq).catch(function(){});
+
+  // Añadir al select y seleccionar
+  var sel = document.getElementById('otrosMaquina');
+  var o = document.createElement('option');
+  o.value = newId;
+  o.textContent = nombre + (area ? ' · ' + area : '');
+  sel.appendChild(o);
+  sel.value = newId;
+
+  document.getElementById('otrosNuevaMaqWrap').style.display = 'none';
+  document.getElementById('otrosNuevaMaqNombre').value = '';
+  document.getElementById('otrosNuevaMaqTipo').value = '';
+  document.getElementById('otrosNuevaMaqArea').value = '';
+  showToast('✅ "' + nombre + '" añadido como ' + newId);
+}
+
+function otrosGuardar() {
+  var tipo = (document.querySelector('input[name="otrosTipo"]:checked') || {}).value || '';
+  var maqId = document.getElementById('otrosMaquina').value;
+  var desc = (document.getElementById('otrosDesc').value || '').trim();
+  var fecha = document.getElementById('otrosFecha').value;
+  var horaIni = document.getElementById('otrosHoraIni').value;
+  var horaFin = document.getElementById('otrosHoraFin').value;
+  var mats = (document.getElementById('otrosMateriales').value || '').trim();
+  var obs  = (document.getElementById('otrosObs').value || '').trim();
+  var mecs = Array.from(document.querySelectorAll('.otros-mec-chk:checked')).map(function(c){ return c.value; });
+
+  if (!tipo)  { showToast('⚠️ Selecciona un tipo de trabajo'); return; }
+  if (!desc)  { showToast('⚠️ Escribe una descripción'); return; }
+  if (!fecha) { showToast('⚠️ Indica la fecha'); return; }
+
+  // Calcular duración si hay hora inicio y fin
+  var durMin = null;
+  if (horaIni && horaFin) {
+    var ini = horaIni.split(':').map(Number);
+    var fin = horaFin.split(':').map(Number);
+    durMin = (fin[0]*60+fin[1]) - (ini[0]*60+ini[1]);
+    if (durMin < 0) durMin += 1440;
+  }
+
+  var maqObj = MAQUINAS.find(function(m){ return m.id === maqId; });
+  var id = _otrosEditId || ('OT-' + Date.now());
+  var obj = {
+    id: id, tipo: tipo, maqId: maqId,
+    maqNombre: maqObj ? maqObj.n : (maqId || 'Sin máquina'),
+    maqArea: maqObj ? (maqObj.a || '') : '',
+    desc: desc, fecha: fecha, horaIni: horaIni, horaFin: horaFin,
+    durMin: durMin, mecs: mecs, materiales: mats, obs: obs, ts: Date.now()
+  };
+
+  DB.ref('otros_trabajos/' + id).set(obj).then(function() {
+    // Actualizar lista local
+    var idx = _otrosTrabajos.findIndex(function(t){ return t.id === id; });
+    if (idx >= 0) _otrosTrabajos[idx] = obj; else _otrosTrabajos.unshift(obj);
+    _otrosTrabajos.sort(function(a,b){ return b.ts - a.ts; });
+    otrosRender();
+    otrosLimpiar();
+    showToast(_otrosEditId ? '✅ Trabajo actualizado' : '✅ Trabajo guardado');
+    _otrosEditId = null;
+  }).catch(function(){ showToast('❌ Error al guardar'); });
+}
+
+function otrosLimpiar() {
+  document.querySelectorAll('input[name="otrosTipo"]').forEach(function(r){ r.checked = false; });
+  document.getElementById('otrosMaquina').value = '';
+  document.getElementById('otrosDesc').value = '';
+  document.getElementById('otrosFecha').value = new Date().toISOString().slice(0,10);
+  document.getElementById('otrosHoraIni').value = '';
+  document.getElementById('otrosHoraFin').value = '';
+  document.getElementById('otrosMateriales').value = '';
+  document.getElementById('otrosObs').value = '';
+  document.querySelectorAll('.otros-mec-chk').forEach(function(c){ c.checked = false; });
+  document.getElementById('otrosNuevaMaqWrap').style.display = 'none';
+  _otrosEditId = null;
+  document.querySelector('.card-gold .sec-title').textContent = '🔨 Registrar trabajo';
+}
+
+function otrosRender() {
+  var el = document.getElementById('otrosList');
+  if (!el) return;
+  var filTipo = (document.getElementById('otrosFilTipo') || {}).value || '';
+  var filBus  = ((document.getElementById('otrosFilBuscar') || {}).value || '').toLowerCase();
+
+  var lista = _otrosTrabajos.filter(function(t) {
+    if (filTipo && t.tipo !== filTipo) return false;
+    if (filBus && !(t.maqNombre||'').toLowerCase().includes(filBus) && !(t.desc||'').toLowerCase().includes(filBus)) return false;
+    return true;
+  });
+
+  if (!lista.length) {
+    el.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.3);padding:32px;font-size:0.9rem">No hay trabajos que coincidan</div>';
+    return;
+  }
+
+  el.innerHTML = lista.map(function(t) {
+    var c = _OTROS_TIPO_COLOR[t.tipo] || _OTROS_TIPO_COLOR['OTRO'];
+    var ico = _OTROS_TIPO_ICON[t.tipo] || '❓';
+    var dur = t.durMin != null ? (Math.floor(t.durMin/60)+'h '+(t.durMin%60)+'min') : '—';
+    var fecha = t.fecha ? new Date(t.fecha+'T12:00').toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
+    var mecs = (t.mecs && t.mecs.length) ? t.mecs.join(', ') : '—';
+    return '<div style="background:var(--navy-mid);border:1px solid rgba(255,255,255,0.08);border-left:3px solid '+c.border+';border-radius:10px;padding:14px 16px;margin-bottom:10px">'
+      + '<div style="display:flex;align-items:flex-start;gap:10px;justify-content:space-between;flex-wrap:wrap">'
+        + '<div style="flex:1;min-width:200px">'
+          + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap">'
+            + '<span style="font-size:0.72rem;background:'+c.bg+';border:1px solid '+c.border+';color:'+c.color+';border-radius:20px;padding:2px 10px;font-weight:700">'+ico+' '+t.tipo+'</span>'
+            + '<span style="font-size:0.88rem;font-weight:800;color:#fff">'+escHtml(t.maqNombre||'Sin máquina')+'</span>'
+            + (t.maqArea ? '<span style="font-size:0.75rem;color:rgba(255,255,255,0.4)">'+escHtml(t.maqArea)+'</span>' : '')
+          + '</div>'
+          + '<div style="font-size:0.85rem;color:rgba(255,255,255,0.7);margin-bottom:6px">'+escHtml(t.desc)+'</div>'
+          + '<div style="display:flex;gap:14px;font-size:0.76rem;color:rgba(255,255,255,0.4);flex-wrap:wrap">'
+            + '<span>📅 '+fecha+'</span>'
+            + (t.horaIni ? '<span>🕐 '+t.horaIni+(t.horaFin?' → '+t.horaFin:'')+'</span>' : '')
+            + '<span>⏱ '+dur+'</span>'
+            + '<span>👷 '+escHtml(mecs)+'</span>'
+          + '</div>'
+          + (t.materiales ? '<div style="margin-top:6px;font-size:0.78rem;color:rgba(255,255,255,0.45)">🔩 '+escHtml(t.materiales)+'</div>' : '')
+          + (t.obs ? '<div style="margin-top:4px;font-size:0.78rem;color:rgba(255,255,255,0.45);font-style:italic">"'+escHtml(t.obs)+'"</div>' : '')
+        + '</div>'
+        + '<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">'
+          + '<button onclick="otrosEditar(\''+t.id+'\')" style="background:rgba(100,210,255,0.1);border:1px solid rgba(100,210,255,0.3);color:#64d2ff;border-radius:7px;padding:5px 12px;cursor:pointer;font-family:\'Barlow\',sans-serif;font-size:0.78rem;font-weight:700">✏️ Editar</button>'
+          + '<button onclick="otrosBorrar(\''+t.id+'\')" style="background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.25);color:rgba(231,76,60,0.7);border-radius:7px;padding:5px 12px;cursor:pointer;font-family:\'Barlow\',sans-serif;font-size:0.78rem;font-weight:700">🗑 Borrar</button>'
+        + '</div>'
+      + '</div>'
+    + '</div>';
+  }).join('');
+}
+
+function otrosEditar(id) {
+  var t = _otrosTrabajos.find(function(x){ return x.id === id; });
+  if (!t) return;
+  _otrosEditId = id;
+  // Tipo
+  var r = document.querySelector('input[name="otrosTipo"][value="'+t.tipo+'"]');
+  if (r) r.checked = true;
+  // Máquina
+  document.getElementById('otrosMaquina').value = t.maqId || '';
+  // Campos
+  document.getElementById('otrosDesc').value = t.desc || '';
+  document.getElementById('otrosFecha').value = t.fecha || '';
+  document.getElementById('otrosHoraIni').value = t.horaIni || '';
+  document.getElementById('otrosHoraFin').value = t.horaFin || '';
+  document.getElementById('otrosMateriales').value = t.materiales || '';
+  document.getElementById('otrosObs').value = t.obs || '';
+  // Mecánicos
+  document.querySelectorAll('.otros-mec-chk').forEach(function(c) {
+    c.checked = (t.mecs || []).indexOf(c.value) !== -1;
+  });
+  document.querySelector('#otrosFormCard .sec-title').textContent = '✏️ Editar trabajo';
+  document.getElementById('otrosFormCard').scrollIntoView({ behavior: 'smooth' });
+}
+
+function otrosBorrar(id) {
+  if (!confirm('¿Borrar este trabajo? No se puede deshacer.')) return;
+  DB.ref('otros_trabajos/' + id).remove().then(function() {
+    _otrosTrabajos = _otrosTrabajos.filter(function(t){ return t.id !== id; });
+    otrosRender();
+    showToast('🗑 Trabajo borrado');
+  }).catch(function(){ showToast('❌ Error al borrar'); });
+}
 </script>
 </div><!-- /appAverias -->
 
