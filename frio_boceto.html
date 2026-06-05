@@ -671,18 +671,200 @@
   <!-- 6. TEMPERATURAS -->
   <!-- ════════════════════════════════════════════════════ -->
   <div class="sec" id="sec-temps">
-    <div class="sec-title">🌡️ Módulo: Temperaturas <span class="badge-norm">AMPLIAR</span></div>
+    <div class="sec-title">🌡️ Módulo: Lecturas &amp; Parámetros <span class="badge-norm">REDISEÑO COMPLETO</span></div>
 
     <div class="alert info" style="margin-bottom:16px">
       <div class="alert-icon">💡</div>
-      <div>Ya existe en admin. Ampliar con: <b>gráfico de evolución</b> por equipo, <b>alertas por temperatura fuera de rango</b>, exportación a Excel por rango de fechas, y asignación de rangos óptimos por equipo.</div>
+      <div>Este módulo sustituye al antiguo de "Temperaturas". Un registro de lectura completo captura <b>todo lo necesario para diagnosticar el estado del equipo sin abrirlo</b>: condiciones del local, circuito frigorífico, desescarches, parámetros eléctricos y estado del producto. Cuantos más datos, más fácil detectar tendencias antes de que fallen.</div>
     </div>
 
+    <!-- SUB-NAV LECTURAS -->
+    <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap">
+      <button class="btn-ice" style="font-size:.78rem;padding:6px 14px">📋 Registrar lectura</button>
+      <button class="btn-ice" style="font-size:.78rem;padding:6px 14px;opacity:.5">📊 Histórico</button>
+      <button class="btn-ice" style="font-size:.78rem;padding:6px 14px;opacity:.5">🌍 Condiciones exteriores</button>
+      <button class="btn-ice" style="font-size:.78rem;padding:6px 14px;opacity:.5">❄️ Desescarches</button>
+      <button class="btn-gold" style="font-size:.78rem;padding:6px 14px;opacity:.7">🚨 Alertas activas (2)</button>
+    </div>
+
+    <!-- ── FORMULARIO COMPLETO DE LECTURA ── -->
+    <div class="card info" style="margin-bottom:16px">
+      <div class="card-title" style="color:var(--ice);margin-bottom:4px">📋 Nueva lectura — TÚNEL 1</div>
+      <div style="font-size:.78rem;color:rgba(255,255,255,.35);margin-bottom:18px">Rellena los campos que puedas medir. Los marcados con <span style="color:var(--gold)">*</span> son obligatorios.</div>
+
+      <!-- BLOQUE 1: IDENTIFICACIÓN -->
+      <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid rgba(240,192,64,.2)">📍 Identificación</div>
+      <div class="form-grid" style="margin-bottom:20px">
+        <div class="f-field"><div class="f-label">Equipo <span style="color:var(--gold)">*</span></div>
+          <select class="f-input"><option>TÚNEL 1</option><option>TÚNEL 2</option><option>FERMENTADORA 1</option><option>CÁMARA 1</option></select>
+        </div>
+        <div class="f-field"><div class="f-label">Fecha <span style="color:var(--gold)">*</span></div><input class="f-input" type="date"></div>
+        <div class="f-field"><div class="f-label">Hora <span style="color:var(--gold)">*</span></div><input class="f-input" type="time"></div>
+        <div class="f-field"><div class="f-label">Registrado por <span style="color:var(--gold)">*</span></div>
+          <select class="f-input"><option>Gregorio</option><option>Jose</option><option>Javier H</option><option>Admin</option></select>
+        </div>
+        <div class="f-field" style="grid-column:span 2"><div class="f-label">Tipo de lectura</div>
+          <select class="f-input"><option>Revisión diaria</option><option>Revisión semanal</option><option>Revisión tras avería</option><option>Tras desescarche</option><option>Revisión preventiva</option><option>Control F-Gas (fugas)</option></select>
+        </div>
+      </div>
+
+      <!-- BLOQUE 2: CONDICIONES EXTERIORES / AMBIENTE -->
+      <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid rgba(240,192,64,.2)">🌍 Condiciones exteriores &amp; ambiente</div>
+      <div style="font-size:.78rem;color:rgba(255,255,255,.35);margin-bottom:10px">Fundamentales para interpretar el resto de datos — una alta temperatura exterior sube la presión de condensación y el consumo.</div>
+      <div class="form-grid" style="margin-bottom:20px">
+        <div class="f-field"><div class="f-label">T. exterior (°C)</div><input class="f-input" type="number" step="0.1" placeholder="ej: 28.5"></div>
+        <div class="f-field"><div class="f-label">Humedad exterior (%)</div><input class="f-input" type="number" step="1" min="0" max="100" placeholder="ej: 65"></div>
+        <div class="f-field"><div class="f-label">T. sala compresores (°C)</div><input class="f-input" type="number" step="0.1" placeholder="ej: 32.0"></div>
+        <div class="f-field"><div class="f-label">T. zona condensadores (°C)</div><input class="f-input" type="number" step="0.1" placeholder="ej: 35.0"></div>
+        <div class="f-field"><div class="f-label">Condición del día</div>
+          <select class="f-input"><option>— Selecciona —</option><option>Soleado / calor</option><option>Nublado</option><option>Lluvia</option><option>Frío</option><option>Viento fuerte</option></select>
+        </div>
+        <div class="f-field"><div class="f-label">Humedad sala compresores (%)</div><input class="f-input" type="number" step="1" min="0" max="100" placeholder="ej: 55"></div>
+      </div>
+
+      <!-- BLOQUE 3: TEMPERATURAS DEL CIRCUITO -->
+      <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid rgba(240,192,64,.2)">🌡️ Temperaturas del circuito frigorífico</div>
+      <div style="font-size:.78rem;color:rgba(255,255,255,.35);margin-bottom:10px">Permiten calcular el superheat y subcooling, que indican si el equipo está cargado correctamente.</div>
+      <div class="form-grid" style="margin-bottom:20px">
+        <div class="f-field"><div class="f-label">T. cámara / producto (°C) <span style="color:var(--gold)">*</span></div><input class="f-input" type="number" step="0.1" placeholder="ej: -21.5"></div>
+        <div class="f-field"><div class="f-label">T. retorno aire (°C)</div><input class="f-input" type="number" step="0.1" placeholder="ej: -20.0"></div>
+        <div class="f-field"><div class="f-label">T. impulsión aire (°C)</div><input class="f-input" type="number" step="0.1" placeholder="ej: -25.0"></div>
+        <div class="f-field"><div class="f-label">T. evaporación (°C)</div><input class="f-input" type="number" step="0.1" placeholder="ej: -28.0"></div>
+        <div class="f-field"><div class="f-label">T. aspiración compresor (°C)</div><input class="f-input" type="number" step="0.1" placeholder="ej: -22.0" title="Temperatura del gas en la entrada del compresor. Debe ser mayor que T. evaporación (superheat)."></div>
+        <div class="f-field"><div class="f-label">T. descarga compresor (°C)</div><input class="f-input" type="number" step="0.1" placeholder="ej: 75.0" title="Temperatura del gas caliente a la salida del compresor. Si supera 120°C hay riesgo de degradación del aceite."></div>
+        <div class="f-field"><div class="f-label">T. condensación (°C)</div><input class="f-input" type="number" step="0.1" placeholder="ej: 40.0"></div>
+        <div class="f-field"><div class="f-label">T. líquido (salida cond.) (°C)</div><input class="f-input" type="number" step="0.1" placeholder="ej: 35.0" title="Temperatura del líquido antes de la válvula de expansión. Con ella se calcula el subcooling."></div>
+        <div class="f-field"><div class="f-label">Superheat calculado (K)</div><input class="f-input" type="number" step="0.1" placeholder="Auto — T.asp - T.evap" disabled title="Calculado automáticamente: T.aspiración − T.evaporación. Valor típico 5–10 K."></div>
+        <div class="f-field"><div class="f-label">Subcooling calculado (K)</div><input class="f-input" type="number" step="0.1" placeholder="Auto — T.cond - T.liq" disabled title="Calculado automáticamente: T.condensación − T.líquido. Valor típico 3–8 K."></div>
+      </div>
+
+      <!-- BLOQUE 4: PRESIONES -->
+      <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid rgba(240,192,64,.2)">🔵 Presiones del circuito</div>
+      <div style="font-size:.78rem;color:rgba(255,255,255,.35);margin-bottom:10px">Una presión baja inusual indica falta de gas o restricción. Una presión alta indica condensador sucio o ventiladores parados.</div>
+      <div class="form-grid" style="margin-bottom:20px">
+        <div class="f-field"><div class="f-label">Presión baja — aspiración (bar)</div><input class="f-input" type="number" step="0.01" placeholder="ej: 1.43"></div>
+        <div class="f-field"><div class="f-label">Presión alta — descarga (bar)</div><input class="f-input" type="number" step="0.01" placeholder="ej: 17.1"></div>
+        <div class="f-field"><div class="f-label">Ratio de compresión</div><input class="f-input" type="number" step="0.01" placeholder="Auto — P.alta / P.baja" disabled title="Calculado. Valor normal 5–12 según equipo. Si supera 15 hay sobreesfuerzo del compresor."></div>
+        <div class="f-field"><div class="f-label">Presión de aceite compresor (bar)</div><input class="f-input" type="number" step="0.01" placeholder="ej: 3.5" title="Diferencial de presión de aceite. Valores bajos indican fallo inminente del compresor."></div>
+      </div>
+
+      <!-- BLOQUE 5: DESESCARCHES -->
+      <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid rgba(240,192,64,.2)">❄️→💧 Desescarche</div>
+      <div style="font-size:.78rem;color:rgba(255,255,255,.35);margin-bottom:10px">Un desescarche demasiado frecuente, largo o incompleto indica problemas de estanqueidad de puertas, exceso de humedad o fallo del evaporador.</div>
+      <div class="form-grid" style="margin-bottom:20px">
+        <div class="f-field"><div class="f-label">¿Desescarche realizado?</div>
+          <select class="f-input"><option>No</option><option>Sí — Correcto</option><option>Sí — Incompleto</option><option>Sí — Fallo / no terminó</option></select>
+        </div>
+        <div class="f-field"><div class="f-label">Hora inicio desescarche</div><input class="f-input" type="time"></div>
+        <div class="f-field"><div class="f-label">Duración (minutos)</div><input class="f-input" type="number" step="1" placeholder="ej: 35" title="Típico 20-45 min. Si dura más puede que haya demasiada escarcha acumulada."></div>
+        <div class="f-field"><div class="f-label">T. al inicio desescarche (°C)</div><input class="f-input" type="number" step="0.1" placeholder="ej: -22.0"></div>
+        <div class="f-field"><div class="f-label">T. al final desescarche (°C)</div><input class="f-input" type="number" step="0.1" placeholder="ej: -18.5"></div>
+        <div class="f-field"><div class="f-label">Tipo de desescarche</div>
+          <select class="f-input"><option>Eléctrico</option><option>Gas caliente</option><option>Agua</option><option>Natural (parada)</option></select>
+        </div>
+        <div class="f-field"><div class="f-label">Estado evaporador tras deseesc.</div>
+          <select class="f-input"><option>Limpio · sin escarcha</option><option>Algo de escarcha residual</option><option>Escarcha significativa — revisar</option><option>Bloqueado — intervención necesaria</option></select>
+        </div>
+        <div class="f-field"><div class="f-label">Nº desescarchess hoy</div><input class="f-input" type="number" step="1" min="0" placeholder="ej: 4" title="Número total de desescarches completados en el día. Más de los programados puede indicar entradas de aire caliente."></div>
+      </div>
+
+      <!-- BLOQUE 6: PARÁMETROS ELÉCTRICOS -->
+      <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid rgba(240,192,64,.2)">⚡ Parámetros eléctricos</div>
+      <div style="font-size:.78rem;color:rgba(255,255,255,.35);margin-bottom:10px">Un consumo elevado con mala temperatura indica ineficiencia. Una intensidad alta puede anunciar un compresor próximo a fallar.</div>
+      <div class="form-grid" style="margin-bottom:20px">
+        <div class="f-field"><div class="f-label">Intensidad compresor L1 (A)</div><input class="f-input" type="number" step="0.1" placeholder="ej: 18.5"></div>
+        <div class="f-field"><div class="f-label">Intensidad compresor L2 (A)</div><input class="f-input" type="number" step="0.1" placeholder="ej: 18.3"></div>
+        <div class="f-field"><div class="f-label">Intensidad compresor L3 (A)</div><input class="f-input" type="number" step="0.1" placeholder="ej: 18.6"></div>
+        <div class="f-field"><div class="f-label">Tensión de alimentación (V)</div><input class="f-input" type="number" step="1" placeholder="ej: 400"></div>
+        <div class="f-field"><div class="f-label">Consumo lectura contador (kWh)</div><input class="f-input" type="number" step="0.1" placeholder="ej: 1248.5" title="Lectura acumulada del contador. Con 2 lecturas se calcula el consumo del período."></div>
+        <div class="f-field"><div class="f-label">Estado variador frecuencia</div>
+          <select class="f-input"><option>— N/A —</option><option>OK — funcionando</option><option>Alarma activa</option><option>Fallo</option></select>
+        </div>
+      </div>
+
+      <!-- BLOQUE 7: ESTADO VISUAL / COMPONENTES -->
+      <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid rgba(240,192,64,.2)">👁️ Estado visual &amp; componentes</div>
+      <div class="form-grid" style="margin-bottom:20px">
+        <div class="f-field"><div class="f-label">Ventiladores condensador</div>
+          <select class="f-input"><option>✅ Todos OK</option><option>⚠️ Uno parado</option><option>⚠️ Ruido anormal</option><option>❌ Fallo</option></select>
+        </div>
+        <div class="f-field"><div class="f-label">Ventiladores evaporador</div>
+          <select class="f-input"><option>✅ Todos OK</option><option>⚠️ Uno parado</option><option>⚠️ Ruido anormal</option><option>❌ Fallo</option></select>
+        </div>
+        <div class="f-field"><div class="f-label">Estado condensador (suciedad)</div>
+          <select class="f-input"><option>✅ Limpio</option><option>⚠️ Algo sucio — limpiar pronto</option><option>🔴 Muy sucio — limpiar urgente</option></select>
+        </div>
+        <div class="f-field"><div class="f-label">Nivel aceite compresor</div>
+          <select class="f-input"><option>✅ Nivel correcto</option><option>⚠️ Bajo — revisar</option><option>❌ Muy bajo — añadir</option><option>— N/A (hermético) —</option></select>
+        </div>
+        <div class="f-field"><div class="f-label">Filtro deshidratador / secador</div>
+          <select class="f-input"><option>✅ OK — sin caída de presión</option><option>⚠️ Posible restricción</option><option>❌ Obstruido — cambiar</option></select>
+        </div>
+        <div class="f-field"><div class="f-label">Válvula de expansión</div>
+          <select class="f-input"><option>✅ Funcionando correcto</option><option>⚠️ Oscilaciones (hunting)</option><option>❌ Bloqueada abierta</option><option>❌ Bloqueada cerrada</option></select>
+        </div>
+        <div class="f-field"><div class="f-label">Indicador de humedad (sight glass)</div>
+          <select class="f-input"><option>🟢 Verde — seco</option><option>🟡 Amarillo — algo de humedad</option><option>🔴 Rojo — humedad — cambiar filtro</option><option>— Sin mirilla —</option></select>
+        </div>
+        <div class="f-field"><div class="f-label">Señal de fuga visible</div>
+          <select class="f-input"><option>✅ Sin indicios</option><option>⚠️ Posible (aceite en uniones)</option><option>🔴 Fuga confirmada — actuar</option></select>
+        </div>
+      </div>
+
+      <!-- BLOQUE 8: HUMEDAD INTERIOR -->
+      <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid rgba(240,192,64,.2)">💧 Humedad interior &amp; producto</div>
+      <div class="form-grid" style="margin-bottom:20px">
+        <div class="f-field"><div class="f-label">Humedad relativa interior (%)</div><input class="f-input" type="number" step="1" min="0" max="100" placeholder="ej: 88"></div>
+        <div class="f-field"><div class="f-label">T. sonda producto (°C)</div><input class="f-input" type="number" step="0.1" placeholder="ej: -19.2" title="Temperatura medida en el producto, no en el aire. Más fiable para validar APPCC."></div>
+        <div class="f-field"><div class="f-label">Estado puertas / juntas</div>
+          <select class="f-input"><option>✅ Buenas</option><option>⚠️ Junta desgastada en puerta X</option><option>❌ Entrada de aire — reparar urgente</option></select>
+        </div>
+        <div class="f-field"><div class="f-label">Escarcha en evaporador</div>
+          <select class="f-input"><option>✅ Sin escarcha</option><option>⚠️ Escarcha normal</option><option>🔴 Exceso de escarcha — revisar desescarche</option></select>
+        </div>
+      </div>
+
+      <!-- OBSERVACIONES -->
+      <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid rgba(240,192,64,.2)">📝 Observaciones</div>
+      <div class="form-grid" style="margin-bottom:20px">
+        <div class="f-field" style="grid-column:1/-1"><div class="f-label">Observaciones libres</div>
+          <textarea class="f-input" style="min-height:70px;resize:vertical" placeholder="Cualquier anomalía, ruido, vibración, olor, cambio de comportamiento del equipo..."></textarea>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn-ice">💾 Guardar lectura</button>
+        <button class="btn-gold" style="opacity:.6">📊 Ver historial equipo</button>
+        <button class="btn-red" style="opacity:.6;font-size:.8rem;padding:8px 14px">⚡ Crear avería desde esta lectura</button>
+      </div>
+    </div>
+
+    <!-- ── ALERTAS AUTOMÁTICAS POR UMBRALES ── -->
+    <div class="card warn" style="margin-bottom:16px">
+      <div class="card-title" style="color:var(--orange)">🚨 Alertas automáticas por umbrales <span class="boceto-chip">NUEVO</span></div>
+      <div style="font-size:.8rem;color:rgba(255,255,255,.5);margin-bottom:14px">El sistema comparará cada valor registrado con los umbrales configurados por equipo y disparará alertas push si hay anomalías.</div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>Parámetro</th><th>Equipo ejemplo</th><th>Alarma si...</th><th>Acción sugerida</th></tr></thead>
+          <tbody>
+            <tr><td>T. cámara</td><td>Túneles congelación</td><td>T &gt; -18°C</td><td>🔴 Alerta push · revisar compresor</td></tr>
+            <tr><td>T. descarga compresor</td><td>Todos</td><td>T &gt; 110°C</td><td>🔴 Alerta push · riesgo aceite</td></tr>
+            <tr><td>Superheat</td><td>Todos</td><td>&lt; 3K o &gt; 15K</td><td>🟡 Aviso · revisar válvula expansión</td></tr>
+            <tr><td>Ratio de compresión</td><td>Todos</td><td>&gt; 14</td><td>🟡 Aviso · verificar presiones</td></tr>
+            <tr><td>Intensidad compresor</td><td>Todos</td><td>&gt; nominal +15%</td><td>🔴 Alerta · posible fallo mecánico</td></tr>
+            <tr><td>Desescarche incompleto</td><td>Todos</td><td>3 veces consecutivas</td><td>🟡 Aviso · revisar resistencias o timer</td></tr>
+            <tr><td>Señal de fuga</td><td>Todos</td><td>Cualquier registro positivo</td><td>🔴 Alerta inmediata · control de fugas F-Gas</td></tr>
+            <tr><td>Filtro secador</td><td>Todos</td><td>Restricción detectada</td><td>🟡 Aviso · cambiar filtro en próxima visita</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── HISTÓRICO Y GRÁFICOS ── -->
     <div class="grid2">
       <div class="card">
-        <div class="card-title">📊 Gráfico evolución — TÚNEL 1 (últimos 7 días) <span class="boceto-chip">NUEVO</span></div>
-        <!-- Simulación visual de gráfico -->
-        <div style="height:100px;background:var(--navy-deep);border-radius:8px;border:1px solid rgba(100,210,255,.1);display:flex;align-items:flex-end;padding:12px 8px;gap:6px;margin-bottom:8px">
+        <div class="card-title">📊 Evolución temperatura — TÚNEL 1 (7 días) <span class="boceto-chip">NUEVO</span></div>
+        <div style="height:90px;background:var(--navy-deep);border-radius:8px;border:1px solid rgba(100,210,255,.1);display:flex;align-items:flex-end;padding:10px 8px;gap:5px;margin-bottom:8px">
           <div style="flex:1;background:rgba(100,210,255,.3);border-radius:3px 3px 0 0;height:70%"></div>
           <div style="flex:1;background:rgba(100,210,255,.3);border-radius:3px 3px 0 0;height:65%"></div>
           <div style="flex:1;background:rgba(231,76,60,.4);border-radius:3px 3px 0 0;height:90%"></div>
@@ -691,47 +873,39 @@
           <div style="flex:1;background:rgba(100,210,255,.3);border-radius:3px 3px 0 0;height:66%"></div>
           <div style="flex:1;background:rgba(46,204,113,.4);border-radius:3px 3px 0 0;height:60%"></div>
         </div>
-        <div style="font-size:.75rem;color:rgba(255,255,255,.4);text-align:center">Temperatura media: <b style="color:var(--ice)">-21.4°C</b> · Rango óptimo: <b style="color:var(--green)">-25°C / -18°C</b></div>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.4);text-align:center">Media: <b style="color:var(--ice)">-21.4°C</b> · Rango: <b style="color:var(--green)">-25 / -18°C</b> · 1 alarma este período</div>
       </div>
       <div class="card">
-        <div class="card-title">🚨 Alertas de temperatura <span class="boceto-chip">NUEVO</span></div>
+        <div class="card-title">🚨 Últimas alertas detectadas</div>
         <div class="timeline">
-          <div class="tl-item">
-            <div class="tl-dot red"></div>
-            <div class="tl-content">
-              <div class="tl-title">TÚNEL 3 — Temperatura fuera de rango</div>
-              <div class="tl-meta">-14.2°C (límite: -18°C) · Hoy 08:23 · Registrado por Jose</div>
-            </div>
+          <div class="tl-item"><div class="tl-dot red"></div>
+            <div class="tl-content"><div class="tl-title">TÚNEL 3 — T. cámara fuera de rango</div><div class="tl-meta">-14.2°C · Hoy 08:23 · Jose</div></div>
           </div>
-          <div class="tl-item">
-            <div class="tl-dot orange"></div>
-            <div class="tl-content">
-              <div class="tl-title">CÁMARA 2 — Temperatura alta</div>
-              <div class="tl-meta">+3.8°C (límite: +2°C) · Ayer 22:15 · Registrado por Gregorio</div>
-            </div>
+          <div class="tl-item"><div class="tl-dot orange"></div>
+            <div class="tl-content"><div class="tl-title">TÚNEL 2 — Desescarche incompleto (3ª vez)</div><div class="tl-meta">Ayer · Revisar resistencias evaporador</div></div>
           </div>
-          <div class="tl-item">
-            <div class="tl-dot green"></div>
-            <div class="tl-content">
-              <div class="tl-title">FERMENTADORA 1 — Temperatura normalizada</div>
-              <div class="tl-meta">+4.5°C (OK) · Hoy 07:00 · Registro automático</div>
-            </div>
+          <div class="tl-item"><div class="tl-dot orange"></div>
+            <div class="tl-content"><div class="tl-title">CÁMARA 1 — Filtro secador con posible restricción</div><div class="tl-meta">22/05 · Gregorio · Programar cambio</div></div>
+          </div>
+          <div class="tl-item"><div class="tl-dot green"></div>
+            <div class="tl-content"><div class="tl-title">FERMENTADORA 1 — Normalizada tras avería</div><div class="tl-meta">Hoy 07:00 · T. correcta</div></div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="card info" style="margin-top:4px">
-      <div class="card-title" style="color:var(--ice)">⚙️ Configuración por equipo — Rangos de temperatura</div>
-      <div class="norm-body" style="margin-bottom:12px">Cada equipo tendrá sus rangos de alerta configurados. Si se registra una temperatura fuera de rango → alerta push automática.</div>
+    <!-- ── CONFIGURACIÓN DE RANGOS ── -->
+    <div class="card info" style="margin-top:14px">
+      <div class="card-title" style="color:var(--ice)">⚙️ Configuración de rangos por equipo</div>
+      <div style="font-size:.8rem;color:rgba(255,255,255,.5);margin-bottom:12px">Administrador configura los valores normales de cada equipo. Cualquier lectura fuera de rango dispara alerta automática.</div>
       <div style="overflow-x:auto">
         <table>
-          <thead><tr><th>Equipo</th><th>T. mín. alarma</th><th>T. máx. alarma</th><th>T. objetivo</th><th>Frecuencia registro</th></tr></thead>
+          <thead><tr><th>Equipo</th><th>T. cámara objetivo</th><th>Alarma</th><th>Superheat normal</th><th>T. desc. máx.</th><th>Desescarches/día</th></tr></thead>
           <tbody>
-            <tr><td>Túneles congelación</td><td style="color:var(--ice)">-28°C</td><td style="color:var(--orange)">-18°C</td><td>-22°C</td><td>Diario</td></tr>
-            <tr><td>Túnel prefío</td><td style="color:var(--ice)">-5°C</td><td style="color:var(--orange)">0°C</td><td>-2°C</td><td>Diario</td></tr>
-            <tr><td>Cámaras positivas</td><td style="color:var(--ice)">0°C</td><td style="color:var(--orange)">+4°C</td><td>+2°C</td><td>Diario</td></tr>
-            <tr><td>Fermentadoras</td><td style="color:var(--ice)">+2°C</td><td style="color:var(--orange)">+8°C</td><td>+5°C</td><td>Diario</td></tr>
+            <tr><td>Túneles congelación</td><td>-22°C</td><td>&gt; -18°C</td><td>5–10 K</td><td>110°C</td><td>4</td></tr>
+            <tr><td>Túnel prefío</td><td>-2°C</td><td>&gt; 0°C</td><td>5–10 K</td><td>100°C</td><td>3</td></tr>
+            <tr><td>Cámaras positivas</td><td>+2°C</td><td>&gt; +4°C</td><td>5–10 K</td><td>100°C</td><td>2</td></tr>
+            <tr><td>Fermentadoras</td><td>+5°C</td><td>&gt; +8°C</td><td>5–8 K</td><td>90°C</td><td>1</td></tr>
           </tbody>
         </table>
       </div>
@@ -975,7 +1149,7 @@
       <a href="#sec-equipos">🏭 Equipos</a>
       <a href="#sec-gas">⛽ Libro de Gas ⚠️</a>
       <a href="#sec-fugas">🔍 Control Fugas ⚠️</a>
-      <a href="#sec-temps">🌡️ Temperaturas</a>
+      <a href="#sec-temps">🌡️ Lecturas &amp; Parámetros</a>
       <a href="#sec-averias">⚡ Averías</a>
       <a href="#sec-prev">🔧 Preventivo</a>
       <a href="#sec-roles">👷 Equipo Beta</a>
