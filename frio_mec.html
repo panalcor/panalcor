@@ -162,6 +162,8 @@ var DB = firebase.database();
               <option value="fallo">Sí — Fallo</option>
             </select>
           </div>
+          <div class="frio-field"><label>Hora inicio desescarche</label><input type="time" id="mLecDesescIni" placeholder="--:--"></div>
+          <div class="frio-field"><label>Hora fin desescarche</label><input type="time" id="mLecDesescFin" placeholder="--:--"></div>
         </div>
 
         <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px">Estado visual</div>
@@ -175,8 +177,10 @@ var DB = firebase.database();
           </div>
           <div class="frio-field"><label>Ventiladores condensador</label>
             <select id="mLecVentCond">
-              <option value="ok">✅ Todos OK</option><option value="uno_parado">⚠️ Uno parado</option>
-              <option value="ruido">⚠️ Ruido</option><option value="fallo">❌ Fallo</option>
+              <option value="ok">✅ Todos OK</option>
+              <option value="uno_parado">⚠️ Uno parado</option>
+              <option value="ruido">⚠️ Ruido</option>
+              <option value="fallo">❌ Fallo</option>
             </select>
           </div>
           <div class="frio-field"><label>Condensador (suciedad)</label>
@@ -184,6 +188,34 @@ var DB = firebase.database();
               <option value="limpio">✅ Limpio</option>
               <option value="algo">⚠️ Algo sucio</option>
               <option value="sucio">🔴 Muy sucio</option>
+            </select>
+          </div>
+          <div class="frio-field"><label>Contactores cuadro</label>
+            <select id="mLecContactor">
+              <option value="ok">✅ OK</option>
+              <option value="desgaste">⚠️ Desgaste visible</option>
+              <option value="fallo">❌ Fallo / Quemado</option>
+            </select>
+          </div>
+          <div class="frio-field"><label>Relés / termistores</label>
+            <select id="mLecRele">
+              <option value="ok">✅ OK</option>
+              <option value="disparado">⚠️ Disparado (resetado)</option>
+              <option value="fallo">❌ Fallo</option>
+            </select>
+          </div>
+          <div class="frio-field"><label>Diferencial / magnetotérmico</label>
+            <select id="mLecDiferencial">
+              <option value="ok">✅ OK — En posición</option>
+              <option value="disparado">⚠️ Disparado (resetado)</option>
+              <option value="fallo">❌ Fallo</option>
+            </select>
+          </div>
+          <div class="frio-field"><label>Seta de emergencia (cuadro)</label>
+            <select id="mLecSeta">
+              <option value="ok">✅ OK — Libre</option>
+              <option value="pulsada">🔴 Pulsada / Activada</option>
+              <option value="dañada">⚠️ Dañada</option>
             </select>
           </div>
         </div>
@@ -332,9 +364,15 @@ function mGuardarLectura() {
     pBaja: numOrNull('mLecPBaja'),
     pAlta: numOrNull('mLecPAlta'),
     desesc: document.getElementById('mLecDesesc').value,
+    desescIni: document.getElementById('mLecDesescIni').value || null,
+    desescFin: document.getElementById('mLecDesescFin').value || null,
     fuga: document.getElementById('mLecFuga').value,
     ventCond: document.getElementById('mLecVentCond').value,
     condSuciedad: document.getElementById('mLecCond').value,
+    contactor: document.getElementById('mLecContactor').value,
+    rele: document.getElementById('mLecRele').value,
+    diferencial: document.getElementById('mLecDiferencial').value,
+    seta: document.getElementById('mLecSeta').value,
     obs: document.getElementById('mLecObs').value.trim(),
     ts: Date.now()
   };
@@ -344,7 +382,10 @@ function mGuardarLectura() {
     ['mLecEq','mLecTCam','mLecTExt','mLecPBaja','mLecPAlta','mLecObs'].forEach(function(i){
       var el = document.getElementById(i); if(el) el.value='';
     });
-    ['mLecDesesc','mLecFuga','mLecVentCond','mLecCond','mLecTipo'].forEach(function(i){
+    ['mLecDesescIni','mLecDesescFin'].forEach(function(i){
+      var el = document.getElementById(i); if(el) el.value='';
+    });
+    ['mLecDesesc','mLecFuga','mLecVentCond','mLecCond','mLecContactor','mLecRele','mLecDiferencial','mLecSeta','mLecTipo'].forEach(function(i){
       var el = document.getElementById(i); if(el) el.selectedIndex=0;
     });
     var hoy = new Date().toISOString().slice(0,10);
