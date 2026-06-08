@@ -3113,14 +3113,22 @@ function imprimirQRAdmin(){
 // ══════════════════════════════════════════════════
 var _fichasData = {};   // { maqId: datosFirebase }
 var _fichasLoaded = false;
+var _fichasListenerOn = false;
 
 function fichasCargar(cb) {
+  if (_fichasListenerOn) {
+    // Listener ya activo — solo re-renderizar si ya cargó
+    if (_fichasLoaded) { fichasActualizarCount(); fichasRenderLista(); }
+    if (cb) cb();
+    return;
+  }
+  _fichasListenerOn = true;
   DB.ref('fichas_maquinas').on('value', function(snap) {
     _fichasData = snap.val() || {};
     _fichasLoaded = true;
     fichasActualizarCount();
     fichasRenderLista();
-    if (cb) cb();
+    if (cb) { cb(); cb = null; }
   });
 }
 
@@ -3135,10 +3143,19 @@ function fichasActualizarCount() {
 function fichasRenderLista() {
   var el = document.getElementById('fichasLista');
   if (!el) return;
-  if (!_fichasLoaded) { el.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,.3);padding:20px;font-size:.85rem">Cargando...</div>'; return; }
+  if (!_fichasLoaded) {
+    el.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,.3);padding:20px;font-size:.85rem">Cargando...</div>';
+    return;
+  }
 
   var query = (document.getElementById('fichasBuscador').value || '').trim().toUpperCase();
   var filtroEstado = (document.getElementById('fichasFiltroEstado').value || '');
+
+  // Sin búsqueda ni filtro: mostrar aviso en lugar de 149 filas
+  if (!query && !filtroEstado) {
+    el.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,.3);padding:24px;font-size:.85rem">🔍 Escribe el nombre o ID de la máquina para buscarla<br><span style="font-size:.75rem;color:rgba(255,255,255,.2)">O usa el filtro para ver solo las que tienen / no tienen ficha</span></div>';
+    return;
+  }
 
   var todas = (typeof MAQUINAS_BASE_ADMIN !== 'undefined' ? MAQUINAS_BASE_ADMIN : [])
                .concat(maquinasExtra || [])
@@ -3161,7 +3178,11 @@ function fichasRenderLista() {
     return;
   }
 
-  el.innerHTML = filtradas.map(function(m) {
+  // Limitar a 30 resultados para no sobrecargar el DOM
+  var mostrar = filtradas.slice(0, 30);
+  var hayMas = filtradas.length > 30;
+
+  el.innerHTML = mostrar.map(function(m) {
     var ficha = _fichasData[m.id];
     var tieneFicha = !!ficha;
     // Semáforo próxima revisión OCA
@@ -3196,7 +3217,8 @@ function fichasRenderLista() {
         + ' style="background:rgba(240,192,64,' + (tieneFicha?'.18':'.08') + ');border:1px solid rgba(240,192,64,' + (tieneFicha?'.5':'.25') + ');color:#f0c040;border-radius:7px;padding:6px 14px;cursor:pointer;font-family:\'Barlow\',sans-serif;font-size:.8rem;font-weight:700;white-space:nowrap;flex-shrink:0">'
         + (tieneFicha ? '📋 Ver/Editar' : '📋 Crear ficha') + '</button>'
       + '</div>';
-  }).join('');
+  }).join('')
+  + (hayMas ? '<div style="text-align:center;padding:10px;font-size:.78rem;color:rgba(255,255,255,.3)">Mostrando 30 de '+filtradas.length+' resultados — afina la búsqueda</div>' : '');
 }
 
 function eliminarMaquina(id){
