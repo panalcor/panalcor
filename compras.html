@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PANALCOR — Compras</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-deep:#0a1520;--navy-mid:#0f1e2e;--navy-light:#162840;
+    --gold:#f0c040;--white:#e8f4ff;
+    --green:#2ecc71;--red:#e74c3c;--orange:#f39c12;--purple:#9b59b6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-serif;min-height:100vh}
+  .topbar{background:var(--navy-mid);border-bottom:1px solid rgba(240,192,64,.15);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:100}
+  .topbar-title{font-size:1.1rem;font-weight:900;color:var(--gold);letter-spacing:.02em}
+  .topbar-sub{font-size:.75rem;color:rgba(255,255,255,.45);margin-top:2px}
+  .btn-sm{background:transparent;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.55);border-radius:8px;padding:7px 14px;font-family:'Barlow',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block;transition:all .2s}
+  .btn-sm:hover{border-color:rgba(240,192,64,.4);color:var(--gold)}
+  .container{max-width:960px;margin:0 auto;padding:20px 16px}
+
+  /* Login */
+  #loginPanel{display:flex;align-items:center;justify-content:center;min-height:80vh}
+  .login-card{background:var(--navy-mid);border:1px solid rgba(240,192,64,.25);border-radius:16px;padding:36px 32px;width:100%;max-width:380px;text-align:center}
+  .login-title{font-size:1.5rem;font-weight:900;color:var(--gold);margin-bottom:6px}
+  .login-sub{font-size:.85rem;color:rgba(255,255,255,.45);margin-bottom:28px}
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;text-align:left}
+  .field label{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45)}
+  select,input[type=text],input[type=number],input[type=date],input[type=time],textarea{
+    background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,.15);border-radius:8px;
+    padding:10px 12px;font-family:'Barlow',sans-serif;font-size:.9rem;width:100%;
+    outline:none;transition:border-color .2s}
+  select:focus,input:focus,textarea:focus{border-color:rgba(240,192,64,.5)}
+  .btn-main{width:100%;padding:13px;border-radius:10px;font-family:'Barlow',sans-serif;font-size:1rem;font-weight:800;cursor:pointer;border:none;background:var(--gold);color:#0a1520;letter-spacing:.03em;transition:opacity .2s}
+  .btn-main:hover{opacity:.85}
+
+  /* App */
+  #appPanel{display:none}
+  .subnav{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+  .tab-btn{background:transparent;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.45);border-radius:8px;padding:9px 18px;font-family:'Barlow',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .2s}
+  .tab-btn.active{background:rgba(240,192,64,.12);border-color:rgba(240,192,64,.5);color:var(--gold)}
+
+  /* Pedido card */
+  .pedido-card{background:var(--navy-mid);border:1px solid rgba(255,255,255,.07);border-left:3px solid var(--orange);border-radius:12px;padding:16px 18px;margin-bottom:12px;transition:border-color .2s}
+  .pedido-card.comprado{border-left-color:var(--green)}
+  .pedido-card.rechazado{border-left-color:var(--red)}
+  .ped-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .ped-desc{font-size:.95rem;font-weight:700;color:#fff;margin-bottom:4px}
+  .ped-meta{display:flex;flex-wrap:wrap;gap:10px;font-size:.78rem;color:rgba(255,255,255,.45);margin-bottom:6px}
+  .ped-meta b{color:rgba(255,255,255,.75)}
+  .ped-motivo{font-size:.8rem;color:rgba(255,255,255,.45);font-style:italic;margin-bottom:8px}
+  .ped-actions{display:flex;flex-direction:column;align-items:flex-end;gap:7px;flex-shrink:0;min-width:120px}
+  .btn-comprar{background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.45);color:#2ecc71;border-radius:8px;padding:8px 16px;font-family:'Barlow',sans-serif;font-size:.82rem;font-weight:800;cursor:pointer;transition:all .2s;white-space:nowrap}
+  .btn-comprar:hover{background:rgba(46,204,113,.25)}
+  .btn-rechazar{background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.35);color:#e74c3c;border-radius:8px;padding:8px 16px;font-family:'Barlow',sans-serif;font-size:.82rem;font-weight:800;cursor:pointer;transition:all .2s;white-space:nowrap}
+  .btn-rechazar:hover{background:rgba(231,76,60,.2)}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:700}
+  .badge-pend{background:rgba(243,156,18,.15);color:#f39c12;border:1px solid rgba(243,156,18,.3)}
+  .badge-ok{background:rgba(46,204,113,.15);color:#2ecc71;border:1px solid rgba(46,204,113,.3)}
+  .badge-ko{background:rgba(231,76,60,.12);color:#e74c3c;border:1px solid rgba(231,76,60,.3)}
+
+  .kpi-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+  .kpi{background:var(--navy-mid);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 20px;flex:1;min-width:100px;text-align:center}
+  .kpi-num{font-size:1.7rem;font-weight:900;color:var(--gold);line-height:1}
+  .kpi-lbl{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4);margin-top:4px}
+
+  .empty{text-align:center;color:rgba(255,255,255,.3);padding:32px;font-size:.9rem}
+
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;align-items:center;justify-content:center;padding:16px}
+  .modal-overlay.open{display:flex}
+  .modal-box{background:#1a2d42;border:1px solid rgba(231,76,60,.35);border-radius:14px;padding:28px;width:100%;max-width:420px}
+  .modal-title{font-size:1rem;font-weight:800;color:#e74c3c;margin-bottom:12px}
+  .modal-body{font-size:.9rem;color:rgba(255,255,255,.7);margin-bottom:16px;line-height:1.5}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end}
+
+  .historial-ts{font-size:.72rem;color:rgba(255,255,255,.35);margin-top:4px}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(20,35,55,.97);border:1px solid rgba(240,192,64,.3);color:var(--white);padding:12px 24px;border-radius:10px;font-size:.9rem;font-weight:700;z-index:9999;pointer-events:none;opacity:0;transition:opacity .3s;max-width:90vw;text-align:center}
+  .toast.show{opacity:1}
+  @media(max-width:500px){.ped-actions{flex-direction:row;align-items:center;min-width:auto}}
+</style>
+</head>
+<body>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script>
+var FB_CFG = {
+  apiKey:            "AIzaSyBiiiTp1oELbkD2sESmh3xRjpgI37DxvYQ",
+  authDomain:        "panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:       "https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:         "panalcor-mantenimiento",
+  storageBucket:     "panalcor-mantenimiento.appspot.com",
+  messagingSenderId: "1061821849642",
+  appId:             "1:1061821849642:web:6dbafe66cdbc3eb5de58c2"
+};
+if (!firebase.apps.length) firebase.initializeApp(FB_CFG);
+var DB = firebase.database();
+</script>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div>
+    <div class="topbar-title">📦 PANALCOR — Compras</div>
+    <div class="topbar-sub" id="topbarSub">Gestión de pedidos de repuestos</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <a href="panalcor_inicio.html" class="btn-sm">← Inicio</a>
+    <button onclick="cerrarSesion()" class="btn-sm" id="btnCerrarSesion" style="display:none">Cerrar sesión</button>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="loginPanel">
+  <div class="login-card">
+    <div class="login-title">📦 Compras</div>
+    <div class="login-sub">Gestión de solicitudes de repuestos</div>
+    <div class="field">
+      <label>Tu nombre</label>
+      <input type="text" id="loginNombre" placeholder="Escribe tu nombre" autocomplete="off">
+    </div>
+    <button class="btn-main" onclick="entrar()">Entrar</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appPanel">
+  <div class="container">
+
+    <!-- KPIs -->
+    <div class="kpi-row" id="kpiRow">
+      <div class="kpi"><div class="kpi-num" id="kpiPend">—</div><div class="kpi-lbl">Pendientes</div></div>
+      <div class="kpi"><div class="kpi-num" id="kpiComp" style="color:var(--green)">—</div><div class="kpi-lbl">Comprados (30d)</div></div>
+      <div class="kpi"><div class="kpi-num" id="kpiRech" style="color:var(--red)">—</div><div class="kpi-lbl">Rechazados (30d)</div></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="subnav">
+      <button class="tab-btn active" id="tab-pend" onclick="cambiarTab('pend')">⏳ Pendientes <span id="tabPendCount"></span></button>
+      <button class="tab-btn" id="tab-hist" onclick="cambiarTab('hist')">📋 Historial</button>
+    </div>
+
+    <!-- PENDIENTES -->
+    <div id="sec-pend">
+      <div id="listaPend"><div class="empty">Cargando...</div></div>
+    </div>
+
+    <!-- HISTORIAL -->
+    <div id="sec-hist" style="display:none">
+      <div id="listaHist"><div class="empty">Cargando...</div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal rechazo -->
+<div class="modal-overlay" id="modalRechazo">
+  <div class="modal-box">
+    <div class="modal-title">❌ Rechazar pedido</div>
+    <div class="modal-body" id="modalRechDesc">—</div>
+    <div class="field">
+      <label>Motivo del rechazo (opcional)</label>
+      <textarea id="modalRechMotivo" rows="3" placeholder="No disponible, presupuesto excedido, pedido incorrecto..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-sm" onclick="cerrarModalRechazo()">Cancelar</button>
+      <button class="btn-rechazar" onclick="confirmarRechazo()">❌ Confirmar rechazo</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toastEl" class="toast"></div>
+
+<script>
+// ─────────────────────────────────────
+// Utils
+// ─────────────────────────────────────
+function escHtml(s){
+  if(s==null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function showToast(msg,dur){
+  var el=document.getElementById('toastEl');
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(function(){el.classList.remove('show');},dur||2800);
+}
+function fmtTs(ts){
+  if(!ts) return '—';
+  var d=new Date(ts);
+  return d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'2-digit'})
+    +' '+d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ─────────────────────────────────────
+// Sesión
+// ─────────────────────────────────────
+var _sesion = null;
+var _pedidosRef = null;
+var _todosPedidos = [];
+var _rechazoPendienteId = null;
+
+function entrar(){
+  var nombre = (document.getElementById('loginNombre').value||'').trim();
+  if(!nombre){showToast('⚠️ Escribe tu nombre');return;}
+  localStorage.setItem('comprasSesion', nombre);
+  iniciarApp(nombre);
+}
+
+function cerrarSesion(){
+  localStorage.removeItem('comprasSesion');
+  location.reload();
+}
+
+function iniciarApp(nombre){
+  _sesion = nombre;
+  document.getElementById('loginPanel').style.display='none';
+  document.getElementById('appPanel').style.display='block';
+  document.getElementById('btnCerrarSesion').style.display='inline-block';
+  document.getElementById('topbarSub').textContent = 'Bienvenido/a, '+nombre;
+  escucharPedidos();
+}
+
+// ─────────────────────────────────────
+// Firebase listener
+// ─────────────────────────────────────
+function escucharPedidos(){
+  if(_pedidosRef) _pedidosRef.off();
+  _pedidosRef = DB.ref('pedidos').orderByChild('ts');
+  _pedidosRef.on('value', function(snap){
+    var raw = snap.val() || {};
+    _todosPedidos = Object.entries(raw).map(function(e){
+      return Object.assign({_id:e[0]},e[1]);
+    }).sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+    renderAll();
+  });
+}
+
+// ─────────────────────────────────────
+// Render
+// ─────────────────────────────────────
+function renderAll(){
+  var ahora = Date.now();
+  var hace30 = ahora - 30*24*3600*1000;
+  var pendientes = _todosPedidos.filter(function(p){ return p.estado==='pendiente'; });
+  var comprados  = _todosPedidos.filter(function(p){ return p.estado==='comprado' && (p.tsCompra||0)>hace30; });
+  var rechazados = _todosPedidos.filter(function(p){ return p.estado==='rechazado' && (p.tsCompra||0)>hace30; });
+
+  document.getElementById('kpiPend').textContent = pendientes.length;
+  document.getElementById('kpiComp').textContent = comprados.length;
+  document.getElementById('kpiRech').textContent = rechazados.length;
+
+  var cntEl = document.getElementById('tabPendCount');
+  if(cntEl) cntEl.textContent = pendientes.length ? '('+pendientes.length+')' : '';
+
+  renderPendientes(pendientes);
+  if(document.getElementById('sec-hist').style.display!=='none'){
+    renderHistorial();
+  }
+}
+
+function renderPendientes(lista){
+  var el = document.getElementById('listaPend');
+  if(!lista.length){
+    el.innerHTML = '<div class="empty">✅ No hay solicitudes pendientes</div>';
+    return;
+  }
+  el.innerHTML = lista.map(function(p){
+    var fechaPed = fmtTs(p.ts);
+    return '<div class="pedido-card" id="pc-'+escHtml(p._id)+'">'
+      +'<div class="ped-head">'
+        +'<div style="flex:1;min-width:0">'
+          +'<div class="ped-desc">'+escHtml(p.desc||'Sin descripción')+'</div>'
+          +'<div class="ped-meta">'
+            +(p.ref ? '<span>Cód. <b>'+escHtml(p.ref)+'</b></span>' : '<span style="color:rgba(255,255,255,.25)">Sin código</span>')
+            +(p.ubicacion ? '<span>📍 <b>'+escHtml(p.ubicacion)+'</b></span>' : '')
+            +'<span>Cant. <b>'+(p.cantidad||1)+'</b></span>'
+            +'<span>👷 <b>'+escHtml(p.mecanico||'—')+'</b></span>'
+            +'<span>📅 '+fechaPed+'</span>'
+          +'</div>'
+          +(p.motivo ? '<div class="ped-motivo">💬 "'+escHtml(p.motivo)+'"</div>' : '')
+        +'</div>'
+        +'<div class="ped-actions">'
+          +'<span class="badge badge-pend">⏳ PENDIENTE</span>'
+          +'<button class="btn-comprar" onclick="abrirConfirmCompra(\''+escHtml(p._id)+'\',\''+escHtml((p.desc||'').replace(/'/g,''))+'\')">✅ Comprado</button>'
+          +'<button class="btn-rechazar" onclick="abrirModalRechazo(\''+escHtml(p._id)+'\',\''+escHtml((p.desc||'').replace(/'/g,''))+'\')">❌ Rechazar</button>'
+        +'</div>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function renderHistorial(){
+  var el = document.getElementById('listaHist');
+  var hist = _todosPedidos.filter(function(p){ return p.estado==='comprado'||p.estado==='rechazado'; }).slice(0,60);
+  if(!hist.length){
+    el.innerHTML='<div class="empty">Sin historial todavía</div>';
+    return;
+  }
+  el.innerHTML = hist.map(function(p){
+    var esComp = p.estado==='comprado';
+    var fechaPed = fmtTs(p.ts);
+    var fechaGes = fmtTs(p.tsCompra);
+    return '<div class="pedido-card '+(esComp?'comprado':'rechazado')+'">'
+      +'<div class="ped-head">'
+        +'<div style="flex:1;min-width:0">'
+          +'<div class="ped-desc">'+escHtml(p.desc||'Sin descripción')+'</div>'
+          +'<div class="ped-meta">'
+            +(p.ref?'<span>Cód. <b>'+escHtml(p.ref)+'</b></span>':'')
+            +(p.ubicacion?'<span>📍 <b>'+escHtml(p.ubicacion)+'</b></span>':'')
+            +'<span>Cant. <b>'+(p.cantidad||1)+'</b></span>'
+            +'<span>👷 <b>'+escHtml(p.mecanico||'—')+'</b></span>'
+            +'<span>📅 Pedido: '+fechaPed+'</span>'
+          +'</div>'
+          +(p.motivo?'<div class="ped-motivo">💬 "'+escHtml(p.motivo)+'"</div>':'')
+          +(p.notaCompras?'<div style="margin-top:5px;font-size:.8rem;background:rgba(231,76,60,.08);border:1px solid rgba(231,76,60,.2);border-radius:6px;padding:5px 9px;color:rgba(231,76,60,.8)">📝 '+escHtml(p.notaCompras)+'</div>':'')
+          +'<div class="historial-ts">'
+            +(esComp?'✅ Comprado':'❌ Rechazado')
+            +' por <b>'+(p.quienCompras||'—')+'</b> el '+fechaGes
+          +'</div>'
+        +'</div>'
+        +'<div class="ped-actions">'
+          +'<span class="badge '+(esComp?'badge-ok':'badge-ko')+'">'+(esComp?'✅ COMPRADO':'❌ RECHAZADO')+'</span>'
+        +'</div>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+
+// ─────────────────────────────────────
+// Acciones — Comprado
+// ─────────────────────────────────────
+function abrirConfirmCompra(id, desc){
+  if(!confirm('¿Confirmar que "'+desc+'" ha sido COMPRADO?')) return;
+  ejecutarCompra(id);
+}
+
+function ejecutarCompra(id){
+  DB.ref('pedidos/'+id).update({
+    estado: 'comprado',
+    tsCompra: Date.now(),
+    quienCompras: _sesion
+  }).then(function(){
+    showToast('✅ Marcado como comprado');
+    // Notificar al admin
+    notificarAdmin(id, 'comprado');
+  }).catch(function(){showToast('❌ Error al guardar');});
+}
+
+// ─────────────────────────────────────
+// Acciones — Rechazar
+// ─────────────────────────────────────
+function abrirModalRechazo(id, desc){
+  _rechazoPendienteId = id;
+  document.getElementById('modalRechDesc').textContent = desc || 'Este pedido';
+  document.getElementById('modalRechMotivo').value = '';
+  document.getElementById('modalRechazo').classList.add('open');
+}
+function cerrarModalRechazo(){
+  _rechazoPendienteId = null;
+  document.getElementById('modalRechazo').classList.remove('open');
+}
+function confirmarRechazo(){
+  if(!_rechazoPendienteId) return;
+  var motivo = (document.getElementById('modalRechMotivo').value||'').trim();
+  var id = _rechazoPendienteId;
+  cerrarModalRechazo();
+  DB.ref('pedidos/'+id).update({
+    estado: 'rechazado',
+    tsCompra: Date.now(),
+    quienCompras: _sesion,
+    notaCompras: motivo || null
+  }).then(function(){
+    showToast('❌ Pedido rechazado');
+    notificarAdmin(id, 'rechazado');
+  }).catch(function(){showToast('❌ Error al guardar');});
+}
+
+// ─────────────────────────────────────
+// Notificar admin (nodo notificaciones)
+// ─────────────────────────────────────
+function notificarAdmin(pedidoId, accion){
+  DB.ref('pedidos/'+pedidoId).once('value').then(function(snap){
+    var p = snap.val();
+    if(!p) return;
+    var texto = accion==='comprado'
+      ? '✅ COMPRADO por '+_sesion+': "'+p.desc+'" (Mec: '+p.mecanico+')'
+      : '❌ RECHAZADO por '+_sesion+': "'+p.desc+'" (Mec: '+p.mecanico+')';
+    DB.ref('notificaciones_admin').push({
+      tipo: 'compras',
+      accion: accion,
+      pedidoId: pedidoId,
+      texto: texto,
+      ts: Date.now(),
+      leido: false
+    });
+  });
+}
+
+// ─────────────────────────────────────
+// Tabs
+// ─────────────────────────────────────
+function cambiarTab(tab){
+  ['pend','hist'].forEach(function(t){
+    var s=document.getElementById('sec-'+t); if(s) s.style.display=t===tab?'':'none';
+    var b=document.getElementById('tab-'+t); if(b) b.classList.toggle('active',t===tab);
+  });
+  if(tab==='hist') renderHistorial();
+}
+
+// Cerrar modal con Escape
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape') cerrarModalRechazo();
+});
+
+// ─────────────────────────────────────
+// Arranque
+// ─────────────────────────────────────
+(function(){
+  var saved = localStorage.getItem('comprasSesion');
+  if(saved){ iniciarApp(saved); }
+})();
+</script>
+</body>
+</html>

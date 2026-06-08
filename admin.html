@@ -8285,14 +8285,63 @@ function _mostrarAlertaPedido(p) {
   setTimeout(function(){ if (el.parentNode) el.remove(); }, 15000);
 }
 
-function cargarPedidos() { initPedidos(); }
+function cargarPedidos() { initPedidos(); initNotifCompras(); }
+
+// ── Notificaciones de compras ────────────────────────────────────────
+var _notifComprasInit = Date.now();
+var _notifComprasOn   = false;
+function initNotifCompras() {
+  if (_notifComprasOn) return;
+  _notifComprasOn = true;
+  DB.ref('notificaciones_admin')
+    .orderByChild('ts').startAt(_notifComprasInit)
+    .on('child_added', function(snap) {
+      var n = snap.val();
+      if (!n || n.tipo !== 'compras') return;
+      _mostrarNotifCompras(n, snap.key);
+    });
+}
+function _mostrarNotifCompras(n, key) {
+  var prev = document.getElementById('_alertaCompras');
+  if (prev) prev.remove();
+  var esComp = n.accion === 'comprado';
+  var color  = esComp ? '#27ae60' : '#e74c3c';
+  var el = document.createElement('div');
+  el.id = '_alertaCompras';
+  el.style.cssText = [
+    'position:fixed','top:70px','right:20px',
+    'background:#1a2d42','border:2px solid '+color,
+    'border-radius:14px','padding:16px 20px',
+    'z-index:9998','max-width:340px','width:90%',
+    'box-shadow:0 8px 32px '+(esComp?'rgba(39,174,96,0.3)':'rgba(231,76,60,0.3)'),
+    'font-family:Barlow,sans-serif',
+    'animation:slideInRight .3s ease'
+  ].join(';');
+  el.innerHTML =
+    '<div style="display:flex;align-items:flex-start;gap:12px">'
+    +'<div style="font-size:1.8rem;flex-shrink:0">'+(esComp?'✅':'❌')+'</div>'
+    +'<div style="flex:1">'
+      +'<div style="font-size:0.88rem;font-weight:900;color:'+color+';margin-bottom:4px">'+(esComp?'Pedido COMPRADO':'Pedido RECHAZADO')+'</div>'
+      +'<div style="font-size:0.82rem;color:#fff;line-height:1.4">'+escHtml(n.texto||'')+'</div>'
+      +'<div style="margin-top:10px;display:flex;gap:8px">'
+        +'<button onclick="switchTab(\'rep\');document.getElementById(\'_alertaCompras\').remove()" '
+          +'style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:7px;padding:6px 14px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.8rem;font-weight:700">Ver pedidos →</button>'
+        +'<button onclick="document.getElementById(\'_alertaCompras\').remove();DB.ref(\'notificaciones_admin/'+key+'\').update({leido:true})" '
+          +'style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);border-radius:7px;padding:6px 12px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.8rem">OK</button>'
+      +'</div>'
+    +'</div>'
+    +'</div>';
+  document.body.appendChild(el);
+  setTimeout(function(){ if(el.parentNode) el.remove(); }, 18000);
+}
 
 function renderPedidos(lista) {
   var el = document.getElementById('pedidosList');
   var cnt = document.getElementById('pedidosCount');
   if (!el) return;
   var pendientes = lista.filter(function(p){ return p.estado === 'pendiente'; }).length;
-  if (cnt) cnt.textContent = '(' + lista.length + ' total · ' + pendientes + ' pendiente' + (pendientes!==1?'s':'') + ')';
+  var comprados  = lista.filter(function(p){ return p.estado === 'comprado'; }).length;
+  if (cnt) cnt.textContent = '(' + lista.length + ' total · ' + pendientes + ' pendiente' + (pendientes!==1?'s':'') + (comprados?' · '+comprados+' comprado'+(comprados!==1?'s':''):'') + ')';
 
   if (!lista.length) {
     el.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:0.85rem;text-align:center;padding:20px">No hay solicitudes de repuesto</div>';
@@ -8300,25 +8349,33 @@ function renderPedidos(lista) {
   }
 
   el.innerHTML = lista.map(function(p) {
-    var estadoColor = p.estado==='pendiente' ? '#f39c12' : p.estado==='aprobado' ? '#27ae60' : '#e74c3c';
-    var estadoIcon  = p.estado==='pendiente' ? '⏳' : p.estado==='aprobado' ? '✅' : '❌';
-    var fecha = p.ts ? new Date(p.ts).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+    var esComp = p.estado === 'comprado';
+    var esRech = p.estado === 'rechazado';
+    var esPend = p.estado === 'pendiente';
+    var estadoColor = esPend ? '#f39c12' : esComp ? '#27ae60' : '#e74c3c';
+    var estadoIcon  = esPend ? '⏳' : esComp ? '✅' : '❌';
+    var estadoLabel = esPend ? 'PENDIENTE' : esComp ? 'COMPRADO' : 'RECHAZADO';
+    var fecha    = p.ts      ? new Date(p.ts).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+    var fechaGes = p.tsCompra? new Date(p.tsCompra).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : (p.tsGestion ? new Date(p.tsGestion).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : null);
     return '<div style="background:var(--navy-dark);border:1px solid rgba(255,255,255,0.07);border-left:3px solid '+estadoColor+';border-radius:10px;padding:13px 16px;margin-bottom:10px">'
       + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">'
         + '<div style="flex:1;min-width:200px">'
           + '<div style="font-size:0.92rem;font-weight:700;color:#fff;margin-bottom:3px">' + escHtml(p.desc||'Sin descripción') + '</div>'
           + '<div style="display:flex;gap:12px;font-size:0.78rem;color:rgba(255,255,255,0.45);flex-wrap:wrap;margin-bottom:6px">'
-            + (p.ref ? '<span>Ref. <b style="color:var(--gold)">' + escHtml(p.ref) + '</b></span>' : '')
-            + '<span>Cantidad: <b>' + (p.cantidad||1) + '</b></span>'
+            + (p.ref ? '<span>Cód. <b style="color:var(--gold)">' + escHtml(p.ref) + '</b></span>' : '')
+            + (p.ubicacion ? '<span>📍 <b>' + escHtml(p.ubicacion) + '</b></span>' : '')
+            + '<span>Cant.: <b>' + (p.cantidad||1) + '</b></span>'
             + '<span>👷 ' + escHtml(p.mecanico||'—') + '</span>'
-            + '<span>📅 ' + fecha + '</span>'
+            + '<span>📅 Pedido: ' + fecha + '</span>'
           + '</div>'
           + (p.motivo ? '<div style="font-size:0.8rem;color:rgba(255,255,255,0.5);font-style:italic">"' + escHtml(p.motivo) + '"</div>' : '')
           + (p.respuesta ? '<div style="margin-top:6px;font-size:0.8rem;background:rgba(39,174,96,0.1);border:1px solid rgba(39,174,96,0.25);border-radius:6px;padding:6px 10px;color:#2ecc71">💬 ' + escHtml(p.respuesta) + '</div>' : '')
+          + (esComp && fechaGes ? '<div style="margin-top:6px;font-size:0.78rem;color:rgba(46,204,113,0.75)">✅ Comprado por <b>' + escHtml(p.quienCompras||'compras') + '</b> el ' + fechaGes + '</div>' : '')
+          + (esRech && fechaGes ? '<div style="margin-top:6px;font-size:0.78rem;color:rgba(231,76,60,0.75)">❌ Rechazado por <b>' + escHtml(p.quienCompras||'compras') + '</b> el ' + fechaGes + (p.notaCompras ? ' — ' + escHtml(p.notaCompras) : '') + '</div>' : '')
         + '</div>'
         + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">'
-          + '<span style="font-size:0.72rem;font-weight:700;color:'+estadoColor+';background:'+estadoColor+'20;padding:3px 10px;border-radius:20px">'+estadoIcon+' '+p.estado.toUpperCase()+'</span>'
-          + (p.estado==='pendiente'
+          + '<span style="font-size:0.72rem;font-weight:700;color:'+estadoColor+';background:'+estadoColor+'20;padding:3px 10px;border-radius:20px">'+estadoIcon+' '+estadoLabel+'</span>'
+          + (esPend
             ? '<button onclick="gestionarPedido(\''+p._id+'\',\'aprobado\')" style="background:rgba(39,174,96,0.15);border:1px solid rgba(39,174,96,0.4);color:#2ecc71;border-radius:7px;padding:5px 12px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.78rem;font-weight:700">✅ Aprobar</button>'
               + '<button onclick="gestionarPedido(\''+p._id+'\',\'rechazado\')" style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);color:#e74c3c;border-radius:7px;padding:5px 12px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.78rem;font-weight:700">❌ Rechazar</button>'
             : '<button onclick="borrarPedido(\''+p._id+'\')" style="background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.25);color:rgba(231,76,60,0.7);border-radius:7px;padding:5px 12px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.78rem;font-weight:700">🗑 Borrar</button>'

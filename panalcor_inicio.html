@@ -585,6 +585,7 @@ var ENC_PWD = {
   'PINILLA':'321567','MAGER':'888666','LUISMI':'456123',
   'SERGIO':'555222','COSTI':'299456','IVAN':'444234'
 };
+var COMPRAS_PWD = { 'COMPRAS':'compras2024' };
 var ADMIN_PWD = 'admin1234';
 var PS_KEY    = 'panalcor_session';
 var mecPwdCache = null;
@@ -658,6 +659,9 @@ function doLogin(){
   if(ENC_PWD[nombre] !== undefined && ENC_PWD[nombre] === pwd){
     saveSession(nombre,'encargado'); mostrarPortal({nombre:nombre,rol:'encargado'}); return;
   }
+  if(COMPRAS_PWD[nombre] !== undefined && COMPRAS_PWD[nombre] === pwd){
+    saveSession(nombre,'compras'); mostrarPortal({nombre:nombre,rol:'compras'}); return;
+  }
   if(mecPwdCache){
     _checkMec(nombre, pwd);
   } else {
@@ -693,7 +697,7 @@ function mostrarPortal(s){
   document.getElementById('loginBox').style.display  = 'none';
   document.getElementById('portalBox').style.display = 'block';
   document.getElementById('portalNombre').textContent = s.nombre;
-  var roles = {mecanico:'Mecanico',encargado:'Encargado',admin:'Administrador'};
+  var roles = {mecanico:'Mecanico',encargado:'Encargado',admin:'Administrador',compras:'Compras'};
   document.getElementById('portalRol').textContent = roles[s.rol] || s.rol;
   document.getElementById('portalBtns').innerHTML = _buildBtns(s.rol);
   DB.ref('averias').on('value', function(snap){
@@ -772,6 +776,12 @@ function _buildBtns(rol){
        + '<div class="btn-icon" style="color:#f0c040">📦</div>'
        + '<div class="btn-label" style="color:#f0c040">Pedir repuesto</div>'
        + '<div class="btn-sublabel" style="color:rgba(243,156,18,0.6)">Solicitud al admin</div></button>';
+  }
+  if(rol === 'compras' || adm){
+    h += '<a class="btn" href="compras.html" style="border-color:rgba(240,192,64,0.35);background:rgba(240,192,64,0.07);text-decoration:none">'
+       + '<div class="btn-icon" style="color:#f0c040">🛒</div>'
+       + '<div class="btn-label" style="color:#f0c040">Compras</div>'
+       + '<div class="btn-sublabel" style="color:rgba(240,192,64,0.6)">Gestión de pedidos</div></a>';
   }
   return h;
 }
