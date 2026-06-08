@@ -3111,24 +3111,20 @@ function imprimirQRAdmin(){
 // ══════════════════════════════════════════════════
 // FICHAS REGLAMENTARIAS — todas las máquinas
 // ══════════════════════════════════════════════════
-var _fichasData = {};   // { maqId: datosFirebase }
-var _fichasLoaded = false;
+var _fichasData = {};
 var _fichasListenerOn = false;
 
-function fichasCargar(cb) {
-  if (_fichasListenerOn) {
-    // Listener ya activo — solo re-renderizar si ya cargó
-    if (_fichasLoaded) { fichasActualizarCount(); fichasRenderLista(); }
-    if (cb) cb();
-    return;
-  }
+function fichasCargar() {
+  if (_fichasListenerOn) return;
   _fichasListenerOn = true;
   DB.ref('fichas_maquinas').on('value', function(snap) {
     _fichasData = snap.val() || {};
-    _fichasLoaded = true;
     fichasActualizarCount();
     fichasRenderLista();
-    if (cb) { cb(); cb = null; }
+  }, function(err) {
+    // Error de permisos u otro — seguir sin datos de fichas
+    _fichasData = {};
+    fichasRenderLista();
   });
 }
 
@@ -3143,15 +3139,14 @@ function fichasActualizarCount() {
 function fichasRenderLista() {
   var el = document.getElementById('fichasLista');
   if (!el) return;
-  if (!_fichasLoaded) {
-    el.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,.3);padding:20px;font-size:.85rem">Cargando...</div>';
-    return;
-  }
 
-  var query = (document.getElementById('fichasBuscador').value || '').trim().toUpperCase();
-  var filtroEstado = (document.getElementById('fichasFiltroEstado').value || '');
+  // Asegurar que la carga está en marcha
+  if (!_fichasListenerOn) fichasCargar();
 
-  // Sin búsqueda ni filtro: mostrar aviso en lugar de 149 filas
+  var query = (document.getElementById('fichasBuscador') ? document.getElementById('fichasBuscador').value : '').trim().toUpperCase();
+  var filtroEstado = (document.getElementById('fichasFiltroEstado') ? document.getElementById('fichasFiltroEstado').value : '');
+
+  // Sin búsqueda ni filtro: mostrar aviso
   if (!query && !filtroEstado) {
     el.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,.3);padding:24px;font-size:.85rem">🔍 Escribe el nombre o ID de la máquina para buscarla<br><span style="font-size:.75rem;color:rgba(255,255,255,.2)">O usa el filtro para ver solo las que tienen / no tienen ficha</span></div>';
     return;
@@ -3781,7 +3776,7 @@ function switchTab(name){
   document.getElementById('tab-'+name).classList.add('active');
   if(name==='mec') { renderMecanicos(); loadPersonal(renderPersonal); }
   if(name==='inf') renderInformes();
-  if(name==='maq') { loadMaquinasExtra(function(){ renderMaquinas(); fichasCargar(); }); }
+  if(name==='maq') { loadMaquinasExtra(renderMaquinas); fichasCargar(); }
   if(name==='rep') { cargarCatalogoRepuestos(); initPedidos(); }
   if(name==='docs') { docsInit(); }
   if(name==='cfg') cargarTareasDiariasAdmin();
