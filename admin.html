@@ -1006,7 +1006,7 @@ if('serviceWorker' in navigator){
       <span id="maqExtraCount" style="font-size:0.8rem;color:rgba(255,255,255,0.4)"></span>
     </div>
     <p style="font-size:0.82rem;color:rgba(255,255,255,0.4);margin-bottom:14px">
-      Las 129 máquinas base siempre están disponibles. Aquí solo aparecen las que añadas tú.
+      Las máquinas base siempre están disponibles. Aquí solo aparecen las que añadas tú.
     </p>
     <div style="overflow-x:auto">
       <table class="data-table" id="tMaquinasExtra">
@@ -1018,6 +1018,31 @@ if('serviceWorker' in navigator){
     </div>
   </div>
 
+  <!-- ══ FICHAS REGLAMENTARIAS — todas las máquinas ══ -->
+  <div class="card">
+    <div class="sec-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <span>📋 Fichas reglamentarias</span>
+      <span id="fichasCount" style="font-size:0.8rem;color:rgba(255,255,255,0.4)"></span>
+    </div>
+    <p style="font-size:0.82rem;color:rgba(255,255,255,0.4);margin-bottom:14px;line-height:1.5">
+      Busca cualquier máquina (base o personalizada) para abrir y editar su ficha reglamentaria.<br>
+      <span style="color:rgba(240,192,64,.6)">🟡 Sin ficha</span> &nbsp;·&nbsp; <span style="color:rgba(46,204,113,.7)">🟢 Ficha completada</span>
+    </p>
+    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <input type="text" id="fichasBuscador" placeholder="Buscar por nombre, ID o área..."
+        oninput="fichasRenderLista()"
+        style="flex:1;min-width:200px;background:var(--navy-deep);color:#fff;border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:10px 14px;font-family:'Barlow',sans-serif;font-size:.9rem">
+      <select id="fichasFiltroEstado" onchange="fichasRenderLista()"
+        style="background:var(--navy-deep);color:#fff;border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:10px 14px;font-family:'Barlow',sans-serif;font-size:.9rem">
+        <option value="">Todas</option>
+        <option value="con">Solo con ficha</option>
+        <option value="sin">Solo sin ficha</option>
+      </select>
+    </div>
+    <div id="fichasLista" style="max-height:420px;overflow-y:auto">
+      <div style="text-align:center;color:rgba(255,255,255,.3);padding:20px;font-size:.85rem">Cargando...</div>
+    </div>
+  </div>
 
 </div>
 
@@ -3083,6 +3108,97 @@ function imprimirQRAdmin(){
   setTimeout(function(){ win.print(); }, 400);
 }
 
+// ══════════════════════════════════════════════════
+// FICHAS REGLAMENTARIAS — todas las máquinas
+// ══════════════════════════════════════════════════
+var _fichasData = {};   // { maqId: datosFirebase }
+var _fichasLoaded = false;
+
+function fichasCargar(cb) {
+  DB.ref('fichas_maquinas').on('value', function(snap) {
+    _fichasData = snap.val() || {};
+    _fichasLoaded = true;
+    fichasActualizarCount();
+    fichasRenderLista();
+    if (cb) cb();
+  });
+}
+
+function fichasActualizarCount() {
+  var todas = (typeof MAQUINAS_BASE_ADMIN !== 'undefined' ? MAQUINAS_BASE_ADMIN : [])
+               .concat(maquinasExtra || []);
+  var conFicha = todas.filter(function(m){ return !!_fichasData[m.id]; }).length;
+  var el = document.getElementById('fichasCount');
+  if (el) el.textContent = conFicha + ' de ' + todas.length + ' con ficha';
+}
+
+function fichasRenderLista() {
+  var el = document.getElementById('fichasLista');
+  if (!el) return;
+  if (!_fichasLoaded) { el.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,.3);padding:20px;font-size:.85rem">Cargando...</div>'; return; }
+
+  var query = (document.getElementById('fichasBuscador').value || '').trim().toUpperCase();
+  var filtroEstado = (document.getElementById('fichasFiltroEstado').value || '');
+
+  var todas = (typeof MAQUINAS_BASE_ADMIN !== 'undefined' ? MAQUINAS_BASE_ADMIN : [])
+               .concat(maquinasExtra || [])
+               .sort(function(a,b){ return (a.n||'').localeCompare(b.n||''); });
+
+  var filtradas = todas.filter(function(m) {
+    if (query && !(
+      (m.n||'').toUpperCase().includes(query) ||
+      (m.id||'').toUpperCase().includes(query) ||
+      (m.a||'').toUpperCase().includes(query)
+    )) return false;
+    var tieneFicha = !!_fichasData[m.id];
+    if (filtroEstado === 'con' && !tieneFicha) return false;
+    if (filtroEstado === 'sin' &&  tieneFicha) return false;
+    return true;
+  });
+
+  if (!filtradas.length) {
+    el.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,.3);padding:20px;font-size:.85rem">Sin resultados</div>';
+    return;
+  }
+
+  el.innerHTML = filtradas.map(function(m) {
+    var ficha = _fichasData[m.id];
+    var tieneFicha = !!ficha;
+    // Semáforo próxima revisión OCA
+    var revBadge = '';
+    if (ficha && ficha.proxRev) {
+      var diff = Math.round((new Date(ficha.proxRev) - new Date()) / 86400000);
+      if (diff < 0)      revBadge = '<span style="font-size:.7rem;color:#e74c3c;margin-left:8px">⛔ OCA vencida</span>';
+      else if (diff <= 60) revBadge = '<span style="font-size:.7rem;color:#f39c12;margin-left:8px">⚠️ OCA en ' + diff + 'd</span>';
+      else                 revBadge = '<span style="font-size:.7rem;color:#2ecc71;margin-left:8px">✅ OCA ' + ficha.proxRev + '</span>';
+    }
+    // Resumen si tiene ficha
+    var resumen = '';
+    if (ficha) {
+      var tags = [];
+      if (ficha.marcadoCE === 'si')   tags.push('<span style="color:rgba(46,204,113,.7);font-size:.7rem">CE✅</span>');
+      if (ficha.declCE === 'no')      tags.push('<span style="color:rgba(231,76,60,.7);font-size:.7rem">DeclCE❌</span>');
+      if (ficha.manual === 'no')      tags.push('<span style="color:rgba(231,76,60,.7);font-size:.7rem">Manual❌</span>');
+      if (ficha.pcc === 'si')         tags.push('<span style="color:rgba(243,156,18,.8);font-size:.7rem">⚠️PCC</span>');
+      if (ficha.tipoRev)              tags.push('<span style="color:rgba(255,255,255,.4);font-size:.7rem">'+escHtml(ficha.tipoRev)+'</span>');
+      if (tags.length) resumen = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">' + tags.join('') + '</div>';
+    }
+    return '<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.05);flex-wrap:wrap">'
+      + '<div style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:' + (tieneFicha ? '#2ecc71' : 'rgba(255,255,255,.2)') + '"></div>'
+      + '<div style="flex:1;min-width:0">'
+        + '<span style="font-size:.88rem;font-weight:700;color:#fff">' + escHtml(m.n||m.id) + '</span>'
+        + '<span style="font-size:.75rem;color:rgba(255,255,255,.35);margin-left:8px">' + escHtml(m.id) + '</span>'
+        + '<span style="font-size:.75rem;color:rgba(255,255,255,.35);margin-left:8px">' + escHtml(m.a||'') + '</span>'
+        + revBadge
+        + resumen
+      + '</div>'
+      + '<button onclick="abrirFichaMaq(\'' + escHtml(m.id) + '\',\'' + escHtml((m.n||'').replace(/'/g,"\\'")) + '\')"'
+        + ' style="background:rgba(240,192,64,' + (tieneFicha?'.18':'.08') + ');border:1px solid rgba(240,192,64,' + (tieneFicha?'.5':'.25') + ');color:#f0c040;border-radius:7px;padding:6px 14px;cursor:pointer;font-family:\'Barlow\',sans-serif;font-size:.8rem;font-weight:700;white-space:nowrap;flex-shrink:0">'
+        + (tieneFicha ? '📋 Ver/Editar' : '📋 Crear ficha') + '</button>'
+      + '</div>';
+  }).join('');
+}
+
 function eliminarMaquina(id){
   const maq = maquinasExtra.find(m=>m.id===id);
   if(!maq) return;
@@ -3643,7 +3759,7 @@ function switchTab(name){
   document.getElementById('tab-'+name).classList.add('active');
   if(name==='mec') { renderMecanicos(); loadPersonal(renderPersonal); }
   if(name==='inf') renderInformes();
-  if(name==='maq') { loadMaquinasExtra(renderMaquinas); }
+  if(name==='maq') { loadMaquinasExtra(function(){ renderMaquinas(); fichasCargar(); }); }
   if(name==='rep') { cargarCatalogoRepuestos(); initPedidos(); }
   if(name==='docs') { docsInit(); }
   if(name==='cfg') cargarTareasDiariasAdmin();
