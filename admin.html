@@ -1017,56 +1017,6 @@ if('serviceWorker' in navigator){
     </div>
   </div>
 
-  <!-- ══ ESTADO DE MÁQUINA ══ -->
-  <div class="card" style="margin-top:16px">
-    <div class="sec-title">🔍 Estado de máquina</div>
-    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
-      <select id="estadoMaqSel" onchange="cargarEstadoMaquina()"
-        style="flex:1;min-width:200px;background:var(--navy-deep,#0d1b2a);color:#f0f4f8;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 14px;font-family:Barlow,sans-serif;font-size:0.95rem">
-        <option value="">— Selecciona una máquina —</option>
-      </select>
-    </div>
-    <div id="estadoMaqWrap" style="display:none">
-      <!-- cabecera maquina -->
-      <div id="estadoMaqHdr" style="display:flex;align-items:center;gap:14px;padding:12px 14px;background:rgba(255,255,255,0.04);border-radius:8px;margin-bottom:12px">
-        <div>
-          <div id="estadoMaqNombre" style="font-size:1.05rem;font-weight:700;color:#f0f4f8;letter-spacing:0.04em"></div>
-          <div id="estadoMaqMeta" style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-top:2px"></div>
-        </div>
-        <div id="estadoMaqBadge" style="margin-left:auto;padding:5px 14px;border-radius:20px;font-size:0.8rem;font-weight:700;letter-spacing:0.06em"></div>
-      </div>
-      <!-- averias abiertas -->
-      <div id="estadoMaqAbiertas"></div>
-      <!-- ultimas resueltas -->
-      <div id="estadoMaqResueltas"></div>
-    </div>
-  </div>
-
-  <!-- ══ GENERADOR DE CÓDIGOS QR ══ -->
-  <div class="card" style="margin-top:16px">
-    <div class="sec-title">📱 Códigos QR por máquina</div>
-    <p style="font-size:0.82rem;color:rgba(255,255,255,0.45);margin-bottom:16px;line-height:1.6">
-      Selecciona una máquina para generar su QR. Al escanearlo, cada usuario es redirigido automáticamente:<br>
-      <span style="color:#c9a227">Mecánico</span> → Registro de avería &nbsp;·&nbsp;
-      <span style="color:#9b59b6">Encargado</span> → Panel de encargado &nbsp;·&nbsp;
-      <span style="color:#3498db">Admin</span> → Esta sección
-    </p>
-    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
-      <select id="qrMaqSel" onchange="generarQRMaquina()"
-        style="flex:1;min-width:200px;background:var(--navy-deep,#0d1b2a);color:#f0f4f8;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 14px;font-family:Barlow,sans-serif;font-size:0.95rem">
-        <option value="">— Selecciona una máquina —</option>
-      </select>
-    </div>
-    <div id="qrWrap" style="display:none;flex-direction:column;align-items:center;gap:14px">
-      <div id="qrCanvas" style="background:#0d1b2a;padding:16px;border-radius:12px;border:2px solid rgba(201,162,39,0.35)"></div>
-      <div id="qrMaqLabel" style="font-size:1rem;font-weight:700;letter-spacing:0.06em;color:#f0f4f8;text-align:center"></div>
-      <div id="qrUrl" style="font-size:0.7rem;color:rgba(255,255,255,0.3);word-break:break-all;text-align:center;max-width:320px"></div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
-        <button onclick="imprimirQR()" style="background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.4);color:#c9a227;padding:9px 20px;border-radius:8px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.85rem;font-weight:700">🖨️ Imprimir</button>
-        <button onclick="descargarQR()" style="background:rgba(52,152,219,0.15);border:1px solid rgba(52,152,219,0.4);color:#74b9ff;padding:9px 20px;border-radius:8px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.85rem;font-weight:700">⬇️ Descargar PNG</button>
-      </div>
-    </div>
-  </div>
 
 </div>
 
@@ -3058,6 +3008,7 @@ function renderMaquinas(){
     <td>${m.a}</td>
     <td><span class="badge ${m.c==='A'?'badge-red':m.c==='B'?'badge-yellow':'badge-blue'}">${m.c||'—'}</span></td>
     <td style="display:flex;gap:6px;flex-wrap:wrap">
+      <button onclick="abrirQRAdminMaq('${m.id}','${m.n.replace(/'/g,'\\\'')}')" style="background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.4);color:#c9a227;border-radius:5px;padding:4px 10px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.8rem">📱 QR</button>
       <button onclick="renombrarMaquinaExtra('${m.id}')" style="background:rgba(52,152,219,0.15);border:1px solid rgba(52,152,219,0.4);color:var(--blue);border-radius:5px;padding:4px 10px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.8rem">✏️ Renombrar</button>
       <button onclick="eliminarMaquina('${m.id}')" style="background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);color:var(--red);border-radius:5px;padding:4px 10px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.8rem">🗑 Eliminar</button>
     </td>
@@ -3086,7 +3037,48 @@ function guardarMaquina(){
   document.getElementById('maqT').value='';
   document.getElementById('maqF').value='';
   document.getElementById('maqA').value='';
-  showToast(`✅ ${n} añadida (${id}) — ya aparece en el formulario y en los QR`);
+  showToast(`✅ ${n} añadida (${id})`);
+  abrirQRAdminMaq(id, n);
+}
+
+function abrirQRAdminMaq(id, nombre){
+  var modal = document.getElementById('modalQRAdminMaq');
+  var box   = document.getElementById('modalQRAdminBox');
+  document.getElementById('modalQRAdminId').textContent    = id;
+  document.getElementById('modalQRAdminNombre').textContent = nombre;
+  box.innerHTML = '';
+  var url = 'https://panalcor.github.io/panalcor/averias.html?maq=' + encodeURIComponent(id);
+  document.getElementById('modalQRAdminUrl').textContent = url;
+  try {
+    new QRCode(box, { text: url, width: 160, height: 160,
+      colorDark: '#1a2d42', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M });
+  } catch(e) {
+    box.innerHTML = '<div style="font-size:.7rem;color:#999;word-break:break-all;padding:8px">'+url+'</div>';
+  }
+  modal.style.display = 'flex';
+}
+
+function imprimirQRAdmin(){
+  var id     = document.getElementById('modalQRAdminId').textContent;
+  var nombre = document.getElementById('modalQRAdminNombre').textContent;
+  var box    = document.getElementById('modalQRAdminBox');
+  var img    = box.querySelector('img') || box.querySelector('canvas');
+  var src    = img ? (img.tagName==='CANVAS' ? img.toDataURL() : img.src) : '';
+  var win    = window.open('','_blank');
+  win.document.write('<html><head><title>QR '+id+'</title>'
+    +'<style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#fff;font-family:sans-serif}'
+    +'.card{border:2px solid #1a2d42;border-radius:12px;padding:20px 24px;text-align:center;width:240px}'
+    +'.cid{font-size:13px;font-weight:700;color:#c9a227;margin-bottom:4px}'
+    +'.cnm{font-size:15px;font-weight:900;color:#1a2d42;margin-bottom:12px}'
+    +'img{width:160px;height:160px}'
+    +'.hint{font-size:10px;color:#888;margin-top:10px}</style></head><body>'
+    +'<div class="card"><div class="cid">'+id+'</div><div class="cnm">'+nombre+'</div>'
+    +(src?'<img src="'+src+'">':'')
+    +'<div class="hint">PANALCOR — Escanear para avería</div></div>'
+    +'</body></html>');
+  win.document.close();
+  setTimeout(function(){ win.print(); }, 400);
 }
 
 function eliminarMaquina(id){
@@ -3394,18 +3386,6 @@ var MAQUINAS_FULL_DATA = {
   'MAQ-149':{a:'FRIO/CLIMA',t:'EVAPORATIVAS',f:''}
 };
 
-function poblarEstadoMaqSel(){
-  var sel = document.getElementById('estadoMaqSel');
-  if(!sel || sel.options.length > 1) return;
-  var todas = MAQUINAS_BASE_ADMIN.concat(maquinasExtra).sort(function(a,b){ return a.n.localeCompare(b.n); });
-  todas.forEach(function(m){
-    var o = document.createElement('option');
-    o.value = m.id;
-    o.textContent = m.n + ' (' + m.id + ')';
-    sel.appendChild(o);
-  });
-}
-
 function cargarEstadoMaquina(){
   var sel = document.getElementById('estadoMaqSel');
   if(!sel || !sel.value) return;
@@ -3505,19 +3485,9 @@ function _esc(s){
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-function poblarQRSel(){
-  var sel = document.getElementById('qrMaqSel');
-  if(!sel || sel.options.length > 1) return;
-  var todas = MAQUINAS_BASE_ADMIN.concat(maquinasExtra).sort(function(a,b){ return a.n.localeCompare(b.n); });
-  todas.forEach(function(m){
-    var o = document.createElement('option');
-    o.value = m.id;
-    o.textContent = m.n + ' (' + m.id + ')';
-    sel.appendChild(o);
-  });
-}
-
 function generarQRMaquina(){
+  // función conservada por compatibilidad — ya no tiene HTML asociado
+  return;
   var sel = document.getElementById('qrMaqSel');
   if(!sel || !sel.value) return;
   var maqId     = sel.value;
@@ -3658,11 +3628,6 @@ function descargarQR(){
   a.click();
 }
 
-// Poblar selector de QR cuando se abre la pestaña Maquinas
-document.addEventListener('DOMContentLoaded', function(){
-  setTimeout(function(){ poblarQRSel(); poblarEstadoMaqSel(); }, 500);
-});
-
 // ══════════════════════════════════════════════════
 // TABS
 // ══════════════════════════════════════════════════
@@ -3676,7 +3641,7 @@ function switchTab(name){
   document.getElementById('tab-'+name).classList.add('active');
   if(name==='mec') { renderMecanicos(); loadPersonal(renderPersonal); }
   if(name==='inf') renderInformes();
-  if(name==='maq') { loadMaquinasExtra(renderMaquinas); poblarQRSel(); poblarEstadoMaqSel(); }
+  if(name==='maq') { loadMaquinasExtra(renderMaquinas); }
   if(name==='rep') { cargarCatalogoRepuestos(); initPedidos(); }
   if(name==='docs') { docsInit(); }
   if(name==='cfg') cargarTareasDiariasAdmin();
@@ -9033,6 +8998,22 @@ function eliminarProy() {
 </script>
 
 <script src="fcm.js"></script>
+
+<!-- Modal QR máquina (admin) -->
+<div id="modalQRAdminMaq" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:900;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#1a2d42;border:2px solid rgba(201,162,39,.4);border-radius:16px;padding:28px 24px;width:100%;max-width:340px;text-align:center">
+    <div style="font-size:.95rem;font-weight:900;color:#c9a227;margin-bottom:4px">📱 Código QR</div>
+    <div id="modalQRAdminId" style="font-size:.82rem;font-weight:700;color:#c9a227;margin-bottom:3px"></div>
+    <div id="modalQRAdminNombre" style="font-size:1rem;font-weight:800;color:#fff;margin-bottom:14px"></div>
+    <div id="modalQRAdminBox" style="display:inline-block;background:#fff;padding:10px;border-radius:8px;margin-bottom:10px"></div>
+    <div id="modalQRAdminUrl" style="font-size:.65rem;color:rgba(255,255,255,.3);word-break:break-all;margin-bottom:16px"></div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button onclick="imprimirQRAdmin()" style="background:rgba(201,162,39,.2);border:1px solid rgba(201,162,39,.5);color:#c9a227;border-radius:8px;padding:9px 18px;font-family:'Barlow',sans-serif;font-size:.88rem;font-weight:800;cursor:pointer">🖨️ Imprimir</button>
+      <button onclick="document.getElementById('modalQRAdminMaq').style.display='none'" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.6);border-radius:8px;padding:9px 18px;font-family:'Barlow',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
 
