@@ -439,13 +439,19 @@ if (window.location.protocol === 'file:') {
 document.getElementById('baseUrlInput').value = serverBase;
 function getBase(){ return (document.getElementById('baseUrlInput').value || serverBase).replace(/\/$/, ''); }
 
-// Poblar filtros
-const areas = [...new Set(MAQUINAS.map(m => m.a))].sort();
-const tipos = [...new Set(MAQUINAS.map(m => m.t))].sort();
-const selArea = document.getElementById('filtroArea');
-const selTipo = document.getElementById('filtroTipo');
-areas.forEach(a => { const o=document.createElement('option');o.textContent=o.value=a;selArea.appendChild(o); });
-tipos.forEach(t => { const o=document.createElement('option');o.textContent=o.value=t;selTipo.appendChild(o); });
+function poblarFiltros() {
+  const selArea = document.getElementById('filtroArea');
+  const selTipo = document.getElementById('filtroTipo');
+  const areaVal = selArea.value;
+  const tipoVal = selTipo.value;
+  const areas = [...new Set(MAQUINAS.map(m => m.a))].filter(Boolean).sort();
+  const tipos = [...new Set(MAQUINAS.map(m => m.t))].filter(Boolean).sort();
+  selArea.innerHTML = '<option value="">Todas las áreas</option>';
+  selTipo.innerHTML = '<option value="">Todos los tipos</option>';
+  areas.forEach(a => { const o=document.createElement('option');o.textContent=o.value=a;if(a===areaVal)o.selected=true;selArea.appendChild(o); });
+  tipos.forEach(t => { const o=document.createElement('option');o.textContent=o.value=t;if(t===tipoVal)o.selected=true;selTipo.appendChild(o); });
+}
+poblarFiltros();
 
 /* ══ Render QR cards ══ */
 let rendered = [];
@@ -525,6 +531,7 @@ _DB_QR.ref('maquinas_extra').once('value').then(snap=>{
     Object.values(val).forEach(m=>{
       if(!MAQUINAS.find(x=>x.id===m.id)) MAQUINAS.push(m);
     });
+    poblarFiltros(); // actualizar filtros con áreas/tipos de las extras
   }
 }).catch(()=>{}).finally(()=>{ renderQR(); });
 </script>

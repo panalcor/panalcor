@@ -11,6 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="PANALCOR">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>Gestión de Averías</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <!-- Firebase SDK (compat — no build tools necesario) -->
@@ -2005,7 +2006,49 @@ function otrosGuardarNuevaMaq() {
   document.getElementById('otrosNuevaMaqNombre').value = '';
   document.getElementById('otrosNuevaMaqTipo').value = '';
   document.getElementById('otrosNuevaMaqArea').value = '';
-  showToast('✅ "' + nombre + '" añadido como ' + newId);
+
+  // Mostrar modal con QR
+  mostrarModalQRMaq(newId, nombre);
+}
+
+function mostrarModalQRMaq(id, nombre) {
+  var modal = document.getElementById('modalQRMaq');
+  var box   = document.getElementById('modalQRMaqBox');
+  document.getElementById('modalQRMaqId').textContent = id;
+  document.getElementById('modalQRMaqNombre').textContent = nombre;
+  box.innerHTML = '';
+  var base = 'https://panalcor.github.io/panalcor';
+  var url  = base + '/averias.html?maq=' + encodeURIComponent(id);
+  try {
+    new QRCode(box, { text: url, width: 160, height: 160,
+      colorDark: '#1a2d42', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M });
+  } catch(e) {
+    box.innerHTML = '<div style="font-size:.7rem;color:#999;word-break:break-all;padding:8px">'+url+'</div>';
+  }
+  modal.style.display = 'flex';
+}
+
+function imprimirQRMaq() {
+  var id      = document.getElementById('modalQRMaqId').textContent;
+  var nombre  = document.getElementById('modalQRMaqNombre').textContent;
+  var box     = document.getElementById('modalQRMaqBox');
+  var img     = box.querySelector('img') || box.querySelector('canvas');
+  var src     = img ? (img.tagName==='CANVAS' ? img.toDataURL() : img.src) : '';
+  var win     = window.open('','_blank');
+  win.document.write('<html><head><title>QR '+id+'</title>'
+    +'<style>body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#fff;font-family:sans-serif}'
+    +'.card{border:2px solid #1a2d42;border-radius:12px;padding:20px 24px;text-align:center;width:240px}'
+    +'.cid{font-size:13px;font-weight:700;color:#c9a227;margin-bottom:4px}'
+    +'.cnm{font-size:15px;font-weight:900;color:#1a2d42;margin-bottom:12px}'
+    +'img{width:160px;height:160px}'
+    +'.hint{font-size:10px;color:#888;margin-top:10px}</style></head><body>'
+    +'<div class="card"><div class="cid">'+id+'</div><div class="cnm">'+nombre+'</div>'
+    +(src?'<img src="'+src+'">':'')
+    +'<div class="hint">PANALCOR — Escanear para avería</div></div>'
+    +'</body></html>');
+  win.document.close();
+  setTimeout(function(){ win.print(); }, 400);
 }
 
 function otrosGuardar() {
@@ -2435,6 +2478,21 @@ function cerrarInstrucciones(){
     <div class="inst-modal-body" id="instModalBody"></div>
   </div>
 </div>
+<!-- Modal QR nueva máquina -->
+<div id="modalQRMaq" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:900;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#1a2d42;border:2px solid rgba(240,192,64,.4);border-radius:16px;padding:28px 24px;width:100%;max-width:340px;text-align:center">
+    <div style="font-size:1rem;font-weight:900;color:#f0c040;margin-bottom:4px">✅ Máquina añadida</div>
+    <div style="font-size:.8rem;color:rgba(255,255,255,.5);margin-bottom:16px">QR generado — puedes imprimirlo ahora</div>
+    <div id="modalQRMaqId" style="font-size:.85rem;font-weight:700;color:#f0c040;margin-bottom:4px"></div>
+    <div id="modalQRMaqNombre" style="font-size:1rem;font-weight:800;color:#fff;margin-bottom:16px"></div>
+    <div id="modalQRMaqBox" style="display:inline-block;background:#fff;padding:10px;border-radius:8px;margin-bottom:18px"></div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button onclick="imprimirQRMaq()" style="background:rgba(240,192,64,.2);border:1px solid rgba(240,192,64,.5);color:#f0c040;border-radius:8px;padding:9px 18px;font-family:'Barlow',sans-serif;font-size:.88rem;font-weight:800;cursor:pointer">🖨️ Imprimir</button>
+      <button onclick="document.getElementById('modalQRMaq').style.display='none'" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.6);border-radius:8px;padding:9px 18px;font-family:'Barlow',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <script src="fcm.js" defer></script>
 <script src="offline.js" defer></script>
 <script>
