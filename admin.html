@@ -454,6 +454,7 @@ if('serviceWorker' in navigator){
   <div class="tab" onclick="switchTab('rec')"  id="tab-rec">🔔 Recordatorios</div>
   <div class="tab" onclick="switchTab('docs')" id="tab-docs">📁 Documentos</div>
   <div class="tab" onclick="switchTab('frio')" id="tab-frio">❄️ Frío</div>
+  <div class="tab" onclick="switchTab('cal')"  id="tab-cal">📐 Calibración</div>
   <div class="tab" onclick="switchTab('est')"  id="tab-est">🟢 Estado</div>
   <div class="tab" onclick="switchTab('proy')" id="tab-proy" style="color:#ff5078">🚀 Proyectos</div>
   <div class="tab" onclick="switchTab('sug')"  id="tab-sug">💬 Sugerencias <span id="badgeSug" style="display:none;background:#e74c3c;color:#fff;border-radius:50%;padding:1px 6px;font-size:0.7rem;font-weight:900;margin-left:4px">0</span></div>
@@ -3008,6 +3009,7 @@ function renderMaquinas(){
     <td>${m.a}</td>
     <td><span class="badge ${m.c==='A'?'badge-red':m.c==='B'?'badge-yellow':'badge-blue'}">${m.c||'—'}</span></td>
     <td style="display:flex;gap:6px;flex-wrap:wrap">
+      <button onclick="abrirFichaMaq('${m.id}','${m.n.replace(/'/g,'\\\'')}')" style="background:rgba(240,192,64,.12);border:1px solid rgba(240,192,64,.35);color:#f0c040;border-radius:5px;padding:4px 10px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.8rem">📋 Ficha</button>
       <button onclick="abrirQRAdminMaq('${m.id}','${m.n.replace(/'/g,'\\\'')}')" style="background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.4);color:#c9a227;border-radius:5px;padding:4px 10px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.8rem">📱 QR</button>
       <button onclick="renombrarMaquinaExtra('${m.id}')" style="background:rgba(52,152,219,0.15);border:1px solid rgba(52,152,219,0.4);color:var(--blue);border-radius:5px;padding:4px 10px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.8rem">✏️ Renombrar</button>
       <button onclick="eliminarMaquina('${m.id}')" style="background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);color:var(--red);border-radius:5px;padding:4px 10px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.8rem">🗑 Eliminar</button>
@@ -3656,6 +3658,7 @@ function switchTab(name){
   if(name==='proy') initProyectos();
   if(name==='cur') initCursos();
   if(name==='frio') initFrio();
+  if(name==='cal') initCal();
 }
 
 // ══════════════════════════════════════════════════
@@ -7393,6 +7396,103 @@ function escAttr(s){ return String(s||'').replace(/'/g,'&#39;').replace(/"/g,'&q
 
 </div><!-- /panel-frio -->
 
+<!-- ═══ CALIBRACIÓN ═══ -->
+<div class="panel" id="panel-cal">
+
+  <!-- KPIs semáforo -->
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px">
+    <div class="card" style="flex:1;min-width:110px;text-align:center;padding:16px;border-color:rgba(231,76,60,.3)">
+      <div style="font-size:1.8rem;font-weight:900;color:#e74c3c" id="calKpiVencido">—</div>
+      <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4);margin-top:4px">Vencidos</div>
+    </div>
+    <div class="card" style="flex:1;min-width:110px;text-align:center;padding:16px;border-color:rgba(243,156,18,.3)">
+      <div style="font-size:1.8rem;font-weight:900;color:#f39c12" id="calKpiProx">—</div>
+      <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4);margin-top:4px">Próximos 30d</div>
+    </div>
+    <div class="card" style="flex:1;min-width:110px;text-align:center;padding:16px;border-color:rgba(46,204,113,.3)">
+      <div style="font-size:1.8rem;font-weight:900;color:#2ecc71" id="calKpiOk">—</div>
+      <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4);margin-top:4px">Al día</div>
+    </div>
+    <div class="card" style="flex:1;min-width:110px;text-align:center;padding:16px">
+      <div style="font-size:1.8rem;font-weight:900;color:var(--gold)" id="calKpiTotal">—</div>
+      <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4);margin-top:4px">Total instrumentos</div>
+    </div>
+  </div>
+
+  <!-- Formulario añadir/editar -->
+  <div class="card" id="calFormCard">
+    <div class="sec-title" id="calFormTitle">➕ Registrar instrumento de medida</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:14px">
+      <div class="field" style="margin:0"><label>Nombre / descripción *</label><input type="text" id="calNombre" placeholder="Ej: Termómetro sonda cámara 1"></div>
+      <div class="field" style="margin:0"><label>Tipo *</label>
+        <select id="calTipo" style="background:var(--navy-deep);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:.9rem;width:100%">
+          <option value="">— Selecciona —</option>
+          <option value="termometro">🌡️ Termómetro / Sonda Tª</option>
+          <option value="bascula">⚖️ Báscula / Balanza</option>
+          <option value="manometro">⏲️ Manómetro</option>
+          <option value="higrómetro">💧 Higrómetro</option>
+          <option value="dosificador">🧪 Dosificador</option>
+          <option value="caudalimetro">🌊 Caudalímetro</option>
+          <option value="otro">🔧 Otro</option>
+        </select>
+      </div>
+      <div class="field" style="margin:0"><label>Máquina / equipo asociado</label>
+        <select id="calMaquina" style="background:var(--navy-deep);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:.9rem;width:100%">
+          <option value="">— Ninguna / General —</option>
+        </select>
+      </div>
+      <div class="field" style="margin:0"><label>Nº de serie / identificador</label><input type="text" id="calNSerie" placeholder="SN o código interno"></div>
+      <div class="field" style="margin:0"><label>Rango de medida</label><input type="text" id="calRango" placeholder="Ej: -40°C a +80°C"></div>
+      <div class="field" style="margin:0"><label>Precisión requerida</label><input type="text" id="calPrecision" placeholder="Ej: ±0.5°C"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:14px">
+      <div class="field" style="margin:0"><label>Fecha última calibración *</label><input type="date" id="calFechaUlt"></div>
+      <div class="field" style="margin:0"><label>Resultado</label>
+        <select id="calResultado" style="background:var(--navy-deep);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:.9rem;width:100%">
+          <option value="conforme">✅ Conforme</option>
+          <option value="no_conforme">❌ No conforme</option>
+          <option value="ajustado">🔧 Ajustado en calibración</option>
+          <option value="retirado">⛔ Retirado de servicio</option>
+        </select>
+      </div>
+      <div class="field" style="margin:0"><label>Próxima calibración *</label><input type="date" id="calFechaProx"></div>
+      <div class="field" style="margin:0"><label>Periodicidad</label>
+        <select id="calPeriodicidad" style="background:var(--navy-deep);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:.9rem;width:100%">
+          <option value="">—</option>
+          <option value="3m">3 meses</option>
+          <option value="6m">6 meses</option>
+          <option value="1a">1 año</option>
+          <option value="2a">2 años</option>
+        </select>
+      </div>
+      <div class="field" style="margin:0"><label>Empresa calibradora</label><input type="text" id="calEmpresa" placeholder="Ej: ENAC, interno..."></div>
+      <div class="field" style="margin:0"><label>Nº certificado calibración</label><input type="text" id="calCertificado" placeholder="Nº cert."></div>
+    </div>
+    <div class="field" style="margin-bottom:14px"><label>Observaciones</label>
+      <textarea id="calObs" rows="2" placeholder="Notas, desviaciones detectadas, acciones correctoras..." style="background:var(--navy-deep);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:.9rem;width:100%;resize:vertical"></textarea>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button onclick="calGuardar()" style="background:rgba(240,192,64,.18);border:1px solid rgba(240,192,64,.5);color:#f0c040;border-radius:8px;padding:10px 22px;font-family:'Barlow',sans-serif;font-size:.9rem;font-weight:800;cursor:pointer" id="calBtnGuardar">💾 Guardar</button>
+      <button onclick="calCancelar()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.5);border-radius:8px;padding:10px 18px;font-family:'Barlow',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;display:none" id="calBtnCancelar">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Tabla de instrumentos -->
+  <div class="card">
+    <div class="sec-title">📐 Instrumentos registrados</div>
+    <div style="overflow-x:auto">
+      <table class="data-table">
+        <thead><tr>
+          <th>Estado</th><th>Instrumento</th><th>Tipo</th><th>Máquina</th>
+          <th>Última cal.</th><th>Próxima cal.</th><th>Empresa</th><th>Resultado</th><th></th>
+        </tr></thead>
+        <tbody id="calTbody"><tr><td colspan="9" class="no-data">Cargando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /panel-cal -->
+
 <!-- ═══ PANEL PROYECTOS ═══ -->
 <div class="panel" id="panel-proy">
 
@@ -8998,6 +9098,389 @@ function eliminarProy() {
 </script>
 
 <script src="fcm.js"></script>
+
+<!-- Modal Ficha Reglamentaria Máquina -->
+<div id="modalFichaMaq" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:950;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto">
+  <div style="background:#0f1e2e;border:1px solid rgba(240,192,64,.3);border-radius:16px;padding:28px;width:100%;max-width:680px;margin:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div>
+        <div style="font-size:1rem;font-weight:900;color:#f0c040">📋 Ficha Reglamentaria</div>
+        <div id="fichaHdrNombre" style="font-size:.8rem;color:rgba(255,255,255,.45);margin-top:3px"></div>
+      </div>
+      <button onclick="cerrarFichaMaq()" style="background:rgba(255,255,255,.08);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem">✕</button>
+    </div>
+
+    <!-- Sección: Identificación del equipo -->
+    <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:#f0c040;margin-bottom:10px">Identificación del equipo</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:20px">
+      <div class="field" style="margin:0"><label>Nº de serie</label><input type="text" id="fichaNSerie" placeholder="SN-00000"></div>
+      <div class="field" style="margin:0"><label>Año de fabricación</label><input type="number" id="fichaAnioFab" placeholder="2018" min="1950" max="2099"></div>
+      <div class="field" style="margin:0"><label>Año de instalación</label><input type="number" id="fichaAnioInst" placeholder="2019" min="1950" max="2099"></div>
+      <div class="field" style="margin:0"><label>Modelo</label><input type="text" id="fichaModelo" placeholder="Modelo exacto"></div>
+    </div>
+
+    <!-- Sección: Documentación CE -->
+    <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:#f0c040;margin-bottom:10px">Documentación CE / Seguridad</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:20px">
+      <div class="field" style="margin:0"><label>Marcado CE</label>
+        <select id="fichaMarcadoCE" style="background:#0a1520;color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:.9rem;width:100%">
+          <option value="">— Selecciona —</option>
+          <option value="si">✅ Sí</option>
+          <option value="no">❌ No</option>
+          <option value="na">— No aplica</option>
+        </select>
+      </div>
+      <div class="field" style="margin:0"><label>Declaración CE de conformidad</label>
+        <select id="fichaDeclCE" style="background:#0a1520;color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:.9rem;width:100%">
+          <option value="">— Selecciona —</option>
+          <option value="si">✅ Disponible</option>
+          <option value="no">❌ No disponible</option>
+          <option value="na">— No aplica</option>
+        </select>
+      </div>
+      <div class="field" style="margin:0"><label>Manual de instrucciones</label>
+        <select id="fichaManual" style="background:#0a1520;color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:.9rem;width:100%">
+          <option value="">— Selecciona —</option>
+          <option value="fisico">📄 Físico</option>
+          <option value="digital">💾 Digital</option>
+          <option value="ambos">✅ Físico + Digital</option>
+          <option value="no">❌ No disponible</option>
+        </select>
+      </div>
+      <div class="field" style="margin:0"><label>Evaluación de riesgos PRL</label>
+        <select id="fichaEvalRiesgos" style="background:#0a1520;color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:.9rem;width:100%">
+          <option value="">— Selecciona —</option>
+          <option value="si">✅ Realizada</option>
+          <option value="pendiente">⚠️ Pendiente</option>
+          <option value="na">— No aplica</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Sección: Revisiones reglamentarias -->
+    <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:#f0c040;margin-bottom:10px">Revisiones reglamentarias (OCA / Industria)</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:20px">
+      <div class="field" style="margin:0"><label>Tipo de revisión</label>
+        <select id="fichaTipoRev" style="background:#0a1520;color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:.9rem;width:100%">
+          <option value="">— No requiere —</option>
+          <option value="presion">⚙️ Equipo a presión (RD 809/2021)</option>
+          <option value="electrico">⚡ Instalación eléctrica (REBT)</option>
+          <option value="elevacion">🏗️ Aparato elevación (ITC-MIE-AEM)</option>
+          <option value="frigorifico">❄️ Inst. frigorífica (RSIF)</option>
+          <option value="gas">🔥 Inst. gas</option>
+          <option value="multiple">🔄 Múltiples</option>
+        </select>
+      </div>
+      <div class="field" style="margin:0"><label>Organismo de control (OCA)</label><input type="text" id="fichaOCA" placeholder="Ej: APPLUS, BUREAU VERITAS" style="text-transform:uppercase"></div>
+      <div class="field" style="margin:0"><label>Última revisión OCA</label><input type="date" id="fichaUltimaRev"></div>
+      <div class="field" style="margin:0"><label>Próxima revisión OCA</label><input type="date" id="fichaProxRev"></div>
+      <div class="field" style="margin:0"><label>Periodicidad (años)</label>
+        <select id="fichaPeriodicidad" style="background:#0a1520;color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:.9rem;width:100%">
+          <option value="">—</option>
+          <option value="1">1 año</option>
+          <option value="2">2 años</option>
+          <option value="4">4 años</option>
+          <option value="5">5 años</option>
+          <option value="10">10 años</option>
+        </select>
+      </div>
+      <div class="field" style="margin:0"><label>Nº certificado / acta</label><input type="text" id="fichaNroCert" placeholder="Nº acta OCA"></div>
+    </div>
+
+    <!-- Sección: APPCC / Higiene alimentaria -->
+    <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:#f0c040;margin-bottom:10px">APPCC / Higiene alimentaria</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:20px">
+      <div class="field" style="margin:0"><label>Contacto con alimento</label>
+        <select id="fichaContactoAlim" style="background:#0a1520;color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:.9rem;width:100%">
+          <option value="no">No</option>
+          <option value="directo">Directo</option>
+          <option value="indirecto">Indirecto</option>
+        </select>
+      </div>
+      <div class="field" style="margin:0"><label>Incluido en plan APPCC</label>
+        <select id="fichaAPPCC" style="background:#0a1520;color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:.9rem;width:100%">
+          <option value="no">No</option>
+          <option value="si">✅ Sí</option>
+          <option value="pendiente">⚠️ Pendiente revisión</option>
+        </select>
+      </div>
+      <div class="field" style="margin:0"><label>Punto crítico de control (PCC)</label>
+        <select id="fichaPCC" style="background:#0a1520;color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:.9rem;width:100%">
+          <option value="no">No es PCC</option>
+          <option value="si">⚠️ Sí es PCC</option>
+        </select>
+      </div>
+      <div class="field" style="margin:0"><label>Frecuencia limpieza</label>
+        <select id="fichaFrecLimpieza" style="background:#0a1520;color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:.9rem;width:100%">
+          <option value="">—</option>
+          <option value="turno">Cada turno</option>
+          <option value="diaria">Diaria</option>
+          <option value="semanal">Semanal</option>
+          <option value="mensual">Mensual</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Observaciones -->
+    <div class="field" style="margin-bottom:20px">
+      <label>Observaciones / notas</label>
+      <textarea id="fichaObs" rows="3" placeholder="Notas, condiciones especiales, referencias a documentos..." style="background:#0a1520;color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:.9rem;width:100%;resize:vertical"></textarea>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
+      <button onclick="cerrarFichaMaq()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.6);border-radius:8px;padding:10px 20px;font-family:'Barlow',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer">Cancelar</button>
+      <button onclick="guardarFichaMaq()" style="background:rgba(240,192,64,.2);border:1px solid rgba(240,192,64,.5);color:#f0c040;border-radius:8px;padding:10px 20px;font-family:'Barlow',sans-serif;font-size:.88rem;font-weight:800;cursor:pointer">💾 Guardar ficha</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+// FICHA REGLAMENTARIA DE MÁQUINA
+// ══════════════════════════════════════════════════
+var _fichaEditId = null;
+var _fichaEditNombre = '';
+
+function abrirFichaMaq(maqId, maqNombre) {
+  _fichaEditId = maqId;
+  _fichaEditNombre = maqNombre;
+  document.getElementById('fichaHdrNombre').textContent = maqNombre + ' — ' + maqId;
+  // Limpiar campos
+  ['fichaNSerie','fichaAnioFab','fichaAnioInst','fichaModelo','fichaOCA',
+   'fichaUltimaRev','fichaProxRev','fichaNroCert','fichaObs'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.value = '';
+  });
+  ['fichaMarcadoCE','fichaDeclCE','fichaManual','fichaEvalRiesgos','fichaTipoRev',
+   'fichaPeriodicidad','fichaContactoAlim','fichaAPPCC','fichaPCC','fichaFrecLimpieza'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.selectedIndex = 0;
+  });
+  // Cargar datos existentes
+  DB.ref('fichas_maquinas/' + maqId).once('value').then(function(snap){
+    var d = snap.val();
+    if (!d) { document.getElementById('modalFichaMaq').style.display = 'flex'; return; }
+    var campos = ['fichaNSerie','fichaAnioFab','fichaAnioInst','fichaModelo','fichaOCA',
+                  'fichaUltimaRev','fichaProxRev','fichaNroCert','fichaObs',
+                  'fichaMarcadoCE','fichaDeclCE','fichaManual','fichaEvalRiesgos','fichaTipoRev',
+                  'fichaPeriodicidad','fichaContactoAlim','fichaAPPCC','fichaPCC','fichaFrecLimpieza'];
+    var keys =  ['nSerie','anioFab','anioInst','modelo','oca',
+                 'ultimaRev','proxRev','nroCert','obs',
+                 'marcadoCE','declCE','manual','evalRiesgos','tipoRev',
+                 'periodicidad','contactoAlim','appcc','pcc','frecLimpieza'];
+    campos.forEach(function(fId, i) {
+      var el = document.getElementById(fId);
+      if (el && d[keys[i]] != null) el.value = d[keys[i]];
+    });
+    document.getElementById('modalFichaMaq').style.display = 'flex';
+  }).catch(function(){ document.getElementById('modalFichaMaq').style.display = 'flex'; });
+}
+
+function cerrarFichaMaq() {
+  document.getElementById('modalFichaMaq').style.display = 'none';
+  _fichaEditId = null;
+}
+
+function guardarFichaMaq() {
+  if (!_fichaEditId) return;
+  var v = function(id){ return (document.getElementById(id)||{}).value || null; };
+  var datos = {
+    maqId: _fichaEditId,
+    maqNombre: _fichaEditNombre,
+    nSerie: v('fichaNSerie'),
+    anioFab: v('fichaAnioFab') ? parseInt(v('fichaAnioFab')) : null,
+    anioInst: v('fichaAnioInst') ? parseInt(v('fichaAnioInst')) : null,
+    modelo: v('fichaModelo'),
+    marcadoCE: v('fichaMarcadoCE'),
+    declCE: v('fichaDeclCE'),
+    manual: v('fichaManual'),
+    evalRiesgos: v('fichaEvalRiesgos'),
+    tipoRev: v('fichaTipoRev'),
+    oca: v('fichaOCA'),
+    ultimaRev: v('fichaUltimaRev'),
+    proxRev: v('fichaProxRev'),
+    periodicidad: v('fichaPeriodicidad'),
+    nroCert: v('fichaNroCert'),
+    contactoAlim: v('fichaContactoAlim'),
+    appcc: v('fichaAPPCC'),
+    pcc: v('fichaPCC'),
+    frecLimpieza: v('fichaFrecLimpieza'),
+    obs: v('fichaObs'),
+    tsActualizado: Date.now()
+  };
+  // Limpiar nulls
+  Object.keys(datos).forEach(function(k){ if(datos[k]===null) delete datos[k]; });
+  DB.ref('fichas_maquinas/' + _fichaEditId).set(datos).then(function(){
+    showToast('✅ Ficha guardada');
+    cerrarFichaMaq();
+    // Actualizar indicador visual en la tabla si está visible
+    if (typeof renderMaquinas === 'function') renderMaquinas();
+  }).catch(function(){ showToast('❌ Error al guardar'); });
+}
+
+// ══════════════════════════════════════════════════
+// CALIBRACIÓN DE INSTRUMENTOS
+// ══════════════════════════════════════════════════
+var _calEditId = null;
+var _calibraciones = [];
+
+function initCal() {
+  DB.ref('calibraciones').on('value', function(snap) {
+    var raw = snap.val() || {};
+    _calibraciones = Object.entries(raw).map(function(e){
+      return Object.assign({_id: e[0]}, e[1]);
+    }).sort(function(a,b){ return (a.proxCal||'').localeCompare(b.proxCal||''); });
+    calRender();
+  });
+  calPoblarMaquinas();
+}
+
+function calPoblarMaquinas() {
+  var sel = document.getElementById('calMaquina');
+  if (!sel) return;
+  // Combinar base + extra — usa MAQUINAS_BASE_ADMIN si existe
+  var lista = [];
+  if (typeof MAQUINAS_BASE_ADMIN !== 'undefined') lista = lista.concat(MAQUINAS_BASE_ADMIN);
+  if (typeof maquinasExtra !== 'undefined') lista = lista.concat(maquinasExtra);
+  lista.sort(function(a,b){ return (a.n||'').localeCompare(b.n||''); });
+  sel.innerHTML = '<option value="">— Ninguna / General —</option>'
+    + lista.map(function(m){
+        return '<option value="'+m.id+'">'+escHtml(m.n)+' ('+m.id+')</option>';
+      }).join('');
+}
+
+function calRender() {
+  var hoy = new Date();
+  var en30 = new Date(Date.now() + 30*24*3600*1000);
+  var vencidos = 0, proximos = 0, ok = 0;
+  var tbody = document.getElementById('calTbody');
+  if (!tbody) return;
+  if (!_calibraciones.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="no-data">Sin instrumentos registrados todavía</td></tr>';
+    document.getElementById('calKpiVencido').textContent = 0;
+    document.getElementById('calKpiProx').textContent = 0;
+    document.getElementById('calKpiOk').textContent = 0;
+    document.getElementById('calKpiTotal').textContent = 0;
+    return;
+  }
+
+  var TIPO_LABEL = {termometro:'🌡️ Termómetro',bascula:'⚖️ Báscula',manometro:'⏲️ Manómetro',
+    'higrómetro':'💧 Higrómetro',dosificador:'🧪 Dosificador',caudalimetro:'🌊 Caudalímetro',otro:'🔧 Otro'};
+  var RES_LABEL = {conforme:'✅ Conforme',no_conforme:'❌ No conforme',
+    ajustado:'🔧 Ajustado',retirado:'⛔ Retirado'};
+
+  tbody.innerHTML = _calibraciones.map(function(c) {
+    var proxDate = c.proxCal ? new Date(c.proxCal) : null;
+    var semaforo, semLabel, semColor;
+    if (!proxDate) {
+      semaforo = 'badge-grey'; semLabel = '—'; semColor = '#95a5a6';
+    } else if (proxDate < hoy) {
+      semaforo = 'badge-red'; semLabel = '🔴 VENCIDO'; semColor = '#e74c3c'; vencidos++;
+    } else if (proxDate <= en30) {
+      semaforo = 'badge-warn'; semLabel = '⚠️ PRÓXIMO'; semColor = '#f39c12'; proximos++;
+    } else {
+      semaforo = 'badge-ok'; semLabel = '✅ OK'; semColor = '#2ecc71'; ok++;
+    }
+    return '<tr>'
+      + '<td><span class="badge '+semaforo+'" style="white-space:nowrap">'+semLabel+'</span></td>'
+      + '<td><b>'+escHtml(c.nombre||'—')+'</b>'+(c.nSerie?'<br><span style="font-size:.72rem;color:rgba(255,255,255,.35)">'+escHtml(c.nSerie)+'</span>':'')+'</td>'
+      + '<td>'+escHtml(TIPO_LABEL[c.tipo]||c.tipo||'—')+'</td>'
+      + '<td style="font-size:.8rem;color:rgba(255,255,255,.55)">'+escHtml(c.maqNombre||c.maquina||'—')+'</td>'
+      + '<td style="font-size:.82rem">'+escHtml(c.ultimaCal||'—')+'</td>'
+      + '<td style="font-size:.82rem;color:'+semColor+'"><b>'+escHtml(c.proxCal||'—')+'</b></td>'
+      + '<td style="font-size:.8rem;color:rgba(255,255,255,.55)">'+escHtml(c.empresa||'—')+'</td>'
+      + '<td>'+escHtml(RES_LABEL[c.resultado]||c.resultado||'—')+'</td>'
+      + '<td style="display:flex;gap:5px;flex-wrap:wrap">'
+        + '<button onclick="calEditar(\''+c._id+'\')" style="background:rgba(52,152,219,.15);border:1px solid rgba(52,152,219,.4);color:#74b9ff;border-radius:5px;padding:4px 9px;cursor:pointer;font-family:\'Barlow\',sans-serif;font-size:.78rem">✏️</button>'
+        + '<button onclick="calBorrar(\''+c._id+'\')" style="background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.35);color:#e74c3c;border-radius:5px;padding:4px 9px;cursor:pointer;font-family:\'Barlow\',sans-serif;font-size:.78rem">🗑</button>'
+      + '</td>'
+      + '</tr>';
+  }).join('');
+
+  document.getElementById('calKpiVencido').textContent = vencidos;
+  document.getElementById('calKpiProx').textContent = proximos;
+  document.getElementById('calKpiOk').textContent = ok;
+  document.getElementById('calKpiTotal').textContent = _calibraciones.length;
+}
+
+function calGuardar() {
+  var nombre = (document.getElementById('calNombre').value||'').trim();
+  var tipo   = document.getElementById('calTipo').value;
+  var ultCal = document.getElementById('calFechaUlt').value;
+  var proxCal= document.getElementById('calFechaProx').value;
+  if (!nombre) { showToast('⚠️ Escribe el nombre del instrumento'); return; }
+  if (!ultCal) { showToast('⚠️ Indica la fecha de última calibración'); return; }
+  if (!proxCal){ showToast('⚠️ Indica la fecha de próxima calibración'); return; }
+  var maqSel = document.getElementById('calMaquina');
+  var maqId  = maqSel ? maqSel.value : '';
+  var maqNombre = maqId && maqSel ? (maqSel.options[maqSel.selectedIndex].textContent.replace(/\s*\(MAQ-\d+\)$/,'')) : '';
+  var datos = {
+    nombre: nombre,
+    tipo: tipo || null,
+    nSerie: (document.getElementById('calNSerie').value||'').trim() || null,
+    rango: (document.getElementById('calRango').value||'').trim() || null,
+    precision: (document.getElementById('calPrecision').value||'').trim() || null,
+    maquina: maqId || null,
+    maqNombre: maqNombre || null,
+    ultimaCal: ultCal,
+    resultado: document.getElementById('calResultado').value || 'conforme',
+    proxCal: proxCal,
+    periodicidad: document.getElementById('calPeriodicidad').value || null,
+    empresa: (document.getElementById('calEmpresa').value||'').trim() || null,
+    certificado: (document.getElementById('calCertificado').value||'').trim() || null,
+    obs: (document.getElementById('calObs').value||'').trim() || null,
+    ts: Date.now()
+  };
+  Object.keys(datos).forEach(function(k){ if(datos[k]===null) delete datos[k]; });
+  var ref = _calEditId ? DB.ref('calibraciones/'+_calEditId) : DB.ref('calibraciones').push();
+  ref.set(datos).then(function(){
+    showToast(_calEditId ? '✅ Calibración actualizada' : '✅ Instrumento registrado');
+    calCancelar();
+  }).catch(function(){ showToast('❌ Error al guardar'); });
+}
+
+function calEditar(id) {
+  var c = _calibraciones.find(function(x){ return x._id === id; });
+  if (!c) return;
+  _calEditId = id;
+  var campos = {
+    calNombre: c.nombre, calNSerie: c.nSerie, calRango: c.rango,
+    calPrecision: c.precision, calFechaUlt: c.ultimaCal, calFechaProx: c.proxCal,
+    calEmpresa: c.empresa, calCertificado: c.certificado, calObs: c.obs
+  };
+  var selects = {
+    calTipo: c.tipo, calResultado: c.resultado,
+    calPeriodicidad: c.periodicidad, calMaquina: c.maquina
+  };
+  Object.entries(campos).forEach(function(e){
+    var el = document.getElementById(e[0]); if(el) el.value = e[1]||'';
+  });
+  Object.entries(selects).forEach(function(e){
+    var el = document.getElementById(e[0]); if(el && e[1]) el.value = e[1];
+  });
+  document.getElementById('calFormTitle').textContent = '✏️ Editar: ' + (c.nombre||'');
+  document.getElementById('calBtnCancelar').style.display = 'inline-block';
+  document.getElementById('calFormCard').scrollIntoView({behavior:'smooth'});
+}
+
+function calCancelar() {
+  _calEditId = null;
+  ['calNombre','calNSerie','calRango','calPrecision','calFechaUlt','calFechaProx','calEmpresa','calCertificado','calObs'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.value = '';
+  });
+  ['calTipo','calResultado','calPeriodicidad','calMaquina'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.selectedIndex = 0;
+  });
+  document.getElementById('calFormTitle').textContent = '➕ Registrar instrumento de medida';
+  document.getElementById('calBtnCancelar').style.display = 'none';
+}
+
+function calBorrar(id) {
+  var c = _calibraciones.find(function(x){ return x._id === id; });
+  if (!c || !confirm('¿Borrar el instrumento "'+c.nombre+'"?')) return;
+  DB.ref('calibraciones/'+id).remove().then(function(){
+    showToast('🗑 Instrumento borrado');
+  }).catch(function(){ showToast('❌ Error'); });
+}
+</script>
 
 <!-- Modal QR máquina (admin) -->
 <div id="modalQRAdminMaq" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:900;align-items:center;justify-content:center;padding:16px">
