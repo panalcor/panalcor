@@ -8371,7 +8371,7 @@ function renderPedidos(lista) {
           + (p.motivo ? '<div style="font-size:0.8rem;color:rgba(255,255,255,0.5);font-style:italic">"' + escHtml(p.motivo) + '"</div>' : '')
           + (p.respuesta ? '<div style="margin-top:6px;font-size:0.8rem;background:rgba(39,174,96,0.1);border:1px solid rgba(39,174,96,0.25);border-radius:6px;padding:6px 10px;color:#2ecc71">💬 ' + escHtml(p.respuesta) + '</div>' : '')
           + (esComp && fechaGes ? '<div style="margin-top:6px;font-size:0.78rem;color:rgba(46,204,113,0.75)">✅ Comprado por <b>' + escHtml(p.quienCompras||'compras') + '</b> el ' + fechaGes + '</div>' : '')
-          + (esRech && fechaGes ? '<div style="margin-top:6px;font-size:0.78rem;color:rgba(231,76,60,0.75)">❌ Rechazado por <b>' + escHtml(p.quienCompras||'compras') + '</b> el ' + fechaGes + (p.notaCompras ? ' — ' + escHtml(p.notaCompras) : '') + '</div>' : '')
+          + (esRech && fechaGes ? '<div style="margin-top:6px;font-size:0.78rem;color:rgba(231,76,60,0.75)">❌ Rechazado por <b>' + escHtml(p.quienCompras||'compras') + '</b> el ' + fechaGes + '</div>' : '')
         + '</div>'
         + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">'
           + '<span style="font-size:0.72rem;font-weight:700;color:'+estadoColor+';background:'+estadoColor+'20;padding:3px 10px;border-radius:20px">'+estadoIcon+' '+estadoLabel+'</span>'

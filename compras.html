@@ -109,20 +109,7 @@ var DB = firebase.database();
   </div>
   <div style="display:flex;align-items:center;gap:10px">
     <a href="panalcor_inicio.html" class="btn-sm">← Inicio</a>
-    <button onclick="cerrarSesion()" class="btn-sm" id="btnCerrarSesion" style="display:none">Cerrar sesión</button>
-  </div>
-</div>
-
-<!-- LOGIN -->
-<div id="loginPanel">
-  <div class="login-card">
-    <div class="login-title">📦 Compras</div>
-    <div class="login-sub">Gestión de solicitudes de repuestos</div>
-    <div class="field">
-      <label>Tu nombre</label>
-      <input type="text" id="loginNombre" placeholder="Escribe tu nombre" autocomplete="off">
-    </div>
-    <button class="btn-main" onclick="entrar()">Entrar</button>
+    <button onclick="cerrarSesion()" class="btn-sm" id="btnCerrarSesion">Cerrar sesión</button>
   </div>
 </div>
 
@@ -198,30 +185,13 @@ function fmtTs(ts){
 // ─────────────────────────────────────
 // Sesión
 // ─────────────────────────────────────
-var _sesion = null;
+var _sesion = 'Compras';
 var _pedidosRef = null;
 var _todosPedidos = [];
 var _rechazoPendienteId = null;
 
-function entrar(){
-  var nombre = (document.getElementById('loginNombre').value||'').trim();
-  if(!nombre){showToast('⚠️ Escribe tu nombre');return;}
-  localStorage.setItem('comprasSesion', nombre);
-  iniciarApp(nombre);
-}
-
 function cerrarSesion(){
-  localStorage.removeItem('comprasSesion');
-  location.reload();
-}
-
-function iniciarApp(nombre){
-  _sesion = nombre;
-  document.getElementById('loginPanel').style.display='none';
-  document.getElementById('appPanel').style.display='block';
-  document.getElementById('btnCerrarSesion').style.display='inline-block';
-  document.getElementById('topbarSub').textContent = 'Bienvenido/a, '+nombre;
-  escucharPedidos();
+  window.location.href = 'panalcor_inicio.html';
 }
 
 // ─────────────────────────────────────
@@ -417,12 +387,9 @@ document.addEventListener('keydown',function(e){
 });
 
 // ─────────────────────────────────────
-// Arranque
+// Arranque directo — sin login
 // ─────────────────────────────────────
-(function(){
-  var saved = localStorage.getItem('comprasSesion');
-  if(saved){ iniciarApp(saved); }
-})();
+escucharPedidos();
 </script>
 </body>
 </html>
