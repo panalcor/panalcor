@@ -6598,7 +6598,6 @@ function docsSetVista(v){
 }
 
 function docsCargarMaquinas(){
-  // Combinar lista base del admin con las extra de Firebase (igual que poblarQRSel)
   var poblar = function(){
     var todas = MAQUINAS_BASE_ADMIN.concat(maquinasExtra).sort(function(a,b){ return (a.n||'').localeCompare(b.n||''); });
     var sel = document.getElementById('docsMaqSel');
@@ -6606,12 +6605,8 @@ function docsCargarMaquinas(){
     sel.innerHTML = '<option value="">— Selecciona máquina —</option>'
       + todas.map(function(m){ return '<option value="'+escHtml(m.id)+'">'+escHtml(m.n)+'</option>'; }).join('');
   };
-  // Si maquinasExtra ya está cargado úsalo, si no cárgalo primero
-  if(maquinasExtra.length || typeof MAQUINAS_BASE_ADMIN !== 'undefined'){
-    loadMaquinasExtra(poblar);
-  } else {
-    poblar();
-  }
+  // Siempre cargar desde Firebase para incluir máquinas nuevas
+  loadMaquinasExtra(poblar);
 }
 
 var _docsRepLista = []; // cache de repuestos para el buscador
