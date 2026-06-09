@@ -547,10 +547,6 @@ if('serviceWorker' in navigator){
       <canvas id="cTendencia" height="90"></canvas>
     </div>
     <div class="chart-wrap">
-      <div class="chart-title">Averías por tipo</div>
-      <canvas id="cTipos" height="90"></canvas>
-    </div>
-    <div class="chart-wrap">
       <div class="chart-title">Top 10 máquinas</div>
       <canvas id="cMaquinas" height="100"></canvas>
     </div>
@@ -617,31 +613,6 @@ if('serviceWorker' in navigator){
   <div class="card" id="cardSinFirma" style="margin-top:16px;max-width:732px">
     <div class="sec-title">📋 Órdenes sin firma de conformidad</div>
     <div id="sinFirmaBody">Cargando...</div>
-  </div>
-
-  <!-- ══ TIEMPO DE RESOLUCIÓN ══ -->
-  <div class="card" style="margin-top:16px">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
-      <div class="sec-title" style="margin-bottom:0">⏱ Tiempo de resolución de averías</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="kpi-period-btn active" id="trBtn30"  onclick="setTRPeriod(30)">30 días</button>
-        <button class="kpi-period-btn"        id="trBtn90"  onclick="setTRPeriod(90)">90 días</button>
-        <button class="kpi-period-btn"        id="trBtn365" onclick="setTRPeriod(365)">1 año</button>
-      </div>
-    </div>
-    <div id="trKpis" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:16px"></div>
-    <div style="overflow-x:auto">
-      <table class="data-table" id="tTiempoRes">
-        <thead><tr>
-          <th>Tipo de avería</th>
-          <th>Nº resueltas</th>
-          <th>Tiempo medio</th>
-          <th>Tiempo mín.</th>
-          <th>Tiempo máx.</th>
-        </tr></thead>
-        <tbody id="bTiempoRes"><tr><td colspan="5" class="no-data">Cargando...</td></tr></tbody>
-      </table>
-    </div>
   </div>
 
   <!-- ══ COMPARATIVA DE TURNOS ══ -->
@@ -1567,7 +1538,6 @@ function initApp(){
   cargarSinFirma();
   initPedidos(); // badge de solicitudes pendientes
   renderResumenDia();
-  renderTiempoResolucion();
   renderCompTurnos();
   renderAlertasRepetitivas();
   // fechas por defecto para mecánicos e informes (último mes)
@@ -1621,7 +1591,6 @@ function renderDashboard(){
 
   // Charts
   renderChartTendencia(av);
-  renderChartTipos(av);
   renderChartMaquinas(av);
   renderChartTurnos(av);
   renderComparativa();
@@ -1857,17 +1826,6 @@ function renderChartTendencia(av){
   });
 }
 
-function renderChartTipos(av){
-  const tipos={};
-  av.forEach(a=>{ if(a.tipo) tipos[a.tipo]=(tipos[a.tipo]||0)+1; });
-  destroyChart('cTipos');
-  if(!Object.keys(tipos).length) return;
-  charts.cTipos=new Chart(document.getElementById('cTipos'),{
-    type:'doughnut',
-    data:{labels:Object.keys(tipos),datasets:[{data:Object.values(tipos),backgroundColor:['#3498db','#f1c40f','#1abc9c','#9b59b6','#e67e22','#95a5a6']}]},
-    options:{maintainAspectRatio:false,plugins:{legend:{labels:{color:'#ccc',font:{size:10}}}}}
-  });
-}
 
 function renderChartMaquinas(av){
   const maqCnt={};
@@ -6275,16 +6233,6 @@ function borrarRecordatorio(id) {
 // ══════════════════════════════════════════════════
 // TIEMPO DE RESOLUCIÓN
 // ══════════════════════════════════════════════════
-var _trDias = 30;
-
-function setTRPeriod(d) {
-  _trDias = d;
-  ['30','90','365'].forEach(function(x) {
-    var b = document.getElementById('trBtn'+x);
-    if (b) b.classList.toggle('active', String(d)===x);
-  });
-  renderTiempoResolucion();
-}
 
 function minToStr(m) {
   if (!m || m <= 0) return '—';
@@ -6292,60 +6240,6 @@ function minToStr(m) {
   return h ? h+'h '+(mn?mn+'min':'') : mn+'min';
 }
 
-function renderTiempoResolucion() {
-  var corte = Date.now() - _trDias*86400000;
-  var av = getAverias().filter(function(a) {
-    return a.estado === 'RESUELTA' && a.tiempoMin > 0 && a.ts >= corte;
-  });
-
-  // KPIs globales
-  var kpisEl = document.getElementById('trKpis');
-  if (!kpisEl) return;
-  if (!av.length) {
-    kpisEl.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:0.85rem">Sin datos de resolución en el período.</div>';
-    document.getElementById('bTiempoRes').innerHTML = '<tr><td colspan="5" class="no-data">Sin datos</td></tr>';
-    return;
-  }
-  var totalMin = av.reduce(function(s,a){ return s+(a.tiempoMin||0); }, 0);
-  var media = Math.round(totalMin/av.length);
-  var minVal = Math.min.apply(null, av.map(function(a){ return a.tiempoMin; }));
-  var maxVal = Math.max.apply(null, av.map(function(a){ return a.tiempoMin; }));
-  var rapidas = av.filter(function(a){ return a.tiempoMin <= 60; }).length;
-
-  kpisEl.innerHTML = [
-    ['Media resolución', minToStr(media), 'var(--gold)'],
-    ['Más rápida', minToStr(minVal), '#2ecc71'],
-    ['Más lenta', minToStr(maxVal), '#e74c3c'],
-    ['< 1 hora', rapidas + ' av.', '#3498db'],
-    ['Total analizadas', av.length + ' av.', 'rgba(255,255,255,0.5)']
-  ].map(function(r) {
-    return '<div style="background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px;text-align:center">'
-      + '<div style="font-size:1.6rem;font-weight:900;color:'+r[2]+'">'+r[1]+'</div>'
-      + '<div style="font-size:0.68rem;color:rgba(255,255,255,0.4);letter-spacing:0.1em;margin-top:4px;text-transform:uppercase">'+r[0]+'</div>'
-      + '</div>';
-  }).join('');
-
-  // Tabla por tipo
-  var porTipo = {};
-  av.forEach(function(a) {
-    var t = a.tipo || 'Sin tipo';
-    if (!porTipo[t]) porTipo[t] = [];
-    porTipo[t].push(a.tiempoMin);
-  });
-  var rows = Object.keys(porTipo).map(function(t) {
-    var mins = porTipo[t];
-    var med = Math.round(mins.reduce(function(s,v){ return s+v; },0)/mins.length);
-    return { tipo:t, cnt:mins.length, med:med, min:Math.min.apply(null,mins), max:Math.max.apply(null,mins) };
-  }).sort(function(a,b){ return b.cnt-a.cnt; });
-
-  document.getElementById('bTiempoRes').innerHTML = rows.map(function(r) {
-    return '<tr><td style="font-weight:600">'+escHtml(r.tipo)+'</td>'
-      +'<td style="text-align:center">'+r.cnt+'</td>'
-      +'<td style="text-align:center;color:var(--gold);font-weight:700">'+minToStr(r.med)+'</td>'
-      +'<td style="text-align:center;color:#2ecc71">'+minToStr(r.min)+'</td>'
-      +'<td style="text-align:center;color:#e74c3c">'+minToStr(r.max)+'</td></tr>';
-  }).join('') || '<tr><td colspan="5" class="no-data">Sin datos</td></tr>';
-}
 
 // ══════════════════════════════════════════════════
 // COMPARATIVA DE TURNOS
