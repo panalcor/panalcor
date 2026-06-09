@@ -3744,7 +3744,7 @@ function switchTab(name){
   if(name==='rec') { cargarMecanicosParaRec(); cargarRecordatorios(); }
   if(name==='enc') cargarAvisosEncargados();
   if(name==='int') { cargarCatalogoRepuestos(); initIntegrales(); }
-  if(name==='est') initEstado();
+  if(name==='est') loadMaquinasExtra(initEstado);
   if(name==='sug') initSugerencias();
   if(name==='proy') initProyectos();
   if(name==='cur') initCursos();
@@ -6450,7 +6450,7 @@ function initEstado() {
 }
 
 function renderEstado() {
-  var todas = MAQUINAS_BASE_ADMIN.slice();
+  var todas = MAQUINAS_BASE_ADMIN.concat(maquinasExtra);
   var areas = ['TODAS'];
   todas.forEach(function(m) { if (m.a && areas.indexOf(m.a) === -1) areas.push(m.a); });
 
