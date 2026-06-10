@@ -1150,7 +1150,7 @@ function mostrarBannerSiProcede(nombre){
   try{ stored = JSON.parse(localStorage.getItem(key)||'null'); }catch(e){}
   if(stored && stored.turno === turno) return; // ya vio este turno
 
-  DB.ref('config/frases_motivadoras').once('value').then(function(snap){
+  DB.ref('frases_motivadoras').once('value').then(function(snap){
     var frases = snap.val();
     if(!frases || !frases.length) frases = _FRASES_DEFAULT;
     _mostrarBanner(nombre, frases, stored, key, turno);

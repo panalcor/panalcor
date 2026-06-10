@@ -2930,7 +2930,7 @@ function cargarFrases(){
   var wrap = document.getElementById('frasesListaWrap');
   if(!wrap) return;
   wrap.innerHTML = '<span style="color:rgba(255,255,255,0.3);font-size:0.85rem">Cargando...</span>';
-  DB.ref('config/frases_motivadoras').once('value').then(function(snap){
+  DB.ref('frases_motivadoras').once('value').then(function(snap){
     var frases = snap.val();
     if(!frases || !frases.length) frases = _FRASES_FB_DEFAULT;
     _renderFrases(frases);
@@ -2984,7 +2984,7 @@ function _getFrasesActuales(){
 function guardarFrases(){
   var frases = _getFrasesActuales();
   if(!frases.length){ showToast('⚠️ No hay frases para guardar'); return; }
-  DB.ref('config/frases_motivadoras').set(frases).then(function(){
+  DB.ref('frases_motivadoras').set(frases).then(function(){
     var msg = document.getElementById('frasesMsg');
     if(msg){ msg.textContent = '✓ '+frases.length+' frases guardadas'; setTimeout(function(){ msg.textContent=''; }, 3000); }
     _renderFrases(frases);
