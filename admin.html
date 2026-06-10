@@ -896,6 +896,46 @@ if('serviceWorker' in navigator){
     </div>
   </div>
 
+  <!-- ═══ INFORME PREVENTIVO IMPRIMIBLE ═══ -->
+  <div class="card" style="margin-top:12px;border:1px solid rgba(46,204,113,0.3)">
+    <div class="sec-title">🖨️ Informe Preventivo Imprimible / PDF</div>
+    <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+      <div>
+        <label style="font-size:0.75rem;color:var(--gold);display:block;margin-bottom:4px;letter-spacing:0.1em">MES</label>
+        <input type="month" id="infPrevMes" style="background:var(--navy-mid);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:8px 12px;font-family:'Barlow',sans-serif;font-size:0.95rem">
+      </div>
+      <button onclick="verInformePrev()" style="background:linear-gradient(135deg,#27ae60,#1a7a40);color:#fff;border:none;border-radius:8px;padding:9px 20px;font-family:'Barlow',sans-serif;font-size:0.9rem;font-weight:700;cursor:pointer;letter-spacing:0.04em">
+        🖨️ Ver Informe / Imprimir PDF
+      </button>
+      <span id="infPrevInfo" style="font-size:0.8rem;color:rgba(255,255,255,0.45);font-style:italic;align-self:center"></span>
+    </div>
+    <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);line-height:1.7">
+      Genera un informe imprimible con resumen de cumplimiento, progreso por mecánico y tareas agrupadas por máquina con estado, fechas y notas. Datos desde el <b style="color:rgba(255,255,255,0.5)">Plan Preventivo</b> (asignaciones del mes).
+    </div>
+  </div>
+
+  <!-- ═══ INFORME FRÍO IMPRIMIBLE ═══ -->
+  <div class="card" style="margin-top:12px;border:1px solid rgba(100,210,255,0.3)">
+    <div class="sec-title" style="color:#64d2ff">❄️ Informe Especial Frío</div>
+    <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+      <div>
+        <label style="font-size:0.75rem;color:#64d2ff;display:block;margin-bottom:4px;letter-spacing:0.1em">DESDE</label>
+        <input type="date" id="infFrioDesde" style="background:var(--navy-mid);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:8px 12px;font-family:'Barlow',sans-serif;font-size:0.9rem;color-scheme:dark">
+      </div>
+      <div>
+        <label style="font-size:0.75rem;color:#64d2ff;display:block;margin-bottom:4px;letter-spacing:0.1em">HASTA</label>
+        <input type="date" id="infFrioHasta" style="background:var(--navy-mid);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:8px 12px;font-family:'Barlow',sans-serif;font-size:0.9rem;color-scheme:dark">
+      </div>
+      <button onclick="verInformeFrio()" style="background:linear-gradient(135deg,#1a7bb0,#0f4d73);color:#64d2ff;border:1px solid rgba(100,210,255,0.4);border-radius:8px;padding:9px 20px;font-family:'Barlow',sans-serif;font-size:0.9rem;font-weight:700;cursor:pointer;letter-spacing:0.04em">
+        ❄️ Ver Informe / Imprimir PDF
+      </button>
+      <span id="infFrioInfo" style="font-size:0.8rem;color:rgba(255,255,255,0.45);font-style:italic;align-self:center"></span>
+    </div>
+    <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);line-height:1.7">
+      Informe detallado de instalaciones de frío: lecturas por equipo (temperaturas, presiones, desescarche), incidencias (fugas, alertas eléctricas, suciedad) y estado actual de los equipos. Selecciona un rango de fechas.
+    </div>
+  </div>
+
   <div class="card">
     <div class="sec-title">📊 Resumen mensual</div>
     <div style="overflow-x:auto">
@@ -2917,6 +2957,348 @@ function _generarExcelMensual(mes, mesLabel, turnos, tareasMap){
 
   XLSX.writeFile(wb, 'informe_mantenimiento_' + mes + '.xlsx');
   showToast('📊 Informe ' + mesLabel + ' generado correctamente');
+}
+
+// ══════════════════════════════════════════════════
+// INFORME PREVENTIVO IMPRIMIBLE
+// ══════════════════════════════════════════════════
+function verInformePrev(){
+  var mes = document.getElementById('infPrevMes').value;
+  if(!mes){ showToast('⚠️ Selecciona un mes'); return; }
+  var parts = mes.split('-');
+  var mesLabel = _MESES_ES[parseInt(parts[1])-1] + ' ' + parts[0];
+  var info = document.getElementById('infPrevInfo');
+  if(info) info.textContent = 'Cargando datos...';
+
+  DB.ref('asignaciones/'+mes).once('value').then(function(snap){
+    var items = Object.values(snap.val() || {});
+    if(!items.length){
+      if(info) info.textContent = 'Sin asignaciones para ' + mesLabel;
+      showToast('Sin datos de preventivo para ' + mesLabel);
+      return;
+    }
+    if(info) info.textContent = items.length + ' tareas cargadas';
+    _abrirInformePrev(mes, mesLabel, items);
+  }).catch(function(){
+    if(info) info.textContent = 'Error al cargar datos';
+    showToast('Error al conectar con Firebase');
+  });
+}
+
+function _abrirInformePrev(mes, mesLabel, items){
+  var total     = items.length;
+  var hechas    = items.filter(function(t){ return t.hecho; }).length;
+  var pct       = total ? Math.round(hechas / total * 100) : 0;
+  var pendientes= total - hechas;
+
+  var mecMap = {};
+  items.forEach(function(t){
+    var m = t.mecanico || 'SIN ASIGNAR';
+    if(!mecMap[m]) mecMap[m] = { done:0, total:0 };
+    mecMap[m].total++;
+    if(t.hecho) mecMap[m].done++;
+  });
+
+  var maqMap = {};
+  items.forEach(function(t){
+    var maq = (t.maquina || 'SIN MÁQUINA').toUpperCase();
+    if(!maqMap[maq]) maqMap[maq] = [];
+    maqMap[maq].push(t);
+  });
+
+  var FORD = {diario:0,semanal:1,quincenal:2,mensual:3,trimestral:4,semestral:5,anual:6};
+
+  var mecRows = Object.keys(mecMap).sort().map(function(m){
+    var d = mecMap[m];
+    var p = d.total ? Math.round(d.done/d.total*100) : 0;
+    var c = p>=90 ? '#1e8449' : p>=70 ? '#b7770d' : '#c0392b';
+    return '<tr><td>'+m+'</td><td class="tc">'+d.done+'</td><td class="tc">'+d.total+'</td>'
+      +'<td class="tc"><b style="color:'+c+'">'+p+'%</b></td></tr>';
+  }).join('');
+
+  var maqSections = Object.keys(maqMap).sort().map(function(maq){
+    var tareas = maqMap[maq].slice().sort(function(a,b){
+      var fa = FORD[a.frecuencia]!==undefined?FORD[a.frecuencia]:99;
+      var fb = FORD[b.frecuencia]!==undefined?FORD[b.frecuencia]:99;
+      return fa - fb || (a.tarea||'').localeCompare(b.tarea||'');
+    });
+    var mH = tareas.filter(function(t){return t.hecho;}).length;
+    var mP = tareas.length ? Math.round(mH/tareas.length*100) : 0;
+    var mC = mP>=90 ? '#2ecc71' : mP>=70 ? '#f39c12' : '#e74c3c';
+
+    var rows = tareas.map(function(t){
+      var fh = '';
+      if(t.hecho && t.hechoEn){
+        try{ fh = ' '+new Date(t.hechoEn).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'}); }catch(e){}
+      }
+      var st = t.hecho
+        ? '<td class="dc">✓ REALIZADA'+fh+'</td>'
+        : '<td class="pc">— PENDIENTE</td>';
+      return '<tr>'
+        +'<td>'+(t.tarea||'')+(t.subtipo?' <span class="st">['+t.subtipo+']</span>':'')+'</td>'
+        +'<td class="fc">'+((t.frecuencia||'').toUpperCase())+(t.instancia&&t.instancia>1?' #'+t.instancia:'')+'</td>'
+        +'<td>'+(t.mecanico||'—')+'</td>'
+        +'<td>'+(t.turno||'—')+'</td>'
+        +st
+        +'<td class="nc">'+(t.notas||'')+'</td>'
+        +'</tr>';
+    }).join('');
+
+    return '<div class="ms">'
+      +'<div class="mh"><span class="mn">'+maq+'</span>'
+      +'<span style="color:'+mC+';font-weight:700;font-size:11px">'+mH+'/'+tareas.length+' ('+mP+'%)</span></div>'
+      +'<table class="tt"><thead><tr><th>Tarea</th><th>Frecuencia</th><th>Mecánico</th><th>Turno</th><th>Estado</th><th>Notas</th></tr></thead>'
+      +'<tbody>'+rows+'</tbody></table></div>';
+  }).join('');
+
+  var fd = new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'});
+  var kpiBg = pct>=90?'#1e8449':pct>=70?'#b7770d':'#c0392b';
+
+  var html='<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">'
+    +'<title>Preventivo '+mesLabel+' — PANALCOR</title>'
+    +'<style>'
+    +'*{box-sizing:border-box;margin:0;padding:0}'
+    +'body{font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#1a1a2e;background:#fff;padding:12mm 12mm 16mm}'
+    +'@media print{.np{display:none!important} @page{margin:8mm;size:A4} body{padding:0}}'
+    +'.hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #c9a227;padding-bottom:10px;margin-bottom:14px}'
+    +'.co{font-size:18px;font-weight:900;color:#0d1b2a;letter-spacing:0.04em}'
+    +'.ct{font-size:12px;font-weight:700;color:#555;margin-top:2px}'
+    +'.dm{text-align:right;font-size:10px;color:#888;line-height:1.7}'
+    +'.kg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}'
+    +'.kb{border:1px solid #ddd;border-radius:6px;padding:10px;text-align:center}'
+    +'.kn{font-size:22px;font-weight:900;line-height:1}'
+    +'.kl{font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:#888;margin-top:3px}'
+    +'.st2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#c9a227;border-bottom:1px solid #c9a22740;padding-bottom:4px;margin:12px 0 8px}'
+    +'table.mt{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:10px}'
+    +'table.mt th{background:#0d1b2a;color:#c9a227;padding:5px 8px;text-align:left;font-size:9px;letter-spacing:0.08em;text-transform:uppercase}'
+    +'table.mt td{padding:5px 8px;border-bottom:1px solid #eee} .tc{text-align:center}'
+    +'table.mt tr:nth-child(even) td{background:#f7f8fa}'
+    +'.ms{margin-bottom:12px;border:1px solid #ddd;border-radius:6px;overflow:hidden;page-break-inside:avoid}'
+    +'.mh{background:#0d1b2a;color:#fff;padding:7px 12px;display:flex;justify-content:space-between;align-items:center}'
+    +'.mn{font-weight:900;font-size:11px;letter-spacing:0.06em}'
+    +'table.tt{width:100%;border-collapse:collapse;font-size:10px}'
+    +'table.tt th{background:#f0f0f0;color:#333;padding:5px 8px;text-align:left;font-size:9px;letter-spacing:0.06em;text-transform:uppercase;border-bottom:2px solid #ddd}'
+    +'table.tt td{padding:5px 8px;border-bottom:1px solid #f0f0f0;vertical-align:top}'
+    +'.dc{color:#1e8449;font-weight:700} .pc{color:#aaa}'
+    +'.fc{color:#666;font-size:9px;white-space:nowrap} .nc{color:#666;font-style:italic;max-width:120px}'
+    +'.st{color:#999;font-size:9px}'
+    +'.pbtn{position:fixed;top:12px;right:12px;background:#0d1b2a;color:#c9a227;border:2px solid #c9a227;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif;z-index:99}'
+    +'.pbtn:hover{background:#c9a227;color:#0d1b2a}'
+    +'.ftr{margin-top:14px;border-top:1px solid #eee;padding-top:6px;font-size:9px;color:#aaa;display:flex;justify-content:space-between}'
+    +'</style></head><body>'
+    +'<button class="pbtn np" onclick="window.print()">🖨️ Imprimir / PDF</button>'
+    +'<div class="hdr"><div><div class="co">PANALCOR S.L.</div>'
+    +'<div class="ct">Informe Mensual de Mantenimiento Preventivo</div></div>'
+    +'<div class="dm">Mes: <b>'+mesLabel.toUpperCase()+'</b><br>Generado: '+fd+'<br>GESTION 3.0</div></div>'
+    +'<div class="kg">'
+    +'<div class="kb"><div class="kn" style="color:#2980b9">'+total+'</div><div class="kl">Total Tareas</div></div>'
+    +'<div class="kb"><div class="kn" style="color:#1e8449">'+hechas+'</div><div class="kl">Realizadas</div></div>'
+    +'<div class="kb"><div class="kn" style="color:#c0392b">'+pendientes+'</div><div class="kl">Pendientes</div></div>'
+    +'<div class="kb"><div class="kn" style="color:'+kpiBg+'">'+pct+'%</div><div class="kl">Cumplimiento</div></div>'
+    +'</div>'
+    +'<div class="st2">Progreso por mecánico</div>'
+    +'<table class="mt"><thead><tr><th>Mecánico</th><th class="tc">Realizadas</th><th class="tc">Total</th><th class="tc">% Cumplimiento</th></tr></thead>'
+    +'<tbody>'+mecRows+'</tbody></table>'
+    +'<div class="st2">Tareas por máquina</div>'
+    +maqSections
+    +'<div class="ftr"><span>PANALCOR S.L. — Sistema GESTION 3.0</span>'
+    +'<span>'+mesLabel+' | '+total+' tareas | '+pct+'% cumplimiento</span></div>'
+    +'</body></html>';
+
+  var w = window.open('','_blank','width=980,height=720,scrollbars=yes,resizable=yes');
+  if(w){ w.document.write(html); w.document.close(); }
+  else { showToast('⚠️ Activa las ventanas emergentes para ver el informe'); }
+}
+
+// ══════════════════════════════════════════════════
+// INFORME ESPECIAL FRÍO
+// ══════════════════════════════════════════════════
+function verInformeFrio(){
+  var desde = document.getElementById('infFrioDesde').value;
+  var hasta = document.getElementById('infFrioHasta').value;
+  if(!desde || !hasta){ showToast('⚠️ Selecciona fecha inicio y fin'); return; }
+  if(desde > hasta){ showToast('⚠️ La fecha inicio debe ser anterior al fin'); return; }
+  var info = document.getElementById('infFrioInfo');
+  if(info) info.textContent = 'Cargando...';
+
+  Promise.all([
+    DB.ref('frio/lecturas').orderByChild('fecha').startAt(desde).endAt(hasta).once('value'),
+    DB.ref('frio/equipos').once('value')
+  ]).then(function(snaps){
+    var lecturas = Object.values(snaps[0].val() || {}).filter(function(l){ return l.fecha >= desde && l.fecha <= hasta; });
+    var equipos  = snaps[1].val() || {};
+    if(!lecturas.length){
+      if(info) info.textContent = 'Sin lecturas en ese período';
+      showToast('Sin datos de frío para ese rango de fechas');
+      return;
+    }
+    lecturas.sort(function(a,b){ return (a.fecha+a.hora).localeCompare(b.fecha+b.hora); });
+    if(info) info.textContent = lecturas.length + ' lecturas encontradas';
+    _abrirInformeFrio(desde, hasta, lecturas, equipos);
+  }).catch(function(){
+    if(info) info.textContent = 'Error al cargar';
+    showToast('Error al conectar con Firebase');
+  });
+}
+
+function _abrirInformeFrio(desde, hasta, lecturas, equipos){
+  var fmtDate = function(d){ if(!d) return '—'; var p=d.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; };
+  var printDate = new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'});
+
+  var totalL = lecturas.length;
+  var fugas = lecturas.filter(function(l){ return l.fuga === 'confirmada' || l.fuga === 'posible'; }).length;
+  var fugasConf = lecturas.filter(function(l){ return l.fuga === 'confirmada'; }).length;
+  var fallosElec = lecturas.filter(function(l){ return l.contactor==='fallo'||l.rele==='fallo'||l.diferencial==='disparado'||l.seta==='activada'; }).length;
+  var descarches = lecturas.filter(function(l){ return l.desesc === 'si'; }).length;
+  var eqIds = Object.keys(equipos);
+
+  // Group lecturas by equipment
+  var eqMap = {};
+  lecturas.forEach(function(l){
+    var k = l.eqId || l.eqNombre || 'SIN EQUIPO';
+    if(!eqMap[k]) eqMap[k] = { nombre: l.eqNombre || equipos[l.eqId]&&equipos[l.eqId].nombre || k, lecturas: [] };
+    eqMap[k].lecturas.push(l);
+  });
+
+  // Incidencias destacadas
+  var incidencias = lecturas.filter(function(l){
+    return l.fuga==='confirmada'||l.fuga==='posible'||l.contactor==='fallo'||l.rele==='fallo'||l.diferencial==='disparado'||l.seta==='activada'||l.condSuciedad==='alta';
+  });
+
+  // Estado equipos table
+  var eqRows = eqIds.length > 0 ? eqIds.map(function(k){
+    var eq = equipos[k];
+    var estadoColor = eq.estado==='operativo'?'#1e8449':eq.estado==='averiado'?'#c0392b':'#b7770d';
+    var proxRev = eq.proxRev ? fmtDate(eq.proxRev) : '—';
+    var proxFgas = eq.proxRevFgas ? fmtDate(eq.proxRevFgas) : '—';
+    return '<tr>'
+      +'<td>'+escHtml(eq.nombre||k)+'</td>'
+      +'<td>'+escHtml(eq.tipo||'—')+'</td>'
+      +'<td>'+escHtml(eq.ubicacion||'—')+'</td>'
+      +'<td><b style="color:'+estadoColor+'">'+escHtml(eq.estado||'—').toUpperCase()+'</b></td>'
+      +'<td>'+escHtml(eq.refrigerante||'—')+'</td>'
+      +'<td>'+proxRev+'</td>'
+      +'<td>'+proxFgas+'</td>'
+      +'</tr>';
+  }).join('') : '<tr><td colspan="7" style="color:#aaa">Sin equipos registrados</td></tr>';
+
+  // Lecturas por equipo sections
+  var lecturaSections = Object.keys(eqMap).sort().map(function(k){
+    var grp = eqMap[k];
+    var rows = grp.lecturas.map(function(l){
+      var fugaIcon = l.fuga==='confirmada'?'<span style="color:#e74c3c;font-weight:700">🔴 CONFIRMADA</span>':l.fuga==='posible'?'<span style="color:#f39c12">⚠️ POSIBLE</span>':'<span style="color:#aaa">No</span>';
+      var alertas = [];
+      if(l.contactor==='fallo') alertas.push('Contactor');
+      if(l.rele==='fallo') alertas.push('Relé');
+      if(l.diferencial==='disparado') alertas.push('Diferencial');
+      if(l.seta==='activada') alertas.push('Seta');
+      if(l.condSuciedad==='alta') alertas.push('Cond. sucio');
+      var alertCell = alertas.length ? '<span style="color:#e74c3c;font-weight:700">⚡ '+alertas.join(', ')+'</span>' : '<span style="color:#aaa">—</span>';
+      var desescStr = l.desesc==='si' ? '✓'+(l.desescIni?' '+l.desescIni:'')+(l.desescFin?'→'+l.desescFin:'') : '—';
+      return '<tr>'
+        +'<td>'+fmtDate(l.fecha)+' '+escHtml(l.hora||'')+'</td>'
+        +'<td>'+escHtml(l.quien||'—')+'</td>'
+        +'<td>'+escHtml(l.tipo||'—')+'</td>'
+        +'<td class="tc">'+(l.tCam!=null?l.tCam+'°':'—')+'</td>'
+        +'<td class="tc">'+(l.tExt!=null?l.tExt+'°':'—')+'</td>'
+        +'<td class="tc">'+(l.pBaja!=null?l.pBaja+' bar':'—')+'</td>'
+        +'<td class="tc">'+(l.pAlta!=null?l.pAlta+' bar':'—')+'</td>'
+        +'<td class="tc">'+desescStr+'</td>'
+        +'<td>'+fugaIcon+'</td>'
+        +'<td>'+alertCell+'</td>'
+        +'<td class="nc">'+escHtml(l.obs||'')+'</td>'
+        +'</tr>';
+    }).join('');
+    return '<div class="ms">'
+      +'<div class="mh"><span class="mn">'+escHtml(grp.nombre)+'</span>'
+      +'<span style="color:rgba(255,255,255,.55);font-size:10px">'+grp.lecturas.length+' lectura'+(grp.lecturas.length!==1?'s':'')+'</span></div>'
+      +'<table class="tt"><thead><tr>'
+      +'<th>Fecha / Hora</th><th>Mecánico</th><th>Tipo</th>'
+      +'<th class="tc">T.Cám</th><th class="tc">T.Ext</th><th class="tc">P.Baja</th><th class="tc">P.Alta</th>'
+      +'<th class="tc">Desescarche</th><th>Fuga</th><th>Alertas Eléc.</th><th>Observaciones</th>'
+      +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
+  }).join('');
+
+  // Incidencias section
+  var incSection = '';
+  if(incidencias.length){
+    var incRows = incidencias.map(function(l){
+      var items = [];
+      if(l.fuga==='confirmada') items.push('<b style="color:#e74c3c">FUGA CONFIRMADA</b>');
+      else if(l.fuga==='posible') items.push('<span style="color:#f39c12">Fuga posible</span>');
+      if(l.contactor==='fallo') items.push('Contactor fallo');
+      if(l.rele==='fallo') items.push('Relé fallo');
+      if(l.diferencial==='disparado') items.push('Diferencial disparado');
+      if(l.seta==='activada') items.push('Seta activada');
+      if(l.condSuciedad==='alta') items.push('Condensador sucio');
+      return '<tr style="background:#fff5f5">'
+        +'<td>'+fmtDate(l.fecha)+' '+escHtml(l.hora||'')+'</td>'
+        +'<td>'+escHtml(l.eqNombre||l.eqId||'—')+'</td>'
+        +'<td>'+escHtml(l.quien||'—')+'</td>'
+        +'<td>'+items.join(' · ')+'</td>'
+        +'<td class="nc">'+escHtml(l.obs||'')+'</td>'
+        +'</tr>';
+    }).join('');
+    incSection = '<div class="st2" style="color:#c0392b">⚠️ Incidencias detectadas</div>'
+      +'<table class="mt" style="margin-bottom:14px"><thead><tr>'
+      +'<th>Fecha</th><th>Equipo</th><th>Mecánico</th><th>Incidencia</th><th>Observaciones</th>'
+      +'</tr></thead><tbody>'+incRows+'</tbody></table>';
+  }
+
+  var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">'
+    +'<title>Informe Frío '+fmtDate(desde)+' – '+fmtDate(hasta)+' — PANALCOR</title>'
+    +'<style>'
+    +'*{box-sizing:border-box;margin:0;padding:0}'
+    +'body{font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#1a1a2e;background:#fff;padding:12mm 12mm 16mm}'
+    +'@media print{.np{display:none!important} @page{margin:8mm;size:A4 landscape} body{padding:0}}'
+    +'.hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #0a7abf;padding-bottom:10px;margin-bottom:14px}'
+    +'.co{font-size:18px;font-weight:900;color:#0a1520;letter-spacing:0.04em}'
+    +'.ct{font-size:12px;font-weight:700;color:#0a7abf;margin-top:2px}'
+    +'.dm{text-align:right;font-size:10px;color:#888;line-height:1.7}'
+    +'.kg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}'
+    +'.kb{border:1px solid #ddd;border-radius:6px;padding:10px;text-align:center}'
+    +'.kn{font-size:22px;font-weight:900;line-height:1}'
+    +'.kl{font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:#888;margin-top:3px}'
+    +'.st2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#0a7abf;border-bottom:1px solid #0a7abf40;padding-bottom:4px;margin:12px 0 8px}'
+    +'table.mt{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:10px}'
+    +'table.mt th{background:#0a1520;color:#64d2ff;padding:5px 8px;text-align:left;font-size:9px;letter-spacing:0.08em;text-transform:uppercase}'
+    +'table.mt td{padding:5px 8px;border-bottom:1px solid #eee} .tc{text-align:center}'
+    +'table.mt tr:nth-child(even) td{background:#f7f8fa}'
+    +'.ms{margin-bottom:12px;border:1px solid #cce4f0;border-radius:6px;overflow:hidden;page-break-inside:avoid}'
+    +'.mh{background:#0a1520;color:#fff;padding:7px 12px;display:flex;justify-content:space-between;align-items:center}'
+    +'.mn{font-weight:900;font-size:11px;letter-spacing:0.06em;color:#64d2ff}'
+    +'table.tt{width:100%;border-collapse:collapse;font-size:9.5px}'
+    +'table.tt th{background:#e8f4fb;color:#333;padding:4px 7px;text-align:left;font-size:8.5px;letter-spacing:0.06em;text-transform:uppercase;border-bottom:2px solid #cce4f0;white-space:nowrap}'
+    +'table.tt td{padding:4px 7px;border-bottom:1px solid #f0f5f8;vertical-align:top}'
+    +'table.tt tr:nth-child(even) td{background:#f7fbfe}'
+    +'.nc{color:#666;font-style:italic;max-width:100px}'
+    +'.pbtn{position:fixed;top:12px;right:12px;background:#0a1520;color:#64d2ff;border:2px solid #64d2ff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif;z-index:99}'
+    +'.pbtn:hover{background:#64d2ff;color:#0a1520}'
+    +'.ftr{margin-top:14px;border-top:1px solid #eee;padding-top:6px;font-size:9px;color:#aaa;display:flex;justify-content:space-between}'
+    +'</style></head><body>'
+    +'<button class="pbtn np" onclick="window.print()">🖨️ Imprimir / PDF</button>'
+    +'<div class="hdr"><div><div class="co">PANALCOR S.L.</div>'
+    +'<div class="ct">❄️ Informe Especial de Mantenimiento — Instalaciones de Frío</div></div>'
+    +'<div class="dm">Período: <b>'+fmtDate(desde)+' — '+fmtDate(hasta)+'</b><br>Generado: '+printDate+'<br>GESTION 3.0</div></div>'
+    +'<div class="kg">'
+    +'<div class="kb"><div class="kn" style="color:#2980b9">'+totalL+'</div><div class="kl">Lecturas</div></div>'
+    +'<div class="kb"><div class="kn" style="color:#16a085">'+eqIds.length+'</div><div class="kl">Equipos reg.</div></div>'
+    +'<div class="kb"><div class="kn" style="color:'+(fugas>0?'#e74c3c':'#1e8449')+'">'+fugas+'</div><div class="kl">Incid. fugas</div></div>'
+    +'<div class="kb"><div class="kn" style="color:'+(fallosElec>0?'#e74c3c':'#1e8449')+'">'+fallosElec+'</div><div class="kl">Alertas eléc.</div></div>'
+    +'</div>'
+    +(eqIds.length ? '<div class="st2">Estado actual de equipos</div>'
+      +'<table class="mt"><thead><tr><th>Equipo</th><th>Tipo</th><th>Ubicación</th><th>Estado</th><th>Refrigerante</th><th>Próx. Rev.</th><th>Próx. F-Gas</th></tr></thead>'
+      +'<tbody>'+eqRows+'</tbody></table>' : '')
+    +incSection
+    +'<div class="st2">Lecturas por equipo</div>'
+    +lecturaSections
+    +'<div class="ftr"><span>PANALCOR S.L. — Sistema GESTION 3.0</span>'
+    +'<span>Período: '+fmtDate(desde)+' – '+fmtDate(hasta)+' | '+totalL+' lecturas'+(fugasConf?' | ⚠️ '+fugasConf+' FUGA(S) CONFIRMADA(S)':'')+'</span></div>'
+    +'</body></html>';
+
+  var w2 = window.open('','_blank','width=1100,height=750,scrollbars=yes,resizable=yes');
+  if(w2){ w2.document.write(html); w2.document.close(); }
+  else { showToast('⚠️ Activa las ventanas emergentes para ver el informe'); }
 }
 
 // ══════════════════════════════════════════════════
