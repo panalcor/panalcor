@@ -458,7 +458,7 @@ function _mecSesionValida(){
 (function cargarMecLoginMT(){
   var sel = document.getElementById('mecLoginNombreSel');
   if(!sel) return;
-  var fb = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO'];
+  var fb = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE'];
   function poblar(lista){ lista.forEach(function(n){ var o=document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o); }); }
   DB.ref('config/mecanicos').once('value')
     .then(function(s){ var v=s.val(); poblar(v&&v.length?v:fb); })
@@ -505,9 +505,9 @@ function getMecanicos(cb){
   DB.ref('config/mecanicos').once('value')
     .then(function(s){
       var val = s.val();
-      cb(val && val.length ? val : ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO']);
+      cb(val && val.length ? val : ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE']);
     })
-    .catch(function(){ cb(['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO']); });
+    .catch(function(){ cb(['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE']); });
 }
 
 function mostrarSelectorMecanico(){

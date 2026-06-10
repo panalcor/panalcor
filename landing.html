@@ -706,7 +706,7 @@ DB.ref('maquinas_extra').once('value').then(function(snap){
 (function cargarMecListLogin(){
   var sel = document.getElementById('mecNombreSel');
   if(!sel) return;
-  var fb = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO'];
+  var fb = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE'];
   function poblar(lista){ lista.forEach(function(n){ var o=document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o); }); }
   DB.ref('config/mecanicos').once('value')
     .then(function(s){ var v=s.val(); poblar(v&&v.length?v:fb); })
