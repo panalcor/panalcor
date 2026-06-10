@@ -1540,6 +1540,8 @@ function initApp(){
   renderResumenDia();
   renderCompTurnos();
   renderAlertasRepetitivas();
+  cargarAlarmasPreventivo();
+  cargarProgresoPreventivo();
   // fechas por defecto para mecánicos e informes (último mes)
   const hoy = new Date();
   const hace30 = new Date(hoy); hace30.setDate(hoy.getDate()-30);
