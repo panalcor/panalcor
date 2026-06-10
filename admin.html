@@ -1172,6 +1172,19 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card config-section">
+    <div class="sec-title">💬 Frases motivadoras de turno</div>
+    <p style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:14px;line-height:1.6">
+      Una frase aleatoria aparece al inicio de cada turno. Se evita repetir la última mostrada. Añade, edita o elimina frases.
+    </p>
+    <div id="frasesListaWrap" style="margin-bottom:12px;display:flex;flex-direction:column;gap:6px"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn-export btn-gold" onclick="agregarFrasa()">+ Añadir frase</button>
+      <button class="btn-export" style="background:rgba(46,204,113,0.15);border:1px solid rgba(46,204,113,0.4);color:var(--green)" onclick="guardarFrases()">💾 Guardar todas</button>
+      <span id="frasesMsg" style="font-size:0.82rem;color:var(--green)"></span>
+    </div>
+  </div>
+
+  <div class="card config-section">
     <div class="sec-title">🔑 Cambiar contraseña de administrador</div>
     <div class="field">
       <label>Contraseña actual</label>
@@ -2877,6 +2890,107 @@ function guardarPinsTablet(){
 // ══════════════════════════════════════════════════
 // CONFIGURACIÓN
 // ══════════════════════════════════════════════════
+// ══════════════════════════════════════════════════
+// FRASES MOTIVADORAS
+// ══════════════════════════════════════════════════
+var _FRASES_FB_DEFAULT = [
+  "El trabajo bien hecho es la mejor firma que puedes dejar.",
+  "Cada máquina que mantienes en marcha es un logro tuyo.",
+  "La constancia hace la diferencia. ¡Buen turno!",
+  "Un equipo que cuida sus máquinas cuida su futuro.",
+  "Lo que hoy arreglas, mañana produce. ¡A por ello!",
+  "La seguridad empieza por ti. Cuídate y cuida a los demás.",
+  "Un gran técnico no es el que nunca falla, sino el que siempre aprende.",
+  "Tu trabajo mantiene la fábrica viva. Eso tiene valor.",
+  "Hoy es un buen día para hacer las cosas bien.",
+  "La atención al detalle es lo que separa lo bueno de lo excelente.",
+  "Cada avería resuelta es una victoria del equipo.",
+  "El mantenimiento no para problemas, los evita. Tú eres la diferencia.",
+  "Buen humor, buena energía, buen turno. ¡Adelante!",
+  "Los mejores días empiezan con la mejor actitud.",
+  "Quien cuida las herramientas cuida su trabajo.",
+  "Un equipo que trabaja unido no tiene rival.",
+  "El esfuerzo de hoy es el resultado de mañana.",
+  "Tu experiencia vale más de lo que crees. Úsala.",
+  "Pequeños pasos, grandes logros. ¡Buen turno!",
+  "La excelencia no es un accidente, es una decisión diaria.",
+  "Hoy tienes la oportunidad de hacer algo que marque la diferencia.",
+  "El que trabaja con orgullo trabaja mejor.",
+  "Un turno más, un aprendizaje más.",
+  "La puntualidad es respeto. Gracias por estar aquí.",
+  "Lo difícil se hace, lo imposible se intenta.",
+  "El buen trabajo siempre se nota, aunque nadie lo vea.",
+  "Cada avería es un reto, y los retos están para superarlos.",
+  "El equipo es tan fuerte como su mecánico más comprometido.",
+  "Hoy empieza contigo. ¡Que sea un gran turno!",
+  "La calidad no cuesta, la falta de calidad sí."
+];
+
+function cargarFrases(){
+  var wrap = document.getElementById('frasesListaWrap');
+  if(!wrap) return;
+  wrap.innerHTML = '<span style="color:rgba(255,255,255,0.3);font-size:0.85rem">Cargando...</span>';
+  DB.ref('config/frases_motivadoras').once('value').then(function(snap){
+    var frases = snap.val();
+    if(!frases || !frases.length) frases = _FRASES_FB_DEFAULT;
+    _renderFrases(frases);
+  }).catch(function(){ _renderFrases(_FRASES_FB_DEFAULT); });
+}
+
+function _renderFrases(frases){
+  var wrap = document.getElementById('frasesListaWrap');
+  if(!wrap) return;
+  wrap.innerHTML = frases.map(function(f, i){
+    return '<div style="display:flex;gap:8px;align-items:center">'
+      + '<span style="color:rgba(255,255,255,0.3);font-size:0.78rem;width:22px;text-align:right;flex-shrink:0">'+(i+1)+'</span>'
+      + '<input type="text" data-idx="'+i+'" value="'+f.replace(/"/g,'&quot;')+'"'
+      + ' style="flex:1;background:var(--navy-deep);color:#fff;border:1px solid rgba(255,255,255,0.15);'
+      + 'border-radius:7px;padding:8px 12px;font-family:Barlow,sans-serif;font-size:0.9rem">'
+      + '<button onclick="eliminarFrase('+i+')" style="background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.3);'
+      + 'color:#e74c3c;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:0.85rem;flex-shrink:0">✕</button>'
+      + '</div>';
+  }).join('');
+}
+
+function agregarFrasa(){
+  var wrap = document.getElementById('frasesListaWrap');
+  if(!wrap) return;
+  var i = wrap.querySelectorAll('input[data-idx]').length;
+  var div = document.createElement('div');
+  div.style.cssText = 'display:flex;gap:8px;align-items:center';
+  div.innerHTML = '<span style="color:rgba(255,255,255,0.3);font-size:0.78rem;width:22px;text-align:right;flex-shrink:0">'+(i+1)+'</span>'
+    + '<input type="text" data-idx="'+i+'" placeholder="Escribe la frase..."'
+    + ' style="flex:1;background:var(--navy-deep);color:#fff;border:1px solid rgba(201,162,39,0.4);'
+    + 'border-radius:7px;padding:8px 12px;font-family:Barlow,sans-serif;font-size:0.9rem">'
+    + '<button onclick="this.closest(\'div\').remove()" style="background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.3);'
+    + 'color:#e74c3c;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:0.85rem;flex-shrink:0">✕</button>';
+  wrap.appendChild(div);
+  div.querySelector('input').focus();
+}
+
+function eliminarFrase(idx){
+  var frases = _getFrasesActuales();
+  frases.splice(idx, 1);
+  _renderFrases(frases);
+}
+
+function _getFrasesActuales(){
+  var inputs = document.querySelectorAll('#frasesListaWrap input');
+  var frases = [];
+  inputs.forEach(function(inp){ var v = inp.value.trim(); if(v) frases.push(v); });
+  return frases;
+}
+
+function guardarFrases(){
+  var frases = _getFrasesActuales();
+  if(!frases.length){ showToast('⚠️ No hay frases para guardar'); return; }
+  DB.ref('config/frases_motivadoras').set(frases).then(function(){
+    var msg = document.getElementById('frasesMsg');
+    if(msg){ msg.textContent = '✓ '+frases.length+' frases guardadas'; setTimeout(function(){ msg.textContent=''; }, 3000); }
+    _renderFrases(frases);
+  }).catch(function(e){ showToast('❌ Error: '+e.message); });
+}
+
 function guardarSesionConfig(){
   const h = parseInt(document.getElementById('cfgMecSessionHoras').value) || 0;
   if(!h || h < 1){ showToast('⚠️ Introduce un número de horas válido (mín. 1)'); return; }
@@ -3809,6 +3923,7 @@ function switchTab(name){
   if(name==='cfg') cargarFechasRealizacion();
   if(name==='cfg') renderEstadoDatos();
   if(name==='cfg') cargarPinsTablet();
+  if(name==='cfg') cargarFrases();
   if(name==='rec') { cargarMecanicosParaRec(); cargarRecordatorios(); }
   if(name==='enc') cargarAvisosEncargados();
   if(name==='int') { cargarCatalogoRepuestos(); initIntegrales(); }

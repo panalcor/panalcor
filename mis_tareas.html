@@ -178,6 +178,15 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
 .tablet-pin-err{color:var(--red);font-size:0.9rem;min-height:22px;text-align:center;font-weight:700}
 .tablet-pin-back{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);padding:11px 24px;border-radius:9px;font-family:'Barlow',sans-serif;font-size:0.9rem;font-weight:700;cursor:pointer;margin-top:2px}
 
+/* ── BANNER MOTIVACIONAL ── */
+.banner-motiv{position:fixed;inset:0;background:rgba(10,22,36,0.97);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1100;padding:32px;text-align:center;animation:bmFadeIn .4s ease}
+@keyframes bmFadeIn{from{opacity:0;transform:scale(1.03)}to{opacity:1;transform:scale(1)}}
+.banner-motiv-ico{font-size:3rem;margin-bottom:16px}
+.banner-motiv-nombre{font-size:0.85rem;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:rgba(201,162,39,0.7);margin-bottom:18px}
+.banner-motiv-frase{font-size:1.35rem;font-weight:700;color:var(--white);line-height:1.5;max-width:420px;margin-bottom:36px}
+.banner-motiv-btn{padding:16px 48px;background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a;border:none;border-radius:12px;font-family:'Barlow',sans-serif;font-size:1.1rem;font-weight:900;letter-spacing:0.08em;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent}
+.banner-motiv-btn:active{transform:scale(0.96)}
+
 /* ── TABLET LOGOUT ── */
 .tablet-logout-btn{display:none;padding:10px 20px;background:rgba(231,76,60,0.15);border:2px solid rgba(231,76,60,0.5);color:#e74c3c;border-radius:9px;font-family:'Barlow',sans-serif;font-size:0.9rem;font-weight:900;cursor:pointer;letter-spacing:0.06em;transition:all .2s;-webkit-tap-highlight-color:transparent}
 .tablet-logout-btn:active{background:rgba(231,76,60,0.35)}
@@ -221,6 +230,14 @@ if('serviceWorker' in navigator){
   <a href="panalcor_inicio.html" title="Inicio" style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;background:rgba(201,162,39,0.12);border:1.5px solid rgba(201,162,39,0.4);margin-bottom:4px;align-self:flex-start"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z" fill="rgba(201,162,39,0.25)" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 21V15H15V21" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/></svg></a>
   <h2>👷 ¿Quién eres?</h2>
   <div id="mecBtnList"></div>
+</div>
+
+<!-- ══ BANNER MOTIVACIONAL ══ -->
+<div class="banner-motiv" id="bannerMotiv" style="display:none">
+  <div class="banner-motiv-ico">💪</div>
+  <div class="banner-motiv-nombre" id="bannerNombre"></div>
+  <div class="banner-motiv-frase" id="bannerFrase"></div>
+  <button class="banner-motiv-btn" onclick="cerrarBanner()">¡Vamos!</button>
 </div>
 
 <!-- ══ TABLET SELECTOR ══ -->
@@ -604,6 +621,7 @@ function arrancarApp(){
   cargarAvRecientsDB();
   cargarRecordatoriosMec();
   cargarIntegralesMec();
+  mostrarBannerSiProcede(mecActual);
 }
 
 /* ══ AVERÍAS PENDIENTES del mecánico ══ */
@@ -1078,6 +1096,83 @@ function _checkShiftLogout(){
     showToast('Turno finalizado — sesión cerrada automáticamente');
     setTimeout(cerrarSesionTablet, 1800);
   }
+}
+
+/* ══════════════════════════════════════════════════
+   BANNER MOTIVACIONAL
+══════════════════════════════════════════════════ */
+var _FRASES_DEFAULT = [
+  "El trabajo bien hecho es la mejor firma que puedes dejar.",
+  "Cada máquina que mantienes en marcha es un logro tuyo.",
+  "La constancia hace la diferencia. ¡Buen turno!",
+  "Un equipo que cuida sus máquinas cuida su futuro.",
+  "Lo que hoy arreglas, mañana produce. ¡A por ello!",
+  "La seguridad empieza por ti. Cuídate y cuida a los demás.",
+  "Un gran técnico no es el que nunca falla, sino el que siempre aprende.",
+  "Tu trabajo mantiene la fábrica viva. Eso tiene valor.",
+  "Hoy es un buen día para hacer las cosas bien.",
+  "La atención al detalle es lo que separa lo bueno de lo excelente.",
+  "Cada avería resuelta es una victoria del equipo.",
+  "El mantenimiento no para problemas, los evita. Tú eres la diferencia.",
+  "Buen humor, buena energía, buen turno. ¡Adelante!",
+  "Los mejores días empiezan con la mejor actitud.",
+  "Quien cuida las herramientas cuida su trabajo.",
+  "Un equipo que trabaja unido no tiene rival.",
+  "El esfuerzo de hoy es el resultado de mañana.",
+  "Tu experiencia vale más de lo que crees. Úsala.",
+  "Pequeños pasos, grandes logros. ¡Buen turno!",
+  "La excelencia no es un accidente, es una decisión diaria.",
+  "Hoy tienes la oportunidad de hacer algo que marque la diferencia.",
+  "El que trabaja con orgullo trabaja mejor.",
+  "Un turno más, un aprendizaje más.",
+  "La puntualidad es respeto. Gracias por estar aquí.",
+  "Lo difícil se hace, lo imposible se intenta.",
+  "El buen trabajo siempre se nota, aunque nadie lo vea.",
+  "Cada avería es un reto, y los retos están para superarlos.",
+  "El equipo es tan fuerte como su mecánico más comprometido.",
+  "Hoy empieza contigo. ¡Que sea un gran turno!",
+  "La calidad no cuesta, la falta de calidad sí."
+];
+
+function _turnoId(){
+  var now = new Date();
+  var h = now.getHours();
+  var d = now.toISOString().slice(0,10);
+  var t = h >= 6 && h < 14 ? 'M' : h >= 14 && h < 22 ? 'T' : 'N';
+  return d + '-' + t;
+}
+
+function mostrarBannerSiProcede(nombre){
+  if(!nombre) return;
+  var turno = _turnoId();
+  var key = 'panalcor_banner_' + nombre;
+  var stored = null;
+  try{ stored = JSON.parse(localStorage.getItem(key)||'null'); }catch(e){}
+  if(stored && stored.turno === turno) return; // ya vio este turno
+
+  DB.ref('config/frases_motivadoras').once('value').then(function(snap){
+    var frases = snap.val();
+    if(!frases || !frases.length) frases = _FRASES_DEFAULT;
+    _mostrarBanner(nombre, frases, stored, key, turno);
+  }).catch(function(){
+    _mostrarBanner(nombre, _FRASES_DEFAULT, stored, key, turno);
+  });
+}
+
+function _mostrarBanner(nombre, frases, stored, key, turno){
+  var lastIdx = (stored && stored.lastIdx !== undefined) ? stored.lastIdx : -1;
+  var disponibles = [];
+  for(var i=0;i<frases.length;i++){ if(i!==lastIdx) disponibles.push(i); }
+  if(!disponibles.length) disponibles = [0];
+  var idx = disponibles[Math.floor(Math.random() * disponibles.length)];
+  localStorage.setItem(key, JSON.stringify({turno:turno, lastIdx:idx}));
+  document.getElementById('bannerNombre').textContent = 'Bienvenido, ' + nombre;
+  document.getElementById('bannerFrase').textContent  = '"' + frases[idx] + '"';
+  document.getElementById('bannerMotiv').style.display = 'flex';
+}
+
+function cerrarBanner(){
+  document.getElementById('bannerMotiv').style.display = 'none';
 }
 
 function iniciarTabletLogout(){
