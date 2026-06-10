@@ -541,6 +541,18 @@ if('serviceWorker' in navigator){
     <div id="pendientesList"></div>
   </div>
 
+  <!-- ══ DESGLOSE TIPO / GRAVEDAD ══ -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;max-width:732px">
+    <div class="card" style="padding:14px 16px;margin-bottom:0">
+      <div style="font-size:0.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:12px">⚙️ Averías por tipo <span id="dashTipoSub" style="color:rgba(255,255,255,0.3);font-weight:400;text-transform:none;letter-spacing:0;font-size:0.7rem"></span></div>
+      <div id="dashTipoWrap"><span style="color:rgba(255,255,255,0.3);font-size:0.82rem">Cargando...</span></div>
+    </div>
+    <div class="card" style="padding:14px 16px;margin-bottom:0">
+      <div style="font-size:0.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:12px">🔴 Averías por gravedad <span id="dashGravSub" style="color:rgba(255,255,255,0.3);font-weight:400;text-transform:none;letter-spacing:0;font-size:0.7rem"></span></div>
+      <div id="dashGravWrap"><span style="color:rgba(255,255,255,0.3);font-size:0.82rem">Cargando...</span></div>
+    </div>
+  </div>
+
 <div class="chart-grid">
     <div class="chart-wrap">
       <div class="chart-title">Averías por mes (último año)</div>
@@ -1567,6 +1579,7 @@ function initApp(){
   renderAlertasRepetitivas();
   cargarAlarmasPreventivo();
   cargarProgresoPreventivo();
+  _iniciaDashTimer();
   // fechas por defecto para mecánicos e informes (último mes)
   const hoy = new Date();
   const hace30 = new Date(hoy); hace30.setDate(hoy.getDate()-30);
@@ -1586,6 +1599,78 @@ function initApp(){
     if(el && h) el.value = h;
   }).catch(()=>{});
   renderEstadoDatos();
+}
+
+// ══════════════════════════════════════════════════
+// DESGLOSE TIPO / GRAVEDAD
+// ══════════════════════════════════════════════════
+var _TIPOS_CFG = [
+  {v:'MECÁNICA',    color:'#3498db', ico:'⚙️'},
+  {v:'ELÉCTRICA',   color:'#f39c12', ico:'⚡'},
+  {v:'HIDRÁULICA',  color:'#1abc9c', ico:'💧'},
+  {v:'NEUMÁTICA',   color:'#9b59b6', ico:'💨'},
+  {v:'ELECTRÓNICA', color:'#e74c3c', ico:'🖥️'},
+  {v:'OTRO',        color:'#7f8c8d', ico:'❓'}
+];
+var _GRAVS_CFG = [
+  {v:'CRÍTICA', color:'#e74c3c', ico:'🚨'},
+  {v:'ALTA',    color:'#e67e22', ico:'🔴'},
+  {v:'MEDIA',   color:'#f39c12', ico:'🟡'},
+  {v:'BAJA',    color:'#2ecc71', ico:'🟢'}
+];
+
+function renderDesgloseAverias(av){
+  if(!av) av = getAverias();
+  var hace30 = Date.now() - 30*24*3600*1000;
+  var base = av.filter(function(a){ return a.ts && a.ts > hace30; });
+  if(!base.length) base = av;
+  var sub = base.length === av.length ? '(histórico)' : '(últimos 30 días)';
+  var st = document.getElementById('dashTipoSub');
+  var sg = document.getElementById('dashGravSub');
+  if(st) st.textContent = sub;
+  if(sg) sg.textContent = sub;
+  _renderBarras('dashTipoWrap', base, 'tipo',     _TIPOS_CFG);
+  _renderBarras('dashGravWrap', base, 'gravedad', _GRAVS_CFG);
+}
+
+function _renderBarras(id, av, campo, cats){
+  var wrap = document.getElementById(id);
+  if(!wrap) return;
+  var total = av.filter(function(a){ return a[campo]; }).length;
+  if(!total){ wrap.innerHTML='<span style="color:rgba(255,255,255,0.3);font-size:0.82rem">Sin datos</span>'; return; }
+  var html = '';
+  cats.forEach(function(cat){
+    var n = av.filter(function(a){ return a[campo]===cat.v; }).length;
+    if(!n) return;
+    var pct = Math.round(n/total*100);
+    html += '<div style="margin-bottom:9px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;font-size:0.8rem;margin-bottom:3px">'
+      +'<span>'+cat.ico+' '+cat.v+'</span>'
+      +'<span style="color:rgba(255,255,255,0.45)">'+n+' <span style="color:rgba(255,255,255,0.25);font-size:0.72rem">('+pct+'%)</span></span>'
+      +'</div>'
+      +'<div style="background:rgba(255,255,255,0.08);border-radius:4px;height:7px;overflow:hidden">'
+      +'<div style="width:'+pct+'%;height:100%;background:'+cat.color+';border-radius:4px;transition:width .6s"></div>'
+      +'</div></div>';
+  });
+  wrap.innerHTML = html || '<span style="color:rgba(255,255,255,0.3);font-size:0.82rem">Sin datos</span>';
+}
+
+// ══════════════════════════════════════════════════
+// AUTO-REFRESCO DASHBOARD (cada 3 min si está activo)
+// ══════════════════════════════════════════════════
+var _dashTimer = null;
+
+function _iniciaDashTimer(){
+  if(_dashTimer) return;
+  _dashTimer = setInterval(function(){
+    if(document.getElementById('panel-dash').classList.contains('active')){
+      renderDashboard();
+      renderResumenDia();
+      cargarAlarmasPreventivo();
+      cargarProgresoPreventivo();
+      cargarSinFirma();
+    }
+  }, 3*60*1000);
 }
 
 // ══════════════════════════════════════════════════
@@ -1625,6 +1710,7 @@ function renderDashboard(){
   // Alertas
   renderAlertasDash(av);
   renderKpiFiabilidad();
+  renderDesgloseAverias(av);
 
   // Últimas averías
   const tbody = document.getElementById('bUltimas');
