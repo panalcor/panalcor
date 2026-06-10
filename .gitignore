@@ -1,0 +1,10 @@
+# Base de datos local (datos operativos, se regenera con bd_panalcor.py)
+panalcor.db
+panalcor.db-shm
+panalcor.db-wal
+
+# Python
+__pycache__/
+
+# Configuración local de Claude Code
+.claude/settings.local.json

@@ -11,12 +11,27 @@ import os
 import socket
 import datetime
 import threading
+import sys
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
+
+# Evitar errores de codificación (emojis en consola) cuando la salida va a un pipe
+try:
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+except Exception:
+    pass
 
 PORT     = 8080
 BASE_DIR = Path(__file__).parent
 DATA_FILE = BASE_DIR / 'averias_data.json'
+
+# Base de datos SQLite paralela (opcional: si falla, el servidor sigue igual)
+try:
+    import bd_panalcor
+except Exception as _e:
+    bd_panalcor = None
+    print(f'  ⚠️  Base de datos SQLite no disponible: {_e}')
 
 # ── Helpers de datos ────────────────────────────────────────────
 def load_averias():
@@ -79,6 +94,12 @@ class PanalcorHandler(http.server.SimpleHTTPRequestHandler):
                     data.append(averia)
                     save_averias(data)
                     print(f'  [{_ts()}] 📱 Nueva avería recibida: {averia.get("maqNombre","?")} — {averia.get("tipo","?")}')
+                # Guardar también en la BD SQLite (en paralelo, sin bloquear)
+                if bd_panalcor:
+                    try:
+                        bd_panalcor.guardar_averia(averia)
+                    except Exception as e:
+                        print(f'  [{_ts()}] ⚠️  SQLite: {e}')
                 self._json({'ok': True, 'total': len(data)})
             except Exception as e:
                 print(f'  [{_ts()}] ❌ Error al guardar avería: {e}')
@@ -88,6 +109,14 @@ class PanalcorHandler(http.server.SimpleHTTPRequestHandler):
             save_averias([])
             print(f'  [{_ts()}] 🗑️  Averías del servidor limpiadas')
             self._json({'ok': True})
+
+        elif path == '/api/db/sync' and bd_panalcor:
+            try:
+                r = bd_panalcor.sync_completo()
+                print(f'  [{_ts()}] 🗄️  Sync manual BD completado')
+                self._json({'ok': True, 'resumen': r})
+            except Exception as e:
+                self._json({'ok': False, 'error': str(e)}, 500)
 
         else:
             self.send_error(404, 'Ruta no encontrada')
@@ -99,6 +128,9 @@ class PanalcorHandler(http.server.SimpleHTTPRequestHandler):
         if path == '/api/averias':
             data = load_averias()
             self._json({'averias': data, 'total': len(data)})
+
+        elif path.startswith('/api/db/') and bd_panalcor:
+            self._api_db(path)
 
         elif path == '/api/status':
             ip = get_local_ip()
@@ -113,6 +145,35 @@ class PanalcorHandler(http.server.SimpleHTTPRequestHandler):
         else:
             # Servir archivos estáticos normalmente
             super().do_GET()
+
+    # ── API de consultas sobre la BD SQLite ───────────────────────
+    def _api_db(self, path):
+        qs = parse_qs(urlparse(self.path).query)
+        p  = lambda k: (qs.get(k) or [None])[0]
+        try:
+            if path == '/api/db/kpis':
+                self._json({'ok': True, 'kpis': bd_panalcor.consultar_kpis()})
+            elif path == '/api/db/averias':
+                avs = bd_panalcor.consultar_averias(
+                    q=p('q'), maq=p('maq'), mecanico=p('mecanico'),
+                    desde=p('desde'), hasta=p('hasta'),
+                    tipo=p('tipo'), estado=p('estado'),
+                    limite=p('limite') or 300)
+                self._json({'ok': True, 'averias': avs, 'total': len(avs)})
+            elif path == '/api/db/maquinas':
+                ms = bd_panalcor.consultar_maquinas(q=p('q'))
+                self._json({'ok': True, 'maquinas': ms, 'total': len(ms)})
+            elif path == '/api/db/repuestos':
+                rs = bd_panalcor.consultar_repuestos(
+                    q=p('q'), bajo_stock=p('bajo_stock') == '1',
+                    limite=p('limite') or 300)
+                self._json({'ok': True, 'repuestos': rs, 'total': len(rs)})
+            elif path == '/api/db/info':
+                self._json({'ok': True, 'info': bd_panalcor.info_bd()})
+            else:
+                self.send_error(404, 'Ruta de BD no encontrada')
+        except Exception as e:
+            self._json({'ok': False, 'error': str(e)}, 500)
 
     # ── JSON helper ───────────────────────────────────────────────
     def _json(self, obj, code=200):
@@ -156,6 +217,16 @@ if __name__ == '__main__':
     print(f'  🛑 Para detener:     Ctrl + C')
     print(linea)
     print()
+
+    # Sincronización de la BD SQLite en segundo plano (cada 15 min)
+    if bd_panalcor:
+        try:
+            bd_panalcor.crear_esquema()
+            bd_panalcor.sync_periodico(intervalo=900)
+            print(f'  [{_ts()}] 🗄️  BD SQLite activa → panalcor.db (sync cada 15 min)')
+            print(f'  [{_ts()}] 🔍 Consultas: http://localhost:{PORT}/consultas.html')
+        except Exception as e:
+            print(f'  [{_ts()}] ⚠️  BD SQLite desactivada: {e}')
 
     try:
         server = http.server.ThreadingHTTPServer(('0.0.0.0', PORT), PanalcorHandler)

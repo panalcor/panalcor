@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#c9a227">
+<title>Consultas BD — PANALCOR</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy-deep:#0d1b2a;--navy-mid:#1a2d42;--navy-light:#243d56;
+  --gold:#c9a227;--gold-light:#f0c040;--white:#f0f4f8;
+  --red:#e74c3c;--green:#2ecc71;--yellow:#f39c12;--blue:#3498db;
+  --purple:#9b59b6;--radius:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-serif;min-height:100vh}
+
+.topbar{background:linear-gradient(135deg,#0a1520,var(--navy-mid));border-bottom:2px solid var(--gold);
+  padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.topbar h1{font-size:1.2rem;font-weight:900;letter-spacing:.06em;color:var(--gold-light);flex:1}
+.topbar .sub{font-size:.72rem;color:rgba(255,255,255,.4)}
+.back-btn{background:rgba(201,162,39,.12);border:1px solid rgba(201,162,39,.4);color:var(--gold);
+  padding:8px 14px;border-radius:7px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:.85rem}
+.sync-btn{background:rgba(52,152,219,.12);border:1px solid rgba(52,152,219,.4);color:var(--blue);
+  padding:8px 14px;border-radius:7px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:.85rem}
+.sync-btn:disabled{opacity:.4;cursor:wait}
+
+.tabs{display:flex;gap:6px;padding:14px 16px 0;flex-wrap:wrap}
+.tab{background:var(--navy-mid);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);
+  padding:9px 18px;border-radius:8px 8px 0 0;cursor:pointer;font-family:'Barlow',sans-serif;
+  font-size:.85rem;font-weight:600;letter-spacing:.05em}
+.tab.active{background:var(--navy-light);color:var(--gold-light);border-color:rgba(201,162,39,.4);border-bottom-color:transparent}
+
+.wrap{padding:16px;max-width:1200px;margin:0 auto}
+.panel{display:none}
+.panel.active{display:block}
+
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:end}
+.filter{display:flex;flex-direction:column;gap:3px}
+.filter label{font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.45)}
+.filter input,.filter select{background:var(--navy-mid);border:1px solid rgba(255,255,255,.15);
+  color:var(--white);padding:8px 10px;border-radius:7px;font-family:'Barlow',sans-serif;font-size:.88rem;min-width:120px}
+.filter input:focus,.filter select:focus{outline:none;border-color:var(--gold)}
+.buscar-btn{background:var(--gold);border:none;color:#0d1b2a;font-weight:700;padding:9px 22px;
+  border-radius:7px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:.88rem;letter-spacing:.04em}
+.buscar-btn:hover{background:var(--gold-light)}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:18px}
+.kpi{background:var(--navy-mid);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);padding:14px}
+.kpi .num{font-size:1.7rem;font-weight:900;color:var(--gold-light)}
+.kpi .lbl{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-top:2px}
+
+.sec-title{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);
+  margin:18px 0 10px;padding-bottom:5px;border-bottom:1px solid rgba(201,162,39,.2)}
+
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45);
+  text-align:left;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.12)}
+td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:top}
+tr:hover td{background:rgba(255,255,255,.03)}
+.tbl-wrap{overflow-x:auto;background:var(--navy-mid);border:1px solid rgba(255,255,255,.08);
+  border-radius:var(--radius);padding:4px 8px 8px}
+
+.badge{font-size:.7rem;padding:2px 8px;border-radius:10px;white-space:nowrap;font-weight:600}
+.b-green{background:rgba(46,204,113,.18);color:var(--green)}
+.b-red{background:rgba(231,76,60,.18);color:var(--red)}
+.b-yellow{background:rgba(243,156,18,.18);color:var(--yellow)}
+.b-blue{background:rgba(52,152,219,.18);color:var(--blue)}
+.b-gray{background:rgba(255,255,255,.08);color:rgba(255,255,255,.55)}
+
+.det-row td{background:rgba(0,0,0,.18)!important;font-size:.82rem}
+.det-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;padding:6px 2px}
+.det-grid .lbl{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.4)}
+.muted{color:rgba(255,255,255,.4)}
+.loading,.no-data{text-align:center;padding:34px;color:rgba(255,255,255,.35);font-size:.9rem}
+.info-foot{font-size:.72rem;color:rgba(255,255,255,.3);padding:18px 16px;text-align:center}
+.clickable{cursor:pointer}
+@media(max-width:640px){.kpi .num{font-size:1.3rem}.filter input,.filter select{min-width:100px}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back-btn" onclick="window.location.href='panalcor_inicio.html'">← Inicio</button>
+  <div style="flex:1">
+    <h1>🗄️ CONSULTAS — BASE DE DATOS</h1>
+    <div class="sub" id="subInfo">panalcor.db</div>
+  </div>
+  <button class="sync-btn" id="syncBtn" onclick="sincronizar()">⟳ Sincronizar ahora</button>
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-tab="resumen" onclick="switchTab('resumen')">📊 Resumen</button>
+  <button class="tab" data-tab="averias"  onclick="switchTab('averias')">🔧 Averías</button>
+  <button class="tab" data-tab="maquinas" onclick="switchTab('maquinas')">⚙️ Máquinas</button>
+  <button class="tab" data-tab="repuestos" onclick="switchTab('repuestos')">📦 Repuestos</button>
+</div>
+
+<div class="wrap">
+
+  <!-- ═══════════ RESUMEN ═══════════ -->
+  <div class="panel active" id="panel-resumen">
+    <div class="kpi-grid" id="kpiGrid"><div class="loading">⏳ Cargando...</div></div>
+    <div class="sec-title">Máquinas con más averías</div>
+    <div class="tbl-wrap"><table id="tblTopMaq"></table></div>
+    <div class="sec-title">Intervenciones por mecánico</div>
+    <div class="tbl-wrap"><table id="tblTopMec"></table></div>
+    <div class="sec-title">Materiales más usados en averías</div>
+    <div class="tbl-wrap"><table id="tblTopMat"></table></div>
+  </div>
+
+  <!-- ═══════════ AVERÍAS ═══════════ -->
+  <div class="panel" id="panel-averias">
+    <div class="filters">
+      <div class="filter"><label>Texto</label><input id="avQ" placeholder="descripción, parte..." onkeydown="if(event.key==='Enter')buscarAverias()"></div>
+      <div class="filter"><label>Máquina</label><input id="avMaq" placeholder="nombre o MAQ-xxx" onkeydown="if(event.key==='Enter')buscarAverias()"></div>
+      <div class="filter"><label>Mecánico</label><input id="avMec" placeholder="nombre" onkeydown="if(event.key==='Enter')buscarAverias()"></div>
+      <div class="filter"><label>Desde</label><input type="date" id="avDesde"></div>
+      <div class="filter"><label>Hasta</label><input type="date" id="avHasta"></div>
+      <div class="filter"><label>Tipo</label>
+        <select id="avTipo"><option value="">Todos</option><option>MECÁNICA</option><option>ELÉCTRICA</option><option>NEUMÁTICA</option><option>HIDRÁULICA</option><option>OTRA</option></select>
+      </div>
+      <button class="buscar-btn" onclick="buscarAverias()">Buscar</button>
+    </div>
+    <div class="tbl-wrap"><table id="tblAverias"><tbody><tr><td class="loading">Usa los filtros y pulsa Buscar</td></tr></tbody></table></div>
+  </div>
+
+  <!-- ═══════════ MÁQUINAS ═══════════ -->
+  <div class="panel" id="panel-maquinas">
+    <div class="filters">
+      <div class="filter"><label>Buscar</label><input id="maqQ" placeholder="nombre, tipo, área..." onkeydown="if(event.key==='Enter')buscarMaquinas()"></div>
+      <button class="buscar-btn" onclick="buscarMaquinas()">Buscar</button>
+    </div>
+    <div class="tbl-wrap"><table id="tblMaquinas"></table></div>
+  </div>
+
+  <!-- ═══════════ REPUESTOS ═══════════ -->
+  <div class="panel" id="panel-repuestos">
+    <div class="filters">
+      <div class="filter"><label>Buscar</label><input id="repQ" placeholder="referencia o descripción" onkeydown="if(event.key==='Enter')buscarRepuestos()"></div>
+      <div class="filter"><label>&nbsp;</label>
+        <select id="repBajo"><option value="">Todos</option><option value="1">Solo bajo stock mínimo</option></select>
+      </div>
+      <button class="buscar-btn" onclick="buscarRepuestos()">Buscar</button>
+    </div>
+    <div class="tbl-wrap"><table id="tblRepuestos"><tbody><tr><td class="loading">Escribe una búsqueda (8.800+ referencias)</td></tr></tbody></table></div>
+  </div>
+
+</div>
+
+<div class="info-foot" id="infoFoot"></div>
+
+<script>
+var API = '';  // mismo origen que el servidor
+
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('active', t.dataset.tab===name); });
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.toggle('active', p.id==='panel-'+name); });
+  if(name==='maquinas' && !window._maqLoaded){ window._maqLoaded=true; buscarMaquinas(); }
+  if(name==='averias' && !window._avLoaded){ window._avLoaded=true; buscarAverias(); }
+}
+
+function api(ruta, cb){
+  fetch(API + ruta).then(function(r){ return r.json(); }).then(cb)
+    .catch(function(e){ console.error(ruta, e); cb({ok:false, error:String(e)}); });
+}
+
+// ═══════════ RESUMEN ═══════════
+function cargarResumen(){
+  api('/api/db/kpis', function(r){
+    var g = document.getElementById('kpiGrid');
+    if(!r.ok){ g.innerHTML = '<div class="no-data">⚠️ '+esc(r.error||'Error')+'</div>'; return; }
+    var k = r.kpis;
+    g.innerHTML =
+      kpi(k.total_averias,'Averías totales') +
+      kpi(k.averias_mes,'Averías este mes') +
+      kpi(k.averias_abiertas,'Sin resolver') +
+      kpi(k.tiempo_medio_min!=null ? k.tiempo_medio_min+' min' : '—','Tiempo medio repar.') +
+      kpi(k.n_maquinas,'Máquinas') +
+      kpi(k.n_repuestos,'Referencias almacén') +
+      kpi(k.repuestos_bajo_stock,'Bajo stock mínimo');
+    tabla('tblTopMaq', ['Máquina','ID','Averías','Minutos totales'],
+      k.top_maquinas.map(function(m){ return [esc(m.maq_nombre), esc(m.maq_id), m.n, m.min_total||0]; }));
+    tabla('tblTopMec', ['Mecánico','Intervenciones'],
+      k.top_mecanicos.map(function(m){ return [esc(m.mecanico), m.n]; }));
+    tabla('tblTopMat', ['Referencia','Descripción','Cantidad usada'],
+      k.materiales_top.map(function(m){ return [esc(m.referencia), esc(m.descripcion), m.total]; }));
+  });
+  api('/api/db/info', function(r){
+    if(!r.ok) return;
+    var i = r.info, ult = i.ultimo_sync;
+    document.getElementById('subInfo').textContent = 'panalcor.db — ' +
+      Object.keys(i.tablas).reduce(function(s,t){ return s + i.tablas[t]; },0) + ' registros';
+    document.getElementById('infoFoot').textContent = ult
+      ? 'Última sincronización: ' + ult.ts.replace('T',' ') + '  (' + ult.origen + ': ' + ult.detalle + ')'
+      : 'Sin sincronizaciones registradas';
+  });
+}
+function kpi(num,lbl){ return '<div class="kpi"><div class="num">'+num+'</div><div class="lbl">'+lbl+'</div></div>'; }
+function tabla(id, cab, filas){
+  var h = '<thead><tr>' + cab.map(function(c){ return '<th>'+c+'</th>'; }).join('') + '</tr></thead><tbody>';
+  if(!filas.length) h += '<tr><td colspan="'+cab.length+'" class="no-data">Sin datos</td></tr>';
+  filas.forEach(function(f){ h += '<tr>' + f.map(function(c){ return '<td>'+c+'</td>'; }).join('') + '</tr>'; });
+  document.getElementById(id).innerHTML = h + '</tbody>';
+}
+
+// ═══════════ AVERÍAS ═══════════
+function buscarAverias(){
+  var p = new URLSearchParams();
+  var v;
+  if(v=document.getElementById('avQ').value.trim())     p.set('q', v);
+  if(v=document.getElementById('avMaq').value.trim())   p.set('maq', v);
+  if(v=document.getElementById('avMec').value.trim())   p.set('mecanico', v);
+  if(v=document.getElementById('avDesde').value)        p.set('desde', v);
+  if(v=document.getElementById('avHasta').value)        p.set('hasta', v);
+  if(v=document.getElementById('avTipo').value)         p.set('tipo', v);
+  var t = document.getElementById('tblAverias');
+  t.innerHTML = '<tbody><tr><td class="loading">⏳ Buscando...</td></tr></tbody>';
+  api('/api/db/averias?' + p.toString(), function(r){
+    if(!r.ok){ t.innerHTML = '<tbody><tr><td class="no-data">⚠️ '+esc(r.error)+'</td></tr></tbody>'; return; }
+    if(!r.averias.length){ t.innerHTML = '<tbody><tr><td class="no-data">Sin resultados</td></tr></tbody>'; return; }
+    var h = '<thead><tr><th>Fecha</th><th>Máquina</th><th>Tipo</th><th>Descripción</th><th>Mecánicos</th><th>Min</th><th>Estado</th></tr></thead><tbody>';
+    r.averias.forEach(function(a, i){
+      var est = a.estado==='RESUELTA' ? 'b-green' : (a.estado ? 'b-red' : 'b-gray');
+      h += '<tr class="clickable" onclick="toggleDet('+i+')">' +
+        '<td>'+esc(a.fecha||'')+'</td>' +
+        '<td><b>'+esc(a.maq_nombre||'')+'</b><br><span class="muted">'+esc(a.maq_id||'')+'</span></td>' +
+        '<td>'+esc(a.tipo||'')+'</td>' +
+        '<td>'+esc(a.descripcion||'')+'</td>' +
+        '<td>'+a.mecanicos.map(esc).join(', ')+'</td>' +
+        '<td>'+(a.tiempo_min||'')+'</td>' +
+        '<td><span class="badge '+est+'">'+esc(a.estado||'—')+'</span></td></tr>';
+      var mats = a.materiales.length
+        ? a.materiales.map(function(m){ return esc(m.referencia)+' — '+esc(m.descripcion)+' (x'+(m.cantidad||1)+')'; }).join('<br>')
+        : '<span class="muted">Ninguno</span>';
+      h += '<tr class="det-row" id="det'+i+'" style="display:none"><td colspan="7"><div class="det-grid">' +
+        det('Causa', a.causa) + det('Parte', a.parte) + det('Acción', a.accion) +
+        det('Gravedad', a.gravedad) + det('Turno', a.turno) +
+        det('Horario', (a.hora_inicio||'')+' → '+(a.hora_fin||'')) +
+        det('Observaciones', a.observaciones) +
+        '<div><div class="lbl">Materiales</div>'+mats+'</div>' +
+        '</div></td></tr>';
+    });
+    t.innerHTML = h + '</tbody>';
+  });
+}
+function det(lbl, val){ return '<div><div class="lbl">'+lbl+'</div>'+esc(val||'—')+'</div>'; }
+function toggleDet(i){
+  var el = document.getElementById('det'+i);
+  el.style.display = el.style.display==='none' ? '' : 'none';
+}
+
+// ═══════════ MÁQUINAS ═══════════
+function buscarMaquinas(){
+  var q = document.getElementById('maqQ').value.trim();
+  var t = document.getElementById('tblMaquinas');
+  t.innerHTML = '<tbody><tr><td class="loading">⏳ Cargando...</td></tr></tbody>';
+  api('/api/db/maquinas' + (q ? '?q='+encodeURIComponent(q) : ''), function(r){
+    if(!r.ok){ t.innerHTML = '<tbody><tr><td class="no-data">⚠️ '+esc(r.error)+'</td></tr></tbody>'; return; }
+    var h = '<thead><tr><th>ID</th><th>Nombre</th><th>Tipo</th><th>Área</th><th>Crit.</th><th>Estado</th><th>Averías</th><th>Última avería</th></tr></thead><tbody>';
+    if(!r.maquinas.length) h += '<tr><td colspan="8" class="no-data">Sin resultados</td></tr>';
+    r.maquinas.forEach(function(m){
+      var est = m.estado_actual || m.estado || '';
+      var cls = /OPERATIVA/i.test(est) ? 'b-green' : (/AVER|PARAD/i.test(est) ? 'b-red' : 'b-gray');
+      h += '<tr class="clickable" onclick="verHistorial(\''+esc(m.id)+'\')">' +
+        '<td>'+esc(m.id)+'</td><td><b>'+esc(m.nombre||'')+'</b></td><td>'+esc(m.tipo||'')+'</td>' +
+        '<td>'+esc(m.area||'')+'</td><td>'+esc(m.criticidad||'')+'</td>' +
+        '<td><span class="badge '+cls+'">'+esc(est||'—')+'</span></td>' +
+        '<td>'+(m.n_averias||0)+'</td><td>'+esc(m.ultima_averia||'—')+'</td></tr>';
+    });
+    t.innerHTML = h + '</tbody>';
+  });
+}
+function verHistorial(id){
+  switchTab('averias');
+  document.getElementById('avMaq').value = id;
+  document.getElementById('avQ').value = '';
+  document.getElementById('avMec').value = '';
+  buscarAverias();
+}
+
+// ═══════════ REPUESTOS ═══════════
+function buscarRepuestos(){
+  var p = new URLSearchParams();
+  var q = document.getElementById('repQ').value.trim();
+  if(q) p.set('q', q);
+  if(document.getElementById('repBajo').value) p.set('bajo_stock','1');
+  var t = document.getElementById('tblRepuestos');
+  t.innerHTML = '<tbody><tr><td class="loading">⏳ Buscando...</td></tr></tbody>';
+  api('/api/db/repuestos?' + p.toString(), function(r){
+    if(!r.ok){ t.innerHTML = '<tbody><tr><td class="no-data">⚠️ '+esc(r.error)+'</td></tr></tbody>'; return; }
+    if(!r.repuestos.length){ t.innerHTML = '<tbody><tr><td class="no-data">Sin resultados</td></tr></tbody>'; return; }
+    var h = '<thead><tr><th>Ref.</th><th>Descripción</th><th>Ubicación</th><th>Stock</th><th>Mínimo</th><th>Últ. entrada</th><th>Últ. salida</th></tr></thead><tbody>';
+    r.repuestos.forEach(function(x){
+      var bajo = x.stock != null && x.stock_minimo != null && Number(x.stock) < Number(x.stock_minimo);
+      h += '<tr><td>'+esc(x.referencia)+'</td><td>'+esc(x.descripcion||'')+'</td>' +
+        '<td>'+esc(x.ubicacion||'')+'</td>' +
+        '<td>'+(bajo ? '<span class="badge b-red">'+x.stock+'</span>' : (x.stock!=null?x.stock:'—'))+'</td>' +
+        '<td>'+(x.stock_minimo!=null?x.stock_minimo:'—')+'</td>' +
+        '<td class="muted">'+esc(x.fecha_ult_entrada||'')+'</td>' +
+        '<td class="muted">'+esc(x.fecha_ult_salida||'')+'</td></tr>';
+    });
+    t.innerHTML = h + '</tbody>' +
+      (r.total >= 300 ? '<tfoot><tr><td colspan="7" class="muted" style="padding:10px">Mostrando los primeros 300 — afina la búsqueda</td></tr></tfoot>' : '');
+  });
+}
+
+// ═══════════ SYNC MANUAL ═══════════
+function sincronizar(){
+  var b = document.getElementById('syncBtn');
+  b.disabled = true; b.textContent = '⏳ Sincronizando...';
+  fetch(API + '/api/db/sync', {method:'POST'})
+    .then(function(r){ return r.json(); })
+    .then(function(r){
+      b.disabled = false; b.textContent = '⟳ Sincronizar ahora';
+      if(r.ok){ cargarResumen(); }
+      else alert('Error al sincronizar: ' + (r.error||'?'));
+    })
+    .catch(function(e){
+      b.disabled = false; b.textContent = '⟳ Sincronizar ahora';
+      alert('No se pudo sincronizar: ' + e);
+    });
+}
+
+cargarResumen();
+</script>
+</body>
+</html>
