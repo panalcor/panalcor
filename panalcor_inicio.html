@@ -699,7 +699,7 @@ function mostrarPortal(s){
   document.getElementById('portalNombre').textContent = s.nombre;
   var roles = {mecanico:'Mecanico',encargado:'Encargado',admin:'Administrador',compras:'Compras'};
   document.getElementById('portalRol').textContent = roles[s.rol] || s.rol;
-  document.getElementById('portalBtns').innerHTML = _buildBtns(s.rol);
+  document.getElementById('portalBtns').innerHTML = _buildBtns(s.rol, s.nombre);
   DB.ref('averias').on('value', function(snap){
     var data = snap.val() || {};
     var n = Object.values(data).filter(function(a){
@@ -714,9 +714,11 @@ function mostrarPortal(s){
   if(s.rol === 'admin') _checkRepuestos();
 }
 
-function _buildBtns(rol){
+function _buildBtns(rol, nombre){
   var h = '';
   var adm = (rol === 'admin');
+  var n = (nombre||'').toUpperCase();
+  var verFrio = adm || n==='GREGORIO' || n==='JOSE' || n==='JAVIER H';
   var badge = '<span id="badgeAverias" style="display:none;position:absolute;top:8px;right:8px;background:#e74c3c;color:#fff;border-radius:50%;width:22px;height:22px;font-size:0.72rem;font-weight:900;line-height:22px;text-align:center;font-family:Barlow,sans-serif"></span>';
   if(rol === 'mecanico' || adm){
     h += '<a class="btn btn-mec" href="landing.html">'
@@ -747,7 +749,7 @@ function _buildBtns(rol){
        + '<div class="btn-sublabel">Registro de incidencias</div></div>'
        + badge + '</a>';
   }
-  if(rol === 'mecanico'){
+  if(verFrio){
     h += '<a class="btn" href="frio_mec.html" style="border-color:rgba(100,210,255,0.35);background:rgba(100,210,255,0.07);text-decoration:none">'
        + '<div class="btn-icon" style="color:#64d2ff">❄️</div>'
        + '<div class="btn-label" style="color:#64d2ff">Frío</div>'
