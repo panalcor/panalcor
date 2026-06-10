@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="theme-color" content="#c9a227">
 <title>Consultas BD — PANALCOR</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -25,6 +27,9 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 .sync-btn{background:rgba(52,152,219,.12);border:1px solid rgba(52,152,219,.4);color:var(--blue);
   padding:8px 14px;border-radius:7px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:.85rem}
 .sync-btn:disabled{opacity:.4;cursor:wait}
+.modo-badge{font-size:.68rem;padding:3px 10px;border-radius:12px;font-weight:700;letter-spacing:.05em}
+.modo-sqlite{background:rgba(46,204,113,.15);color:var(--green);border:1px solid rgba(46,204,113,.35)}
+.modo-fb{background:rgba(243,156,18,.15);color:var(--yellow);border:1px solid rgba(243,156,18,.35)}
 
 .tabs{display:flex;gap:6px;padding:14px 16px 0;flex-wrap:wrap}
 .tab{background:var(--navy-mid);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.6);
@@ -85,9 +90,10 @@ tr:hover td{background:rgba(255,255,255,.03)}
   <button class="back-btn" onclick="window.location.href='panalcor_inicio.html'">← Inicio</button>
   <div style="flex:1">
     <h1>🗄️ CONSULTAS — BASE DE DATOS</h1>
-    <div class="sub" id="subInfo">panalcor.db</div>
+    <div class="sub" id="subInfo">Detectando origen de datos...</div>
   </div>
-  <button class="sync-btn" id="syncBtn" onclick="sincronizar()">⟳ Sincronizar ahora</button>
+  <span class="modo-badge" id="modoBadge" style="display:none"></span>
+  <button class="sync-btn" id="syncBtn" onclick="sincronizar()" style="display:none">⟳ Sincronizar ahora</button>
 </div>
 
 <div class="tabs">
@@ -152,13 +158,184 @@ tr:hover td{background:rgba(255,255,255,.03)}
 <div class="info-foot" id="infoFoot"></div>
 
 <script>
-var API = '';  // mismo origen que el servidor
+// ══════════════════════════════════════════════════════════════
+// MODO DUAL:
+//  'servidor' → API SQLite del servidor local (arrancar.bat)
+//  'firebase' → lectura directa de Firebase (GitHub Pages / móvil)
+// ══════════════════════════════════════════════════════════════
+var MODO = null;
+
+var FB_CFG = {
+  apiKey:            "AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU",
+  authDomain:        "panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:       "https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:         "panalcor-mantenimiento",
+  storageBucket:     "panalcor-mantenimiento.firebasestorage.app",
+  messagingSenderId: "67593058609",
+  appId:             "1:67593058609:web:c33fa1fa4fce2932485810"
+};
+
+// Lista de máquinas (la misma que usa averias.html)
+var MAQUINAS_LOCAL = [
+  {id:'MAQ-001',n:'PABAT 1',t:'AMASADORA',f:'NEOTECH',a:'OBRADOR',c:'A'},
+  {id:'MAQ-002',n:'PABAT 2',t:'AMASADORA',f:'NEOTECH',a:'OBRADOR',c:'A'},
+  {id:'MAQ-003',n:'PABAT 3',t:'AMASADORA',f:'NEOTECH',a:'OBRADOR',c:'A'},
+  {id:'MAQ-004',n:'PABAT 4',t:'AMASADORA',f:'NEOTECH',a:'OBRADOR',c:'A'},
+  {id:'MAQ-005',n:'PABAT 5',t:'AMASADORA',f:'NEOTECH',a:'OBRADOR',c:'A'},
+  {id:'MAQ-006',n:'PABAT 6',t:'AMASADORA',f:'NEOTECH',a:'OBRADOR',c:'A'},
+  {id:'MAQ-007',n:'PABAT 7',t:'AMASADORA',f:'NEOTECH',a:'OBRADOR',c:'A'},
+  {id:'MAQ-008',n:'PABAT 8',t:'AMASADORA',f:'MAGER',a:'OBRADOR',c:'C'},
+  {id:'MAQ-009',n:'AMASADORA CANDEAL',t:'AMASADORA',f:'KEMPER',a:'OBRADOR',c:'A'},
+  {id:'MAQ-010',n:'LINEA 1',t:'FORMADORA-ENTABLADORA',f:'TECKMAPA',a:'OBRADOR',c:'B'},
+  {id:'MAQ-011',n:'LINEA 2',t:'FORMADORA-ENTABLADORA',f:'TECKMAPA',a:'OBRADOR',c:'B'},
+  {id:'MAQ-012',n:'LINEA 3',t:'FORMADORA-ENTABLADORA',f:'TECKMAPA',a:'OBRADOR',c:'B'},
+  {id:'MAQ-013',n:'LINEA 4',t:'FORMADORA-ENTABLADORA',f:'TECKMAPA',a:'OBRADOR',c:'B'},
+  {id:'MAQ-014',n:'LINEA 5',t:'FORMADORA-ENTABLADORA',f:'TECKMAPA',a:'OBRADOR',c:'B'},
+  {id:'MAQ-015',n:'LINEA 6',t:'FORMADORA-ENTABLADORA',f:'BEOR',a:'OBRADOR',c:'B'},
+  {id:'MAQ-016',n:'LINEA 7',t:'FORMADORA-ENTABLADORA',f:'TECKMAPA',a:'OBRADOR',c:'A'},
+  {id:'MAQ-017',n:'CARRUSEL 1',t:'CARRUSEL',f:'SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-018',n:'CARRUSEL 2',t:'CARRUSEL',f:'SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-019',n:'CARRUSEL 3',t:'CARRUSEL',f:'SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-020',n:'CARRUSEL 4',t:'CARRUSEL',f:'SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-021',n:'CARRUSEL 5',t:'CARRUSEL',f:'SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-022',n:'CARRUSEL 6',t:'CARRUSEL',f:'SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-023',n:'VOLCADOR 1',t:'VOLCADOR',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-024',n:'VOLCADOR 2',t:'VOLCADOR',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-025',n:'VOLCADOR 3',t:'VOLCADOR',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-026',n:'VOLCADOR 4',t:'VOLCADOR',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-027',n:'VOLCADOR 5',t:'VOLCADOR',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-028',n:'VOLCADOR 6',t:'VOLCADOR',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-029',n:'VOLCADOR 7',t:'VOLCADOR',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-030',n:'REPARTIDOR 1',t:'REPARTIDOR',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-031',n:'REPARTIDOR 2',t:'REPARTIDOR',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-032',n:'REPARTIDOR 3',t:'REPARTIDOR',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-033',n:'DIVISORA N1',t:'DIVISORAS',f:'SUBAL',a:'OBRADOR',c:''},
+  {id:'MAQ-034',n:'DIVISORA N2',t:'DIVISORAS',f:'SUBAL',a:'OBRADOR',c:''},
+  {id:'MAQ-035',n:'DIVISORA N3',t:'DIVISORAS',f:'SUBAL',a:'OBRADOR',c:''},
+  {id:'MAQ-036',n:'DIVISORA N4',t:'DIVISORAS',f:'SUBAL',a:'OBRADOR',c:''},
+  {id:'MAQ-037',n:'DIVISORA N5',t:'DIVISORAS',f:'SUBAL',a:'OBRADOR',c:''},
+  {id:'MAQ-038',n:'DIVISORA N6',t:'DIVISORAS',f:'SUBAL',a:'OBRADOR',c:''},
+  {id:'MAQ-039',n:'DIVISORA N7',t:'DIVISORAS',f:'SUBAL',a:'OBRADOR',c:''},
+  {id:'MAQ-040',n:'DIVISORA N8',t:'DIVISORAS',f:'SUBAL',a:'OBRADOR',c:''},
+  {id:'MAQ-041',n:'DIVISORA N9',t:'DIVISORAS',f:'SUBAL',a:'OBRADOR',c:''},
+  {id:'MAQ-042',n:'CAMARA DE BOLAS N1',t:'CAMARA REPOSO',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-043',n:'CAMARA DE BOLAS N2',t:'CAMARA REPOSO',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-044',n:'CAMARA DE BOLAS N3',t:'CAMARA REPOSO',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-045',n:'CAMARA DE BOLAS N4',t:'CAMARA REPOSO',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-046',n:'CAMARA DE BOLAS N5',t:'CAMARA REPOSO',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-047',n:'CAMARA DE BOLAS N6',t:'CAMARA REPOSO',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-048',n:'CAMARA DE BOLAS N7',t:'CAMARA REPOSO',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-049',n:'EMBOLADORA N1',t:'EMBOLADORA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-050',n:'EMBOLADORA N2',t:'EMBOLADORA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-051',n:'EMBOLADORA N3',t:'EMBOLADORA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-052',n:'EMBOLADORA N4',t:'EMBOLADORA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-053',n:'EMBOLADORA N5',t:'EMBOLADORA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-054',n:'EMBOLADORA N6',t:'EMBOLADORA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-055',n:'EMBOLADORA N7',t:'EMBOLADORA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-056',n:'EMBOLADORA N8',t:'EMBOLADORA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-057',n:'EMBOLADORA N9',t:'EMBOLADORA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-058',n:'FERMENTADORA RELAMPAGO',t:'FERMENTADORA',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-059',n:'FERMENTADORA TRUENO',t:'FERMENTADORA',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-060',n:'HORNO 1',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
+  {id:'MAQ-061',n:'HORNO 2',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
+  {id:'MAQ-062',n:'HORNO 3',t:'HORNO',f:'GPG',a:'HORNOS',c:''},
+  {id:'MAQ-063',n:'HORNO 4',t:'HORNO',f:'GPG',a:'HORNOS',c:''},
+  {id:'MAQ-064',n:'HORNO 5',t:'HORNO',f:'GPG',a:'HORNOS',c:''},
+  {id:'MAQ-065',n:'HORNO 6',t:'HORNO',f:'GPG',a:'HORNOS',c:''},
+  {id:'MAQ-066',n:'HORNO 7',t:'HORNO',f:'GPG',a:'HORNOS',c:''},
+  {id:'MAQ-067',n:'HORNO 8',t:'HORNO',f:'GPG',a:'HORNOS',c:''},
+  {id:'MAQ-068',n:'HORNO 9',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
+  {id:'MAQ-069',n:'HORNO 10',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
+  {id:'MAQ-070',n:'HORNO 11',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
+  {id:'MAQ-071',n:'HORNO 12',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
+  {id:'MAQ-072',n:'HORNO 13',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
+  {id:'MAQ-073',n:'HORNO 14',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
+  {id:'MAQ-074',n:'HORNO 15',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
+  {id:'MAQ-075',n:'HORNO 16 (1TRUENO)',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
+  {id:'MAQ-076',n:'HORNO 17 (2TRUENO)',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
+  {id:'MAQ-077',n:'HORNO 18 (3TRUENO)',t:'HORNO',f:'BEGESA',a:'HORNOS',c:''},
+  {id:'MAQ-078',n:'HORNO 19 (4TRUENO)',t:'HORNO',f:'GPG',a:'HORNOS',c:''},
+  {id:'MAQ-079',n:'TALLADORA RELAMPAGO',t:'TALLADORA',f:'PORTICEL',a:'HORNOS',c:''},
+  {id:'MAQ-080',n:'TALLADORA TRUENO',t:'TALLADORA',f:'AYMI',a:'',c:''},
+  {id:'MAQ-081',n:'TUNEL PREFRIO',t:'TUNEL PREFRIO',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-082',n:'TUNEL 1',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-083',n:'TUNEL 2',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-084',n:'TUNEL 3',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-085',n:'TUNEL 4',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-086',n:'TUNEL 5',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-087',n:'TUNEL 6',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-088',n:'TUNEL 7',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-089',n:'TUNEL 8',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-090',n:'TUNEL 9 (1 TRUENO)',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-091',n:'TUNEL 10 (2 TRUENO)',t:'TUNEL CONGELACION',f:'INFRISA',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-092',n:'MAQUINA DE CAJAS',t:'FORMADORA CAJAS',f:'TAVIL',a:'ENVASADO',c:''},
+  {id:'MAQ-093',n:'FORMADORA-EMBOLSADORA',t:'FORMADORA CAJAS',f:'TAVIL',a:'ENVASADO',c:''},
+  {id:'MAQ-094',n:'MAQUINA DE BOLSAS',t:'EMBOLSADORA',f:'PATTYN',a:'ENVASADO',c:''},
+  {id:'MAQ-095',n:'DESCARGADOR 1',t:'CARGADOR/DESCARGADOR',f:'PORTICEL',a:'ENVASADO',c:''},
+  {id:'MAQ-096',n:'DESCARGADOR 2',t:'CARGADOR/DESCARGADOR',f:'PORTICEL',a:'ENVASADO',c:''},
+  {id:'MAQ-097',n:'CARGADOR 1',t:'CARGADOR/DESCARGADOR',f:'PORTICEL',a:'ENVASADO',c:''},
+  {id:'MAQ-098',n:'CARGADOR 2',t:'CARGADOR/DESCARGADOR',f:'PORTICEL',a:'ENVASADO',c:''},
+  {id:'MAQ-099',n:'DESMOLDEO 1',t:'DESMOLDEO',f:'PORTICEL',a:'ENVASADO',c:''},
+  {id:'MAQ-100',n:'DESMOLDEO 2',t:'DESMOLDEO',f:'PORTICEL',a:'ENVASADO',c:''},
+  {id:'MAQ-101',n:'CONTADORA 1',t:'CONTADORA',f:'LOYJAR',a:'ENVASADO',c:''},
+  {id:'MAQ-102',n:'CONTADORA 2',t:'CONTADORA',f:'PORTICEL',a:'ENVASADO',c:''},
+  {id:'MAQ-103',n:'CAMINO DE RODILLOS',t:'C. RODILLOS',f:'',a:'ENVASADO',c:''},
+  {id:'MAQ-104',n:'IMPRESORA RELAMPAGO',t:'IMPRESORA',f:'UBS',a:'ENVASADO',c:''},
+  {id:'MAQ-105',n:'IMPRESORA TRUENO',t:'IMPRESORA',f:'UBS',a:'ENVASADO',c:''},
+  {id:'MAQ-106',n:'PRECINTADORA',t:'PRECINTADORA',f:'SOCO-SYSTEM',a:'ENVASADO',c:''},
+  {id:'MAQ-107',n:'M. PEGATINAS',t:'M. PEGATINAS',f:'PANALCOR',a:'ENVASADO',c:''},
+  {id:'MAQ-108',n:'ROBOT',t:'ROBOT',f:'IPLA-FANUC',a:'ENVASADO',c:''},
+  {id:'MAQ-109',n:'ENFARDADORA RELAMPAGO',t:'ENFARDADORA',f:'IPLA-ROBOPAC',a:'ENVASADO',c:''},
+  {id:'MAQ-110',n:'ENFARDADORA TRUENO',t:'ENFARDADORA',f:'',a:'ENVASADO',c:''},
+  {id:'MAQ-111',n:'LAVADORA',t:'EMBOLADORA',f:'SOMENGIL',a:'OBRADOR',c:''},
+  {id:'MAQ-112',n:'SILOS',t:'SILOS HARINA',f:'AGRIFLEX',a:'SILOS',c:''},
+  {id:'MAQ-113',n:'TURBINAS',t:'SILOS HARINA',f:'',a:'SILOS',c:''},
+  {id:'MAQ-114',n:'CUADRO SILOS',t:'SILOS HARINA',f:'AGRIFLEX',a:'SILOS',c:''},
+  {id:'MAQ-115',n:'CUADRO HARINA',t:'SILOS HARINA',f:'',a:'SILOS',c:''},
+  {id:'MAQ-116',n:'ADITIVOS',t:'ADITIVOS',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-117',n:'CUADRO ADITIVOS',t:'ADITIVOS',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-118',n:'REVOLVER',t:'ADITIVOS',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-119',n:'TOLVA 1',t:'SILOS HARINA',f:'DAMM-SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-120',n:'TOLVA 2',t:'SILOS HARINA',f:'DAMM-SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-121',n:'TOLVA 3',t:'SILOS HARINA',f:'DAMM-SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-122',n:'TOLVA 4',t:'SILOS HARINA',f:'DAMM-SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-123',n:'TOLVA 5',t:'SILOS HARINA',f:'DAMM-SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-124',n:'TOLVA 6',t:'SILOS HARINA',f:'DAMM-SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-125',n:'TOLVA 7',t:'SILOS HARINA',f:'DAMM-SABATECNO',a:'OBRADOR',c:''},
+  {id:'MAQ-126',n:'LEVADURA TANQUE 1',t:'LEVADURA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-127',n:'LEVADURA TANQUE 2',t:'LEVADURA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-128',n:'LEVADURA CUADRO GENERAL Y BOMBAS',t:'LEVADURA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-129',n:'LEVADURA CUADRO GLICOL',t:'LEVADURA',f:'',a:'OBRADOR',c:''},
+  {id:'MAQ-130',n:'CAMARA STOCK 1',t:'CAMARA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-131',n:'CAMARA STOCK 2',t:'CAMARA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-132',n:'CAMARA STOCK 3',t:'CAMARA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-133',n:'CAMARA STOCK 4',t:'CAMARA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-134',n:'CAMARA STOCK 5 (TRUENO)',t:'CAMARA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-135',n:'TANQUE 1',t:'AGUA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-136',n:'TANQUE 2',t:'AGUA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-137',n:'TANQUE 3',t:'AGUA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-138',n:'TANQUE 4',t:'AGUA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-139',n:'TANQUE 5 (TRUENO)',t:'AGUA',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-140',n:'A/A OBRADOR',t:'A/A',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-141',n:'A/A VESTUARIO',t:'A/A',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-142',n:'A/A OFICINAS',t:'A/A',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-143',n:'TRANSFORMADOR',t:'A/A',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-144',n:'CONDENSADORES ELECTRICOS',t:'ELECTRICIDAD',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-145',n:'CUADROS GENERALES',t:'ELECTRICIDAD',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-146',n:'A/A MUELLE',t:'A/A',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-147',n:'EXTRACTORES RELAMPAGO',t:'EXTRACTORES',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-148',n:'EXTRACTORES TRUENO',t:'EXTRACTORES',f:'',a:'FRIO/CLIMA',c:''},
+  {id:'MAQ-149',n:'EVAPORATIVAS',t:'EVAPORATIVAS',f:'',a:'FRIO/CLIMA',c:''}
+];
+
+var FB = { db:null, averias:null, extra:null, estados:null, _base:null, _rep:null };
 
 function esc(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
   });
 }
+function norm(s){ return String(s == null ? '' : s).toUpperCase(); }
 
 function switchTab(name){
   document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('active', t.dataset.tab===name); });
@@ -167,42 +344,260 @@ function switchTab(name){
   if(name==='averias' && !window._avLoaded){ window._avLoaded=true; buscarAverias(); }
 }
 
-function api(ruta, cb){
-  fetch(API + ruta).then(function(r){ return r.json(); }).then(cb)
-    .catch(function(e){ console.error(ruta, e); cb({ok:false, error:String(e)}); });
+// ══════════════════════════════════════════════════════════════
+// DETECCIÓN DE MODO
+// ══════════════════════════════════════════════════════════════
+function init(){
+  fetch('/api/db/info')
+    .then(function(r){
+      var ct = r.headers.get('content-type') || '';
+      if(!r.ok || ct.indexOf('json') === -1) throw new Error('sin API local');
+      return r.json();
+    })
+    .then(function(r){
+      if(!r.ok) throw new Error('sin API local');
+      MODO = 'servidor';
+      pintarModo();
+      renderInfo(r.info);
+      cargarResumen();
+    })
+    .catch(function(){
+      MODO = 'firebase';
+      try{
+        if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
+        FB.db = firebase.database();
+      }catch(e){
+        document.getElementById('kpiGrid').innerHTML =
+          '<div class="no-data">⚠️ Sin servidor local y sin conexión a Firebase.<br>Comprueba tu conexión a internet.</div>';
+        return;
+      }
+      pintarModo();
+      cargarResumen();
+    });
 }
 
-// ═══════════ RESUMEN ═══════════
-function cargarResumen(){
-  api('/api/db/kpis', function(r){
-    var g = document.getElementById('kpiGrid');
-    if(!r.ok){ g.innerHTML = '<div class="no-data">⚠️ '+esc(r.error||'Error')+'</div>'; return; }
-    var k = r.kpis;
-    g.innerHTML =
-      kpi(k.total_averias,'Averías totales') +
-      kpi(k.averias_mes,'Averías este mes') +
-      kpi(k.averias_abiertas,'Sin resolver') +
-      kpi(k.tiempo_medio_min!=null ? k.tiempo_medio_min+' min' : '—','Tiempo medio repar.') +
-      kpi(k.n_maquinas,'Máquinas') +
-      kpi(k.n_repuestos,'Referencias almacén') +
-      kpi(k.repuestos_bajo_stock,'Bajo stock mínimo');
-    tabla('tblTopMaq', ['Máquina','ID','Averías','Minutos totales'],
-      k.top_maquinas.map(function(m){ return [esc(m.maq_nombre), esc(m.maq_id), m.n, m.min_total||0]; }));
-    tabla('tblTopMec', ['Mecánico','Intervenciones'],
-      k.top_mecanicos.map(function(m){ return [esc(m.mecanico), m.n]; }));
-    tabla('tblTopMat', ['Referencia','Descripción','Cantidad usada'],
-      k.materiales_top.map(function(m){ return [esc(m.referencia), esc(m.descripcion), m.total]; }));
+function pintarModo(){
+  var b = document.getElementById('modoBadge');
+  b.style.display = '';
+  if(MODO === 'servidor'){
+    b.className = 'modo-badge modo-sqlite';
+    b.textContent = '● BD LOCAL (SQLite)';
+    document.getElementById('syncBtn').style.display = '';
+    document.getElementById('subInfo').textContent = 'panalcor.db';
+  } else {
+    b.className = 'modo-badge modo-fb';
+    b.textContent = '● FIREBASE DIRECTO';
+    document.getElementById('syncBtn').style.display = 'none';
+    document.getElementById('subInfo').textContent = 'Datos en directo de Firebase (sin servidor local)';
+    document.getElementById('infoFoot').textContent =
+      'Modo Firebase: consultas en directo. La BD SQLite completa (con histórico del almacén) está en el PC del servidor.';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// CAPA DE DATOS — FIREBASE
+// ══════════════════════════════════════════════════════════════
+function fbOnce(nodo){
+  return FB.db.ref(nodo).once('value').then(function(s){ return s.val(); });
+}
+
+function fbBase(){
+  if(FB._base) return FB._base;
+  FB._base = Promise.all([fbOnce('averias'), fbOnce('maquinas_extra'), fbOnce('estado_maquinas')])
+    .then(function(res){
+      FB.averias = normalizarAverias(res[0]);
+      FB.extra   = res[1] || {};
+      FB.estados = res[2] || {};
+    });
+  return FB._base;
+}
+
+function normalizarAverias(val){
+  var out = [];
+  Object.keys(val || {}).forEach(function(k){
+    var a = val[k] || {};
+    out.push({
+      id: a.id || k, fecha: a.fecha || '', hora_inicio: a.horaInicio || '',
+      hora_fin: a.horaFin || '', tiempo_min: a.tiempoMin || 0,
+      maq_id: a.maqId || '', maq_nombre: a.maqNombre || '', maq_tipo: a.maqTipo || '',
+      maq_area: a.maqArea || '', tipo: a.tipo || '', causa: a.causa || '',
+      gravedad: a.gravedad || '', criticidad: a.criticidad || '', parte: a.parte || '',
+      descripcion: a.descripcion || '', accion: a.accion || '',
+      observaciones: a.observaciones || '', estado: a.estado || '', turno: a.turno || '',
+      ts: a.ts || 0,
+      mecanicos: a.mecanicos || [],
+      materiales: (a.materiales || []).map(function(m){
+        return { referencia: String(m.ref || ''), descripcion: m.desc || '', cantidad: m.qty || 1 };
+      })
+    });
   });
-  api('/api/db/info', function(r){
-    if(!r.ok) return;
-    var i = r.info, ult = i.ultimo_sync;
-    document.getElementById('subInfo').textContent = 'panalcor.db — ' +
-      Object.keys(i.tablas).reduce(function(s,t){ return s + i.tablas[t]; },0) + ' registros';
-    document.getElementById('infoFoot').textContent = ult
-      ? 'Última sincronización: ' + ult.ts.replace('T',' ') + '  (' + ult.origen + ': ' + ult.detalle + ')'
-      : 'Sin sincronizaciones registradas';
+  out.sort(function(x,y){ return (y.fecha||'').localeCompare(x.fecha||'') || (y.ts - x.ts); });
+  return out;
+}
+
+function fbRepuestos(){
+  if(FB._rep) return FB._rep;
+  FB._rep = fbOnce('repuestos_base').then(function(v){
+    var arr = [];
+    var lista = Array.isArray(v) ? v : Object.keys(v || {}).map(function(k){ return v[k]; });
+    lista.forEach(function(r){
+      if(!r) return;
+      arr.push({
+        referencia: String(r.ref || ''), descripcion: r.desc || '',
+        ubicacion: r.ubicacion || '', stock: r.stock, stock_minimo: r.stockMin,
+        fecha_ult_entrada: '', fecha_ult_salida: ''
+      });
+    });
+    return arr;
+  });
+  return FB._rep;
+}
+
+function fbListaMaquinas(){
+  return fbBase().then(function(){
+    var lista = MAQUINAS_LOCAL.map(function(m){
+      return { id:m.id, nombre:m.n, tipo:m.t, fabricante:m.f, area:m.a, criticidad:m.c, estado:null };
+    });
+    Object.keys(FB.extra).forEach(function(k){
+      var m = FB.extra[k] || {};
+      var id = m.id || k;
+      if(!lista.some(function(x){ return x.id === id; })){
+        lista.push({ id:id, nombre:m.n, tipo:m.t, fabricante:m.f, area:m.a, criticidad:'', estado:null });
+      }
+    });
+    lista.forEach(function(m){
+      var avs = FB.averias.filter(function(a){ return a.maq_id === m.id; });
+      m.n_averias = avs.length;
+      m.ultima_averia = avs.length ? avs[0].fecha : null;
+      m.estado_actual = (FB.estados[m.id] || {}).estado || null;
+    });
+    lista.sort(function(a,b){ return String(a.id).localeCompare(String(b.id)); });
+    return lista;
   });
 }
+
+function fbFiltrarAverias(f){
+  return fbBase().then(function(){
+    return FB.averias.filter(function(a){
+      if(f.q){
+        var campos = norm(a.descripcion + ' ' + a.accion + ' ' + a.observaciones + ' ' + a.parte + ' ' + a.maq_nombre);
+        var ok = f.q.split(/\s+/).every(function(p){ return campos.indexOf(norm(p)) !== -1; });
+        if(!ok) return false;
+      }
+      if(f.maq && a.maq_id !== f.maq && norm(a.maq_nombre).indexOf(norm(f.maq)) === -1) return false;
+      if(f.mecanico && !a.mecanicos.some(function(m){ return norm(m).indexOf(norm(f.mecanico)) !== -1; })) return false;
+      if(f.desde && a.fecha < f.desde) return false;
+      if(f.hasta && a.fecha > f.hasta) return false;
+      if(f.tipo && a.tipo !== f.tipo) return false;
+      return true;
+    });
+  });
+}
+
+function fbKpis(){
+  return Promise.all([fbBase(), fbRepuestos(), fbListaMaquinas()]).then(function(res){
+    var reps = res[1], maqs = res[2];
+    var av = FB.averias;
+    var mes = new Date().toISOString().substring(0,7);
+    var agg = function(arr, clave){
+      var m = {};
+      arr.forEach(function(x){ var k = clave(x); if(k) m[k] = (m[k]||0) + 1; });
+      return m;
+    };
+    var conTiempo = av.filter(function(a){ return a.tiempo_min > 0; });
+    var porMaq = {};
+    av.forEach(function(a){
+      var k = a.maq_id + '|' + a.maq_nombre;
+      porMaq[k] = porMaq[k] || { maq_id:a.maq_id, maq_nombre:a.maq_nombre, n:0, min_total:0 };
+      porMaq[k].n++; porMaq[k].min_total += (a.tiempo_min || 0);
+    });
+    var porMec = {};
+    av.forEach(function(a){ a.mecanicos.forEach(function(m){ porMec[m] = (porMec[m]||0)+1; }); });
+    var porMat = {};
+    av.forEach(function(a){ a.materiales.forEach(function(m){
+      var k = m.referencia + '|' + m.descripcion;
+      porMat[k] = porMat[k] || { referencia:m.referencia, descripcion:m.descripcion, total:0 };
+      porMat[k].total += (m.cantidad || 1);
+    }); });
+    var tipos = agg(av, function(a){ return a.tipo; });
+    return {
+      total_averias: av.length,
+      averias_mes: av.filter(function(a){ return a.fecha.indexOf(mes) === 0; }).length,
+      averias_abiertas: av.filter(function(a){ return a.estado && a.estado !== 'RESUELTA'; }).length,
+      tiempo_medio_min: conTiempo.length
+        ? Math.round(conTiempo.reduce(function(s,a){ return s + a.tiempo_min; }, 0) / conTiempo.length * 10) / 10
+        : null,
+      por_tipo: Object.keys(tipos).map(function(t){ return { tipo:t, n:tipos[t] }; }),
+      top_maquinas: Object.keys(porMaq).map(function(k){ return porMaq[k]; })
+        .sort(function(a,b){ return b.n - a.n; }).slice(0,10),
+      top_mecanicos: Object.keys(porMec).map(function(m){ return { mecanico:m, n:porMec[m] }; })
+        .sort(function(a,b){ return b.n - a.n; }).slice(0,10),
+      materiales_top: Object.keys(porMat).map(function(k){ return porMat[k]; })
+        .sort(function(a,b){ return b.total - a.total; }).slice(0,10),
+      repuestos_bajo_stock: reps.filter(function(r){
+        return r.stock != null && r.stock_minimo != null &&
+               Number(r.stock_minimo) > 0 && Number(r.stock) < Number(r.stock_minimo);
+      }).length,
+      n_maquinas: maqs.length,
+      n_repuestos: reps.length
+    };
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// CAPA DE DATOS — SERVIDOR LOCAL (API SQLite)
+// ══════════════════════════════════════════════════════════════
+function api(ruta){
+  return fetch(ruta).then(function(r){
+    var ct = r.headers.get('content-type') || '';
+    if(ct.indexOf('json') === -1){
+      throw new Error('El servidor no tiene la API de base de datos (versión antigua). Cierra la ventana del servidor y vuelve a abrir arrancar.bat.');
+    }
+    return r.json();
+  }).then(function(r){
+    if(!r.ok) throw new Error(r.error || 'Error en la API');
+    return r;
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// RESUMEN
+// ══════════════════════════════════════════════════════════════
+function cargarResumen(){
+  var p = (MODO === 'servidor')
+    ? api('/api/db/kpis').then(function(r){ return r.kpis; })
+    : fbKpis();
+  p.then(renderKpis).catch(function(e){
+    document.getElementById('kpiGrid').innerHTML = '<div class="no-data">⚠️ ' + esc(e.message || e) + '</div>';
+  });
+}
+
+function renderKpis(k){
+  document.getElementById('kpiGrid').innerHTML =
+    kpi(k.total_averias,'Averías totales') +
+    kpi(k.averias_mes,'Averías este mes') +
+    kpi(k.averias_abiertas,'Sin resolver') +
+    kpi(k.tiempo_medio_min != null ? k.tiempo_medio_min + ' min' : '—','Tiempo medio repar.') +
+    kpi(k.n_maquinas,'Máquinas') +
+    kpi(k.n_repuestos,'Referencias almacén') +
+    kpi(k.repuestos_bajo_stock,'Bajo stock mínimo');
+  tabla('tblTopMaq', ['Máquina','ID','Averías','Minutos totales'],
+    k.top_maquinas.map(function(m){ return [esc(m.maq_nombre), esc(m.maq_id), m.n, m.min_total||0]; }));
+  tabla('tblTopMec', ['Mecánico','Intervenciones'],
+    k.top_mecanicos.map(function(m){ return [esc(m.mecanico), m.n]; }));
+  tabla('tblTopMat', ['Referencia','Descripción','Cantidad usada'],
+    k.materiales_top.map(function(m){ return [esc(m.referencia), esc(m.descripcion), m.total]; }));
+}
+
+function renderInfo(info){
+  var total = Object.keys(info.tablas).reduce(function(s,t){ return s + info.tablas[t]; }, 0);
+  document.getElementById('subInfo').textContent = 'panalcor.db — ' + total + ' registros';
+  var ult = info.ultimo_sync;
+  document.getElementById('infoFoot').textContent = ult
+    ? 'Última sincronización: ' + ult.ts.replace('T',' ') + '  (' + ult.origen + ': ' + ult.detalle + ')'
+    : 'Sin sincronizaciones registradas';
+}
+
 function kpi(num,lbl){ return '<div class="kpi"><div class="num">'+num+'</div><div class="lbl">'+lbl+'</div></div>'; }
 function tabla(id, cab, filas){
   var h = '<thead><tr>' + cab.map(function(c){ return '<th>'+c+'</th>'; }).join('') + '</tr></thead><tbody>';
@@ -211,73 +606,110 @@ function tabla(id, cab, filas){
   document.getElementById(id).innerHTML = h + '</tbody>';
 }
 
-// ═══════════ AVERÍAS ═══════════
+// ══════════════════════════════════════════════════════════════
+// AVERÍAS
+// ══════════════════════════════════════════════════════════════
 function buscarAverias(){
-  var p = new URLSearchParams();
-  var v;
-  if(v=document.getElementById('avQ').value.trim())     p.set('q', v);
-  if(v=document.getElementById('avMaq').value.trim())   p.set('maq', v);
-  if(v=document.getElementById('avMec').value.trim())   p.set('mecanico', v);
-  if(v=document.getElementById('avDesde').value)        p.set('desde', v);
-  if(v=document.getElementById('avHasta').value)        p.set('hasta', v);
-  if(v=document.getElementById('avTipo').value)         p.set('tipo', v);
+  var f = {
+    q:        document.getElementById('avQ').value.trim(),
+    maq:      document.getElementById('avMaq').value.trim(),
+    mecanico: document.getElementById('avMec').value.trim(),
+    desde:    document.getElementById('avDesde').value,
+    hasta:    document.getElementById('avHasta').value,
+    tipo:     document.getElementById('avTipo').value
+  };
   var t = document.getElementById('tblAverias');
   t.innerHTML = '<tbody><tr><td class="loading">⏳ Buscando...</td></tr></tbody>';
-  api('/api/db/averias?' + p.toString(), function(r){
-    if(!r.ok){ t.innerHTML = '<tbody><tr><td class="no-data">⚠️ '+esc(r.error)+'</td></tr></tbody>'; return; }
-    if(!r.averias.length){ t.innerHTML = '<tbody><tr><td class="no-data">Sin resultados</td></tr></tbody>'; return; }
-    var h = '<thead><tr><th>Fecha</th><th>Máquina</th><th>Tipo</th><th>Descripción</th><th>Mecánicos</th><th>Min</th><th>Estado</th></tr></thead><tbody>';
-    r.averias.forEach(function(a, i){
-      var est = a.estado==='RESUELTA' ? 'b-green' : (a.estado ? 'b-red' : 'b-gray');
-      h += '<tr class="clickable" onclick="toggleDet('+i+')">' +
-        '<td>'+esc(a.fecha||'')+'</td>' +
-        '<td><b>'+esc(a.maq_nombre||'')+'</b><br><span class="muted">'+esc(a.maq_id||'')+'</span></td>' +
-        '<td>'+esc(a.tipo||'')+'</td>' +
-        '<td>'+esc(a.descripcion||'')+'</td>' +
-        '<td>'+a.mecanicos.map(esc).join(', ')+'</td>' +
-        '<td>'+(a.tiempo_min||'')+'</td>' +
-        '<td><span class="badge '+est+'">'+esc(a.estado||'—')+'</span></td></tr>';
-      var mats = a.materiales.length
-        ? a.materiales.map(function(m){ return esc(m.referencia)+' — '+esc(m.descripcion)+' (x'+(m.cantidad||1)+')'; }).join('<br>')
-        : '<span class="muted">Ninguno</span>';
-      h += '<tr class="det-row" id="det'+i+'" style="display:none"><td colspan="7"><div class="det-grid">' +
-        det('Causa', a.causa) + det('Parte', a.parte) + det('Acción', a.accion) +
-        det('Gravedad', a.gravedad) + det('Turno', a.turno) +
-        det('Horario', (a.hora_inicio||'')+' → '+(a.hora_fin||'')) +
-        det('Observaciones', a.observaciones) +
-        '<div><div class="lbl">Materiales</div>'+mats+'</div>' +
-        '</div></td></tr>';
-    });
-    t.innerHTML = h + '</tbody>';
+
+  var p;
+  if(MODO === 'servidor'){
+    var qp = new URLSearchParams();
+    Object.keys(f).forEach(function(k){ if(f[k]) qp.set(k === 'maq' ? 'maq' : k, f[k]); });
+    p = api('/api/db/averias?' + qp.toString()).then(function(r){ return r.averias; });
+  } else {
+    p = fbFiltrarAverias(f);
+  }
+  p.then(renderAverias).catch(function(e){
+    t.innerHTML = '<tbody><tr><td class="no-data">⚠️ ' + esc(e.message || e) + '</td></tr></tbody>';
   });
 }
+
+function renderAverias(averias){
+  var t = document.getElementById('tblAverias');
+  if(!averias.length){ t.innerHTML = '<tbody><tr><td class="no-data">Sin resultados</td></tr></tbody>'; return; }
+  var h = '<thead><tr><th>Fecha</th><th>Máquina</th><th>Tipo</th><th>Descripción</th><th>Mecánicos</th><th>Min</th><th>Estado</th></tr></thead><tbody>';
+  averias.forEach(function(a, i){
+    var est = a.estado === 'RESUELTA' ? 'b-green' : (a.estado ? 'b-red' : 'b-gray');
+    h += '<tr class="clickable" onclick="toggleDet('+i+')">' +
+      '<td>'+esc(a.fecha||'')+'</td>' +
+      '<td><b>'+esc(a.maq_nombre||'')+'</b><br><span class="muted">'+esc(a.maq_id||'')+'</span></td>' +
+      '<td>'+esc(a.tipo||'')+'</td>' +
+      '<td>'+esc(a.descripcion||'')+'</td>' +
+      '<td>'+a.mecanicos.map(esc).join(', ')+'</td>' +
+      '<td>'+(a.tiempo_min||'')+'</td>' +
+      '<td><span class="badge '+est+'">'+esc(a.estado||'—')+'</span></td></tr>';
+    var mats = a.materiales.length
+      ? a.materiales.map(function(m){ return esc(m.referencia)+' — '+esc(m.descripcion)+' (x'+(m.cantidad||1)+')'; }).join('<br>')
+      : '<span class="muted">Ninguno</span>';
+    h += '<tr class="det-row" id="det'+i+'" style="display:none"><td colspan="7"><div class="det-grid">' +
+      det('Causa', a.causa) + det('Parte', a.parte) + det('Acción', a.accion) +
+      det('Gravedad', a.gravedad) + det('Turno', a.turno) +
+      det('Horario', (a.hora_inicio||'')+' → '+(a.hora_fin||'')) +
+      det('Observaciones', a.observaciones) +
+      '<div><div class="lbl">Materiales</div>'+mats+'</div>' +
+      '</div></td></tr>';
+  });
+  t.innerHTML = h + '</tbody>';
+}
+
 function det(lbl, val){ return '<div><div class="lbl">'+lbl+'</div>'+esc(val||'—')+'</div>'; }
 function toggleDet(i){
   var el = document.getElementById('det'+i);
   el.style.display = el.style.display==='none' ? '' : 'none';
 }
 
-// ═══════════ MÁQUINAS ═══════════
+// ══════════════════════════════════════════════════════════════
+// MÁQUINAS
+// ══════════════════════════════════════════════════════════════
 function buscarMaquinas(){
   var q = document.getElementById('maqQ').value.trim();
   var t = document.getElementById('tblMaquinas');
   t.innerHTML = '<tbody><tr><td class="loading">⏳ Cargando...</td></tr></tbody>';
-  api('/api/db/maquinas' + (q ? '?q='+encodeURIComponent(q) : ''), function(r){
-    if(!r.ok){ t.innerHTML = '<tbody><tr><td class="no-data">⚠️ '+esc(r.error)+'</td></tr></tbody>'; return; }
-    var h = '<thead><tr><th>ID</th><th>Nombre</th><th>Tipo</th><th>Área</th><th>Crit.</th><th>Estado</th><th>Averías</th><th>Última avería</th></tr></thead><tbody>';
-    if(!r.maquinas.length) h += '<tr><td colspan="8" class="no-data">Sin resultados</td></tr>';
-    r.maquinas.forEach(function(m){
-      var est = m.estado_actual || m.estado || '';
-      var cls = /OPERATIVA/i.test(est) ? 'b-green' : (/AVER|PARAD/i.test(est) ? 'b-red' : 'b-gray');
-      h += '<tr class="clickable" onclick="verHistorial(\''+esc(m.id)+'\')">' +
-        '<td>'+esc(m.id)+'</td><td><b>'+esc(m.nombre||'')+'</b></td><td>'+esc(m.tipo||'')+'</td>' +
-        '<td>'+esc(m.area||'')+'</td><td>'+esc(m.criticidad||'')+'</td>' +
-        '<td><span class="badge '+cls+'">'+esc(est||'—')+'</span></td>' +
-        '<td>'+(m.n_averias||0)+'</td><td>'+esc(m.ultima_averia||'—')+'</td></tr>';
+
+  var p;
+  if(MODO === 'servidor'){
+    p = api('/api/db/maquinas' + (q ? '?q='+encodeURIComponent(q) : '')).then(function(r){ return r.maquinas; });
+  } else {
+    p = fbListaMaquinas().then(function(lista){
+      if(!q) return lista;
+      var Q = norm(q);
+      return lista.filter(function(m){
+        return norm(m.id).indexOf(Q) !== -1 || norm(m.nombre).indexOf(Q) !== -1 ||
+               norm(m.tipo).indexOf(Q) !== -1 || norm(m.area).indexOf(Q) !== -1;
+      });
     });
-    t.innerHTML = h + '</tbody>';
+  }
+  p.then(renderMaquinas).catch(function(e){
+    t.innerHTML = '<tbody><tr><td class="no-data">⚠️ ' + esc(e.message || e) + '</td></tr></tbody>';
   });
 }
+
+function renderMaquinas(maquinas){
+  var t = document.getElementById('tblMaquinas');
+  var h = '<thead><tr><th>ID</th><th>Nombre</th><th>Tipo</th><th>Área</th><th>Crit.</th><th>Estado</th><th>Averías</th><th>Última avería</th></tr></thead><tbody>';
+  if(!maquinas.length) h += '<tr><td colspan="8" class="no-data">Sin resultados</td></tr>';
+  maquinas.forEach(function(m){
+    var est = m.estado_actual || m.estado || '';
+    var cls = /OPERATIVA/i.test(est) ? 'b-green' : (/AVER|PARAD/i.test(est) ? 'b-red' : 'b-gray');
+    h += '<tr class="clickable" onclick="verHistorial(\''+esc(m.id)+'\')">' +
+      '<td>'+esc(m.id)+'</td><td><b>'+esc(m.nombre||'')+'</b></td><td>'+esc(m.tipo||'')+'</td>' +
+      '<td>'+esc(m.area||'')+'</td><td>'+esc(m.criticidad||'')+'</td>' +
+      '<td><span class="badge '+cls+'">'+esc(est||'—')+'</span></td>' +
+      '<td>'+(m.n_averias||0)+'</td><td>'+esc(m.ultima_averia||'—')+'</td></tr>';
+  });
+  t.innerHTML = h + '</tbody>';
+}
+
 function verHistorial(id){
   switchTab('averias');
   document.getElementById('avMaq').value = id;
@@ -286,37 +718,69 @@ function verHistorial(id){
   buscarAverias();
 }
 
-// ═══════════ REPUESTOS ═══════════
+// ══════════════════════════════════════════════════════════════
+// REPUESTOS
+// ══════════════════════════════════════════════════════════════
 function buscarRepuestos(){
-  var p = new URLSearchParams();
   var q = document.getElementById('repQ').value.trim();
-  if(q) p.set('q', q);
-  if(document.getElementById('repBajo').value) p.set('bajo_stock','1');
+  var bajo = document.getElementById('repBajo').value === '1';
   var t = document.getElementById('tblRepuestos');
   t.innerHTML = '<tbody><tr><td class="loading">⏳ Buscando...</td></tr></tbody>';
-  api('/api/db/repuestos?' + p.toString(), function(r){
-    if(!r.ok){ t.innerHTML = '<tbody><tr><td class="no-data">⚠️ '+esc(r.error)+'</td></tr></tbody>'; return; }
-    if(!r.repuestos.length){ t.innerHTML = '<tbody><tr><td class="no-data">Sin resultados</td></tr></tbody>'; return; }
-    var h = '<thead><tr><th>Ref.</th><th>Descripción</th><th>Ubicación</th><th>Stock</th><th>Mínimo</th><th>Últ. entrada</th><th>Últ. salida</th></tr></thead><tbody>';
-    r.repuestos.forEach(function(x){
-      var bajo = x.stock != null && x.stock_minimo != null && Number(x.stock) < Number(x.stock_minimo);
-      h += '<tr><td>'+esc(x.referencia)+'</td><td>'+esc(x.descripcion||'')+'</td>' +
-        '<td>'+esc(x.ubicacion||'')+'</td>' +
-        '<td>'+(bajo ? '<span class="badge b-red">'+x.stock+'</span>' : (x.stock!=null?x.stock:'—'))+'</td>' +
-        '<td>'+(x.stock_minimo!=null?x.stock_minimo:'—')+'</td>' +
-        '<td class="muted">'+esc(x.fecha_ult_entrada||'')+'</td>' +
-        '<td class="muted">'+esc(x.fecha_ult_salida||'')+'</td></tr>';
+
+  var p;
+  if(MODO === 'servidor'){
+    var qp = new URLSearchParams();
+    if(q) qp.set('q', q);
+    if(bajo) qp.set('bajo_stock','1');
+    p = api('/api/db/repuestos?' + qp.toString()).then(function(r){ return { lista: r.repuestos, total: r.total }; });
+  } else {
+    p = fbRepuestos().then(function(reps){
+      var out = reps;
+      if(q){
+        var palabras = q.split(/\s+/).map(norm);
+        out = out.filter(function(r){
+          var campos = norm(r.referencia + ' ' + r.descripcion + ' ' + r.ubicacion);
+          return palabras.every(function(pal){ return campos.indexOf(pal) !== -1; });
+        });
+      }
+      if(bajo){
+        out = out.filter(function(r){
+          return r.stock != null && r.stock_minimo != null &&
+                 Number(r.stock_minimo) > 0 && Number(r.stock) < Number(r.stock_minimo);
+        });
+      }
+      return { lista: out.slice(0,300), total: out.length };
     });
-    t.innerHTML = h + '</tbody>' +
-      (r.total >= 300 ? '<tfoot><tr><td colspan="7" class="muted" style="padding:10px">Mostrando los primeros 300 — afina la búsqueda</td></tr></tfoot>' : '');
+  }
+  p.then(function(res){ renderRepuestos(res.lista, res.total); }).catch(function(e){
+    t.innerHTML = '<tbody><tr><td class="no-data">⚠️ ' + esc(e.message || e) + '</td></tr></tbody>';
   });
 }
 
-// ═══════════ SYNC MANUAL ═══════════
+function renderRepuestos(lista, total){
+  var t = document.getElementById('tblRepuestos');
+  if(!lista.length){ t.innerHTML = '<tbody><tr><td class="no-data">Sin resultados</td></tr></tbody>'; return; }
+  var h = '<thead><tr><th>Ref.</th><th>Descripción</th><th>Ubicación</th><th>Stock</th><th>Mínimo</th><th>Últ. entrada</th><th>Últ. salida</th></tr></thead><tbody>';
+  lista.forEach(function(x){
+    var bajo = x.stock != null && x.stock_minimo != null && Number(x.stock) < Number(x.stock_minimo);
+    h += '<tr><td>'+esc(x.referencia)+'</td><td>'+esc(x.descripcion||'')+'</td>' +
+      '<td>'+esc(x.ubicacion||'')+'</td>' +
+      '<td>'+(bajo ? '<span class="badge b-red">'+x.stock+'</span>' : (x.stock!=null?x.stock:'—'))+'</td>' +
+      '<td>'+(x.stock_minimo!=null?x.stock_minimo:'—')+'</td>' +
+      '<td class="muted">'+esc(x.fecha_ult_entrada||'')+'</td>' +
+      '<td class="muted">'+esc(x.fecha_ult_salida||'')+'</td></tr>';
+  });
+  t.innerHTML = h + '</tbody>' +
+    (total > 300 ? '<tfoot><tr><td colspan="7" class="muted" style="padding:10px">Mostrando 300 de '+total+' — afina la búsqueda</td></tr></tfoot>' : '');
+}
+
+// ══════════════════════════════════════════════════════════════
+// SYNC MANUAL (solo modo servidor)
+// ══════════════════════════════════════════════════════════════
 function sincronizar(){
   var b = document.getElementById('syncBtn');
   b.disabled = true; b.textContent = '⏳ Sincronizando...';
-  fetch(API + '/api/db/sync', {method:'POST'})
+  fetch('/api/db/sync', {method:'POST'})
     .then(function(r){ return r.json(); })
     .then(function(r){
       b.disabled = false; b.textContent = '⟳ Sincronizar ahora';
@@ -329,7 +793,7 @@ function sincronizar(){
     });
 }
 
-cargarResumen();
+init();
 </script>
 </body>
 </html>

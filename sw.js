@@ -46,7 +46,7 @@ self.addEventListener('notificationclick', function(e) {
 });
 
 // ── Cache shell ───────────────────────────────────────────────────
-const CACHE = 'panalcor-v8';
+const CACHE = 'panalcor-v9';
 const SHELL = [
   'panalcor_inicio.html','maquina.html','landing.html','admin.html',
   'averias.html','mis_tareas.html','plan_preventivo.html','preventivo.html',
@@ -77,6 +77,9 @@ self.addEventListener('activate', function(e) {
 self.addEventListener('fetch', function(e) {
   // Solo cachear peticiones http/https
   if (!e.request.url.startsWith('http')) return;
+
+  // API del servidor local: siempre a red, nunca cachear
+  if (e.request.url.includes('/api/')) return;
 
   if (e.request.url.includes('firebase') ||
       e.request.url.includes('googleapis') ||
