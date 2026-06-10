@@ -1,4 +1,4 @@
-// Service Worker — PANALCOR v7 (con FCM push)
+// Service Worker — PANALCOR v8 (con FCM push)
 importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js');
 
@@ -46,7 +46,7 @@ self.addEventListener('notificationclick', function(e) {
 });
 
 // ── Cache shell ───────────────────────────────────────────────────
-const CACHE = 'panalcor-v8';
+const CACHE = 'panalcor-v9';
 const SHELL = [
   'panalcor_inicio.html','maquina.html','landing.html','admin.html',
   'averias.html','mis_tareas.html','plan_preventivo.html','preventivo.html',

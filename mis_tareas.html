@@ -153,6 +153,34 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
 .av-accion-btn{display:inline-block;margin-top:12px;padding:8px 16px;border-radius:8px;font-family:'Barlow',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;border:none;transition:all .2s}
 .av-accion-btn.retomar{background:rgba(201,162,39,0.18);border:1px solid rgba(201,162,39,0.4);color:var(--gold-light)}
 .av-accion-btn.editar{background:rgba(46,204,113,0.15);border:1px solid rgba(46,204,113,0.4);color:var(--green)}
+
+/* ── TABLET SELECTOR ── */
+.tablet-screen{position:fixed;inset:0;background:var(--navy);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:998;padding:24px;gap:0}
+.tablet-header{text-align:center;margin-bottom:28px}
+.tablet-header h1{font-size:1.8rem;font-weight:900;color:var(--gold-light);letter-spacing:0.08em}
+.tablet-header p{font-size:0.8rem;color:rgba(255,255,255,0.4);margin-top:8px;letter-spacing:0.15em;text-transform:uppercase}
+.tablet-mec-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;width:100%;max-width:440px}
+.tablet-mec-btn{padding:22px 16px;background:var(--navy-mid);border:2px solid rgba(255,255,255,0.1);border-radius:14px;color:var(--white);font-family:'Barlow',sans-serif;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;-webkit-tap-highlight-color:transparent}
+.tablet-mec-btn:hover,.tablet-mec-btn:active{background:rgba(201,162,39,0.2);border-color:var(--gold);transform:scale(0.97)}
+.tablet-mec-btn .mec-ico{font-size:2rem}
+
+/* ── TABLET PIN ── */
+.tablet-pin-screen{position:fixed;inset:0;background:var(--navy);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:999;padding:24px;gap:14px}
+.tablet-pin-name{font-size:1.2rem;font-weight:900;color:var(--gold-light);letter-spacing:0.06em}
+.tablet-pin-dots{display:flex;gap:16px;margin:2px 0 4px}
+.tablet-pin-dot{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);background:transparent;transition:all .2s}
+.tablet-pin-dot.filled{background:var(--gold);border-color:var(--gold)}
+.tablet-pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:290px}
+.tablet-pin-key{padding:22px 10px;background:var(--navy-mid);border:2px solid rgba(255,255,255,0.1);border-radius:12px;color:var(--white);font-family:'Barlow',sans-serif;font-size:1.6rem;font-weight:700;cursor:pointer;transition:all .15s;text-align:center;-webkit-tap-highlight-color:transparent;user-select:none;line-height:1}
+.tablet-pin-key:active{background:rgba(201,162,39,0.3);border-color:var(--gold);transform:scale(0.93)}
+.tablet-pin-key.del{font-size:1.2rem;color:rgba(255,255,255,0.55)}
+.tablet-pin-key.ph{background:transparent;border-color:transparent;pointer-events:none}
+.tablet-pin-err{color:var(--red);font-size:0.9rem;min-height:22px;text-align:center;font-weight:700}
+.tablet-pin-back{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);padding:11px 24px;border-radius:9px;font-family:'Barlow',sans-serif;font-size:0.9rem;font-weight:700;cursor:pointer;margin-top:2px}
+
+/* ── TABLET LOGOUT ── */
+.tablet-logout-btn{display:none;padding:10px 20px;background:rgba(231,76,60,0.15);border:2px solid rgba(231,76,60,0.5);color:#e74c3c;border-radius:9px;font-family:'Barlow',sans-serif;font-size:0.9rem;font-weight:900;cursor:pointer;letter-spacing:0.06em;transition:all .2s;-webkit-tap-highlight-color:transparent}
+.tablet-logout-btn:active{background:rgba(231,76,60,0.35)}
 </style>
 <script>
 if('serviceWorker' in navigator){
@@ -195,6 +223,43 @@ if('serviceWorker' in navigator){
   <div id="mecBtnList"></div>
 </div>
 
+<!-- ══ TABLET SELECTOR ══ -->
+<div class="tablet-screen" id="tabletSelector">
+  <div class="tablet-header">
+    <h1>PANALCOR S.L.</h1>
+    <p>Selecciona tu nombre</p>
+  </div>
+  <div class="tablet-mec-grid" id="tabletMecGrid"></div>
+</div>
+
+<!-- ══ TABLET PIN ══ -->
+<div class="tablet-pin-screen" id="tabletPinScreen">
+  <div style="font-size:2.4rem">🔒</div>
+  <div class="tablet-pin-name" id="tabletPinName">—</div>
+  <div class="tablet-pin-dots">
+    <div class="tablet-pin-dot" id="tpd0"></div>
+    <div class="tablet-pin-dot" id="tpd1"></div>
+    <div class="tablet-pin-dot" id="tpd2"></div>
+    <div class="tablet-pin-dot" id="tpd3"></div>
+  </div>
+  <div class="tablet-pin-grid">
+    <button class="tablet-pin-key" onclick="tabletPinKey('1')">1</button>
+    <button class="tablet-pin-key" onclick="tabletPinKey('2')">2</button>
+    <button class="tablet-pin-key" onclick="tabletPinKey('3')">3</button>
+    <button class="tablet-pin-key" onclick="tabletPinKey('4')">4</button>
+    <button class="tablet-pin-key" onclick="tabletPinKey('5')">5</button>
+    <button class="tablet-pin-key" onclick="tabletPinKey('6')">6</button>
+    <button class="tablet-pin-key" onclick="tabletPinKey('7')">7</button>
+    <button class="tablet-pin-key" onclick="tabletPinKey('8')">8</button>
+    <button class="tablet-pin-key" onclick="tabletPinKey('9')">9</button>
+    <button class="tablet-pin-key ph"></button>
+    <button class="tablet-pin-key" onclick="tabletPinKey('0')">0</button>
+    <button class="tablet-pin-key del" onclick="tabletPinDel()">⌫</button>
+  </div>
+  <div class="tablet-pin-err" id="tabletPinErr"></div>
+  <button class="tablet-pin-back" onclick="volverTabletSelector()">← Cambiar</button>
+</div>
+
 <!-- ══ APP ══ -->
 <div id="app" style="display:none">
 
@@ -233,7 +298,8 @@ if('serviceWorker' in navigator){
   <circle cx="20" cy="24" r="3"   fill="#0d1b2a"/>
 </svg></a>
         <a href="panalcor_inicio.html" title="Inicio" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:9px;flex-shrink:0;background:rgba(201,162,39,0.12);border:1.5px solid rgba(201,162,39,0.4);transition:all .2s" onmouseover="this.style.background='rgba(201,162,39,0.28)'" onmouseout="this.style.background='rgba(201,162,39,0.12)'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z" fill="rgba(201,162,39,0.25)" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 21V15H15V21" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/></svg></a>
-        <button class="header-back" onclick="cambiarMecanico()">Cambiar</button>
+        <button class="header-back" onclick="cambiarMecanico()" id="btnCambiarMec">Cambiar</button>
+        <button class="tablet-logout-btn" id="tabletLogoutBtn" onclick="cerrarSesionTablet()">CERRAR SESIÓN</button>
       </div>
     </div>
     <div class="vista-tabs">
@@ -362,6 +428,14 @@ var FB_CFG = {
 };
 if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
 var DB = firebase.database();
+
+/* ══ TABLET MODE ══ */
+(function(){
+  var p = new URLSearchParams(window.location.search);
+  if(p.has('tablet') && p.get('tablet') !== '0') localStorage.setItem('panalcor_tablet_mode','1');
+  else if(p.get('tablet') === '0') localStorage.removeItem('panalcor_tablet_mode');
+})();
+var _tabletMode = localStorage.getItem('panalcor_tablet_mode') === '1';
 
 /* ══ ESTADO ══ */
 var MEC_SESION_KEY = 'mecSesion';
@@ -809,6 +883,15 @@ function _adminSessionValida(){
 
 // ── SESION UNIFICADA ──────────────────────────────
 (function(){
+  if(_tabletMode){
+    // En modo tablet la sesión la gestiona el propio sistema de tablet
+    var s=null;
+    try{s=JSON.parse(localStorage.getItem(MEC_SESION_KEY)||'null');}catch(e){}
+    if(s&&s.nombre&&s.tablet&&(s.expires===null||Date.now()<s.expires)){
+      mecActual=s.nombre;
+    }
+    return; // nunca redirigir a panalcor_inicio
+  }
   var ps=null;
   try{ps=JSON.parse(localStorage.getItem('panalcor_session')||'null');}catch(e){}
   if(ps&&(ps.rol==='mecanico'||ps.rol==='admin')&&Date.now()<ps.expires){
@@ -826,6 +909,17 @@ function _adminSessionValida(){
 })();
 
 (function(){
+  if(_tabletMode){
+    document.getElementById('loginScreen').style.display='none';
+    if(mecActual){
+      arrancarApp();
+      _mostrarBtnLogoutTablet();
+      iniciarTabletLogout();
+    } else {
+      mostrarTabletSelector();
+    }
+    return;
+  }
   var nombre = _mecSesionValida();
   if(nombre){
     mecActual = nombre;
@@ -838,6 +932,159 @@ function _adminSessionValida(){
     mostrarSelectorMecanico();
   }
 })();
+
+/* ══════════════════════════════════════════════════
+   TABLET MODE — funciones
+══════════════════════════════════════════════════ */
+var _tabletPinBuffer = '';
+var _tabletPinMec    = '';
+var _tabletLogoutTimer = null;
+var _TURNOS_MIN = [6*60, 14*60, 22*60]; // 6:00, 14:00, 22:00
+var _MEC_FALLBACK = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE'];
+
+function mostrarTabletSelector(){
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('mecSelector').style.display = 'none';
+  document.getElementById('tabletPinScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'none';
+  var grid = document.getElementById('tabletMecGrid');
+  grid.innerHTML = '<div style="color:rgba(255,255,255,0.4);font-size:0.85rem;text-align:center;padding:20px">Cargando...</div>';
+  document.getElementById('tabletSelector').style.display = 'flex';
+  DB.ref('config/mecanicos').once('value')
+    .then(function(snap){ var v=snap.val(); _renderTabletGrid(v&&v.length?v:_MEC_FALLBACK); })
+    .catch(function(){ _renderTabletGrid(_MEC_FALLBACK); });
+}
+
+function _renderTabletGrid(mecs){
+  var grid = document.getElementById('tabletMecGrid');
+  grid.innerHTML = mecs.map(function(m){
+    return '<button class="tablet-mec-btn" onclick="seleccionarMecTablet(\''+m.replace(/'/g,"\\'")+'\')">'
+         + '<span class="mec-ico">👷</span><span>'+m+'</span></button>';
+  }).join('');
+}
+
+function seleccionarMecTablet(nombre){
+  _tabletPinMec    = nombre;
+  _tabletPinBuffer = '';
+  _actualizarPuntos();
+  document.getElementById('tabletPinName').textContent = nombre;
+  document.getElementById('tabletPinErr').textContent  = '';
+  document.getElementById('tabletSelector').style.display   = 'none';
+  document.getElementById('tabletPinScreen').style.display  = 'flex';
+}
+
+function tabletPinKey(d){
+  if(_tabletPinBuffer.length >= 4) return;
+  _tabletPinBuffer += d;
+  _actualizarPuntos();
+  if(_tabletPinBuffer.length === 4) setTimeout(_verificarTabletPin, 150);
+}
+
+function tabletPinDel(){
+  if(_tabletPinBuffer.length > 0){
+    _tabletPinBuffer = _tabletPinBuffer.slice(0,-1);
+    _actualizarPuntos();
+  }
+}
+
+function _actualizarPuntos(){
+  for(var i=0;i<4;i++){
+    var d = document.getElementById('tpd'+i);
+    if(d) d.classList.toggle('filled', i < _tabletPinBuffer.length);
+  }
+}
+
+function _verificarTabletPin(){
+  var pin = _tabletPinBuffer;
+  var nombre = _tabletPinMec;
+  DB.ref('config/mecanicos_pin').once('value').then(function(snap){
+    var pins = snap.val() || {};
+    if(pins[nombre] && String(pins[nombre]) === pin){
+      var sesion = {nombre:nombre, expires:null, sessionStart:Date.now(), tablet:true};
+      localStorage.setItem(MEC_SESION_KEY, JSON.stringify(sesion));
+      localStorage.setItem('panalcor_session', JSON.stringify(
+        {nombre:nombre, rol:'mecanico', expires:Date.now()+24*3600*1000, tablet:true}
+      ));
+      mecActual = nombre;
+      document.getElementById('tabletPinScreen').style.display = 'none';
+      _mostrarBtnLogoutTablet();
+      arrancarApp();
+      iniciarTabletLogout();
+    } else {
+      document.getElementById('tabletPinErr').textContent = '❌ PIN incorrecto';
+      _tabletPinBuffer = '';
+      _actualizarPuntos();
+      setTimeout(function(){ document.getElementById('tabletPinErr').textContent=''; }, 2200);
+    }
+  }).catch(function(){
+    document.getElementById('tabletPinErr').textContent = '❌ Error de conexión';
+    _tabletPinBuffer = '';
+    _actualizarPuntos();
+  });
+}
+
+function volverTabletSelector(){
+  _tabletPinBuffer = '';
+  document.getElementById('tabletPinScreen').style.display = 'none';
+  mostrarTabletSelector();
+}
+
+function _mostrarBtnLogoutTablet(){
+  var btn = document.getElementById('tabletLogoutBtn');
+  var btnCambiar = document.getElementById('btnCambiarMec');
+  if(btn){ btn.style.display = 'inline-flex'; btn.style.alignItems='center'; }
+  if(btnCambiar) btnCambiar.style.display = 'none';
+}
+
+function cerrarSesionTablet(){
+  if(_tabletLogoutTimer){ clearInterval(_tabletLogoutTimer); _tabletLogoutTimer=null; }
+  localStorage.removeItem(MEC_SESION_KEY);
+  localStorage.removeItem('panalcor_session');
+  mecActual = null;
+  if(dbListener){ try{ DB.ref('asignaciones').off('value',dbListener); }catch(e){} dbListener=null; }
+  var btn = document.getElementById('tabletLogoutBtn');
+  var btnCambiar = document.getElementById('btnCambiarMec');
+  if(btn) btn.style.display = 'none';
+  if(btnCambiar) btnCambiar.style.display = '';
+  mostrarTabletSelector();
+}
+
+/* ── AUTO-LOGOUT POR TURNO ── */
+function _ultimoCambioTurno(){
+  var now = new Date();
+  var hoy = new Date(now); hoy.setSeconds(0,0);
+  var candidatos = [];
+  _TURNOS_MIN.forEach(function(t){
+    var d = new Date(hoy);
+    d.setHours(Math.floor(t/60), t%60, 0, 0);
+    if(d.getTime() <= now.getTime()) candidatos.push(d.getTime());
+  });
+  // Último turno del día anterior (22:00)
+  var ayer22 = new Date(hoy);
+  ayer22.setDate(ayer22.getDate()-1);
+  ayer22.setHours(22,0,0,0);
+  candidatos.push(ayer22.getTime());
+  return Math.max.apply(null, candidatos);
+}
+
+function _checkShiftLogout(){
+  if(!mecActual || !_tabletMode) return;
+  var s=null;
+  try{ s=JSON.parse(localStorage.getItem(MEC_SESION_KEY)||'null'); }catch(e){}
+  if(!s||!s.tablet||!s.sessionStart) return;
+  var lastChange = _ultimoCambioTurno();
+  var GRACE = 10*60*1000; // 10 min
+  if(s.sessionStart < lastChange && (Date.now()-lastChange) >= GRACE){
+    showToast('Turno finalizado — sesión cerrada automáticamente');
+    setTimeout(cerrarSesionTablet, 1800);
+  }
+}
+
+function iniciarTabletLogout(){
+  if(_tabletLogoutTimer) clearInterval(_tabletLogoutTimer);
+  _tabletLogoutTimer = setInterval(_checkShiftLogout, 30000);
+  _checkShiftLogout();
+}
 
 // ══════════════════════════════════════════════════════════════
 // INTEGRALES — zona informativa para mecánicos

@@ -1160,6 +1160,18 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card config-section">
+    <div class="sec-title">📱 PINs de tablet (4 dígitos)</div>
+    <p style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:16px;line-height:1.6">
+      PIN numérico de 4 dígitos para entrar desde las <b>tablets compartidas</b>. No afecta a las contraseñas de acceso desde móvil personal.
+    </p>
+    <div id="tabletPinsList" style="margin-bottom:4px"></div>
+    <div style="display:flex;align-items:center;gap:14px;margin-top:10px;flex-wrap:wrap">
+      <button class="btn-export btn-gold" onclick="guardarPinsTablet()">💾 Guardar PINs</button>
+      <span id="tabletPinsMsg" style="font-size:0.82rem;color:var(--green)"></span>
+    </div>
+  </div>
+
+  <div class="card config-section">
     <div class="sec-title">🔑 Cambiar contraseña de administrador</div>
     <div class="field">
       <label>Contraseña actual</label>
@@ -2809,6 +2821,60 @@ function _generarExcelMensual(mes, mesLabel, turnos, tareasMap){
 }
 
 // ══════════════════════════════════════════════════
+// CONFIGURACIÓN — PINs TABLET
+// ══════════════════════════════════════════════════
+var _tabletMecList = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE'];
+
+function cargarPinsTablet(){
+  var container = document.getElementById('tabletPinsList');
+  if(!container) return;
+  container.innerHTML = '<span style="color:rgba(255,255,255,0.3);font-size:0.85rem">Cargando...</span>';
+  Promise.all([
+    DB.ref('config/mecanicos_pin').once('value'),
+    DB.ref('config/mecanicos').once('value')
+  ]).then(function(snaps){
+    var pins = snaps[0].val() || {};
+    var lista = snaps[1].val();
+    if(lista && lista.length) _tabletMecList = lista;
+    _renderPinsList(_tabletMecList, pins);
+  }).catch(function(){ _renderPinsList(_tabletMecList, {}); });
+}
+
+function _renderPinsList(mecs, pins){
+  var container = document.getElementById('tabletPinsList');
+  if(!container) return;
+  container.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">'
+    + mecs.map(function(m){
+        var pin = pins[m] || '';
+        return '<div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.04);border-radius:8px;padding:10px 12px">'
+          + '<span style="flex:1;font-weight:700;font-size:0.9rem">'+m+'</span>'
+          + '<input type="text" inputmode="numeric" maxlength="4" placeholder="PIN" data-mec="'+m+'" value="'+pin+'"'
+          + ' style="width:80px;background:var(--navy-deep);color:#fff;border:1px solid rgba(255,255,255,0.2);'
+          + 'border-radius:7px;padding:8px 10px;font-family:Barlow,sans-serif;font-size:1rem;text-align:center;letter-spacing:0.2em"'
+          + ' oninput="this.value=this.value.replace(/[^0-9]/g,\'\').slice(0,4)">'
+          + '</div>';
+      }).join('')
+    + '</div>';
+}
+
+function guardarPinsTablet(){
+  var inputs = document.querySelectorAll('#tabletPinsList input[data-mec]');
+  var pinsObj = {};
+  var errores = [];
+  inputs.forEach(function(inp){
+    var pin = inp.value.trim();
+    if(pin === '') return;
+    if(pin.length !== 4){ errores.push(inp.dataset.mec+': el PIN debe tener 4 dígitos'); return; }
+    pinsObj[inp.dataset.mec] = pin;
+  });
+  if(errores.length){ showToast('⚠️ '+errores[0]); return; }
+  DB.ref('config/mecanicos_pin').set(pinsObj).then(function(){
+    var msg = document.getElementById('tabletPinsMsg');
+    if(msg){ msg.textContent = '✓ PINs guardados'; setTimeout(function(){ msg.textContent=''; }, 3000); }
+  }).catch(function(e){ showToast('❌ Error al guardar: '+e.message); });
+}
+
+// ══════════════════════════════════════════════════
 // CONFIGURACIÓN
 // ══════════════════════════════════════════════════
 function guardarSesionConfig(){
@@ -3741,8 +3807,8 @@ function switchTab(name){
   if(name==='docs') { docsInit(); }
   if(name==='cfg') cargarTareasDiariasAdmin();
   if(name==='cfg') cargarFechasRealizacion();
-  if(name==='cfg') cargarFechasRealizacion();
   if(name==='cfg') renderEstadoDatos();
+  if(name==='cfg') cargarPinsTablet();
   if(name==='rec') { cargarMecanicosParaRec(); cargarRecordatorios(); }
   if(name==='enc') cargarAvisosEncargados();
   if(name==='int') { cargarCatalogoRepuestos(); initIntegrales(); }
