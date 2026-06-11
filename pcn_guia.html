@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan de Continuidad de Negocio — PANALCOR</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,600;0,700;0,900;1,400&display=swap');
+
+  :root{
+    --azul:#1a3a5c;
+    --azul-mid:#2056a0;
+    --azul-light:#3b82c4;
+    --gold:#c8960c;
+    --gold-light:#f0c040;
+    --verde:#1a6b3a;
+    --verde-light:#2ecc71;
+    --rojo:#8b1a1a;
+    --rojo-light:#e74c3c;
+    --naranja:#c45c10;
+    --gris:#f4f6f8;
+    --gris-mid:#dde3ea;
+    --texto:#1a2535;
+    --texto-suave:#4a5568;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Barlow',sans-serif;color:var(--texto);background:#fff;font-size:14px;line-height:1.7}
+
+  /* ── PORTADA ── */
+  .portada{
+    background:linear-gradient(160deg,var(--azul) 0%,var(--azul-mid) 60%,var(--azul-light) 100%);
+    color:#fff;min-height:100vh;display:flex;flex-direction:column;
+    justify-content:center;align-items:center;text-align:center;padding:60px 40px;
+    page-break-after:always;
+  }
+  .portada .logo{font-size:4rem;margin-bottom:20px}
+  .portada h1{font-size:2.6rem;font-weight:900;letter-spacing:0.04em;line-height:1.2;margin-bottom:12px}
+  .portada .subtitulo{font-size:1.1rem;font-weight:300;opacity:0.85;max-width:520px;margin:0 auto 32px}
+  .portada .tag{display:inline-block;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.35);
+    padding:6px 18px;border-radius:20px;font-size:0.82rem;font-weight:700;letter-spacing:0.1em;margin:4px}
+  .portada .footer-portada{position:absolute;bottom:32px;font-size:0.78rem;opacity:0.5;letter-spacing:0.1em}
+
+  /* ── CABECERA DE CAPÍTULO ── */
+  .cap-header{
+    background:linear-gradient(135deg,var(--azul) 0%,var(--azul-mid) 100%);
+    color:#fff;padding:18px 32px 14px;
+    border-bottom:4px solid var(--gold);
+    display:flex;align-items:center;gap:14px;
+    margin-bottom:28px;
+  }
+  .cap-num{font-size:2.2rem;font-weight:900;opacity:0.35;line-height:1}
+  .cap-titulo{font-size:1.35rem;font-weight:900;letter-spacing:0.03em}
+  .cap-sub{font-size:0.8rem;font-weight:400;opacity:0.75;margin-top:2px}
+
+  /* ── LAYOUT ── */
+  .pagina{padding:32px 40px;max-width:860px;margin:0 auto}
+  @media print{
+    .pagina{padding:20px 28px;max-width:none}
+    .portada{min-height:100vh}
+    .salto{page-break-before:always}
+    body{font-size:12.5px}
+  }
+
+  /* ── TIPOGRAFÍA ── */
+  h2{font-size:1.15rem;font-weight:900;color:var(--azul);margin:26px 0 10px;
+     padding-bottom:6px;border-bottom:2px solid var(--gris-mid)}
+  h3{font-size:1rem;font-weight:700;color:var(--azul-mid);margin:18px 0 8px}
+  p{margin-bottom:12px;color:var(--texto-suave)}
+  ul,ol{padding-left:22px;margin-bottom:12px;color:var(--texto-suave)}
+  li{margin-bottom:5px}
+  strong{color:var(--texto);font-weight:700}
+  em{color:var(--texto-suave);font-style:italic}
+
+  /* ── CAJAS ── */
+  .caja{border-radius:10px;padding:16px 20px;margin:16px 0}
+  .caja-azul{background:#eef4fb;border-left:4px solid var(--azul-light)}
+  .caja-gold{background:#fdf8e8;border-left:4px solid var(--gold)}
+  .caja-verde{background:#eafaf1;border-left:4px solid var(--verde-light)}
+  .caja-rojo{background:#fdf0f0;border-left:4px solid var(--rojo-light)}
+  .caja-naranja{background:#fef5ec;border-left:4px solid var(--naranja)}
+  .caja .etiqueta{font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px}
+  .caja-azul .etiqueta{color:var(--azul-mid)}
+  .caja-gold .etiqueta{color:var(--gold)}
+  .caja-verde .etiqueta{color:var(--verde)}
+  .caja-rojo .etiqueta{color:var(--rojo)}
+  .caja-naranja .etiqueta{color:var(--naranja)}
+  .caja p,.caja ul,.caja ol{color:var(--texto-suave);margin-bottom:6px}
+  .caja p:last-child,.caja ul:last-child{margin-bottom:0}
+
+  /* ── TABLA ── */
+  table{width:100%;border-collapse:collapse;font-size:0.85rem;margin:14px 0}
+  th{background:var(--azul);color:#fff;padding:8px 12px;text-align:left;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em}
+  td{padding:8px 12px;border-bottom:1px solid var(--gris-mid);vertical-align:top}
+  tr:nth-child(even) td{background:var(--gris)}
+  tr:hover td{background:#e8f0fa}
+
+  /* ── BADGE ── */
+  .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:0.7rem;font-weight:700}
+  .b-alto{background:#fde8e8;color:var(--rojo);border:1px solid #f5b7b7}
+  .b-medio{background:#fef3e2;color:var(--naranja);border:1px solid #fad5a5}
+  .b-bajo{background:#eafaf1;color:var(--verde);border:1px solid #a9dfbf}
+
+  /* ── TIMELINE ── */
+  .timeline{position:relative;padding-left:32px;margin:16px 0}
+  .timeline::before{content:'';position:absolute;left:10px;top:4px;bottom:4px;width:2px;background:var(--gris-mid)}
+  .tl-item{position:relative;margin-bottom:18px}
+  .tl-item::before{content:'';position:absolute;left:-26px;top:6px;width:12px;height:12px;
+    border-radius:50%;background:var(--azul-mid);border:2px solid #fff;box-shadow:0 0 0 2px var(--azul-mid)}
+  .tl-item h3{margin-top:0}
+
+  /* ── CHECKLIST ── */
+  .check-item{display:flex;gap:10px;align-items:flex-start;padding:8px 12px;
+    border-radius:7px;margin-bottom:4px;background:var(--gris)}
+  .check-item .box{width:18px;height:18px;min-width:18px;border:2px solid var(--azul-light);
+    border-radius:4px;margin-top:1px}
+  .check-item .txt{font-size:0.88rem;color:var(--texto-suave)}
+
+  /* ── ESCENARIO ── */
+  .escenario{border:1px solid var(--gris-mid);border-radius:12px;margin:16px 0;overflow:hidden}
+  .escenario-header{background:var(--azul);color:#fff;padding:10px 16px;
+    display:flex;align-items:center;gap:10px;font-weight:700;font-size:0.95rem}
+  .escenario-ico{font-size:1.4rem}
+  .escenario-body{padding:14px 18px}
+  .escenario-body table{margin:8px 0}
+
+  /* ── ZURICH ── */
+  .zurich-box{background:linear-gradient(135deg,#0a0a5c 0%,#1a1aaa 100%);
+    color:#fff;border-radius:12px;padding:20px 24px;margin:20px 0}
+  .zurich-box h3{color:#fff;border:none;margin-top:0;font-size:1rem}
+  .zurich-box p,.zurich-box li{color:rgba(255,255,255,0.8)}
+  .zurich-box ul{color:rgba(255,255,255,0.8)}
+  .zurich-logo{font-size:1.5rem;font-weight:900;letter-spacing:0.05em;margin-bottom:8px;
+    color:#fff;text-transform:uppercase}
+  .zurich-tag{display:inline-block;background:rgba(255,255,255,0.15);padding:2px 10px;
+    border-radius:10px;font-size:0.72rem;font-weight:700;margin-bottom:12px}
+
+  /* ── PIE DE PÁGINA ── */
+  .pie{text-align:center;color:rgba(0,0,0,0.25);font-size:0.72rem;
+    border-top:1px solid var(--gris-mid);padding-top:14px;margin-top:40px}
+
+  /* ── SEPARADOR ── */
+  .sep{border:none;border-top:1px solid var(--gris-mid);margin:24px 0}
+
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- PORTADA -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="portada">
+  <div class="logo">🏭</div>
+  <h1>Plan de Continuidad<br>de Negocio</h1>
+  <div class="subtitulo">Guía práctica y coloquial para entender el PCN, aplicarlo en PANALCOR y sacarle partido al seguro con Zurich</div>
+  <div>
+    <span class="tag">PANALCOR S.L.</span>
+    <span class="tag">PCN / BCP</span>
+    <span class="tag">ISO 22301</span>
+    <span class="tag">Zurich Insurance</span>
+  </div>
+  <div class="footer-portada">Elaborado Jun 2026 · Uso interno · Confidencial</div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- CAPÍTULO 1 — QUÉ ES EL PCN -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="pagina">
+  <div class="cap-header">
+    <div class="cap-num">01</div>
+    <div>
+      <div class="cap-titulo">¿Qué es el PCN y para qué sirve?</div>
+      <div class="cap-sub">La explicación sin tecnicismos</div>
+    </div>
+  </div>
+
+  <p>Imagina que mañana por la mañana llegas a la fábrica y hay un incendio en la zona de silos de harina. Los bomberos lo apagan, no hay heridos, pero la zona de producción principal está fuera de servicio durante dos semanas. ¿Qué haces? ¿A quién llamas primero? ¿Cómo le dices a los clientes que no van a recibir su pedido? ¿Sabes exactamente qué máquinas se pueden seguir usando?</p>
+
+  <p>Si tienes que ponerte a pensar todo eso <em>en ese momento</em>, ya has perdido tiempo y dinero. El <strong>Plan de Continuidad de Negocio (PCN)</strong> es exactamente eso: el documento que tienes preparado de antemano con todas las respuestas, para que cuando llegue el lío sepas exactamente qué hacer, en qué orden y quién se encarga de qué.</p>
+
+  <div class="caja caja-azul">
+    <div class="etiqueta">💡 En una frase</div>
+    <p>El PCN es el "manual de supervivencia" de la empresa ante cualquier crisis que interrumpa la producción. No evita que pasen cosas malas, pero garantiza que cuando pasan, la empresa aguanta y se recupera lo antes posible.</p>
+  </div>
+
+  <h2>PCN vs. otros planes que ya conoces</h2>
+  <p>Es fácil confundirlo con otros documentos, así que aquí va la diferencia clara:</p>
+
+  <table>
+    <thead><tr><th>Plan</th><th>¿Qué hace?</th><th>¿Cuándo actúa?</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Plan de Emergencia / Autoprotección (PCI)</strong></td><td>Cómo evacuar y apagar el fuego</td><td>Durante el incidente (primeros minutos)</td></tr>
+      <tr><td><strong>DPCE (ATEX)</strong></td><td>Cómo evitar explosiones</td><td>Antes del incidente (prevención)</td></tr>
+      <tr><td><strong>PCN / BCP</strong></td><td>Cómo mantener o recuperar la producción</td><td>Después del incidente (recuperación)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="caja caja-gold">
+    <div class="etiqueta">⚠️ ¿Es obligatorio el PCN?</div>
+    <p>Para una PYME industrial como PANALCOR <strong>no es obligatorio por ley</strong> (a diferencia del Plan de Autoprotección o el DPCE). Sin embargo, <strong>Zurich y la mayoría de aseguradoras lo valoran mucho</strong> a la hora de calcular la prima y, sobre todo, a la hora de pagar una indemnización por lucro cesante. Si no tienes PCN y sufres un siniestro, la aseguradora puede argumentar que no tomaste medidas de mitigación razonables.</p>
+  </div>
+
+  <h2>¿Qué terminología vas a encontrar?</h2>
+  <table>
+    <thead><tr><th>Término</th><th>Qué significa en el día a día</th></tr></thead>
+    <tbody>
+      <tr><td><strong>PCN / BCP</strong></td><td>Plan de Continuidad de Negocio (en inglés: Business Continuity Plan)</td></tr>
+      <tr><td><strong>RTO</strong></td><td>Recovery Time Objective — el tiempo máximo que puedes estar parado sin que sea un desastre</td></tr>
+      <tr><td><strong>RPO</strong></td><td>Recovery Point Objective — cuánto tiempo de datos o producción puedes permitirte perder</td></tr>
+      <tr><td><strong>BIA</strong></td><td>Business Impact Analysis — el análisis de qué te costaría estar parado (dinero, clientes, imagen)</td></tr>
+      <tr><td><strong>Lucro cesante</strong></td><td>El dinero que dejas de ganar mientras estás parado — es lo que cubre Zurich si lo tienes contratado</td></tr>
+      <tr><td><strong>ISO 22301</strong></td><td>La norma internacional que define cómo hacer bien un PCN — no es obligatoria pero es la referencia</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pie">PCN PANALCOR S.L. · Capítulo 1 de 6 · Jun 2026</div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- CAPÍTULO 2 — POR QUÉ LO NECESITA PANALCOR -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="pagina salto">
+  <div class="cap-header">
+    <div class="cap-num">02</div>
+    <div>
+      <div class="cap-titulo">¿Por qué lo necesita PANALCOR en concreto?</div>
+      <div class="cap-sub">Riesgos reales de una panadería industrial</div>
+    </div>
+  </div>
+
+  <p>Una panadería industrial tiene una combinación de riesgos bastante particular. No es lo mismo que una oficina, que puede trabajar desde casa si hay un incendio. PANALCOR depende de maquinaria específica, de materias primas perecederas, de turnos nocturnos y de clientes (supermercados, hostelería) que necesitan el pan a una hora concreta. Un día parado no es solo un día sin facturar: pueden ser contratos rotos.</p>
+
+  <h2>Los cinco grandes enemigos de la continuidad en PANALCOR</h2>
+
+  <div class="escenario">
+    <div class="escenario-header"><div class="escenario-ico">🔥</div>Escenario 1 — Incendio o explosión de polvo de harina</div>
+    <div class="escenario-body">
+      <p>Ya sabemos por la sección ATEX que el polvo de harina es explosivo. Un fallo en la aspiración o una chispa puede causar un incendio importante en los silos o en la zona de producción.</p>
+      <table>
+        <tr><td><strong>Impacto inmediato</strong></td><td>Paralización total o parcial. Posibles daños estructurales.</td></tr>
+        <tr><td><strong>Tiempo típico de recuperación</strong></td><td>2 días (incendio menor) — 3 meses (daños graves)</td></tr>
+        <tr><td><strong>Pérdida económica estimada</strong></td><td>Facturación diaria × días parado + coste de reparación</td></tr>
+        <tr><td><strong>Lo que cubre Zurich</strong></td><td>Daños materiales + lucro cesante (si está contratado)</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="escenario">
+    <div class="escenario-header"><div class="escenario-ico">⚡</div>Escenario 2 — Avería grave en maquinaria crítica</div>
+    <div class="escenario-body">
+      <p>El horno principal, el túnel de congelación o el compresor frigorífico se averían y no hay repuesto disponible. El plazo de entrega del fabricante es de 3 semanas.</p>
+      <table>
+        <tr><td><strong>Impacto inmediato</strong></td><td>Reducción de producción 50–100% según qué máquina</td></tr>
+        <tr><td><strong>Tiempo típico de recuperación</strong></td><td>1–4 semanas</td></tr>
+        <tr><td><strong>Lo que cubre Zurich</strong></td><td>Avería de maquinaria (póliza específica) + lucro cesante</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="escenario">
+    <div class="escenario-header"><div class="escenario-ico">💧</div>Escenario 3 — Inundación o rotura de tubería</div>
+    <div class="escenario-body">
+      <p>Una tubería de la red de rociadores o de suministro de agua revienta durante la noche. El agua daña la instalación eléctrica y la maquinaria antes de que alguien lo detecte.</p>
+      <table>
+        <tr><td><strong>Impacto inmediato</strong></td><td>Posible corte eléctrico total + daños en equipos</td></tr>
+        <tr><td><strong>Tiempo típico de recuperación</strong></td><td>3 días — 3 semanas</td></tr>
+        <tr><td><strong>Lo que cubre Zurich</strong></td><td>Daños por agua + daños eléctricos + lucro cesante</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="escenario">
+    <div class="escenario-header"><div class="escenario-ico">🦠</div>Escenario 4 — Contaminación alimentaria o retirada de producto</div>
+    <div class="escenario-body">
+      <p>Se detecta un problema de calidad o contaminación en un lote. Hay que retirar producto del mercado y parar la línea afectada para investigar.</p>
+      <table>
+        <tr><td><strong>Impacto inmediato</strong></td><td>Daño reputacional + coste de retirada + parada de línea</td></tr>
+        <tr><td><strong>Tiempo típico de recuperación</strong></td><td>2 días — 2 semanas (más el daño de imagen)</td></tr>
+        <tr><td><strong>Lo que cubre Zurich</strong></td><td>Seguro de retirada de producto (si está contratado)</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="escenario">
+    <div class="escenario-header"><div class="escenario-ico">👷</div>Escenario 5 — Baja de personal clave</div>
+    <div class="escenario-body">
+      <p>El mecánico que conoce el sistema de frío causa baja larga o deja la empresa sin previo aviso. Nadie más sabe cómo actuar ante una avería en los compresores.</p>
+      <table>
+        <tr><td><strong>Impacto inmediato</strong></td><td>Vulnerabilidad operativa ante averías en sistemas críticos</td></tr>
+        <tr><td><strong>Tiempo típico de recuperación</strong></td><td>Indefinido si no hay plan de relevo</td></tr>
+        <tr><td><strong>Lo que cubre Zurich</strong></td><td>Póliza de persona clave (si está contratada)</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="caja caja-rojo">
+    <div class="etiqueta">🚨 El dato que más duele</div>
+    <p>Según estudios del sector, <strong>el 40% de las PYMEs que sufren un siniestro grave sin PCN no vuelven a abrir</strong>. No porque los daños sean irreparables, sino porque durante la parálisis pierden contratos, clientes y liquidez. El PCN no es burocracia: es supervivencia.</p>
+  </div>
+
+  <div class="pie">PCN PANALCOR S.L. · Capítulo 2 de 6 · Jun 2026</div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- CAPÍTULO 3 — ANÁLISIS DE IMPACTO (BIA) -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="pagina salto">
+  <div class="cap-header">
+    <div class="cap-num">03</div>
+    <div>
+      <div class="cap-titulo">Análisis de Impacto del Negocio (BIA)</div>
+      <div class="cap-sub">Saber qué duele más para protegerlo primero</div>
+    </div>
+  </div>
+
+  <p>El BIA (Business Impact Analysis) es básicamente hacerse la pregunta: <em>"Si esto falla, ¿cuánto nos cuesta y cuánto tiempo podemos aguantar?"</em>. No hace falta ser un consultor para hacerlo bien — hace falta conocer la empresa, que es algo que PANALCOR ya tiene.</p>
+
+  <h2>Paso 1 — Identificar los procesos críticos</h2>
+  <p>Un proceso es crítico si, al fallar, la empresa no puede cumplir con sus compromisos principales. En PANALCOR serían:</p>
+
+  <table>
+    <thead><tr><th>Proceso</th><th>¿Por qué es crítico?</th><th>RTO máximo recomendado</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Producción de pan (hornos)</strong></td><td>Es el producto principal. Sin hornos no hay facturación</td><td><span class="badge b-alto">4–8 horas</span></td></tr>
+      <tr><td><strong>Cadena de frío (túneles, cámaras)</strong></td><td>El producto congelado se pierde si falla. Incumplimiento sanitario.</td><td><span class="badge b-alto">2–4 horas</span></td></tr>
+      <tr><td><strong>Suministro de harina</strong></td><td>Sin materia prima no hay producción</td><td><span class="badge b-medio">24 horas</span></td></tr>
+      <tr><td><strong>Suministro eléctrico</strong></td><td>Todo depende de él: maquinaria, frío, iluminación</td><td><span class="badge b-alto">1–2 horas</span></td></tr>
+      <tr><td><strong>Gestión de pedidos y expediciones</strong></td><td>Si no se entregan los pedidos a tiempo se pierden contratos</td><td><span class="badge b-medio">8–12 horas</span></td></tr>
+      <tr><td><strong>Sistema de mantenimiento (PANALCOR app)</strong></td><td>Sin datos no se puede gestionar averías ni preventivo</td><td><span class="badge b-bajo">48–72 horas</span></td></tr>
+    </tbody>
+  </table>
+
+  <h2>Paso 2 — Calcular el coste de la parada</h2>
+  <p>Esto es algo que solo PANALCOR puede rellenar con datos reales, pero el esquema es este:</p>
+
+  <div class="caja caja-gold">
+    <div class="etiqueta">📊 Fórmula básica de impacto diario</div>
+    <p><strong>Coste de parada diaria =</strong></p>
+    <ul>
+      <li>Facturación media diaria perdida</li>
+      <li>+ Costes fijos que siguen corriendo (personal, alquiler, energía contratada)</li>
+      <li>+ Coste de materia prima perecedera estropeada</li>
+      <li>+ Penalizaciones contractuales con clientes (si las hay)</li>
+      <li>+ Coste de horas extra y recursos adicionales para recuperar</li>
+    </ul>
+    <p><em>Ejemplo orientativo: si PANALCOR factura 5.000 €/día y los costes fijos diarios son 2.000 €, una semana parada supone ~49.000 € de impacto bruto antes de lo que cubra el seguro.</em></p>
+  </div>
+
+  <h2>Paso 3 — Definir el RTO de cada proceso</h2>
+  <p>El <strong>RTO (Recovery Time Objective)</strong> es el tiempo máximo que puedes estar parado sin consecuencias irreversibles. No es el tiempo que tardas en recuperarte — es el límite que no debes sobrepasar.</p>
+
+  <div class="caja caja-verde">
+    <div class="etiqueta">✅ Cómo fijar el RTO</div>
+    <p>Pregúntate: <em>"Si este proceso falla ahora mismo, ¿a partir de cuántas horas empiezo a perder clientes, incumplir contratos o tener problemas legales?"</em> Ese es tu RTO. Sé realista, no optimista.</p>
+  </div>
+
+  <h2>Paso 4 — Identificar las dependencias</h2>
+  <p>Muchos procesos dependen unos de otros. En PANALCOR, la cadena sería más o menos así:</p>
+
+  <div style="background:var(--gris);border-radius:10px;padding:16px 20px;margin:16px 0;font-size:0.88rem;text-align:center;line-height:2">
+    <strong>Suministro eléctrico</strong>
+    → <strong>Compresores frigoríficos</strong>
+    → <strong>Túneles y cámaras</strong>
+    → <strong>Producto terminado</strong><br>
+    <strong>Suministro de harina</strong>
+    → <strong>Amasadoras</strong>
+    → <strong>Hornos</strong>
+    → <strong>Producción</strong>
+    → <strong>Expedición</strong>
+  </div>
+
+  <p>Si falla el suministro eléctrico, todo lo que viene después falla también. Por eso el suministro eléctrico tiene el RTO más corto: es la base de todo.</p>
+
+  <div class="pie">PCN PANALCOR S.L. · Capítulo 3 de 6 · Jun 2026</div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- CAPÍTULO 4 — ESTRATEGIAS DE RECUPERACIÓN -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="pagina salto">
+  <div class="cap-header">
+    <div class="cap-num">04</div>
+    <div>
+      <div class="cap-titulo">Estrategias de Recuperación</div>
+      <div class="cap-sub">Qué hacer concrétamente para cada escenario</div>
+    </div>
+  </div>
+
+  <p>Aquí es donde el PCN se vuelve útil de verdad. No sirve de nada saber que algo puede pasar si no tienes decidido de antemano qué vas a hacer. Para cada riesgo crítico necesitas una <strong>estrategia de recuperación</strong> documentada.</p>
+
+  <h2>Estrategias posibles — de menos a más coste</h2>
+
+  <div class="timeline">
+    <div class="tl-item">
+      <h3>1. Redundancia interna</h3>
+      <p>Tener un equipo de respaldo dentro de la propia fábrica. Por ejemplo: un compresor de reserva para la cadena de frío, o un grupo electrógeno para aguantar un corte de luz.</p>
+      <div class="caja caja-verde" style="margin-top:8px">
+        <div class="etiqueta">✅ Para PANALCOR</div>
+        <p>Grupo electrógeno para alimentar la cadena de frío en cortes de luz. Stock mínimo de harina para 48 h de producción. Repuestos críticos en almacén (correas, rodamientos, contactores).</p>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <h3>2. Acuerdos con proveedores alternativos</h3>
+      <p>Tener identificado (y con contrato o acuerdo informal) un segundo proveedor para cada suministro crítico.</p>
+      <div class="caja caja-gold" style="margin-top:8px">
+        <div class="etiqueta">⚠️ Para PANALCOR</div>
+        <p>Segundo proveedor de harina homologado. Empresa frigorista alternativa a INFRISA para urgencias. Empresa eléctrica de mantenimiento de guardia.</p>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <h3>3. Subcontratación temporal de producción</h3>
+      <p>Identificar otra panadería o industria alimentaria que pueda producir parte de los pedidos críticos mientras PANALCOR se recupera.</p>
+      <div class="caja caja-azul" style="margin-top:8px">
+        <div class="etiqueta">ℹ️ A valorar</div>
+        <p>Requiere acuerdo de confidencialidad y homologación de proveedor por parte de los clientes. Es la opción más cara pero evita perder contratos estratégicos durante una parada larga.</p>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <h3>4. Priorización de producción</h3>
+      <p>Si la capacidad se reduce (por ejemplo, solo funcionan 2 de 4 hornos), tener decidido de antemano qué productos y qué clientes tienen prioridad.</p>
+      <div class="caja caja-verde" style="margin-top:8px">
+        <div class="etiqueta">✅ Recomendado para PANALCOR</div>
+        <p>Clasificar los clientes por volumen, antigüedad y penalizaciones contractuales. En emergencia, atender primero a los de mayor riesgo de penalización o pérdida irreversible.</p>
+      </div>
+    </div>
+  </div>
+
+  <h2>Plan de recuperación paso a paso (ejemplo: avería grave de horno)</h2>
+
+  <table>
+    <thead><tr><th>Tiempo</th><th>Acción</th><th>Responsable</th></tr></thead>
+    <tbody>
+      <tr><td><strong>0–30 min</strong></td><td>Confirmar la avería. Evaluar si es reparable en &lt; 4 h o requiere pieza. Avisar al jefe de producción.</td><td>Mecánico de turno</td></tr>
+      <tr><td><strong>30–60 min</strong></td><td>Si no es reparable en 4 h: activar PCN. Llamar al proveedor del horno y consultar disponibilidad de pieza.</td><td>Responsable mantenimiento</td></tr>
+      <tr><td><strong>1–2 h</strong></td><td>Comunicar a clientes afectados el retraso estimado. Renegociar plazos de entrega.</td><td>Dirección / Comercial</td></tr>
+      <tr><td><strong>2–4 h</strong></td><td>Redirigir producción a hornos alternativos. Priorizar los pedidos más urgentes.</td><td>Jefe de producción</td></tr>
+      <tr><td><strong>4–24 h</strong></td><td>Evaluar subcontratación si la parada supera un día. Notificar a Zurich si el daño es asegurable.</td><td>Dirección</td></tr>
+      <tr><td><strong>Diariamente</strong></td><td>Actualizar estado a clientes. Seguimiento de la reparación. Registro en PANALCOR app.</td><td>Responsable mantenimiento</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Árbol de decisión ante una crisis</h2>
+
+  <div style="background:var(--gris);border-radius:10px;padding:20px;font-size:0.85rem;line-height:2">
+    <strong>¿Puedo seguir produciendo?</strong><br>
+    ├── <strong>Sí, con capacidad reducida</strong> → Priorizar pedidos críticos → Comunicar retrasos → Registrar incidencia<br>
+    └── <strong>No</strong> → ¿Tengo alternativa interna? (grupo electrógeno, equipo de respaldo)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── <strong>Sí</strong> → Activar alternativa → Continuar producción → Registrar<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── <strong>No</strong> → ¿Puedo subcontratar?<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── <strong>Sí</strong> → Activar acuerdo → Gestionar clientes → Notificar seguro<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── <strong>No</strong> → Parada total → Comunicar clientes → Notificar seguro → Activar recuperación
+  </div>
+
+  <div class="pie">PCN PANALCOR S.L. · Capítulo 4 de 6 · Jun 2026</div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- CAPÍTULO 5 — ZURICH Y EL SEGURO -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="pagina salto">
+  <div class="cap-header">
+    <div class="cap-num">05</div>
+    <div>
+      <div class="cap-titulo">El seguro Zurich y el PCN</div>
+      <div class="cap-sub">Cómo sacarle el máximo partido a tu póliza</div>
+    </div>
+  </div>
+
+  <div class="zurich-box">
+    <div class="zurich-logo">Zurich Insurance</div>
+    <div class="zurich-tag">Seguro industrial · PANALCOR S.L.</div>
+    <p>Zurich es una de las aseguradoras líderes en seguros industriales en España. Su póliza para empresas industriales suele incluir (o permitir contratar) coberturas directamente relacionadas con la continuidad de negocio. Conocer bien qué tienes contratado y cómo notificar siniestros es parte del PCN.</p>
+  </div>
+
+  <h2>Coberturas de Zurich más relevantes para el PCN de PANALCOR</h2>
+
+  <table>
+    <thead><tr><th>Cobertura</th><th>Qué cubre</th><th>Clave para el PCN</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Daños materiales (incendio, explosión, agua…)</strong></td>
+        <td>Reparación o reposición de maquinaria, instalaciones y existencias dañadas</td>
+        <td>Base de cualquier siniestro grave. Verificar que el valor asegurado está actualizado.</td>
+      </tr>
+      <tr>
+        <td><strong>Lucro cesante</strong></td>
+        <td>El beneficio que dejas de obtener durante el tiempo de paralización</td>
+        <td><strong>La más importante para el PCN.</strong> Cubre la "sangría" mientras te recuperas. Comprobar el período indemnizatorio contratado.</td>
+      </tr>
+      <tr>
+        <td><strong>Avería de maquinaria</strong></td>
+        <td>Reparación o sustitución de equipos que sufren avería mecánica o eléctrica</td>
+        <td>Cubre los hornos, compresores y maquinaria crítica. Diferente al daño material por incendio.</td>
+      </tr>
+      <tr>
+        <td><strong>Pérdida de beneficios por avería de maquinaria</strong></td>
+        <td>El lucro cesante derivado específicamente de una avería (no de un siniestro clásico)</td>
+        <td>Muy útil para PANALCOR dado el papel crítico de hornos y compresores.</td>
+      </tr>
+      <tr>
+        <td><strong>Responsabilidad civil / retirada de producto</strong></td>
+        <td>Daños a terceros y costes de retirada de lotes defectuosos del mercado</td>
+        <td>Relevante en el escenario de contaminación alimentaria.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Lo que Zurich espera de ti para cubrir bien un siniestro</h2>
+
+  <div class="caja caja-rojo">
+    <div class="etiqueta">🚨 Errores que reducen o anulan la indemnización</div>
+    <ul>
+      <li><strong>No notificar el siniestro en el plazo pactado</strong> (suele ser 48–72 h desde que lo conoces)</li>
+      <li><strong>No tener el valor asegurado actualizado</strong> — si tus máquinas valen más que la suma asegurada, Zurich aplica la regla proporcional y te paga menos</li>
+      <li><strong>No conservar las pruebas</strong> — fotos, partes de avería, facturas de reparación urgente</li>
+      <li><strong>Reparar antes de que el perito lo vea</strong> — siempre esperar autorización salvo que sea urgente para evitar daños mayores</li>
+      <li><strong>No poder demostrar el lucro cesante</strong> — necesitas contabilidad ordenada, histórico de ventas y los registros de producción de PANALCOR app</li>
+    </ul>
+  </div>
+
+  <div class="caja caja-verde">
+    <div class="etiqueta">✅ Lo que el PCN aporta a tu relación con Zurich</div>
+    <ul>
+      <li>Demuestra que tomaste medidas de mitigación razonables → menor riesgo de disputa</li>
+      <li>Acelera la tramitación porque tienes todo documentado (inventario de equipos, histórico de mantenimiento, registros de producción)</li>
+      <li>Puede mejorar las condiciones de renovación de la póliza</li>
+      <li>Zurich puede ofrecer asesoramiento gratuito en continuidad de negocio a clientes con póliza industrial — pregúntales directamente</li>
+    </ul>
+  </div>
+
+  <h2>Checklist de notificación de siniestro a Zurich</h2>
+
+  <div class="check-item"><div class="box"></div><div class="txt"><strong>Llamar al teléfono de siniestros de Zurich</strong> lo antes posible (número en la póliza)</div></div>
+  <div class="check-item"><div class="box"></div><div class="txt"><strong>Enviar notificación escrita</strong> describiendo qué ocurrió, cuándo y el daño estimado</div></div>
+  <div class="check-item"><div class="box"></div><div class="txt"><strong>Fotografiar y documentar los daños</strong> antes de tocar nada</div></div>
+  <div class="check-item"><div class="box"></div><div class="txt"><strong>Recopilar facturas y presupuestos</strong> de reparación urgente</div></div>
+  <div class="check-item"><div class="box"></div><div class="txt"><strong>Calcular la producción perdida</strong> (unidades, días, clientes afectados)</div></div>
+  <div class="check-item"><div class="box"></div><div class="txt"><strong>Reunir el histórico de ventas</strong> de los últimos 12 meses para justificar el lucro cesante</div></div>
+  <div class="check-item"><div class="box"></div><div class="txt"><strong>No reparar nada de relevancia</strong> sin autorización del perito de Zurich (salvo emergencia)</div></div>
+  <div class="check-item"><div class="box"></div><div class="txt"><strong>Conservar los registros de mantenimiento</strong> de PANALCOR app — demuestran que cumplías con el preventivo</div></div>
+
+  <div class="pie">PCN PANALCOR S.L. · Capítulo 5 de 6 · Jun 2026</div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- CAPÍTULO 6 — CÓMO HACER EL PCN Y MANTENERLO VIVO -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="pagina salto">
+  <div class="cap-header">
+    <div class="cap-num">06</div>
+    <div>
+      <div class="cap-titulo">Cómo elaborar y mantener vivo el PCN</div>
+      <div class="cap-sub">Sin consultores caros ni documentos que nadie lee</div>
+    </div>
+  </div>
+
+  <p>Un PCN no tiene que ser un documento de 200 páginas que vive en una carpeta del servidor y nadie consulta. En una empresa como PANALCOR, lo más valioso es un documento <strong>breve, práctico y conocido por las personas que tienen que actuar</strong>.</p>
+
+  <h2>Los 8 pasos para elaborar el PCN de PANALCOR</h2>
+
+  <div class="timeline">
+    <div class="tl-item">
+      <h3>Paso 1 — Nombra un responsable del PCN</h3>
+      <p>Alguien debe ser el "dueño" del plan: quien lo elabora, lo actualiza y lo activa cuando hay una crisis. En PANALCOR, lo lógico es que sea el responsable de mantenimiento o el director de planta.</p>
+    </div>
+    <div class="tl-item">
+      <h3>Paso 2 — Haz el BIA (cap. 3 de esta guía)</h3>
+      <p>Lista los procesos críticos, su RTO y el coste estimado de una parada de 1 día / 1 semana / 1 mes. No hace falta que sea exacto al céntimo — una estimación razonada ya sirve.</p>
+    </div>
+    <div class="tl-item">
+      <h3>Paso 3 — Identifica los riesgos principales</h3>
+      <p>Lista los 5–10 escenarios que podrían interrumpir la producción. Para cada uno: probabilidad (alta/media/baja) e impacto (alto/medio/bajo). Prioriza los de alta probabilidad + alto impacto.</p>
+    </div>
+    <div class="tl-item">
+      <h3>Paso 4 — Define las estrategias de recuperación</h3>
+      <p>Para cada riesgo prioritario: ¿qué haces? ¿Tienes un equipo de respaldo? ¿Un proveedor alternativo? ¿Un plan de subcontratación? Documenta la decisión, no hace falta que sea perfecta.</p>
+    </div>
+    <div class="tl-item">
+      <h3>Paso 5 — Escribe los procedimientos de respuesta</h3>
+      <p>Para cada escenario crítico: una página con quién hace qué, en qué orden y con qué contactos. Que lo pueda seguir alguien que no conozca el proceso de memoria.</p>
+    </div>
+    <div class="tl-item">
+      <h3>Paso 6 — Compila los contactos de emergencia</h3>
+      <p>Un listado con: mecánicos de guardia, proveedor de cada maquinaria crítica, INFRISA, empresa eléctrica, Zurich (siniestros), Ayuntamiento, 112. Que esté impreso y accesible, no solo en el ordenador.</p>
+    </div>
+    <div class="tl-item">
+      <h3>Paso 7 — Haz un simulacro anual</h3>
+      <p>Una vez al año, elige un escenario y simula que ha ocurrido. Sin ejecutar nada real, simplemente revisa: "Si esto pasara ahora, ¿seguimos los pasos del PCN? ¿Hay algo desactualizado?" Tarda 1–2 horas y vale mucho.</p>
+    </div>
+    <div class="tl-item">
+      <h3>Paso 8 — Actualiza el PCN ante cambios relevantes</h3>
+      <p>Cada vez que haya un cambio significativo (nueva máquina, nuevo proveedor, cambio en el personal clave, ampliación de instalaciones), revisar el PCN y actualizar lo que corresponda.</p>
+    </div>
+  </div>
+
+  <hr class="sep">
+
+  <h2>Plantilla de 1 página para empezar ahora mismo</h2>
+
+  <div style="border:2px solid var(--azul-light);border-radius:12px;padding:20px;margin:16px 0;font-size:0.85rem">
+    <div style="font-weight:900;color:var(--azul);font-size:1rem;margin-bottom:14px;border-bottom:1px solid var(--gris-mid);padding-bottom:8px">📄 PCN PANALCOR — Hoja de respuesta rápida</div>
+    <table style="margin:0">
+      <tr><td style="font-weight:700;width:35%">Responsable del PCN</td><td>_____________________________ · Tlf: _____________</td></tr>
+      <tr><td style="font-weight:700">Suplente</td><td>_____________________________ · Tlf: _____________</td></tr>
+      <tr><td style="font-weight:700">Zurich siniestros 24h</td><td>900 102 201 (verificar en póliza)</td></tr>
+      <tr><td style="font-weight:700">INFRISA urgencias</td><td>___________________________</td></tr>
+      <tr><td style="font-weight:700">Proveedor harina alternativo</td><td>___________________________</td></tr>
+      <tr><td style="font-weight:700">Proveedor eléctrico guardia</td><td>___________________________</td></tr>
+      <tr><td style="font-weight:700">Stock mínimo harina en planta</td><td>___________ kg (para ___ horas de producción)</td></tr>
+      <tr><td style="font-weight:700">Grupo electrógeno disponible</td><td>☐ Sí — ubicación: _______________ · ☐ No</td></tr>
+      <tr><td style="font-weight:700">Proceso más crítico</td><td>Cadena de frío — RTO máximo: 4 horas</td></tr>
+      <tr><td style="font-weight:700">Segunda más crítica</td><td>Hornos principales — RTO máximo: 8 horas</td></tr>
+    </table>
+    <div style="margin-top:12px;font-size:0.78rem;color:var(--texto-suave);font-style:italic">
+      Imprimir, plastificar y colocar en la oficina de producción, en el taller de mantenimiento y en la sala de compresores.
+    </div>
+  </div>
+
+  <h2>Resumen final — Lo que tienes que recordar</h2>
+
+  <div class="caja caja-azul">
+    <ul>
+      <li>El PCN <strong>no evita</strong> los accidentes, los hace <strong>sobrevivibles</strong></li>
+      <li>Lo más importante no es el documento, sino que <strong>la gente sepa qué hacer</strong></li>
+      <li>El <strong>lucro cesante de Zurich</strong> solo se cobra bien si tienes los datos de producción bien registrados (PANALCOR app ayuda en esto)</li>
+      <li>Los procesos más críticos en PANALCOR son la <strong>cadena de frío</strong> y los <strong>hornos</strong></li>
+      <li>Empieza simple: una hoja de contactos + un procedimiento por cada riesgo crítico ya es un PCN funcional</li>
+      <li><strong>Revísalo una vez al año</strong> y cada vez que algo importante cambie en la fábrica</li>
+    </ul>
+  </div>
+
+  <div class="pie">PCN PANALCOR S.L. · Capítulo 6 de 6 · Jun 2026 · Para imprimir: Ctrl+P → Guardar como PDF</div>
+</div>
+
+</body>
+</html>

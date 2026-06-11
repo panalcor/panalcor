@@ -159,6 +159,15 @@
     <a href="#atex-sanciones" onclick="setActive(this)"><div class="dot dot-red"></div>Sanciones ATEX</a>
   </div>
   <div class="sidebar-section">
+    <div class="sidebar-section-title">🔄 PCN — Continuidad negocio</div>
+    <a href="#pcn-que-es" onclick="setActive(this)"><div class="dot dot-blue"></div>Qué es el PCN</a>
+    <a href="#pcn-bia" onclick="setActive(this)"><div class="dot dot-orange"></div>Análisis de impacto (BIA)</a>
+    <a href="#pcn-escenarios" onclick="setActive(this)"><div class="dot dot-red"></div>Escenarios de riesgo</a>
+    <a href="#pcn-recuperacion" onclick="setActive(this)"><div class="dot dot-gold"></div>Estrategias de recuperación</a>
+    <a href="#pcn-zurich" onclick="setActive(this)"><div class="dot dot-green"></div>Seguro Zurich y PCN</a>
+    <a href="#pcn-elaborar" onclick="setActive(this)"><div class="dot dot-blue"></div>Cómo elaborarlo</a>
+  </div>
+  <div class="sidebar-section">
     <div class="sidebar-section-title">📋 Referencia rápida</div>
     <a href="#check-titular" onclick="setActive(this)"><div class="dot dot-gold"></div>Checklist titular</a>
     <a href="#contactos" onclick="setActive(this)"><div class="dot dot-green"></div>Contactos útiles</a>
@@ -1455,6 +1464,291 @@
           • <b>Recargo de prestaciones</b> de la Seguridad Social: 30-50% sobre prestaciones del trabajador afectado, a cargo de la empresa<br>
           • <b>Pérdida de seguros</b> si se demuestra incumplimiento deliberado de normativa<br>
           • <b>Paralización de obra/actividad</b> hasta corrección de deficiencias
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PCN — QUÉ ES -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="pcn-que-es">
+      <div class="article-header">
+        <div class="article-icon">🔄</div>
+        <div>
+          <div class="article-title">PCN — Plan de Continuidad de Negocio</div>
+          <span class="article-badge">BUENA PRÁCTICA · ISO 22301</span>
+        </div>
+      </div>
+
+      <div class="alert info">
+        <div class="alert-icon">ℹ️</div>
+        <div>El PCN <strong>no es obligatorio por ley</strong> para una PYME industrial, pero Zurich y las aseguradoras industriales lo valoran para calcular primas y, sobre todo, para cubrir correctamente el <strong>lucro cesante</strong> ante un siniestro. Sin PCN, la aseguradora puede argumentar falta de medidas de mitigación.</div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-title">¿Qué es y para qué sirve?</div>
+        <div class="nb-body">
+          El PCN es el "manual de supervivencia" de PANALCOR ante cualquier crisis que interrumpa la producción. No evita que pasen cosas malas, pero garantiza que cuando pasan, la empresa sabe exactamente qué hacer, en qué orden y quién se encarga de qué.<br><br>
+          <table class="nt">
+            <thead><tr><th>Plan</th><th>¿Qué hace?</th><th>¿Cuándo actúa?</th></tr></thead>
+            <tbody>
+              <tr><td><b>Plan de Autoprotección (PCI)</b></td><td>Evacuar y controlar el fuego</td><td>Durante el incidente</td></tr>
+              <tr><td><b>DPCE (ATEX)</b></td><td>Evitar explosiones</td><td>Antes del incidente (prevención)</td></tr>
+              <tr class="hl-ok"><td><b>PCN</b></td><td>Mantener o recuperar la producción</td><td>Después del incidente (recuperación)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="norm-block ok">
+        <div class="nb-title">✅ Terminología clave</div>
+        <div class="nb-body">
+          <b>RTO</b> (Recovery Time Objective) — Tiempo máximo que puedes estar parado sin consecuencias irreversibles<br>
+          <b>RPO</b> (Recovery Point Objective) — Cuánto tiempo de datos o producción puedes permitirte perder<br>
+          <b>BIA</b> (Business Impact Analysis) — Análisis de qué te costaría estar parado: dinero, clientes, imagen<br>
+          <b>Lucro cesante</b> — El dinero que dejas de ganar mientras estás parado (lo que cubre Zurich si lo tienes contratado)<br>
+          <b>ISO 22301</b> — Norma internacional que define cómo hacer bien un PCN — referencia, no obligatoria
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PCN — BIA -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="pcn-bia">
+      <div class="article-header">
+        <div class="article-icon">📊</div>
+        <div>
+          <div class="article-title">Análisis de Impacto del Negocio (BIA)</div>
+          <span class="article-badge">PROCESOS CRÍTICOS DE PANALCOR</span>
+        </div>
+      </div>
+
+      <div class="norm-block warn">
+        <div class="nb-title">Procesos críticos y RTO recomendado</div>
+        <div class="nb-body">
+          <table class="nt">
+            <thead><tr><th>Proceso</th><th>Por qué es crítico</th><th>RTO máximo</th></tr></thead>
+            <tbody>
+              <tr class="hl-row"><td><b>Cadena de frío</b></td><td>El producto congelado se pierde. Incumplimiento sanitario.</td><td><span class="badge b-red">2–4 h</span></td></tr>
+              <tr class="hl-row"><td><b>Suministro eléctrico</b></td><td>Todo depende de él: maquinaria, frío, iluminación</td><td><span class="badge b-red">1–2 h</span></td></tr>
+              <tr class="hl-warn"><td><b>Hornos (producción)</b></td><td>Sin hornos no hay producto ni facturación</td><td><span class="badge b-orange">4–8 h</span></td></tr>
+              <tr class="hl-warn"><td><b>Suministro de harina</b></td><td>Sin materia prima no hay producción</td><td><span class="badge b-orange">24 h</span></td></tr>
+              <tr><td><b>Gestión de pedidos y expedición</b></td><td>Retrasos rompen contratos</td><td><span class="badge b-gold">8–12 h</span></td></tr>
+              <tr><td><b>Sistema PANALCOR app</b></td><td>Sin datos no se gestiona mantenimiento</td><td><span class="badge b-green">48–72 h</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-title">💰 Fórmula básica del coste de parada diaria</div>
+        <div class="nb-body">
+          <b>Coste diario de parada =</b><br>
+          Facturación media diaria perdida<br>
+          + Costes fijos que siguen corriendo (personal, alquiler, energía)<br>
+          + Materia prima perecedera estropeada<br>
+          + Penalizaciones contractuales con clientes<br>
+          + Horas extra y recursos adicionales para recuperar<br><br>
+          <span class="hl">Ejemplo orientativo:</span> si PANALCOR factura 5.000 €/día y tiene 2.000 €/día de costes fijos, una semana parada supone ~49.000 € de impacto bruto antes de lo que cubra el seguro.
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PCN — ESCENARIOS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="pcn-escenarios">
+      <div class="article-header">
+        <div class="article-icon">⚠️</div>
+        <div>
+          <div class="article-title">Escenarios de Riesgo para PANALCOR</div>
+          <span class="article-badge">PROBABILIDAD · IMPACTO · COBERTURA</span>
+        </div>
+      </div>
+
+      <table class="nt">
+        <thead><tr><th>Escenario</th><th>Probabilidad</th><th>Impacto</th><th>Tiempo típico de recuperación</th><th>Cubre Zurich</th></tr></thead>
+        <tbody>
+          <tr class="hl-row"><td><b>🔥 Incendio / explosión de polvo</b></td><td><span class="badge b-orange">Media</span></td><td><span class="badge b-red">Muy alto</span></td><td>2 días — 3 meses</td><td>Daños materiales + lucro cesante</td></tr>
+          <tr class="hl-warn"><td><b>⚡ Avería grave de horno o compresor</b></td><td><span class="badge b-red">Alta</span></td><td><span class="badge b-orange">Alto</span></td><td>1–4 semanas</td><td>Avería maquinaria + lucro cesante</td></tr>
+          <tr class="hl-warn"><td><b>💧 Inundación o rotura de tubería</b></td><td><span class="badge b-orange">Media</span></td><td><span class="badge b-orange">Alto</span></td><td>3 días — 3 semanas</td><td>Daños por agua + eléctricos + lucro cesante</td></tr>
+          <tr><td><b>🦠 Contaminación / retirada de producto</b></td><td><span class="badge b-gold">Baja</span></td><td><span class="badge b-orange">Alto</span></td><td>2 días — 2 semanas</td><td>Retirada de producto (si contratado)</td></tr>
+          <tr><td><b>🔌 Corte eléctrico prolongado</b></td><td><span class="badge b-orange">Media</span></td><td><span class="badge b-red">Muy alto</span></td><td>Horas — días</td><td>Solo si hay daños físicos asociados</td></tr>
+          <tr><td><b>👷 Baja de personal clave</b></td><td><span class="badge b-red">Alta</span></td><td><span class="badge b-orange">Medio</span></td><td>Indefinido sin plan de relevo</td><td>Persona clave (si contratado)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="norm-block warn">
+        <div class="nb-title">📌 El dato que más duele</div>
+        <div class="nb-body">
+          El <span class="hl">40% de las PYMEs que sufren un siniestro grave sin PCN no vuelven a abrir</span>. No porque los daños sean irreparables, sino porque durante la parálisis pierden contratos, clientes y liquidez. El PCN es supervivencia, no burocracia.
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PCN — RECUPERACIÓN -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="pcn-recuperacion">
+      <div class="article-header">
+        <div class="article-icon">🛠️</div>
+        <div>
+          <div class="article-title">Estrategias de Recuperación</div>
+          <span class="article-badge">OPCIONES POR NIVEL DE COSTE</span>
+        </div>
+      </div>
+
+      <div class="norm-block ok">
+        <div class="nb-title">1. Redundancia interna (coste bajo)</div>
+        <div class="nb-body">
+          Tener alternativas dentro de la propia fábrica:<br>
+          • <b>Grupo electrógeno</b> para alimentar la cadena de frío en cortes de luz<br>
+          • <b>Stock mínimo de harina</b> para 48 h de producción<br>
+          • <b>Repuestos críticos en almacén</b> (correas, rodamientos, contactores de uso frecuente)
+        </div>
+      </div>
+
+      <div class="norm-block warn">
+        <div class="nb-title">2. Proveedores alternativos (coste medio)</div>
+        <div class="nb-body">
+          Tener identificado un segundo proveedor para cada suministro crítico:<br>
+          • Segundo proveedor de harina homologado<br>
+          • Empresa frigorista alternativa a INFRISA para urgencias<br>
+          • Empresa eléctrica de mantenimiento de guardia con SLA definido
+        </div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-title">3. Priorización de producción (sin coste)</div>
+        <div class="nb-body">
+          Si la capacidad se reduce, tener decidido de antemano qué clientes y productos tienen prioridad:<br>
+          • Clasificar clientes por volumen, antigüedad y penalizaciones contractuales<br>
+          • En emergencia: atender primero a los de mayor riesgo de penalización o pérdida irreversible<br>
+          • Comunicar proactivamente los retrasos con estimación de plazos realistas
+        </div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-title">4. Subcontratación temporal (coste alto pero evita perder contratos)</div>
+        <div class="nb-body">
+          Identificar otra panadería o industria alimentaria que pueda producir parte de los pedidos críticos durante la parada. Requiere acuerdo de confidencialidad y homologación por parte de los clientes.
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PCN — ZURICH -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="pcn-zurich">
+      <div class="article-header">
+        <div class="article-icon">🛡️</div>
+        <div>
+          <div class="article-title">Seguro Zurich y el PCN</div>
+          <span class="article-badge">COBERTURAS · ERRORES · CHECKLIST</span>
+        </div>
+      </div>
+
+      <div class="norm-block ok">
+        <div class="nb-title">✅ Coberturas de Zurich más relevantes para PANALCOR</div>
+        <div class="nb-body">
+          <table class="nt">
+            <thead><tr><th>Cobertura</th><th>Qué cubre</th><th>Clave PCN</th></tr></thead>
+            <tbody>
+              <tr class="hl-ok"><td><b>Lucro cesante</b></td><td>El beneficio que dejas de obtener durante la paralización</td><td><span class="badge b-red">Más importante para el PCN</span></td></tr>
+              <tr><td><b>Daños materiales</b></td><td>Reparación/reposición de maquinaria e instalaciones</td><td>Verificar que el valor asegurado está actualizado</td></tr>
+              <tr><td><b>Avería de maquinaria</b></td><td>Avería mecánica o eléctrica de equipos (hornos, compresores)</td><td>Diferente al daño por incendio — comprobar si está incluida</td></tr>
+              <tr><td><b>Pérdida de beneficios por avería</b></td><td>Lucro cesante derivado de avería (no de siniestro clásico)</td><td>Muy útil dado el papel crítico de hornos y compresores</td></tr>
+              <tr><td><b>Retirada de producto</b></td><td>Costes de retirada de lotes del mercado</td><td>Relevante en contaminación alimentaria</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="norm-block danger">
+        <div class="nb-title">🚨 Errores que reducen o anulan la indemnización</div>
+        <div class="nb-body">
+          ❌ <b>No notificar el siniestro en el plazo pactado</b> (suele ser 48–72 h desde que lo conoces)<br>
+          ❌ <b>Valor asegurado desactualizado</b> — si las máquinas valen más que la suma asegurada, Zurich aplica regla proporcional<br>
+          ❌ <b>Reparar antes de que el perito lo vea</b> — siempre esperar autorización salvo emergencia<br>
+          ❌ <b>No poder demostrar el lucro cesante</b> — necesitas contabilidad ordenada e histórico de ventas<br>
+          ❌ <b>No conservar las pruebas</b> — fotos, partes de avería, facturas de reparación urgente
+        </div>
+      </div>
+
+      <div class="norm-block ok">
+        <div class="nb-title">✅ Checklist de notificación de siniestro a Zurich</div>
+        <div class="nb-body">
+          ☐ Llamar al teléfono de siniestros de Zurich lo antes posible (número en la póliza)<br>
+          ☐ Enviar notificación escrita con qué ocurrió, cuándo y daño estimado<br>
+          ☐ Fotografiar y documentar los daños antes de tocar nada<br>
+          ☐ Recopilar facturas y presupuestos de reparación urgente<br>
+          ☐ Calcular producción perdida (unidades, días, clientes afectados)<br>
+          ☐ Reunir histórico de ventas de los últimos 12 meses para justificar lucro cesante<br>
+          ☐ Conservar los registros de mantenimiento de PANALCOR — demuestran cumplimiento del preventivo
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PCN — ELABORAR -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="pcn-elaborar">
+      <div class="article-header">
+        <div class="article-icon">📝</div>
+        <div>
+          <div class="article-title">Cómo Elaborar el PCN — 8 pasos</div>
+          <span class="article-badge">GUÍA PRÁCTICA · SIN CONSULTORES</span>
+        </div>
+      </div>
+
+      <div class="norm-block ok">
+        <div class="nb-title">✅ Los 8 pasos</div>
+        <div class="nb-body">
+          ① <b>Nombra un responsable</b> — quien lo elabora, actualiza y activa en crisis (responsable de mantenimiento o director de planta)<br>
+          ② <b>Haz el BIA</b> — lista los procesos críticos, su RTO y el coste estimado de 1 día / 1 semana parado<br>
+          ③ <b>Identifica los 5–10 riesgos principales</b> con probabilidad e impacto. Prioriza alta probabilidad + alto impacto<br>
+          ④ <b>Define las estrategias de recuperación</b> para cada riesgo prioritario (redundancia, proveedor alternativo, subcontratación)<br>
+          ⑤ <b>Escribe los procedimientos de respuesta</b> — una página por escenario: quién hace qué, en qué orden y con qué contactos<br>
+          ⑥ <b>Compila los contactos de emergencia</b> — mecánicos, proveedores, INFRISA, Zurich, 112 — impresos y accesibles, no solo en el ordenador<br>
+          ⑦ <b>Haz un simulacro anual</b> — 1–2 horas revisando: "si esto pasara ahora, ¿seguimos el PCN? ¿hay algo desactualizado?"<br>
+          ⑧ <b>Actualiza el PCN</b> ante cambios relevantes: nueva máquina, nuevo proveedor, cambio en personal clave, ampliación
+        </div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-title">💡 Hoja de respuesta rápida — para imprimir y plastificar</div>
+        <div class="nb-body">
+          Tres copias: <b>oficina de producción · taller de mantenimiento · sala de compresores</b><br><br>
+          ☐ Responsable del PCN: _________________ · Tlf: _________________<br>
+          ☐ Suplente: _________________ · Tlf: _________________<br>
+          ☐ Zurich siniestros 24 h: <b>ver número en póliza</b><br>
+          ☐ INFRISA urgencias: _________________<br>
+          ☐ Proveedor harina alternativo: _________________<br>
+          ☐ Grupo electrógeno disponible: ☐ Sí — ubicación: _____________ · ☐ No<br>
+          ☐ Stock mínimo harina: _______ kg (para _____ h de producción)<br>
+          ☐ Proceso más crítico: <b>Cadena de frío — RTO máx. 4 h</b><br>
+          ☐ Segunda más crítica: <b>Hornos — RTO máx. 8 h</b>
+        </div>
+      </div>
+
+      <div class="norm-block ok">
+        <div class="nb-title">📎 Recurso adicional</div>
+        <div class="nb-body">
+          Se ha elaborado una <b>guía completa en PDF</b> con todos estos conceptos desarrollados en tono divulgativo, incluyendo ejemplos concretos de PANALCOR, la relación detallada con Zurich y plantillas listas para rellenar.<br><br>
+          Archivo: <span class="hl">pcn_guia.html</span> → abrir en navegador y Ctrl+P → Guardar como PDF
         </div>
       </div>
     </div>
