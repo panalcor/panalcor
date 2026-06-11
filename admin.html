@@ -1283,6 +1283,19 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card config-section">
+    <div class="sec-title">📱 PIN de Rubiel (rubiel.html)</div>
+    <p style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:14px;line-height:1.6">
+      PIN numérico de 4 dígitos para que Rubiel entre en su página de tareas.
+    </p>
+    <div style="display:flex;gap:12px;align-items:center">
+      <input type="text" id="cfgRubielPin" maxlength="4" placeholder="0000" inputmode="numeric" pattern="[0-9]*"
+        style="width:90px;text-align:center;background:var(--navy-deep);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 12px;font-family:monospace;font-size:1.3rem;letter-spacing:.2em">
+      <button class="btn-export btn-gold" onclick="guardarRubielPin()">💾 Guardar PIN</button>
+      <span id="rubielPinMsg" style="font-size:0.82rem;color:var(--green)"></span>
+    </div>
+  </div>
+
+  <div class="card config-section">
     <div class="sec-title">🔑 Cambiar contraseña de administrador</div>
     <div class="field">
       <label>Contraseña actual</label>
@@ -3515,6 +3528,23 @@ function guardarSesionConfig(){
   }).catch(()=>{ showToast('❌ Error al guardar. Comprueba la conexión.'); });
 }
 
+function cargarRubielPin(){
+  DB.ref('config/rubiel_pin').once('value').then(function(s){
+    var inp = document.getElementById('cfgRubielPin');
+    if(inp && s.val() !== null) inp.value = String(s.val());
+  });
+}
+function guardarRubielPin(){
+  var inp = document.getElementById('cfgRubielPin');
+  var msg = document.getElementById('rubielPinMsg');
+  var pin = (inp ? inp.value : '').trim();
+  if(!/^\d{4}$/.test(pin)){ msg.style.color='var(--red)'; msg.textContent='Debe ser exactamente 4 dígitos'; return; }
+  DB.ref('config/rubiel_pin').set(pin).then(function(){
+    msg.style.color='var(--green)'; msg.textContent='✓ Guardado';
+    setTimeout(function(){ msg.textContent=''; }, 3000);
+  }).catch(function(){ msg.style.color='var(--red)'; msg.textContent='Error al guardar'; });
+}
+
 function cargarEncPwd(){
   DB.ref('config/encargados_pwd').once('value').then(function(snap){
     var data = snap.val();
@@ -4674,6 +4704,7 @@ function switchTab(name){
   if(name==='cfg') cargarFrases();
   if(name==='cfg') cargarFrioMecs();
   if(name==='cfg') cargarEncPwd();
+  if(name==='cfg') cargarRubielPin();
   if(name==='rec') { cargarMecanicosParaRec(); cargarRecordatorios(); }
   if(name==='enc') cargarAvisosEncargados();
   if(name==='int') { cargarCatalogoRepuestos(); initIntegrales(); }

@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PANALCOR">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>RUBIEL — PANALCOR</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0d1b2a;
+  --navy-mid:#152336;
+  --gold:#c9a227;
+  --green:#27ae60;
+  --green-dark:#1e8449;
+  --white:#f0f4f8;
+  --grey:#8899aa;
+  --done-bg:#0f2a1a;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;overflow-x:hidden}
+
+/* ══ PANTALLA LOGIN ══ */
+#loginScreen{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;padding:24px 20px;
+}
+.login-logo{font-size:3.5rem;margin-bottom:6px}
+.login-empresa{font-size:1rem;font-weight:700;letter-spacing:.15em;color:var(--gold);margin-bottom:4px}
+.login-nombre{font-size:2.2rem;font-weight:900;color:var(--white);margin-bottom:32px}
+
+.pin-dots{display:flex;gap:16px;justify-content:center;margin-bottom:28px}
+.pin-dot{
+  width:18px;height:18px;border-radius:50%;
+  border:2px solid rgba(255,255,255,0.35);
+  background:transparent;transition:background .15s;
+}
+.pin-dot.filled{background:var(--gold);border-color:var(--gold)}
+
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;max-width:300px}
+.numpad-btn{
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:14px;
+  color:var(--white);
+  font-family:'Barlow',sans-serif;
+  font-size:1.8rem;
+  font-weight:700;
+  padding:18px 0;
+  cursor:pointer;
+  transition:background .1s,transform .08s;
+  user-select:none;
+}
+.numpad-btn:active{background:rgba(201,162,39,0.25);transform:scale(0.94)}
+.numpad-btn.borrar{font-size:1.3rem;color:var(--grey)}
+.numpad-btn.entrar{
+  background:var(--green);border-color:var(--green-dark);
+  font-size:1.1rem;letter-spacing:.05em;
+}
+.numpad-btn.entrar:active{background:var(--green-dark)}
+
+.login-error{
+  margin-top:18px;color:#ff6b6b;font-size:1rem;font-weight:600;
+  min-height:24px;text-align:center;
+}
+
+/* ══ PANTALLA PRINCIPAL ══ */
+#mainScreen{display:none;min-height:100vh;padding-bottom:100px}
+
+.topbar{
+  background:var(--navy-mid);
+  border-bottom:3px solid var(--gold);
+  padding:16px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:10;
+}
+.topbar-nombre{font-size:1.4rem;font-weight:900;color:var(--white)}
+.topbar-sub{font-size:.82rem;color:var(--gold);margin-top:1px}
+.btn-salir{
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.2);
+  color:rgba(255,255,255,0.5);
+  border-radius:10px;padding:8px 14px;
+  font-family:'Barlow',sans-serif;font-size:.85rem;
+  cursor:pointer;
+}
+
+/* ══ PROGRESO ══ */
+.progreso-wrap{padding:18px 20px 10px}
+.progreso-label{
+  display:flex;justify-content:space-between;align-items:baseline;
+  margin-bottom:8px;
+}
+.progreso-txt{font-size:1rem;color:rgba(255,255,255,.65)}
+.progreso-pct{font-size:1.4rem;font-weight:900;color:var(--gold)}
+.progreso-bar{
+  height:10px;background:rgba(255,255,255,0.1);
+  border-radius:10px;overflow:hidden;
+}
+.progreso-fill{
+  height:100%;background:linear-gradient(90deg,var(--green),#2ecc71);
+  border-radius:10px;transition:width .4s ease;
+}
+
+/* ══ MES ══ */
+.mes-nav{
+  display:flex;align-items:center;justify-content:center;
+  gap:20px;padding:10px 20px 16px;
+}
+.mes-btn{
+  background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);
+  color:var(--white);border-radius:10px;
+  font-size:1.5rem;width:44px;height:44px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+}
+.mes-btn:active{background:rgba(201,162,39,.2)}
+.mes-label{font-size:1.1rem;font-weight:700;color:var(--white);min-width:140px;text-align:center}
+
+/* ══ BANNER TODO HECHO ══ */
+#bannerDone{
+  display:none;margin:0 16px 16px;
+  background:rgba(39,174,96,.15);border:2px solid var(--green);
+  border-radius:14px;padding:20px;text-align:center;
+}
+#bannerDone .ico{font-size:2.5rem;margin-bottom:6px}
+#bannerDone .txt{font-size:1.1rem;font-weight:700;color:var(--green)}
+
+/* ══ LISTA DE TAREAS ══ */
+.tareas-lista{padding:0 16px;display:flex;flex-direction:column;gap:14px}
+
+.tarea-card{
+  background:var(--navy-mid);
+  border:2px solid rgba(255,255,255,0.1);
+  border-radius:16px;
+  overflow:hidden;
+  transition:opacity .3s;
+}
+.tarea-card.hecha{
+  background:var(--done-bg);
+  border-color:rgba(39,174,96,0.25);
+  opacity:.75;
+}
+
+.tarea-info{padding:16px 18px 12px}
+.tarea-lugar{
+  font-size:.82rem;font-weight:700;
+  color:var(--gold);letter-spacing:.06em;text-transform:uppercase;
+  margin-bottom:6px;
+}
+.tarea-desc{
+  font-size:1.15rem;font-weight:600;
+  color:var(--white);line-height:1.4;
+}
+.tarea-freq{
+  display:inline-block;margin-top:8px;
+  background:rgba(201,162,39,0.1);border:1px solid rgba(201,162,39,0.25);
+  color:var(--gold);border-radius:20px;
+  padding:2px 10px;font-size:.78rem;font-weight:700;
+}
+
+.btn-hecho{
+  display:block;width:100%;
+  background:var(--green);
+  border:none;color:#fff;
+  font-family:'Barlow',sans-serif;font-size:1.25rem;font-weight:900;
+  letter-spacing:.05em;padding:18px;
+  cursor:pointer;transition:background .15s,transform .08s;
+}
+.btn-hecho:active{background:var(--green-dark);transform:scale(0.98)}
+
+.tarea-hecha-info{
+  background:rgba(39,174,96,.08);
+  padding:12px 18px;
+  font-size:.9rem;color:var(--green);font-weight:600;
+  display:flex;align-items:center;gap:8px;
+}
+
+/* ══ VACÍO ══ */
+.vacio{
+  text-align:center;padding:60px 20px;
+  font-size:1rem;color:rgba(255,255,255,.4);
+}
+.vacio .ico{font-size:3rem;margin-bottom:12px}
+
+/* ══ TOAST ══ */
+#toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--green);color:#fff;
+  font-family:'Barlow',sans-serif;font-size:1rem;font-weight:700;
+  padding:14px 28px;border-radius:30px;
+  transition:transform .3s ease;z-index:999;
+  pointer-events:none;white-space:nowrap;
+}
+#toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ══ CARGANDO ══ */
+.cargando{
+  text-align:center;padding:60px 20px;
+  font-size:1rem;color:rgba(255,255,255,.4);
+}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div id="loginScreen">
+  <div class="login-logo">👷</div>
+  <div class="login-empresa">PANALCOR</div>
+  <div class="login-nombre">RUBIEL</div>
+
+  <div class="pin-dots">
+    <div class="pin-dot" id="d0"></div>
+    <div class="pin-dot" id="d1"></div>
+    <div class="pin-dot" id="d2"></div>
+    <div class="pin-dot" id="d3"></div>
+  </div>
+
+  <div class="numpad">
+    <button class="numpad-btn" onclick="pinTecla('1')">1</button>
+    <button class="numpad-btn" onclick="pinTecla('2')">2</button>
+    <button class="numpad-btn" onclick="pinTecla('3')">3</button>
+    <button class="numpad-btn" onclick="pinTecla('4')">4</button>
+    <button class="numpad-btn" onclick="pinTecla('5')">5</button>
+    <button class="numpad-btn" onclick="pinTecla('6')">6</button>
+    <button class="numpad-btn" onclick="pinTecla('7')">7</button>
+    <button class="numpad-btn" onclick="pinTecla('8')">8</button>
+    <button class="numpad-btn" onclick="pinTecla('9')">9</button>
+    <button class="numpad-btn borrar" onclick="pinBorrar()">⌫</button>
+    <button class="numpad-btn" onclick="pinTecla('0')">0</button>
+    <button class="numpad-btn entrar" onclick="pinEntrar()">OK</button>
+  </div>
+  <div class="login-error" id="loginErr"></div>
+</div>
+
+<!-- ══ PANTALLA PRINCIPAL ══ -->
+<div id="mainScreen">
+  <div class="topbar">
+    <div>
+      <div class="topbar-nombre">👷 RUBIEL</div>
+      <div class="topbar-sub" id="topbarFecha"></div>
+    </div>
+    <button class="btn-salir" onclick="salir()">Salir</button>
+  </div>
+
+  <div class="progreso-wrap">
+    <div class="progreso-label">
+      <span class="progreso-txt" id="progresoTxt">Cargando...</span>
+      <span class="progreso-pct" id="progresoPct"></span>
+    </div>
+    <div class="progreso-bar"><div class="progreso-fill" id="progresoFill" style="width:0%"></div></div>
+  </div>
+
+  <div class="mes-nav">
+    <div class="mes-btn" onclick="cambiarMes(-1)">‹</div>
+    <div class="mes-label" id="mesLabel">—</div>
+    <div class="mes-btn" onclick="cambiarMes(1)">›</div>
+  </div>
+
+  <div id="bannerDone">
+    <div class="ico">🎉</div>
+    <div class="txt">¡Todo hecho! Buen trabajo, Rubiel.</div>
+  </div>
+
+  <div class="tareas-lista" id="tareasLista">
+    <div class="cargando"><div class="ico" style="font-size:2rem;margin-bottom:8px">⏳</div>Cargando tareas...</div>
+  </div>
+</div>
+
+<div id="toast">✅ Tarea marcada como hecha</div>
+
+<script>
+// ── FIREBASE ─────────────────────────────────────────────────
+var FB_CFG = {
+  apiKey:"AIzaSyBWlOJqOKyFaUBkT1s73VVkHTqQpVDxPJc",
+  authDomain:"panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:"https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"panalcor-mantenimiento",
+  storageBucket:"panalcor-mantenimiento.appspot.com",
+  messagingSenderId:"532791447025",
+  appId:"1:532791447025:web:19e9be1c68ed044b07413a"
+};
+firebase.initializeApp(FB_CFG);
+var DB = firebase.database();
+
+// ── ESTADO ───────────────────────────────────────────────────
+var NOMBRE      = 'RUBIEL';
+var SESION_KEY  = 'rubiel_sesion';
+var PIN_CACHE   = null;   // se carga de config/rubiel_pin
+var mesActual   = '';
+var asigs       = {};
+var dbListener  = null;
+
+// ── UTILIDADES ───────────────────────────────────────────────
+function hoyMes(){
+  var d = new Date();
+  return d.getFullYear()+'-'+(d.getMonth()+1<10?'0':'')+(d.getMonth()+1);
+}
+function labelMes(m){
+  if(!m) return '';
+  var meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+               'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  var p = m.split('-');
+  return meses[parseInt(p[1],10)-1] + ' ' + p[0];
+}
+function toast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2500);
+}
+
+// ── PIN / LOGIN ───────────────────────────────────────────────
+var pinActual = '';
+
+// Precargar PIN desde Firebase (config/rubiel_pin)
+DB.ref('config/rubiel_pin').once('value')
+  .then(function(s){ PIN_CACHE = s.val() || null; })
+  .catch(function(){});
+
+function pinTecla(n){
+  if(pinActual.length >= 4) return;
+  pinActual += n;
+  actualizarDots();
+  if(pinActual.length === 4) setTimeout(pinEntrar, 120);
+}
+function pinBorrar(){
+  pinActual = pinActual.slice(0,-1);
+  actualizarDots();
+  document.getElementById('loginErr').textContent = '';
+}
+function actualizarDots(){
+  for(var i=0;i<4;i++){
+    document.getElementById('d'+i).classList.toggle('filled', i < pinActual.length);
+  }
+}
+function pinEntrar(){
+  if(!pinActual){ document.getElementById('loginErr').textContent = 'Introduce tu PIN'; return; }
+  var err = document.getElementById('loginErr');
+
+  function verificar(pin){
+    if(String(pin) === String(pinActual)){
+      guardarSesion();
+      abrirApp();
+    } else {
+      err.textContent = 'PIN incorrecto. Inténtalo otra vez.';
+      pinActual = '';
+      actualizarDots();
+      // Vibración suave si disponible
+      if(navigator.vibrate) navigator.vibrate(200);
+    }
+  }
+
+  if(PIN_CACHE !== null){
+    verificar(PIN_CACHE);
+  } else {
+    // Fallback: intentar contra mecanicos_pwd con la contraseña completa
+    // (por si no hay rubiel_pin configurado aún)
+    DB.ref('config/rubiel_pin').once('value').then(function(s){
+      PIN_CACHE = s.val();
+      if(PIN_CACHE !== null){
+        verificar(PIN_CACHE);
+      } else {
+        // Sin PIN configurado, comprobar contra mecanicos_pwd como fallback
+        DB.ref('config/mecanicos_pwd/'+NOMBRE).once('value').then(function(s2){
+          var pwd = s2.val() || '';
+          if(String(pwd) === String(pinActual)){
+            guardarSesion();
+            abrirApp();
+          } else {
+            err.textContent = 'PIN no configurado. Avisa al administrador.';
+            pinActual = '';
+            actualizarDots();
+          }
+        });
+      }
+    }).catch(function(){
+      err.textContent = 'Error de conexión. Comprueba el WiFi.';
+      pinActual = '';
+      actualizarDots();
+    });
+  }
+}
+
+function guardarSesion(){
+  var exp = Date.now() + 8 * 3600 * 1000; // 8 horas
+  localStorage.setItem(SESION_KEY, JSON.stringify({nombre:NOMBRE, expires:exp}));
+}
+function sesionValida(){
+  try{
+    var s = JSON.parse(localStorage.getItem(SESION_KEY)||'null');
+    return s && Date.now() < s.expires;
+  }catch(e){ return false; }
+}
+function salir(){
+  localStorage.removeItem(SESION_KEY);
+  if(dbListener) try{ DB.ref('asignaciones/'+mesActual).off('value',dbListener); }catch(e){}
+  document.getElementById('mainScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  pinActual = '';
+  actualizarDots();
+  document.getElementById('loginErr').textContent = '';
+}
+
+// ── APP ───────────────────────────────────────────────────────
+function abrirApp(){
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('mainScreen').style.display = 'block';
+  mesActual = hoyMes();
+  actualizarFecha();
+  cargarTareas();
+}
+
+function actualizarFecha(){
+  document.getElementById('mesLabel').textContent = labelMes(mesActual);
+  var hoy = new Date();
+  var dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  document.getElementById('topbarFecha').textContent =
+    dias[hoy.getDay()] + ' ' + hoy.getDate() + '/' + (hoy.getMonth()+1);
+}
+
+function cambiarMes(dir){
+  if(dbListener) try{ DB.ref('asignaciones/'+mesActual).off('value',dbListener); }catch(e){}
+  var p = mesActual.split('-');
+  var y = parseInt(p[0],10), m = parseInt(p[1],10) + dir;
+  if(m < 1){ m=12; y--; } if(m > 12){ m=1; y++; }
+  mesActual = y+'-'+(m<10?'0':'')+m;
+  document.getElementById('mesLabel').textContent = labelMes(mesActual);
+  cargarTareas();
+}
+
+function cargarTareas(){
+  document.getElementById('tareasLista').innerHTML =
+    '<div class="cargando"><div style="font-size:2rem;margin-bottom:8px">⏳</div>Cargando...</div>';
+  document.getElementById('bannerDone').style.display = 'none';
+
+  dbListener = DB.ref('asignaciones/'+mesActual).on('value', function(snap){
+    var val = snap.val() || {};
+    asigs = {};
+    Object.keys(val).forEach(function(k){
+      if(val[k] && val[k].mecanico === NOMBRE) asigs[k] = val[k];
+    });
+    renderTareas();
+  }, function(){
+    document.getElementById('tareasLista').innerHTML =
+      '<div class="vacio"><div class="ico">❌</div>Sin conexión. Comprueba el WiFi.</div>';
+  });
+}
+
+function renderTareas(){
+  var lista = Object.keys(asigs).map(function(k){ return Object.assign({_id:k}, asigs[k]); });
+
+  // Ordenar: pendientes primero, luego hechas
+  lista.sort(function(a,b){
+    if(a.hecho && !b.hecho) return 1;
+    if(!a.hecho && b.hecho) return -1;
+    return (a.instancia||a.maquina||'').localeCompare(b.instancia||b.maquina||'');
+  });
+
+  var total  = lista.length;
+  var hechas = lista.filter(function(t){ return t.hecho; }).length;
+  var pct    = total ? Math.round(hechas/total*100) : 0;
+
+  document.getElementById('progresoTxt').textContent  = hechas + ' de ' + total + ' tareas';
+  document.getElementById('progresoPct').textContent  = pct + '%';
+  document.getElementById('progresoFill').style.width = pct + '%';
+  document.getElementById('bannerDone').style.display = (total > 0 && hechas === total) ? 'block' : 'none';
+
+  if(!total){
+    document.getElementById('tareasLista').innerHTML =
+      '<div class="vacio"><div class="ico">📋</div>No tienes tareas para '+labelMes(mesActual)+'.</div>';
+    return;
+  }
+
+  var freqLabel = {DIARIO:'Cada día',SEMANAL:'Cada semana',QUINCENAL:'Cada 2 semanas',
+                   MENSUAL:'Este mes',TRIMESTRAL:'Este trimestre',SEMESTRAL:'Cada 6 meses',ANUAL:'Este año'};
+
+  var wrap = document.getElementById('tareasLista');
+  wrap.innerHTML = '';
+
+  lista.forEach(function(t){
+    var lugar = t.instancia || t.maquina || '';
+    var desc  = t.tarea || '—';
+    var freq  = freqLabel[t.frecuencia] || t.frecuencia || '';
+
+    var card = document.createElement('div');
+    card.className = 'tarea-card' + (t.hecho ? ' hecha' : '');
+
+    var infoHtml =
+      '<div class="tarea-info">'
+      + (lugar ? '<div class="tarea-lugar">📍 '+escHtml(lugar)+'</div>' : '')
+      + '<div class="tarea-desc">'+escHtml(desc)+'</div>'
+      + (freq ? '<span class="tarea-freq">'+escHtml(freq)+'</span>' : '')
+      + '</div>';
+
+    var accionHtml = '';
+    if(t.hecho){
+      var d = t.hechoEn ? new Date(t.hechoEn) : null;
+      var fechaStr = d ? d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'})
+                       + ' a las ' + d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}) : '';
+      accionHtml = '<div class="tarea-hecha-info">✅ Hecho' + (fechaStr ? ' · '+fechaStr : '') + '</div>';
+    } else {
+      accionHtml = '<button class="btn-hecho" onclick="marcarHecha(\''+t._id+'\')">✅ &nbsp;HECHO</button>';
+    }
+
+    card.innerHTML = infoHtml + accionHtml;
+    wrap.appendChild(card);
+  });
+}
+
+function marcarHecha(id){
+  var now = Date.now();
+  DB.ref('asignaciones/'+mesActual+'/'+id).update({ hecho:true, hechoEn:now, hechoBy:NOMBRE })
+    .then(function(){ toast('✅ ¡Tarea completada!'); })
+    .catch(function(){ toast('❌ Error. Comprueba el WiFi.'); });
+}
+
+function escHtml(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── ARRANQUE ─────────────────────────────────────────────────
+if(sesionValida()){
+  abrirApp();
+}
+</script>
+</body>
+</html>
