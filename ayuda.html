@@ -140,6 +140,16 @@
     <a href="#seguridad" onclick="setActive(this)"><div class="dot dot-red"></div>Seguridad en planta</a>
   </div>
   <div class="sidebar-section">
+    <div class="sidebar-section-title">🔥 PCI — Contra incendios</div>
+    <a href="#pci-marco" onclick="setActive(this)"><div class="dot dot-red"></div>Marco legal PCI</a>
+    <a href="#pci-riesgo" onclick="setActive(this)"><div class="dot dot-orange"></div>Nivel de riesgo intrínseco</a>
+    <a href="#pci-instalaciones" onclick="setActive(this)"><div class="dot dot-gold"></div>Instalaciones obligatorias</a>
+    <a href="#pci-mantenimiento" onclick="setActive(this)"><div class="dot dot-blue"></div>Mantenimiento y frecuencias</a>
+    <a href="#pci-oca" onclick="setActive(this)"><div class="dot dot-green"></div>Inspecciones OCA</a>
+    <a href="#pci-documentacion" onclick="setActive(this)"><div class="dot dot-gold"></div>Documentación obligatoria</a>
+    <a href="#pci-sanciones" onclick="setActive(this)"><div class="dot dot-red"></div>Sanciones PCI</a>
+  </div>
+  <div class="sidebar-section">
     <div class="sidebar-section-title">💥 ATEX — Polvo de harina</div>
     <a href="#atex-marco" onclick="setActive(this)"><div class="dot dot-red"></div>Marco legal ATEX</a>
     <a href="#atex-zonas" onclick="setActive(this)"><div class="dot dot-orange"></div>Clasificación de zonas</a>
@@ -718,6 +728,398 @@
           <tr><td>No tener contrato de mantenimiento vigente</td><td><span class="badge b-gold">LEVE</span></td><td>5.000 €</td></tr>
         </tbody>
       </table>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PCI — MARCO LEGAL -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="pci-marco">
+      <div class="article-header">
+        <div class="article-icon">🔥</div>
+        <div>
+          <div class="article-title">PCI — Marco legal aplicable a PANALCOR</div>
+          <span class="article-badge">PROTECCIÓN CONTRA INCENDIOS · INDUSTRIAL</span>
+        </div>
+      </div>
+
+      <div class="alert danger">
+        <div class="alert-icon">🚨</div>
+        <div>Una panadería industrial combina harina (polvo combustible), hornos a alta temperatura, aceites y grasas, y motores eléctricos. Es una actividad de <strong>riesgo medio-alto</strong> de incendio. El incumplimiento de la normativa PCI puede suponer el cierre inmediato de la instalación.</div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-title">Normativa de referencia</div>
+        <div class="nb-body">
+          <table class="nt">
+            <thead><tr><th>Norma</th><th>Ámbito</th><th>Qué regula en PANALCOR</th></tr></thead>
+            <tbody>
+              <tr class="hl-row"><td><b>RD 164/2025 (RSCIEI)</b></td><td>España — establecimientos industriales</td><td>Requisitos de seguridad contra incendios para industrias. Sustituye al RD 2267/2004 desde el 10/05/2025</td></tr>
+              <tr class="hl-row"><td><b>RD 513/2017 (RIPCI)</b></td><td>España — instalaciones PCI</td><td>Obliga al mantenimiento periódico de todos los sistemas activos de protección (extintores, BIE, detección, rociadores…)</td></tr>
+              <tr><td><b>CTE DB-SI</b></td><td>Código Técnico Edificación</td><td>Aplica a la parte edilicia (sectores de incendio, evacuación, resistencia al fuego de estructura)</td></tr>
+              <tr><td><b>UNE 23580</b></td><td>Norma técnica española</td><td>Formato y contenido de los registros de mantenimiento PCI</td></tr>
+              <tr><td><b>UNE-EN 671</b></td><td>Norma europea</td><td>Bocas de incendio equipadas (BIE): diseño, instalación y mantenimiento</td></tr>
+              <tr><td><b>UNE-EN 12845</b></td><td>Norma europea</td><td>Sistemas automáticos de rociadores: diseño e inspección</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PCI — RIESGO INTRÍNSECO -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="pci-riesgo">
+      <div class="article-header">
+        <div class="article-icon">📊</div>
+        <div>
+          <div class="article-title">Nivel de Riesgo Intrínseco — Cálculo para PANALCOR</div>
+          <span class="article-badge">RSCIEI RD 164/2025</span>
+        </div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-title">¿Qué es el Riesgo Intrínseco (RII)?</div>
+        <div class="nb-body">
+          El RII determina qué instalaciones de protección son obligatorias. Se calcula como la <b>carga de fuego ponderada</b> del sector de incendio (en MJ/m²):<br><br>
+          <code style="background:rgba(255,255,255,0.08);padding:6px 12px;border-radius:6px;display:block;margin:8px 0">RII = Σ (Qi × Ci × Hi) / A × Ra</code>
+          Donde: <b>Qi</b> = cantidad de material (kg), <b>Ci</b> = poder calorífico (MJ/kg), <b>Hi</b> = factor de peligrosidad, <b>A</b> = área del sector (m²), <b>Ra</b> = factor de riesgo de activación.
+        </div>
+      </div>
+
+      <div class="norm-block warn">
+        <div class="nb-title">⚠️ Estimación para una panadería industrial</div>
+        <div class="nb-body">
+          <table class="nt">
+            <thead><tr><th>Material</th><th>Poder calorífico</th><th>Factor peligrosidad</th><th>Observación</th></tr></thead>
+            <tbody>
+              <tr class="hl-warn"><td><b>Harina (polvo)</b></td><td>~17 MJ/kg</td><td>1,6</td><td>Muy combustible; riesgo combinado incendio + explosión</td></tr>
+              <tr class="hl-warn"><td>Aceites vegetales</td><td>~39 MJ/kg</td><td>1,6</td><td>Alta inflamabilidad en freidoras y conductos</td></tr>
+              <tr><td>Embalajes cartón/plástico</td><td>~17 MJ/kg</td><td>1,2</td><td>Almacén de envases</td></tr>
+              <tr><td>Madera (palés)</td><td>~17 MJ/kg</td><td>1,0</td><td>Zona de carga/expedición</td></tr>
+              <tr class="hl-row"><td><b>Factor activación Ra (hornos)</b></td><td colspan="2">1,5 — Alta probabilidad de ignición</td><td>Superficies calientes continuas</td></tr>
+            </tbody>
+          </table>
+          <br>💡 Una panadería industrial típica presenta una <b>carga de fuego de 400–750 MJ/m²</b>, lo que la sitúa generalmente en <span class="hl">Riesgo Medio-Alto</span>.
+        </div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-title">Clasificación del nivel de riesgo</div>
+        <div class="nb-body">
+          <table class="nt">
+            <thead><tr><th>Nivel</th><th>RII (MJ/m²)</th><th>Instalaciones mínimas exigidas</th></tr></thead>
+            <tbody>
+              <tr class="hl-ok"><td><b>Bajo 1</b></td><td>≤ 100</td><td>Extintores + señalización + alumbrado emergencia</td></tr>
+              <tr class="hl-ok"><td><b>Bajo 2</b></td><td>100–200</td><td>Anterior + BIE 25mm</td></tr>
+              <tr class="hl-warn"><td><b>Medio 3</b></td><td>200–300</td><td>Anterior + detección automática</td></tr>
+              <tr class="hl-warn"><td><b>Medio 4</b></td><td>300–400</td><td>Anterior + rociadores (según superficie)</td></tr>
+              <tr class="hl-row"><td><b>Alto 5</b></td><td>400–800</td><td>Todo lo anterior + rociadores obligatorios + control de humos</td></tr>
+              <tr class="hl-row"><td><b>Alto 6</b></td><td>800–1.600</td><td>Nivel más exigente — sistemas redundantes</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PCI — INSTALACIONES OBLIGATORIAS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="pci-instalaciones">
+      <div class="article-header">
+        <div class="article-icon">🧯</div>
+        <div>
+          <div class="article-title">Instalaciones de PCI Obligatorias</div>
+          <span class="article-badge">RD 164/2025 · RD 513/2017</span>
+        </div>
+      </div>
+
+      <div class="norm-block ok">
+        <div class="nb-title">✅ Extintores portátiles</div>
+        <div class="nb-body">
+          • <b>Distancia máxima</b> a cualquier punto del sector: <span class="hl">15 metros</span><br>
+          • <b>Eficacia mínima:</b> 21A-113B para riesgo medio; 34A-144B para riesgo alto<br>
+          • <b>Tipo en panadería:</b> CO₂ junto a cuadros eléctricos y hornos; polvo ABC en zona general<br>
+          • <b>Altura de montaje:</b> parte superior a máx. 1,70 m del suelo<br>
+          • <b>Señalización:</b> pictograma normalizado visible desde 10 m
+        </div>
+      </div>
+
+      <div class="norm-block ok">
+        <div class="nb-title">✅ Bocas de Incendio Equipadas (BIE)</div>
+        <div class="nb-body">
+          • <b>BIE 25 mm</b> para riesgo bajo-medio; <b>BIE 45 mm</b> para riesgo alto<br>
+          • <b>Cobertura:</b> radio de acción de cada BIE = longitud de manguera (20 o 25 m) + 5 m de chorro<br>
+          • <b>Presión mínima en boquilla:</b> 3,5 bar (BIE 25 mm) o 2 bar (BIE 45 mm)<br>
+          • <b>Caudal simultáneo:</b> al menos 2 BIE funcionando a la vez durante 60 minutos<br>
+          • <b>Separación máxima</b> entre BIEs: 50 metros<br>
+          • <b>Distancia a la salida del sector:</b> máx. 5 metros
+        </div>
+      </div>
+
+      <div class="norm-block ok">
+        <div class="nb-title">✅ Sistema de detección automática de incendios</div>
+        <div class="nb-body">
+          • <b>Detectores de humo</b> en zonas de almacenamiento y producción general<br>
+          • <b>Detectores térmicos</b> junto a hornos y zonas de alta temperatura<br>
+          • <b>Detector de llama</b> recomendado en zona de freidoras y aceites<br>
+          • La central de incendios debe estar <b>monitorizada</b> (CRA o vigilante) en instalaciones de riesgo alto<br>
+          • <b>Sirenas y avisadores visuales</b> audibles en toda la instalación
+        </div>
+      </div>
+
+      <div class="norm-block warn">
+        <div class="nb-title">⚠️ Sistemas de rociadores (si aplica por superficie/riesgo)</div>
+        <div class="nb-body">
+          • Obligatorios a partir de cierto riesgo y superficie (según RSCIEI — verificar con cálculo de RII)<br>
+          • <b>Temperatura de disparo</b> en zona de hornos: rociador de respuesta rápida 93°C (evitar disparos falsos)<br>
+          • La red de rociadores requiere <b>depósito de reserva</b> o conexión a red municipal garantizada<br>
+          • <b>Válvulas de sectorización</b> con indicador de posición visible
+        </div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-title">Alumbrado de emergencia y señalización</div>
+        <div class="nb-body">
+          • Luminarias de emergencia sobre <b>cada salida y cambio de dirección</b> en recorridos de evacuación<br>
+          • <b>Iluminancia mínima:</b> 1 lux en recorridos; 5 lux en puestos de seguridad (cuadro eléctrico, BIE, extintor)<br>
+          • <b>Autonomía mínima:</b> 1 hora<br>
+          • <b>Señalización fotoluminiscente</b> normalizada (UNE-EN ISO 7010) en todas las vías de evacuación
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PCI — MANTENIMIENTO -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="pci-mantenimiento">
+      <div class="article-header">
+        <div class="article-icon">🔧</div>
+        <div>
+          <div class="article-title">Mantenimiento Periódico — Frecuencias obligatorias</div>
+          <span class="article-badge">RD 513/2017 · RIPCI</span>
+        </div>
+      </div>
+
+      <div class="alert info">
+        <div class="alert-icon">ℹ️</div>
+        <div>Las inspecciones <b>trimestrales y anuales</b> deben realizarse por <b>empresa mantenedora autorizada</b> inscrita en el Registro Industrial de la Comunidad Autónoma. Las inspecciones visuales mensuales puede hacerlas el propio personal de PANALCOR.</div>
+      </div>
+
+      <div class="norm-block warn">
+        <div class="nb-title">🧯 Extintores</div>
+        <div class="nb-body">
+          <table class="nt">
+            <thead><tr><th>Período</th><th>Quién</th><th>Qué se comprueba</th></tr></thead>
+            <tbody>
+              <tr><td><span class="badge b-blue">Trimestral</span></td><td>Personal PANALCOR</td><td>Presión en verde · precinto intacto · accesibilidad · etiqueta · estado exterior</td></tr>
+              <tr class="hl-warn"><td><span class="badge b-orange">Anual</span></td><td>Empresa mantenedora autorizada</td><td>Revisión técnica completa · peso del agente · comprobación mecánica · actualización etiqueta</td></tr>
+              <tr class="hl-row"><td><span class="badge b-red">Cada 5 años</span></td><td>Empresa mantenedora autorizada</td><td>Retimbrado (prueba hidrostática) · inspección interior · sustitución si es necesario</td></tr>
+            </tbody>
+          </table>
+          <br>⏳ <b>Vida útil máxima:</b> 20 años desde fabricación. Tras retimbrado a los 5 y 10 años, a los 15 y 20 se realizan nuevas pruebas o se retiran.
+        </div>
+      </div>
+
+      <div class="norm-block warn">
+        <div class="nb-title">💧 Bocas de Incendio Equipadas (BIE)</div>
+        <div class="nb-body">
+          <table class="nt">
+            <thead><tr><th>Período</th><th>Quién</th><th>Qué se comprueba</th></tr></thead>
+            <tbody>
+              <tr><td><span class="badge b-blue">Trimestral</span></td><td>Personal PANALCOR</td><td>Desplegar manguera completamente · probar boquilla · comprobar manómetro · estado general · señalización</td></tr>
+              <tr class="hl-warn"><td><span class="badge b-orange">Anual</span></td><td>Empresa mantenedora autorizada</td><td>Prueba funcional completa · medición de presión y caudal · comprobación de válvulas · registro</td></tr>
+              <tr class="hl-row"><td><span class="badge b-red">Cada 5 años</span></td><td>Empresa mantenedora autorizada</td><td>Prueba hidrostática de manguera a 15 kg/cm² · inspección de racores y boquilla</td></tr>
+            </tbody>
+          </table>
+          <br>⏳ <b>Sustitución de manguera:</b> a los 20 años desde instalación como máximo.
+        </div>
+      </div>
+
+      <div class="norm-block warn">
+        <div class="nb-title">🔔 Sistema de detección y alarma</div>
+        <div class="nb-body">
+          <table class="nt">
+            <thead><tr><th>Período</th><th>Quién</th><th>Qué se comprueba</th></tr></thead>
+            <tbody>
+              <tr><td><span class="badge b-blue">Trimestral</span></td><td>Personal PANALCOR</td><td>Estado visual de detectores y pulsadores · central sin alarmas activas · baterías de respaldo</td></tr>
+              <tr class="hl-warn"><td><span class="badge b-orange">Anual</span></td><td>Empresa mantenedora autorizada</td><td>Prueba funcional de todos los detectores · simulación de alarma · verificación de comunicaciones · limpieza de detectores</td></tr>
+            </tbody>
+          </table>
+          <br>⏳ <b>Vida útil de detectores:</b> 10 años. Pasados los 10 años, verificación adicional cada 5 años hasta sustitución.
+        </div>
+      </div>
+
+      <div class="norm-block warn">
+        <div class="nb-title">🚿 Rociadores automáticos</div>
+        <div class="nb-body">
+          <table class="nt">
+            <thead><tr><th>Período</th><th>Quién</th><th>Qué se comprueba</th></tr></thead>
+            <tbody>
+              <tr><td><span class="badge b-blue">Trimestral</span></td><td>Personal PANALCOR</td><td>Visual de rociadores (sin pintura, golpes ni obstrucciones) · manómetros en verde · no fugas</td></tr>
+              <tr><td><span class="badge b-gold">Semestral</span></td><td>Empresa mantenedora autorizada</td><td>Inspección de tuberías · válvulas de sectorización · prueba de bomba eléctrica</td></tr>
+              <tr class="hl-warn"><td><span class="badge b-orange">Anual</span></td><td>Empresa mantenedora autorizada</td><td>Prueba funcional completa · caudal y presión · prueba de bomba Diesel (mín. 20 min)</td></tr>
+              <tr class="hl-row"><td><span class="badge b-red">Cada 5 años</span></td><td>Empresa mantenedora autorizada</td><td>Retimbrado de depósito · prueba hidrostática de tuberías · inspección interna del depósito</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-title">💡 Alumbrado de emergencia</div>
+        <div class="nb-body">
+          <table class="nt">
+            <thead><tr><th>Período</th><th>Qué se comprueba</th></tr></thead>
+            <tbody>
+              <tr><td><span class="badge b-blue">Mensual</span></td><td>Simular fallo de red · verificar que cada luminaria enciende · duración de prueba: breve (no agotar batería)</td></tr>
+              <tr class="hl-warn"><td><span class="badge b-orange">Anual</span></td><td>Prueba de autonomía completa (1 hora) · verificación de iluminancia · sustitución de baterías o lámparas defectuosas</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PCI — OCA -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="pci-oca">
+      <div class="article-header">
+        <div class="article-icon">🏛️</div>
+        <div>
+          <div class="article-title">Inspecciones OCA — Organismo de Control Autorizado</div>
+          <span class="article-badge">RD 513/2017 · CADA 10 AÑOS</span>
+        </div>
+      </div>
+
+      <div class="norm-block warn">
+        <div class="nb-title">¿Qué es y cuándo es obligatoria?</div>
+        <div class="nb-body">
+          La OCA es un organismo acreditado por <b>ENAC</b> que realiza inspecciones reglamentarias de las instalaciones de protección contra incendios. Es <b>distinta</b> de la empresa mantenedora: la OCA no mantiene, audita.<br><br>
+          • <b>Primera inspección OCA:</b> a los 10 años desde la puesta en servicio de la instalación<br>
+          • <b>Inspecciones posteriores:</b> cada 10 años<br>
+          • <b>Quién la solicita:</b> el titular de la instalación (PANALCOR) — es responsabilidad del propietario, no de la empresa mantenedora<br>
+          • <b>El informe OCA</b> debe conservarse y estar disponible ante la autoridad competente de la Comunidad Autónoma
+        </div>
+      </div>
+
+      <div class="norm-block ok">
+        <div class="nb-title">✅ Qué revisa la OCA en su inspección</div>
+        <div class="nb-body">
+          ① Adecuación de las instalaciones al RSCIEI vigente<br>
+          ② Estado de todos los sistemas activos (extintores, BIE, detección, rociadores)<br>
+          ③ Correcta sectorización contra incendios del edificio<br>
+          ④ Existencia y actualización del libro de mantenimiento<br>
+          ⑤ Que la empresa mantenedora está debidamente habilitada<br>
+          ⑥ Señalización y alumbrado de emergencia<br>
+          ⑦ Vías de evacuación despejadas y dimensionadas<br>
+          ⑧ Plan de emergencia (si es exigible)<br><br>
+          Si la OCA detecta deficiencias graves, <b>notifica a la Administración</b> y puede exigir paralización de la actividad hasta su corrección.
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PCI — DOCUMENTACIÓN -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="pci-documentacion">
+      <div class="article-header">
+        <div class="article-icon">📋</div>
+        <div>
+          <div class="article-title">Documentación Obligatoria PCI</div>
+          <span class="article-badge">RD 513/2017 · UNE 23580</span>
+        </div>
+      </div>
+
+      <div class="norm-block ok">
+        <div class="nb-title">✅ Documentos que debe tener PANALCOR en planta</div>
+        <div class="nb-body">
+          ☐ <b>Proyecto de instalación PCI</b> firmado por técnico competente (al instalar o modificar)<br>
+          ☐ <b>Certificado de instalación</b> de cada sistema (extinción, detección, BIE…)<br>
+          ☐ <b>Libro de mantenimiento PCI</b> — registro cronológico de todas las revisiones (ver formato UNE 23580)<br>
+          ☐ <b>Contratos con empresa mantenedora habilitada</b> vigentes<br>
+          ☐ <b>Informes de inspección OCA</b> (a partir de los 10 años de la instalación)<br>
+          ☐ <b>Plan de autoprotección / emergencia</b> (obligatorio si &gt;25 trabajadores o riesgo alto)<br>
+          ☐ <b>Registros de simulacros</b> de evacuación (mínimo 1 al año)<br>
+          ☐ <b>Fichas técnicas de agentes extintores</b> (tipo de polvo, CO₂, etc.)<br><br>
+          ⏳ <b>Conservación mínima:</b> 5 años. Los proyectos e informes OCA, durante toda la vida de la instalación.
+        </div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-title">📝 Qué debe contener cada registro del Libro de Mantenimiento (UNE 23580)</div>
+        <div class="nb-body">
+          Por cada operación realizada:<br><br>
+          ① Fecha de la revisión<br>
+          ② Sistema revisado (extintor nº X, BIE nº Y, detector zona Z…)<br>
+          ③ Tipo de mantenimiento (visual, técnico, retimbrado, prueba hidrostática)<br>
+          ④ Resultado (correcto / deficiencia detectada)<br>
+          ⑤ Acciones correctoras realizadas o pendientes<br>
+          ⑥ Nombre y nº de habilitación del técnico<br>
+          ⑦ Empresa mantenedora<br>
+          ⑧ Firma del técnico y del representante de PANALCOR
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PCI — SANCIONES -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="pci-sanciones">
+      <div class="article-header">
+        <div class="article-icon">⚖️</div>
+        <div>
+          <div class="article-title">Sanciones por incumplimiento PCI</div>
+          <span class="article-badge">LEY 17/2015 · NORMATIVA AUTONÓMICA</span>
+        </div>
+      </div>
+
+      <table class="nt">
+        <thead><tr><th>Infracción</th><th>Gravedad</th><th>Consecuencia</th></tr></thead>
+        <tbody>
+          <tr class="hl-row"><td>No disponer de las instalaciones PCI exigidas por el RSCIEI</td><td><span class="badge b-red">MUY GRAVE</span></td><td>Clausura de la instalación hasta subsanación + multa hasta 600.000 €</td></tr>
+          <tr class="hl-row"><td>No realizar las inspecciones OCA en los plazos</td><td><span class="badge b-red">MUY GRAVE</span></td><td>Paralización de actividad + multa</td></tr>
+          <tr class="hl-warn"><td>No contratar empresa mantenedora habilitada</td><td><span class="badge b-orange">GRAVE</span></td><td>Multa 3.000–30.000 €</td></tr>
+          <tr class="hl-warn"><td>No realizar las revisiones periódicas del RIPCI</td><td><span class="badge b-orange">GRAVE</span></td><td>Multa 3.000–30.000 €</td></tr>
+          <tr class="hl-warn"><td>Libro de mantenimiento inexistente o sin actualizar</td><td><span class="badge b-orange">GRAVE</span></td><td>Multa 3.000–30.000 €</td></tr>
+          <tr class="hl-warn"><td>No tener Plan de Autoprotección cuando es exigible</td><td><span class="badge b-orange">GRAVE</span></td><td>Multa 3.000–30.000 €</td></tr>
+          <tr><td>Señalización deficiente o luminarias de emergencia defectuosas</td><td><span class="badge b-gold">LEVE</span></td><td>Multa 100–3.000 €</td></tr>
+          <tr><td>Extintores fuera de plazo de revisión anual</td><td><span class="badge b-gold">LEVE</span></td><td>Multa 100–3.000 €</td></tr>
+        </tbody>
+      </table>
+
+      <div class="norm-block danger" style="margin-top:14px">
+        <div class="nb-title">🚨 Responsabilidad en caso de incendio con víctimas</div>
+        <div class="nb-body">
+          Si hay un incendio y se demuestra incumplimiento de la normativa PCI:<br><br>
+          • <b>Responsabilidad civil</b> frente a trabajadores, clientes y terceros afectados<br>
+          • <b>Responsabilidad penal</b> del titular y responsables de seguridad (Art. 316 Código Penal)<br>
+          • <b>El seguro puede no cubrir</b> los daños si el incumplimiento fue la causa del siniestro<br>
+          • <b>Recargo de prestaciones</b> de la Seguridad Social (30–50%) a cargo de la empresa<br>
+          • <b>Inhabilitación</b> para ejercer actividades industriales
+        </div>
+      </div>
+
+      <div class="norm-block ok" style="margin-top:0">
+        <div class="nb-title">✅ Referencias legales</div>
+        <div class="nb-body">
+          • <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-6606" target="_blank" style="color:var(--ice)">RD 513/2017 RIPCI — BOE</a><br>
+          • <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2025-7190" target="_blank" style="color:var(--ice)">RD 164/2025 RSCIEI — BOE</a><br>
+          • <a href="https://www.codigotecnico.org/pdf/Documentos/SI/DBSI.pdf" target="_blank" style="color:var(--ice)">CTE DB-SI — Código Técnico de la Edificación</a>
+        </div>
+      </div>
     </div>
 
     <hr class="sep">
