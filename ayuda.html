@@ -112,7 +112,7 @@
   <a class="topbar-back" href="admin.html">← Admin</a>
   <div style="font-size:1.3rem">📖</div>
   <div class="topbar-title">Normativa & Ayuda — PANALCOR</div>
-  <div style="margin-left:auto;font-size:.78rem;color:rgba(255,255,255,.3)">Actualizado Jun 2025</div>
+  <div style="margin-left:auto;font-size:.78rem;color:rgba(255,255,255,.3)">Actualizado Jun 2026</div>
 </div>
 
 <div class="layout">
@@ -138,6 +138,15 @@
     <a href="#manipulacion" onclick="setActive(this)"><div class="dot dot-blue"></div>Manipulación de gas</a>
     <a href="#presiones" onclick="setActive(this)"><div class="dot dot-green"></div>Presiones de trabajo</a>
     <a href="#seguridad" onclick="setActive(this)"><div class="dot dot-red"></div>Seguridad en planta</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">💥 ATEX — Polvo de harina</div>
+    <a href="#atex-marco" onclick="setActive(this)"><div class="dot dot-red"></div>Marco legal ATEX</a>
+    <a href="#atex-zonas" onclick="setActive(this)"><div class="dot dot-orange"></div>Clasificación de zonas</a>
+    <a href="#atex-dpce" onclick="setActive(this)"><div class="dot dot-gold"></div>DPCE — Doc. protección</a>
+    <a href="#atex-equipos" onclick="setActive(this)"><div class="dot dot-blue"></div>Equipos certificados</a>
+    <a href="#atex-operativa" onclick="setActive(this)"><div class="dot dot-green"></div>Medidas operativas</a>
+    <a href="#atex-sanciones" onclick="setActive(this)"><div class="dot dot-red"></div>Sanciones ATEX</a>
   </div>
   <div class="sidebar-section">
     <div class="sidebar-section-title">📋 Referencia rápida</div>
@@ -709,6 +718,343 @@
           <tr><td>No tener contrato de mantenimiento vigente</td><td><span class="badge b-gold">LEVE</span></td><td>5.000 €</td></tr>
         </tbody>
       </table>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- ATEX — MARCO LEGAL -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="atex-marco">
+      <div class="article-header">
+        <div class="article-icon">💥</div>
+        <div>
+          <div class="article-title">ATEX — Marco legal aplicable a PANALCOR</div>
+          <span class="article-badge">POLVO DE HARINA · ATMÓSFERAS EXPLOSIVAS</span>
+        </div>
+      </div>
+
+      <div class="alert danger">
+        <div class="alert-icon">🚨</div>
+        <div>El polvo de harina es <strong>combustible y explosivo</strong> cuando se dispersa en el aire. Una concentración de solo <strong>50–60 g/m³</strong> con una fuente de ignición puede causar una explosión devastadora. ATEX es de obligado cumplimiento en PANALCOR.</div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-title">Normativa de referencia</div>
+        <div class="nb-body">
+          <table class="nt">
+            <thead><tr><th>Norma</th><th>Ámbito</th><th>Aplicación en PANALCOR</th></tr></thead>
+            <tbody>
+              <tr class="hl-row"><td><b>Directiva 1999/92/CE</b></td><td>UE — seguridad trabajadores</td><td>Requisitos mínimos para proteger a los trabajadores en zonas con riesgo de explosión</td></tr>
+              <tr class="hl-row"><td><b>RD 681/2003</b></td><td>España — transposición 1999/92/CE</td><td>Norma española principal. Obliga a clasificar zonas, elaborar DPCE y formar al personal</td></tr>
+              <tr><td><b>Directiva 2014/34/UE</b></td><td>UE — equipos ATEX</td><td>Todo equipo instalado en zonas ATEX debe llevar marcado CE + Ex y categoría certificada</td></tr>
+              <tr><td><b>UNE-EN 60079-10-2</b></td><td>Clasificación de zonas (polvo)</td><td>Metodología para determinar extensión de Zonas 20, 21 y 22</td></tr>
+              <tr><td><b>UNE-EN 1127-1</b></td><td>Prevención de explosiones</td><td>Identificación de fuentes de ignición y medidas de protección</td></tr>
+              <tr><td><b>Ley 31/1995 PRL</b></td><td>España — prevención de riesgos</td><td>Marco general; infracciones ATEX se sancionan bajo esta ley</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="norm-block warn">
+        <div class="nb-title">⚠️ Parámetros de explosividad de la harina de trigo</div>
+        <div class="nb-body">
+          • <b>Energía Mínima de Ignición (MIE):</b> <span class="hl">50–100 mJ</span> — La electricidad estática generada al manipular harina puede superarla<br>
+          • <b>Concentración Mínima Explosiva (CME):</b> <span class="hl">50–60 g/m³</span> — Basta con el polvo visible en el ambiente<br>
+          • <b>Temperatura Mínima de Inflamación (MIT):</b> ~300°C en nube de polvo<br>
+          • <b>Clase de explosión:</b> St1 — propagación de llama rápida<br>
+          • <b>Tamaño de partícula crítico:</b> &lt; 65 µm (harina fina = mayor riesgo)<br><br>
+          💡 Una capa de polvo de <span class="red">0,5 mm</span> de grosor ya se considera peligrosa si se levanta en suspensión.
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- ATEX — CLASIFICACIÓN ZONAS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="atex-zonas">
+      <div class="article-header">
+        <div class="article-icon">🗺️</div>
+        <div>
+          <div class="article-title">Clasificación de Zonas ATEX — Polvo</div>
+          <span class="article-badge">RD 681/2003 · UNE-EN 60079-10-2</span>
+        </div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-title">Definición de zonas para polvo combustible</div>
+        <div class="nb-body">
+          <table class="nt">
+            <thead><tr><th>Zona</th><th>Definición</th><th>Ubicaciones típicas en PANALCOR</th><th>Equipo requerido</th></tr></thead>
+            <tbody>
+              <tr class="hl-row">
+                <td><b>Zona 20</b></td>
+                <td>Nube de polvo explosivo presente de forma <b>continua, frecuente o prolongada</b></td>
+                <td>Interior de silos de harina · interior de tolvas · interior de sistemas de transporte neumático en funcionamiento</td>
+                <td><span class="badge b-red">Categoría 1D</span></td>
+              </tr>
+              <tr class="hl-warn">
+                <td><b>Zona 21</b></td>
+                <td>Nube de polvo explosivo que puede formarse <b>ocasionalmente en condiciones normales</b></td>
+                <td>Alrededor de bocas de carga/descarga · tamizadoras · amasadoras en operación · puntos de dosificación · área de pesado de harina</td>
+                <td><span class="badge b-orange">Categoría 2D</span></td>
+              </tr>
+              <tr class="hl-ok">
+                <td><b>Zona 22</b></td>
+                <td>Nube de polvo explosivo que puede formarse <b>excepcionalmente o durante breve tiempo</b></td>
+                <td>Zona de vaciado de sacos · almacén de harinas · zonas adyacentes a equipos de Zona 21 con posibles fugas de polvo</td>
+                <td><span class="badge b-gold">Categoría 3D</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="norm-block warn">
+        <div class="nb-title">📍 Obligaciones de señalización</div>
+        <div class="nb-body">
+          Cada zona debe estar delimitada y señalizada con el <b>pictograma triangular ATEX</b> (triángulo amarillo con "Ex" negro). Las señales deben:<br>
+          • Colocarse en los límites de cada zona clasificada<br>
+          • Ser visibles y resistentes al entorno<br>
+          • Indicar la zona (20, 21 o 22) en el rótulo complementario<br><br>
+          ⚠️ El acceso a Zona 20 y 21 debe estar <b>restringido</b> al personal formado y autorizado.
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- ATEX — DPCE -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="atex-dpce">
+      <div class="article-header">
+        <div class="article-icon">📄</div>
+        <div>
+          <div class="article-title">DPCE — Documento de Protección contra Explosiones</div>
+          <span class="article-badge">OBLIGATORIO · RD 681/2003 ART. 4 Y 8</span>
+        </div>
+      </div>
+
+      <div class="alert danger">
+        <div class="alert-icon">🚨</div>
+        <div>El DPCE es <strong>obligatorio antes de comenzar a trabajar</strong> en zonas con riesgo de explosión. Su ausencia es una infracción muy grave bajo la Ley 31/1995 PRL. Debe estar actualizado y disponible ante la Inspección de Trabajo en todo momento.</div>
+      </div>
+
+      <div class="norm-block ok">
+        <div class="nb-title">✅ Contenido obligatorio del DPCE (Art. 8 RD 681/2003)</div>
+        <div class="nb-body">
+          ① <b>Evaluación de riesgos de explosión:</b> identificación de fuentes de polvo, condiciones de dispersión, fuentes de ignición<br>
+          ② <b>Plano de zonas clasificadas</b> (20, 21, 22) con sus límites definidos<br>
+          ③ <b>Inventario de equipos ATEX</b> instalados con su categoría y nº de certificado<br>
+          ④ <b>Medidas técnicas y organizativas</b> para prevenir y limitar explosiones<br>
+          ⑤ <b>Plan de limpieza:</b> frecuencias, métodos y responsables<br>
+          ⑥ <b>Sistema de puesta a tierra y equipotencialidad:</b> verificaciones periódicas<br>
+          ⑦ <b>Plan de formación del personal</b> en riesgo ATEX<br>
+          ⑧ <b>Procedimientos de trabajo seguro</b> en Zonas 20 y 21<br>
+          ⑨ <b>Plan de emergencia</b> específico para explosión/incendio de polvo<br>
+          ⑩ <b>Coordinación con contratas</b> (el DPCE aplica también a empresas externas que trabajen en las instalaciones)<br><br>
+          📅 El DPCE debe <b>revisarse</b> ante cualquier modificación significativa de instalaciones, equipos u organización del trabajo.
+        </div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-title">💡 Integración con documentación existente</div>
+        <div class="nb-body">
+          El DPCE puede integrarse en la <b>Evaluación de Riesgos Laborales</b> general de PANALCOR (Ley 31/1995). Si ya existe un Plan de Prevención, se añade como capítulo específico ATEX. Recomendable contratar a un <b>técnico de prevención especializado en ATEX</b> para su elaboración inicial; el mantenimiento posterior puede hacerlo el propio equipo.
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- ATEX — EQUIPOS -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="atex-equipos">
+      <div class="article-header">
+        <div class="article-icon">⚙️</div>
+        <div>
+          <div class="article-title">Equipos ATEX — Selección, marcado y mantenimiento</div>
+          <span class="article-badge">DIRECTIVA 2014/34/UE</span>
+        </div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-title">Categorías de equipos para polvo (grupo III)</div>
+        <div class="nb-body">
+          <table class="nt">
+            <thead><tr><th>Categoría</th><th>Zona</th><th>Nivel de protección</th><th>Protección IP mínima</th><th>Ejemplos en panadería</th></tr></thead>
+            <tbody>
+              <tr class="hl-row"><td><b>Cat. 1D</b></td><td>Zona 20</td><td>Muy alta — 2 fallos independientes tolerados</td><td>IP 6X</td><td>Sensores dentro de silos, válvulas rotativas internas, nivel de silo</td></tr>
+              <tr class="hl-warn"><td><b>Cat. 2D</b></td><td>Zona 21</td><td>Alta — 1 medida de protección primaria</td><td>IP 6X</td><td>Motores de amasadoras, tamizadoras, transportadores de tornillo, extractores de polvo</td></tr>
+              <tr class="hl-ok"><td><b>Cat. 3D</b></td><td>Zona 22</td><td>Normal — condiciones estándar</td><td>IP 5X (o 6X si polvo conductor)</td><td>Luminarias en almacén de sacos, enchufes y cuadros en zona de vaciado</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="norm-block warn">
+        <div class="nb-title">🔍 Marcado ATEX que debe aparecer en cada equipo</div>
+        <div class="nb-body">
+          Todo equipo para uso en zona ATEX debe llevar grabado o en placa:<br><br>
+          <code style="background:rgba(255,255,255,0.08);padding:4px 10px;border-radius:6px;font-size:0.9rem">⑧ II 2D Ex tb IIIC T135°C Db</code><br><br>
+          • <span class="hl">⑧</span> — Marcado CE<br>
+          • <span class="hl">II</span> — Grupo II (superficial, no minero)<br>
+          • <span class="hl">2D</span> — Categoría 2, polvo (D)<br>
+          • <span class="hl">Ex</span> — Equipo certificado para atmósfera explosiva<br>
+          • <span class="hl">tb</span> — Modo de protección (carcasa antipolvo)<br>
+          • <span class="hl">IIIC</span> — Subgrupo de polvo (IIIa=polvo no conductor, IIIb=polvo conductor, IIIc=polvo inflamable)<br>
+          • <span class="hl">T135°C</span> — Temperatura superficial máxima (debe ser &lt; MIT del polvo)<br>
+          • <span class="hl">Db</span> — Nivel de protección EPL<br><br>
+          ⚠️ Si un equipo no tiene este marcado, <b>no puede instalarse en zonas ATEX</b>.
+        </div>
+      </div>
+
+      <div class="norm-block ok">
+        <div class="nb-title">✅ Mantenimiento obligatorio de equipos ATEX (UNE-EN 60079-17)</div>
+        <div class="nb-body">
+          • <b>Inspección visual:</b> mensual — verificar integridad de carcasas, sellos, gomas, conexiones<br>
+          • <b>Inspección detallada:</b> anual — desmontar partes accesibles, verificar bornes, estado interior<br>
+          • <b>Inspección completa:</b> cada 3–5 años — desmontaje total, ensayos eléctricos, verificación de certificados<br>
+          • <b>Registro obligatorio</b> de cada inspección con fecha, técnico y resultado<br>
+          • Solo personal <b>formado y competente en ATEX</b> puede realizar estas inspecciones<br>
+          • Las piezas de repuesto deben ser <b>originales o equivalentes certificados</b> — no se pueden instalar piezas estándar en equipos ATEX
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- ATEX — OPERATIVA -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="atex-operativa">
+      <div class="article-header">
+        <div class="article-icon">🔧</div>
+        <div>
+          <div class="article-title">Medidas Operativas ATEX — Limpieza, tierra y ventilación</div>
+          <span class="article-badge">OPERATIVA DIARIA · RD 681/2003</span>
+        </div>
+      </div>
+
+      <div class="norm-block danger">
+        <div class="nb-title">🚫 Fuentes de ignición prohibidas en zonas ATEX</div>
+        <div class="nb-body">
+          ❌ Llamas abiertas o trabajos en caliente (soldadura, corte) sin permiso de trabajo especial<br>
+          ❌ Herramientas que puedan producir chispas (acero sobre acero) en Zona 20/21<br>
+          ❌ Teléfonos móviles y equipos electrónicos no certificados ATEX en Zona 20/21<br>
+          ❌ Equipos de iluminación no certificados<br>
+          ❌ Ropa sintética que acumule electricidad estática (usar ropa antiestática en Zona 20/21)<br>
+          ❌ Equipos eléctricos con la carcasa abierta o deteriorada<br>
+          ❌ Fumar en cualquier zona de producción
+        </div>
+      </div>
+
+      <div class="norm-block warn">
+        <div class="nb-title">⚡ Puesta a tierra y equipotencialidad — OBLIGATORIA</div>
+        <div class="nb-body">
+          Todos los elementos conductores deben estar <b>conectados a tierra</b> para disipar la electricidad estática:<br><br>
+          • Estructuras metálicas de silos y tolvas<br>
+          • Conducciones de transporte neumático<br>
+          • Marcos metálicos de máquinas (amasadoras, tamizadoras, etc.)<br>
+          • Sistemas de aspiración y filtración de polvo<br>
+          • Vehículos de transporte interno (carretillas elevadoras en zona ATEX)<br><br>
+          <b>Verificación:</b> Resistencia de puesta a tierra <span class="hl">&lt; 10 Ω</span> medida con megóhmetro<br>
+          <b>Frecuencia:</b> Verificación anual mínima + tras cualquier modificación estructural<br>
+          <b>Registro:</b> Anotar fecha, resistencia medida y técnico responsable
+        </div>
+      </div>
+
+      <div class="norm-block ok">
+        <div class="nb-title">🧹 Plan de limpieza antiexplosión — Frecuencias mínimas</div>
+        <div class="nb-body">
+          <table class="nt">
+            <thead><tr><th>Elemento</th><th>Frecuencia</th><th>Método</th></tr></thead>
+            <tbody>
+              <tr><td>Suelos y superficies horizontales de producción</td><td><span class="badge b-red">Diaria</span></td><td>Aspiración con equipo ATEX certificado o limpieza húmeda. Nunca barrer en seco (levanta polvo)</td></tr>
+              <tr><td>Vigas, conductos y superficies elevadas</td><td><span class="badge b-orange">Semanal</span></td><td>Aspiración ATEX. Comprobar que no hay capas &gt; 0,5 mm</td></tr>
+              <tr><td>Tolvas y dosificadoras</td><td><span class="badge b-orange">Diaria tras cada producción</span></td><td>Aspiración o limpieza con aire comprimido hacia extractor activo</td></tr>
+              <tr><td>Filtros de aspiración de polvo</td><td><span class="badge b-orange">Semanal / según fabricante</span></td><td>No superar el 50% de la capacidad del colector</td></tr>
+              <tr><td>Interior de silos (limpieza profunda)</td><td><span class="badge b-gold">Mensual + cambio de harina</span></td><td>Empresa especializada con equipo certificado y protocolo de entrada en espacio confinado</td></tr>
+              <tr><td>Revisión general ATEX de instalación</td><td><span class="badge b-blue">Anual</span></td><td>Técnico competente en ATEX. Actualizar DPCE si hay cambios</td></tr>
+            </tbody>
+          </table>
+          <br>💡 <b>Regla de oro:</b> Una capa de polvo de <span class="red">0,5 mm</span> sobre una superficie de 1 m² contiene suficiente harina para crear una concentración explosiva en un volumen de 1 m³ si se levanta en suspensión.
+        </div>
+      </div>
+
+      <div class="norm-block">
+        <div class="nb-title">💨 Ventilación en zonas ATEX</div>
+        <div class="nb-body">
+          • La ventilación debe mantener la concentración de polvo <b>por debajo del 25% del LIE</b> (límite inferior de explosividad)<br>
+          • Los ventiladores y motores de extracción deben ser <b>Cat. 2D mínimo</b> si están en Zona 21<br>
+          • Los conductos de ventilación no deben tener <b>tramos horizontales largos</b> donde se deposite el polvo<br>
+          • Revisión de filtros y conductos: <b>mínimo trimestral</b><br>
+          • En caso de parada del sistema de ventilación: <b>detener la producción</b> hasta restablecer
+        </div>
+      </div>
+
+      <div class="norm-block warn">
+        <div class="nb-title">🚨 Actuación en caso de explosión de polvo</div>
+        <div class="nb-body">
+          ① <b>Evacuar inmediatamente</b> — las explosiones de polvo suelen producirse en dos ondas (la primera levanta el polvo depositado, la segunda es más destructiva)<br>
+          ② <b>Cortar el suministro eléctrico y de gas</b> desde fuera de la zona afectada<br>
+          ③ <b>Llamar al 112</b> — indicar que es explosión de polvo de harina<br>
+          ④ <b>No entrar</b> a la zona hasta autorización de bomberos (riesgo de segunda explosión)<br>
+          ⑤ <b>Preservar la escena</b> para la investigación obligatoria del accidente<br>
+          ⑥ Notificación obligatoria a la <b>Inspección de Trabajo</b> si hay víctimas o daños significativos
+        </div>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- ATEX — SANCIONES -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="article" id="atex-sanciones">
+      <div class="article-header">
+        <div class="article-icon">⚖️</div>
+        <div>
+          <div class="article-title">Sanciones por incumplimiento ATEX</div>
+          <span class="article-badge">LEY 31/1995 PRL · LISOS</span>
+        </div>
+      </div>
+
+      <div class="alert danger">
+        <div class="alert-icon">🚨</div>
+        <div>Las infracciones ATEX se sancionan bajo la <strong>Ley de Infracciones y Sanciones del Orden Social (LISOS)</strong>. En caso de accidente grave, puede haber <strong>responsabilidad penal</strong> para los responsables de la empresa.</div>
+      </div>
+
+      <table class="nt">
+        <thead><tr><th>Infracción</th><th>Gravedad</th><th>Multa máxima</th></tr></thead>
+        <tbody>
+          <tr class="hl-row"><td>No tener DPCE elaborado o no mantenerlo actualizado</td><td><span class="badge b-red">MUY GRAVE</span></td><td>819.780 €</td></tr>
+          <tr class="hl-row"><td>Instalar equipos sin certificación ATEX en zonas clasificadas</td><td><span class="badge b-red">MUY GRAVE</span></td><td>819.780 €</td></tr>
+          <tr class="hl-row"><td>No clasificar ni señalizar las zonas ATEX</td><td><span class="badge b-red">MUY GRAVE</span></td><td>819.780 €</td></tr>
+          <tr class="hl-row"><td>Trabajos en caliente sin permiso especial en zona ATEX</td><td><span class="badge b-red">MUY GRAVE</span></td><td>819.780 €</td></tr>
+          <tr class="hl-warn"><td>No verificar la puesta a tierra de las instalaciones</td><td><span class="badge b-orange">GRAVE</span></td><td>40.985 €</td></tr>
+          <tr class="hl-warn"><td>No realizar el plan de limpieza antiexplosión</td><td><span class="badge b-orange">GRAVE</span></td><td>40.985 €</td></tr>
+          <tr class="hl-warn"><td>No formar al personal en riesgos ATEX</td><td><span class="badge b-orange">GRAVE</span></td><td>40.985 €</td></tr>
+          <tr class="hl-warn"><td>No informar a las contratas del DPCE antes de su acceso</td><td><span class="badge b-orange">GRAVE</span></td><td>40.985 €</td></tr>
+          <tr><td>Señalización incompleta o incorrecta de zonas</td><td><span class="badge b-gold">LEVE</span></td><td>2.046 €</td></tr>
+          <tr><td>Registros de mantenimiento ATEX incompletos</td><td><span class="badge b-gold">LEVE</span></td><td>2.046 €</td></tr>
+        </tbody>
+      </table>
+
+      <div class="norm-block warn" style="margin-top:14px">
+        <div class="nb-title">⚠️ Consecuencias adicionales ante un accidente</div>
+        <div class="nb-body">
+          • <b>Paralización inmediata</b> de la actividad por la Inspección de Trabajo<br>
+          • <b>Responsabilidad penal</b> del empresario y encargados de seguridad (Art. 316-318 Código Penal) — hasta 6 años de prisión en caso de muerte<br>
+          • <b>Recargo de prestaciones</b> de la Seguridad Social: 30-50% sobre prestaciones del trabajador afectado, a cargo de la empresa<br>
+          • <b>Pérdida de seguros</b> si se demuestra incumplimiento deliberado de normativa<br>
+          • <b>Paralización de obra/actividad</b> hasta corrección de deficiencias
+        </div>
+      </div>
     </div>
 
     <hr class="sep">
