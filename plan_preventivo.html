@@ -150,38 +150,24 @@ if('serviceWorker' in navigator){
 <div class="panel active" id="panel-asignar">
   <div class="card">
     <div class="filter-bar">
-      <select id="asigFiltMaq" onchange="renderCatalogo()">
-        <option value="">Todas las máquinas</option>
-        <option>LEVADURA</option><option>HARINA-ADITIVOS</option><option>COMPRESORES-SECADORES</option>
-        <option>LINEAS</option><option>CARRUSEL</option><option>TOLVAS-AGUA</option>
-        <option>DIVISORAS</option><option>REPARTIDORES</option><option>TALLADORA RELAMPAGO</option>
-        <option>HORNOS</option><option>FERMENTADORA RELAMPAGO</option><option>TUNEL PREFRIO</option>
-        <option>TUNELES</option><option>DESMOLDEO</option><option>CONTADORA</option>
-        <option>M CAJAS</option><option>M BOLSAS</option><option>BASCULA-PRECINTADORA</option>
-        <option>CENTRADOR ENTABLADO</option><option>TRUENO</option>
+      <input type="month" id="asigMes" onchange="onAsigMesChange()" style="min-width:150px">
+      <select id="asigMec" onchange="renderMaquinasAsig()">
+        <option value="">— Mecánico —</option>
       </select>
-      <select id="asigFiltFreq" onchange="renderCatalogo()">
-        <option value="">Todas las frecuencias</option>
-        <option>DIARIO</option><option>SEMANAL</option><option>QUINCENAL</option>
-        <option>MENSUAL</option><option>TRIMESTRAL</option><option>SEMESTRAL</option><option>ANUAL</option>
+      <select id="asigAreaFilt" onchange="renderMaquinasAsig()">
+        <option value="">Todas las áreas</option>
+        <option>OBRADOR</option><option>HORNOS</option><option>FRIO/CLIMA</option>
+        <option>ENVASADO</option><option>SILOS</option>
       </select>
-      <input type="search" id="asigSearch" placeholder="Buscar tarea..." oninput="renderCatalogo()" style="flex:1;min-width:160px">
-      <span id="asigCount" style="color:rgba(255,255,255,0.4);font-size:0.82rem;white-space:nowrap"></span>
+      <input type="search" id="asigBusq" placeholder="Buscar máquina..." oninput="renderMaquinasAsig()" style="flex:1;min-width:130px">
     </div>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr>
-          <th><input type="checkbox" id="selectAllCb" onclick="toggleSelectAll()"></th>
-          <th>Máquina</th><th>Subtipo</th><th>Tarea</th><th>Frecuencia</th><th>Instancias</th><th></th>
-        </tr></thead>
-        <tbody id="catalogoBody"></tbody>
-      </table>
-    </div>
+    <div id="asigEstadoBar" style="font-size:0.82rem;color:rgba(255,255,255,0.4);margin-bottom:14px;min-height:18px"></div>
+    <div id="asigMaqWrap"><p style="text-align:center;padding:40px;color:rgba(255,255,255,0.25)">Cargando máquinas...</p></div>
   </div>
-  <div class="sel-bar" id="selBar">
-    <span style="font-weight:700;color:var(--gold)"><span id="selCount">0</span> seleccionadas</span>
-    <button class="btn btn-gold" onclick="abrirModal(Array.from(selectedIds))">⚡ Asignar seleccionadas</button>
-    <button class="btn" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5)" onclick="limpiarSeleccion()">✕ Limpiar</button>
+  <div id="selBarMaq" style="display:none;position:sticky;bottom:0;background:var(--navy-mid);border-top:2px solid var(--gold);padding:12px 20px;align-items:center;gap:12px;flex-wrap:wrap;z-index:100">
+    <span style="font-weight:700;color:var(--gold)"><span id="selMaqCount">0</span> máquina(s)</span>
+    <button class="btn btn-gold" onclick="asignarMaquinasSel()">⚡ Asignar preventivo</button>
+    <button class="btn" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5)" onclick="limpiarSeleccionMaq()">✕ Limpiar</button>
   </div>
 </div>
 
@@ -402,18 +388,19 @@ function arrancarApp(){
   document.getElementById('segMes').value = cm;
   document.getElementById('impMes').value = cm;
   document.getElementById('modalMes').value = cm;
+  document.getElementById('asigMes').value = cm;
   DB.ref('config/mecanicos').once('value').then(function(s){
     var v=s.val();
     if(v && v.length) mecanicosLista=v;
   }).catch(function(){}).finally(function(){
     poblarMecs();
-    renderCatalogo();
+    cargarMaquinasParaAsig();
     cargarSeguimiento();
   });
 }
 
 function poblarMecs(){
-  ['modalMec','segMecFilt','impMecFilt'].forEach(function(id){
+  ['asigMec','modalMec','segMecFilt','impMecFilt'].forEach(function(id){
     var s=document.getElementById(id);
     if(!s) return;
     var hasAll=s.getAttribute('data-hasall')==='1';
@@ -489,7 +476,7 @@ function limpiarSeleccion(){
     var rc=r.querySelector('input[type=checkbox]');
     if(rc) rc.checked=false;
   });
-  document.getElementById('selectAllCb').checked=false;
+  var cb=document.getElementById('selectAllCb'); if(cb) cb.checked=false;
   updateSelBar();
 }
 
@@ -1244,6 +1231,220 @@ function exportarCatalogoExcel() {
 }
 
 
+
+// ══════════════════════════════════════════════════
+// NUEVA ASIGNACIÓN POR MÁQUINA
+// ══════════════════════════════════════════════════
+var maquinasListaCompleta = [];
+var selMaqIds = new Set();
+var asigMaquinasCache = {}; // { mes: { maqId: mecNombre } }
+
+function cargarMaquinasParaAsig(){
+  var base = [];
+  DB.ref('maquinas').once('value').then(function(snap){
+    var v = snap.val();
+    base = Array.isArray(v) ? v.filter(Boolean) : (v ? Object.values(v).filter(Boolean) : []);
+    return DB.ref('maquinas_extra').once('value');
+  }).then(function(snap){
+    var extra = snap.val() || {};
+    Object.values(extra).forEach(function(m){
+      base.push({ID:m.id, NOMBRE:m.n, TIPO:m.t, AREA:m.a, CRITICIDAD:m.c});
+    });
+    maquinasListaCompleta = base;
+    onAsigMesChange();
+  }).catch(function(){ maquinasListaCompleta = []; renderMaquinasAsig(); });
+}
+
+function onAsigMesChange(){
+  var mes = document.getElementById('asigMes').value;
+  if(!mes){ renderMaquinasAsig(); return; }
+  DB.ref('preventivo_maquinas/'+mes).once('value').then(function(snap){
+    asigMaquinasCache[mes] = snap.val() || {};
+    renderMaquinasAsig();
+  }).catch(function(){ renderMaquinasAsig(); });
+}
+
+function getCatalogoGrupo(tipo, nombre){
+  var n = (nombre||'').toUpperCase();
+  var t = (tipo||'').toUpperCase();
+  if(n.indexOf('TRUENO')>=0 && (t==='FERMENTADORA'||t==='TALLADORA')) return 'TRUENO';
+  var map = {
+    'FORMADORA-ENTABLADORA':'LINEAS','CARRUSEL':'CARRUSEL','REPARTIDOR':'REPARTIDORES',
+    'DIVISORAS':'DIVISORAS','FERMENTADORA':'FERMENTADORA RELAMPAGO','HORNO':'HORNOS',
+    'TALLADORA':'TALLADORA RELAMPAGO','TUNEL CONGELACION':'TUNELES','TUNEL PREFRIO':'TUNEL PREFRIO',
+    'DESMOLDEO':'DESMOLDEO','CONTADORA':'CONTADORA','FORMADORA CAJAS':'M CAJAS',
+    'EMBOLSADORA':'M BOLSAS','PRECINTADORA':'BASCULA-PRECINTADORA',
+    'SILOS HARINA':'HARINA-ADITIVOS','ADITIVOS':'HARINA-ADITIVOS','LEVADURA':'LEVADURA'
+  };
+  return map[t] || null;
+}
+
+function renderMaquinasAsig(){
+  var mes  = document.getElementById('asigMes').value;
+  var area = document.getElementById('asigAreaFilt').value;
+  var q    = (document.getElementById('asigBusq').value||'').toLowerCase().trim();
+  var wrap = document.getElementById('asigMaqWrap');
+  var asignadas = (mes && asigMaquinasCache[mes]) ? asigMaquinasCache[mes] : {};
+  var cat  = getCatalogo();
+
+  var lista = maquinasListaCompleta.filter(function(m){
+    if(area && m.AREA !== area) return false;
+    if(q && !((m.ID||'')+' '+(m.NOMBRE||'')).toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  // agrupar por área
+  var grupos = {};
+  lista.forEach(function(m){
+    var a = m.AREA||'SIN ÁREA';
+    if(!grupos[a]) grupos[a]=[];
+    grupos[a].push(m);
+  });
+
+  var totalLibres=0, totalAsig=0;
+  var html='';
+  Object.keys(grupos).sort().forEach(function(areaKey){
+    html+='<div style="margin-bottom:22px">';
+    html+='<div style="font-size:0.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid rgba(201,162,39,0.2)">'+areaKey+'</div>';
+    html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px">';
+    grupos[areaKey].forEach(function(m){
+      var mecAsig = asignadas[m.ID];
+      var grupo   = getCatalogoGrupo(m.TIPO, m.NOMBRE);
+      var nTareas = grupo ? cat.filter(function(t){ return t.maquina===grupo; }).length : 0;
+      var libre   = !mecAsig;
+      var sel     = selMaqIds.has(m.ID);
+      if(libre){ totalLibres++; } else { totalAsig++; }
+
+      if(libre){
+        html+='<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;'
+          +'background:'+(sel?'rgba(201,162,39,0.12)':'rgba(255,255,255,0.04)')
+          +';border:1px solid '+(sel?'rgba(201,162,39,0.5)':'rgba(255,255,255,0.1)')
+          +';border-radius:8px;cursor:pointer;transition:all .15s">'
+          +'<input type="checkbox" '+(sel?'checked':'')
+          +' onchange="toggleMaq(\''+m.ID+'\',this.checked)" style="width:16px;height:16px;accent-color:var(--gold);cursor:pointer">'
+          +'<div style="flex:1;min-width:0">'
+          +'<div style="font-weight:700;font-size:0.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(m.NOMBRE)+'</div>'
+          +'<div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-top:1px">'+m.ID
+          +(nTareas?' · <span style="color:rgba(46,204,113,0.8)">'+nTareas+' tareas</span>':'· <span style="color:rgba(231,76,60,0.6)">sin catálogo</span>')
+          +'</div></div></label>';
+      } else {
+        html+='<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;'
+          +'background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:8px;opacity:0.5">'
+          +'<div style="width:16px;height:16px;border-radius:3px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.06);flex-shrink:0"></div>'
+          +'<div style="flex:1;min-width:0">'
+          +'<div style="font-weight:700;font-size:0.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(m.NOMBRE)+'</div>'
+          +'<div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-top:1px">→ '+escH(mecAsig)+'</div>'
+          +'</div></div>';
+      }
+    });
+    html+='</div></div>';
+  });
+
+  if(!lista.length) html='<p style="text-align:center;padding:48px;color:rgba(255,255,255,0.25)">No hay máquinas que coincidan</p>';
+  wrap.innerHTML = html;
+
+  var bar = document.getElementById('asigEstadoBar');
+  if(mes){
+    bar.innerHTML='<span style="color:var(--green)">'+totalLibres+' sin asignar</span>'
+      +' · <span style="color:rgba(255,255,255,0.35)">'+totalAsig+' ya asignadas este mes</span>'
+      +' · <span style="color:rgba(255,255,255,0.2)">'+lista.length+' total</span>';
+  } else {
+    bar.innerHTML='<span style="color:rgba(255,255,255,0.3)">Selecciona un mes para ver el estado de asignación</span>';
+  }
+  _updateSelBarMaq();
+}
+
+function toggleMaq(id, checked){
+  if(checked) selMaqIds.add(id); else selMaqIds.delete(id);
+  renderMaquinasAsig();
+}
+
+function limpiarSeleccionMaq(){
+  selMaqIds.clear();
+  renderMaquinasAsig();
+}
+
+function _updateSelBarMaq(){
+  var bar = document.getElementById('selBarMaq');
+  var cnt = selMaqIds.size;
+  document.getElementById('selMaqCount').textContent = cnt;
+  bar.style.display = cnt > 0 ? 'flex' : 'none';
+}
+
+function asignarMaquinasSel(){
+  var mes = document.getElementById('asigMes').value;
+  var mec = document.getElementById('asigMec').value;
+  if(!mes){ showToast('⚠️ Selecciona un mes'); return; }
+  if(!mec){ showToast('⚠️ Selecciona un mecánico'); return; }
+  if(!selMaqIds.size){ showToast('⚠️ Selecciona al menos una máquina'); return; }
+
+  var cat     = getCatalogo();
+  var semanas = calcSemanasValidas(mes);
+  var maqsSel = maquinasListaCompleta.filter(function(m){ return selMaqIds.has(m.ID); });
+
+  var totalTareas = 0;
+  maqsSel.forEach(function(m){
+    var grupo = getCatalogoGrupo(m.TIPO, m.NOMBRE);
+    if(!grupo) return;
+    cat.filter(function(t){ return t.maquina===grupo; }).forEach(function(t){
+      var reps = repeticionesPorFrecuencia(t.frecuencia, semanas);
+      if(reps !== null) totalTareas += reps;
+    });
+  });
+
+  if(!totalTareas){
+    showToast('⚠️ Las máquinas seleccionadas no tienen tareas en el catálogo');
+    return;
+  }
+
+  var nombres = maqsSel.map(function(m){ return m.NOMBRE; }).join(', ');
+  if(!confirm('Asignar a '+mec+'\n'+maqsSel.length+' máquina(s) · '+totalTareas+' tareas para '+mes+'\n\n'+nombres+'\n\n¿Continuar?')) return;
+
+  _ejecutarAsignacionMaquinas(mec, mes, semanas, cat, maqsSel);
+}
+
+function _ejecutarAsignacionMaquinas(mec, mes, semanas, cat, maquinas){
+  var updates = {};
+  var count   = 0;
+
+  maquinas.forEach(function(m){
+    var grupo = getCatalogoGrupo(m.TIPO, m.NOMBRE);
+    if(!grupo) return;
+    cat.filter(function(t){ return t.maquina===grupo; }).forEach(function(t){
+      var reps = repeticionesPorFrecuencia(t.frecuencia, semanas);
+      if(reps === null) return;
+      var paso = semanas.length>0 ? Math.max(1,Math.round(semanas.length/reps)) : 1;
+      for(var i=0; i<reps; i++){
+        var sem  = semanas[i*paso] || semanas[semanas.length-1] || null;
+        var key  = DB.ref('asignaciones/'+mes).push().key;
+        var obj  = {
+          catalogId:t.id, maqId:m.ID, maquina:grupo, maqNombre:m.NOMBRE,
+          subtipo:t.subtipo||'', tarea:t.tarea, frecuencia:t.frecuencia,
+          instancia:m.NOMBRE, mecanico:mec, mes:mes,
+          hecho:false, hechoEn:null, turno:null, notas:''
+        };
+        if(sem){ obj.semana=sem.num; obj.semanaInfo='Semana '+sem.num+' ('+sem.inicio+' – '+sem.fin+')'; }
+        updates['asignaciones/'+mes+'/'+key] = obj;
+        count++;
+      }
+    });
+    updates['preventivo_maquinas/'+mes+'/'+m.ID] = mec;
+  });
+
+  if(!count){ showToast('⚠️ No se generaron tareas'); return; }
+
+  DB.ref().update(updates).then(function(){
+    if(!asigMaquinasCache[mes]) asigMaquinasCache[mes]={};
+    maquinas.forEach(function(m){ asigMaquinasCache[mes][m.ID]=mec; });
+    selMaqIds.clear();
+    renderMaquinasAsig();
+    showToast('✅ '+count+' tareas asignadas a '+mec);
+    if(document.getElementById('segMes').value===mes) cargarSeguimiento();
+    var p=mes.split('-');
+    var ml=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    fcmEnviar(mec,'📋 Tareas asignadas','Tienes '+count+' tarea'+(count>1?'s':'')+' de mantenimiento para '+ml[parseInt(p[1]||1)-1]+' '+p[0],'mis_tareas.html','📋');
+  }).catch(function(e){ showToast('❌ Error: '+e.message); });
+}
 </script>
 <script src="fcm.js"></script>
 </body>
