@@ -496,7 +496,10 @@ if('serviceWorker' in navigator){
     </div>
   </div>
   <div class="kpi-row" id="kpiRow"></div>
-  
+
+  <!-- ══ SUGERENCIAS PREVENTIVO ══ -->
+  <div id="sugerenciasPreventivo" style="margin-bottom:16px;max-width:732px"></div>
+
   <!-- ══ PANELES ALARMAS ══ -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;max-width:732px">
     <div class="card" style="padding:14px 16px;margin-bottom:0">
@@ -1638,6 +1641,7 @@ function initApp(){
   renderAlertasRepetitivas();
   cargarAlarmasPreventivo();
   cargarProgresoPreventivo();
+  renderSugerenciasPreventivo();
   _iniciaDashTimer();
   // fechas por defecto para mecánicos e informes (último mes)
   const hoy = new Date();
@@ -1770,6 +1774,7 @@ function renderDashboard(){
   renderAlertasDash(av);
   renderKpiFiabilidad();
   renderDesgloseAverias(av);
+  renderSugerenciasPreventivo();
 
   // Últimas averías
   const tbody = document.getElementById('bUltimas');
@@ -7189,6 +7194,108 @@ function renderAlertasRepetitivas() {
       + (a.cnt>=umbral*2?'🚨 CRÍTICO':'⚠️ ALERTA') + '</span>'
       + '</div>';
   }).join('');
+}
+
+// ══════════════════════════════════════════════════
+// SUGERENCIAS PREVENTIVO DESDE REINCIDENCIAS
+// ══════════════════════════════════════════════════
+function renderSugerenciasPreventivo() {
+  var el = document.getElementById('sugerenciasPreventivo');
+  if (!el) return;
+
+  var UMBRAL = 3, DIAS = 30;
+  var corte = Date.now() - DIAS * 86400000;
+
+  // Agrupar por maqId + tipo
+  var grupos = {};
+  getAverias().forEach(function(a) {
+    if (a.estado !== 'RESUELTA') return;
+    var ts = a.ts || new Date((a.fecha||'')+'T00:00:00').getTime();
+    if (ts < corte) return;
+    var tipo = a.tipo || 'Sin tipo';
+    var key = (a.maqId||a.maquina||'') + '||' + tipo;
+    if (!grupos[key]) grupos[key] = { maq: a.maqNombre||a.maqId||a.maquina||'—', maqId: a.maqId||'', tipo: tipo, cnt: 0, causa: a.causa||'', accion: a.accion||'' };
+    grupos[key].cnt++;
+    if (a.causa) grupos[key].causa = a.causa;
+    if (a.accion) grupos[key].accion = a.accion;
+  });
+
+  // Filtrar los que superan el umbral y no han sido ignorados
+  var ignorados = JSON.parse(localStorage.getItem('prevSugIgnorados')||'{}');
+  var sugerencias = Object.entries(grupos)
+    .filter(function(e){ return e[1].cnt >= UMBRAL && !ignorados[e[0]]; })
+    .map(function(e){ return Object.assign({key: e[0]}, e[1]); })
+    .sort(function(a,b){ return b.cnt - a.cnt; });
+
+  if (!sugerencias.length) { el.innerHTML = ''; return; }
+
+  el.innerHTML = sugerencias.map(function(s) {
+    var safeKey = escHtml(s.key);
+    var safeMaq = escHtml(s.maq);
+    var safeTipo = escHtml(s.tipo);
+    var safeCausa = escHtml(s.causa);
+    var safeAccion = escHtml(s.accion);
+    var tareaDef = 'Revisar ' + safeTipo + (s.causa ? ' — causa: ' + safeCausa : '') + (s.accion ? '. Acción previa: ' + safeAccion : '');
+    return '<div id="sugCard_'+btoa(s.key).replace(/=/g,'')+'" style="background:rgba(243,156,18,0.08);border:1px solid rgba(243,156,18,0.4);border-radius:10px;padding:14px 16px;margin-bottom:10px">'
+      + '<div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">'
+        + '<div style="font-size:2rem;font-weight:900;color:#f39c12;line-height:1;min-width:36px">'+s.cnt+'×</div>'
+        + '<div style="flex:1;min-width:200px">'
+          + '<div style="font-size:0.72rem;letter-spacing:.1em;text-transform:uppercase;color:#f39c12;font-weight:700;margin-bottom:2px">💡 Sugerencia preventivo</div>'
+          + '<div style="font-weight:700;font-size:0.95rem">'+safeMaq+'</div>'
+          + '<div style="font-size:0.8rem;color:rgba(255,255,255,0.5);margin-top:2px">'+safeTipo+' · '+s.cnt+' veces en los últimos '+DIAS+' días</div>'
+          + '<!-- Form oculto -->'
+          + '<div id="sugForm_'+btoa(s.key).replace(/=/g,'')+'" style="display:none;margin-top:12px">'
+            + '<textarea id="sugTarea_'+btoa(s.key).replace(/=/g,'')+'" rows="2" style="width:100%;background:var(--navy-deep);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 12px;font-family:Barlow,sans-serif;font-size:.83rem;resize:vertical;box-sizing:border-box;margin-bottom:8px">'+tareaDef+'</textarea>'
+            + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
+              + '<select id="sugFrec_'+btoa(s.key).replace(/=/g,'')+'" style="background:var(--navy-deep);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:7px 12px;font-family:Barlow,sans-serif;font-size:.83rem">'
+                + '<option>SEMANAL</option><option>QUINCENAL</option><option selected>MENSUAL</option><option>TRIMESTRAL</option><option>SEMESTRAL</option><option>ANUAL</option>'
+              + '</select>'
+              + '<button onclick="guardarSugPreventivo(\''+s.key.replace(/'/g,"\\'")+'\')" style="background:rgba(46,204,113,.2);border:1px solid rgba(46,204,113,.5);color:#2ecc71;border-radius:8px;padding:7px 16px;cursor:pointer;font-family:Barlow,sans-serif;font-size:.83rem;font-weight:700">✅ Crear preventivo</button>'
+              + '<span id="sugMsg_'+btoa(s.key).replace(/=/g,'')+'" style="font-size:.78rem;color:#2ecc71"></span>'
+            + '</div>'
+          + '</div>'
+        + '</div>'
+        + '<div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap">'
+          + '<button onclick="toggleSugForm(\''+s.key.replace(/'/g,"\\'")+'\')" style="background:rgba(201,162,39,.15);border:1px solid rgba(201,162,39,.4);color:#f0c040;border-radius:8px;padding:7px 14px;cursor:pointer;font-family:Barlow,sans-serif;font-size:.82rem;font-weight:700">📋 Crear preventivo</button>'
+          + '<button onclick="ignorarSug(\''+s.key.replace(/'/g,"\\'")+'\')" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.4);border-radius:8px;padding:7px 14px;cursor:pointer;font-family:Barlow,sans-serif;font-size:.82rem">Ignorar</button>'
+        + '</div>'
+      + '</div>'
+    + '</div>';
+  }).join('');
+}
+
+function toggleSugForm(key) {
+  var id = btoa(key).replace(/=/g,'');
+  var f = document.getElementById('sugForm_'+id);
+  if (f) f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+function ignorarSug(key) {
+  var ignorados = JSON.parse(localStorage.getItem('prevSugIgnorados')||'{}');
+  ignorados[key] = Date.now();
+  localStorage.setItem('prevSugIgnorados', JSON.stringify(ignorados));
+  renderSugerenciasPreventivo();
+}
+
+function guardarSugPreventivo(key) {
+  var id = btoa(key).replace(/=/g,'');
+  var tarea = (document.getElementById('sugTarea_'+id)||{}).value||'';
+  var frec  = (document.getElementById('sugFrec_'+id)||{}).value||'MENSUAL';
+  var partes = key.split('||');
+  var maq = partes[0]||'';
+  var tipo = partes[1]||'';
+  if (!tarea.trim()) { showToast('Escribe la descripción de la tarea'); return; }
+  var catId = 'CAT-PREV-' + Date.now();
+  DB.ref('catalogo/'+catId).set({
+    id: catId, maquina: maq.toUpperCase(), subtipo: tipo,
+    tarea: tarea.trim(), frecuencia: frec,
+    instancias: [maq], origen: 'reincidencia', tsCreado: Date.now()
+  }).then(function() {
+    var msg = document.getElementById('sugMsg_'+id);
+    if (msg) msg.textContent = '✅ Guardado';
+    ignorarSug(key);
+    showToast('✅ Tarea añadida al catálogo preventivo');
+  }).catch(function(){ showToast('❌ Error al guardar'); });
 }
 
 // ══════════════════════════════════════════════════
