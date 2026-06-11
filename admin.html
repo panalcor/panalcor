@@ -1077,6 +1077,7 @@ if('serviceWorker' in navigator){
         <button onclick="ocaSetFiltro('proxima')" id="ocaFProxima" style="padding:5px 12px;border-radius:7px;font-family:'Barlow',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;border:1px solid rgba(243,156,18,.4);background:rgba(243,156,18,.08);color:#f39c12">⚠️ Próximas</button>
         <button onclick="ocaSetFiltro('ok')"      id="ocaFOk"      style="padding:5px 12px;border-radius:7px;font-family:'Barlow',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;border:1px solid rgba(46,204,113,.4);background:rgba(46,204,113,.08);color:#2ecc71">✅ Al día</button>
         <button onclick="ocaSetFiltro('sin')"     id="ocaFSin"     style="padding:5px 12px;border-radius:7px;font-family:'Barlow',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:rgba(255,255,255,.4)">Sin fecha</button>
+        <button onclick="ocaImprimirInforme()" style="padding:5px 12px;border-radius:7px;font-family:'Barlow',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;border:1px solid rgba(52,152,219,.5);background:rgba(52,152,219,.15);color:#3498db">🖨️ Informe</button>
       </div>
     </div>
     <!-- KPIs resumen -->
@@ -3864,6 +3865,84 @@ function ocaRender() {
       + '<button onclick="abrirFichaMaq(\''+escHtml(i.m.id)+'\',\''+escHtml((i.m.n||'').replace(/'/g,"\\'"))+'\')" style="background:rgba(240,192,64,.1);border:1px solid rgba(240,192,64,.3);color:#f0c040;border-radius:7px;padding:5px 12px;cursor:pointer;font-family:\'Barlow\',sans-serif;font-size:.78rem;font-weight:700;white-space:nowrap;flex-shrink:0">📋 Ficha</button>'
       + '</div>';
   }).join('');
+}
+
+function ocaImprimirInforme() {
+  var todas = (typeof MAQUINAS_BASE_ADMIN !== 'undefined' ? MAQUINAS_BASE_ADMIN : []).concat(maquinasExtra || []);
+  var items = todas.map(function(m) {
+    var f = _fichasData[m.id] || {};
+    var proxRev = f.proxRev || '';
+    var estado = ocaEstado(proxRev);
+    var dias = proxRev ? Math.round((new Date(proxRev) - new Date()) / 86400000) : null;
+    return { id: m.id, nombre: m.n||m.id, area: m.a||'—', estado: estado, dias: dias,
+      proxRev: proxRev, ultimaRev: f.ultimaRev||'', tipoRev: f.tipoRev||'',
+      periodicidad: f.periodicidad||'', nroCert: f.nroCert||'', modelo: f.modelo||'', nSerie: f.nSerie||'' };
+  }).sort(function(a,b){
+    var o = {vencida:0,proxima:1,ok:2,sin:3};
+    if (o[a.estado] !== o[b.estado]) return o[a.estado]-o[b.estado];
+    if (a.dias !== null && b.dias !== null) return a.dias-b.dias;
+    return a.nombre.localeCompare(b.nombre);
+  });
+
+  var fecha = new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'});
+  var estadoLabel = { vencida:'⛔ VENCIDA', proxima:'⚠️ PRÓXIMA', ok:'✅ AL DÍA', sin:'— SIN FECHA' };
+  var estadoColor = { vencida:'#c0392b', proxima:'#e67e22', ok:'#27ae60', sin:'#888' };
+
+  var cnts = {vencida:0,proxima:0,ok:0,sin:0};
+  items.forEach(function(i){ cnts[i.estado]++; });
+
+  var filas = items.map(function(i) {
+    var col = estadoColor[i.estado];
+    var lbl = estadoLabel[i.estado];
+    var diasTxt = i.dias !== null ? (i.dias < 0 ? 'Vencida hace '+Math.abs(i.dias)+' días' : 'En '+i.dias+' días') : '—';
+    return '<tr>'
+      +'<td>'+i.nombre+'</td>'
+      +'<td>'+i.area+'</td>'
+      +'<td>'+i.tipoRev+'</td>'
+      +'<td>'+i.periodicidad+'</td>'
+      +'<td>'+i.ultimaRev+'</td>'
+      +'<td>'+i.proxRev+'</td>'
+      +'<td style="color:'+col+';font-weight:700">'+lbl+'</td>'
+      +'<td style="color:'+col+'">'+diasTxt+'</td>'
+      +'<td>'+i.nroCert+'</td>'
+      +'</tr>';
+  }).join('');
+
+  var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">'
+    +'<title>Informe OCA — PANALCOR</title>'
+    +'<style>'
+    +'body{font-family:Arial,sans-serif;font-size:11px;color:#222;margin:20px}'
+    +'h1{font-size:16px;margin:0 0 4px}h2{font-size:12px;color:#555;font-weight:normal;margin:0 0 16px}'
+    +'.kpis{display:flex;gap:16px;margin-bottom:16px}'
+    +'.kpi{border:1px solid #ddd;border-radius:6px;padding:8px 16px;text-align:center}'
+    +'.kpi-n{font-size:22px;font-weight:900}.kpi-l{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#666}'
+    +'table{width:100%;border-collapse:collapse}'
+    +'th{background:#1a2a3a;color:#fff;padding:7px 8px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.06em}'
+    +'td{padding:6px 8px;border-bottom:1px solid #eee;vertical-align:middle}'
+    +'tr:nth-child(even) td{background:#f9f9f9}'
+    +'.footer{margin-top:20px;font-size:9px;color:#999;border-top:1px solid #eee;padding-top:8px}'
+    +'@media print{body{margin:10px}.footer{position:fixed;bottom:0;width:100%}}'
+    +'</style></head><body>'
+    +'<h1>📋 Informe de Revisiones OCA / Normativas — PANALCOR S.L.</h1>'
+    +'<h2>Generado: '+fecha+'</h2>'
+    +'<div class="kpis">'
+    +'<div class="kpi"><div class="kpi-n" style="color:#c0392b">'+cnts.vencida+'</div><div class="kpi-l">Vencidas</div></div>'
+    +'<div class="kpi"><div class="kpi-n" style="color:#e67e22">'+cnts.proxima+'</div><div class="kpi-l">Próximas ≤60d</div></div>'
+    +'<div class="kpi"><div class="kpi-n" style="color:#27ae60">'+cnts.ok+'</div><div class="kpi-l">Al día</div></div>'
+    +'<div class="kpi"><div class="kpi-n" style="color:#888">'+cnts.sin+'</div><div class="kpi-l">Sin fecha</div></div>'
+    +'<div class="kpi"><div class="kpi-n">'+items.length+'</div><div class="kpi-l">Total máquinas</div></div>'
+    +'</div>'
+    +'<table><thead><tr>'
+    +'<th>Máquina</th><th>Área</th><th>Tipo revisión</th><th>Periodicidad</th>'
+    +'<th>Última rev.</th><th>Próxima rev.</th><th>Estado</th><th>Días</th><th>Nº Cert.</th>'
+    +'</tr></thead><tbody>'+filas+'</tbody></table>'
+    +'<div class="footer">PANALCOR S.L. · Informe generado automáticamente por el sistema de gestión de mantenimiento · '+fecha+'</div>'
+    +'</body></html>';
+
+  var w = window.open('','_blank','width=1100,height=700');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(function(){ w.print(); }, 400);
 }
 
 function fichasRenderLista() {
