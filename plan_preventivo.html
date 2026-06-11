@@ -360,7 +360,7 @@ if('serviceWorker' in navigator){
       <input type="month" id="modalMes">
     </div>
     <div class="field" id="modalInstWrap" style="display:none">
-      <label>Instancia</label>
+      <label>Instancia / Máquina</label>
       <select id="modalInst"></select>
     </div>
     <div style="display:flex;gap:10px;margin-top:6px">
@@ -501,12 +501,20 @@ function updateSelBar(){
 function abrirModal(catIds){
   if(!catIds||!catIds.length) return;
   pendingItems=catIds;
-  var isSingle=catIds.length===1;
-  var cat=isSingle?CATALOGO.find(function(c){return c.id===catIds[0];}):null;
+  var catalogo=getCatalogo();
   var instWrap=document.getElementById('modalInstWrap');
-  if(isSingle&&cat&&cat.instancias.length>1){
-    var sel=document.getElementById('modalInst');
-    sel.innerHTML=cat.instancias.map(function(i){return '<option value="'+i+'">'+i+'</option>';}).join('');
+  var sel=document.getElementById('modalInst');
+  // Recoger todas las instancias únicas de las tareas seleccionadas
+  var todasInst=[];
+  catIds.forEach(function(id){
+    var cat=catalogo.find(function(c){return c.id===id;});
+    if(cat&&cat.instancias){
+      cat.instancias.forEach(function(i){ if(todasInst.indexOf(i)===-1) todasInst.push(i); });
+    }
+  });
+  if(todasInst.length>1){
+    sel.innerHTML='<option value="__TODAS__">⚡ TODAS LAS INSTANCIAS</option>'
+      +todasInst.map(function(i){return '<option value="'+i+'">'+i+'</option>';}).join('');
     instWrap.style.display='block';
   } else {
     instWrap.style.display='none';
@@ -632,9 +640,17 @@ function _ejecutarAsignacion(mec, mes, semanas, catalogo, inst){
   pendingItems.forEach(function(catId){
     var cat = catalogo.find(function(c){ return c.id === catId; });
     if(!cat) return;
-    var instancia  = inst || (cat.instancias && cat.instancias[0]) || cat.instancia || cat.maquina;
+    // Calcular lista de instancias a usar
+    var instList;
+    if(inst === '__TODAS__'){
+      instList = (cat.instancias && cat.instancias.length) ? cat.instancias : [cat.maquina];
+    } else {
+      instList = [inst || (cat.instancias && cat.instancias[0]) || cat.instancia || cat.maquina];
+    }
     var frecuencia = cat.frecuencia || 'MENSUAL';
     var reps       = repeticionesPorFrecuencia(frecuencia, semanas);
+
+    instList.forEach(function(instancia){
 
     if (reps === null) {
       // DIARIO: una tarea por día laborable (lun-sab)
@@ -673,7 +689,8 @@ function _ejecutarAsignacion(mec, mes, semanas, catalogo, inst){
         count++;
       }
     }
-  });
+    }); // fin instList.forEach
+  }); // fin pendingItems.forEach
 
   DB.ref().update(updates).then(function(){
     limpiarSeleccion();
