@@ -1235,24 +1235,23 @@ function exportarCatalogoExcel() {
 // ══════════════════════════════════════════════════
 // NUEVA ASIGNACIÓN POR MÁQUINA
 // ══════════════════════════════════════════════════
+var MAQUINAS_PREV = [{"id":"MAQ-001","n":"PABAT 1","tipo":"AMASADORA","area":"OBRADOR"},{"id":"MAQ-002","n":"PABAT 2","tipo":"AMASADORA","area":"OBRADOR"},{"id":"MAQ-003","n":"PABAT 3","tipo":"AMASADORA","area":"OBRADOR"},{"id":"MAQ-004","n":"PABAT 4","tipo":"AMASADORA","area":"OBRADOR"},{"id":"MAQ-005","n":"PABAT 5","tipo":"AMASADORA","area":"OBRADOR"},{"id":"MAQ-006","n":"PABAT 6","tipo":"AMASADORA","area":"OBRADOR"},{"id":"MAQ-007","n":"PABAT 7","tipo":"AMASADORA","area":"OBRADOR"},{"id":"MAQ-008","n":"PABAT 8","tipo":"AMASADORA","area":"OBRADOR"},{"id":"MAQ-009","n":"AMASADORA CANDEAL","tipo":"AMASADORA","area":"OBRADOR"},{"id":"MAQ-010","n":"LINEA 1","tipo":"FORMADORA-ENTABLADORA","area":"OBRADOR"},{"id":"MAQ-011","n":"LINEA 2","tipo":"FORMADORA-ENTABLADORA","area":"OBRADOR"},{"id":"MAQ-012","n":"LINEA 3","tipo":"FORMADORA-ENTABLADORA","area":"OBRADOR"},{"id":"MAQ-013","n":"LINEA 4","tipo":"FORMADORA-ENTABLADORA","area":"OBRADOR"},{"id":"MAQ-014","n":"LINEA 5","tipo":"FORMADORA-ENTABLADORA","area":"OBRADOR"},{"id":"MAQ-015","n":"LINEA 6","tipo":"FORMADORA-ENTABLADORA","area":"OBRADOR"},{"id":"MAQ-016","n":"LINEA 7","tipo":"FORMADORA-ENTABLADORA","area":"OBRADOR"},{"id":"MAQ-017","n":"CARRUSEL 1","tipo":"CARRUSEL","area":"OBRADOR"},{"id":"MAQ-018","n":"CARRUSEL 2","tipo":"CARRUSEL","area":"OBRADOR"},{"id":"MAQ-019","n":"CARRUSEL 3","tipo":"CARRUSEL","area":"OBRADOR"},{"id":"MAQ-020","n":"CARRUSEL 4","tipo":"CARRUSEL","area":"OBRADOR"},{"id":"MAQ-021","n":"CARRUSEL 5","tipo":"CARRUSEL","area":"OBRADOR"},{"id":"MAQ-022","n":"CARRUSEL 6","tipo":"CARRUSEL","area":"OBRADOR"},{"id":"MAQ-023","n":"VOLCADOR 1","tipo":"VOLCADOR","area":"OBRADOR"},{"id":"MAQ-024","n":"VOLCADOR 2","tipo":"VOLCADOR","area":"OBRADOR"},{"id":"MAQ-025","n":"VOLCADOR 3","tipo":"VOLCADOR","area":"OBRADOR"},{"id":"MAQ-026","n":"VOLCADOR 4","tipo":"VOLCADOR","area":"OBRADOR"},{"id":"MAQ-027","n":"VOLCADOR 5","tipo":"VOLCADOR","area":"OBRADOR"},{"id":"MAQ-028","n":"VOLCADOR 6","tipo":"VOLCADOR","area":"OBRADOR"},{"id":"MAQ-029","n":"VOLCADOR 7","tipo":"VOLCADOR","area":"OBRADOR"},{"id":"MAQ-030","n":"REPARTIDOR 1","tipo":"REPARTIDOR","area":"OBRADOR"},{"id":"MAQ-031","n":"REPARTIDOR 2","tipo":"REPARTIDOR","area":"OBRADOR"},{"id":"MAQ-032","n":"REPARTIDOR 3","tipo":"REPARTIDOR","area":"OBRADOR"},{"id":"MAQ-033","n":"DIVISORA N1","tipo":"DIVISORAS","area":"OBRADOR"},{"id":"MAQ-034","n":"DIVISORA N2","tipo":"DIVISORAS","area":"OBRADOR"},{"id":"MAQ-035","n":"DIVISORA N3","tipo":"DIVISORAS","area":"OBRADOR"},{"id":"MAQ-036","n":"DIVISORA N4","tipo":"DIVISORAS","area":"OBRADOR"},{"id":"MAQ-037","n":"DIVISORA N5","tipo":"DIVISORAS","area":"OBRADOR"},{"id":"MAQ-038","n":"DIVISORA N6","tipo":"DIVISORAS","area":"OBRADOR"},{"id":"MAQ-039","n":"DIVISORA N7","tipo":"DIVISORAS","area":"OBRADOR"},{"id":"MAQ-040","n":"DIVISORA N8","tipo":"DIVISORAS","area":"OBRADOR"},{"id":"MAQ-041","n":"DIVISORA N9","tipo":"DIVISORAS","area":"OBRADOR"},{"id":"MAQ-042","n":"CAMARA DE BOLAS N1","tipo":"CAMARA REPOSO","area":"OBRADOR"},{"id":"MAQ-043","n":"CAMARA DE BOLAS N2","tipo":"CAMARA REPOSO","area":"OBRADOR"},{"id":"MAQ-044","n":"CAMARA DE BOLAS N3","tipo":"CAMARA REPOSO","area":"OBRADOR"},{"id":"MAQ-045","n":"CAMARA DE BOLAS N4","tipo":"CAMARA REPOSO","area":"OBRADOR"},{"id":"MAQ-046","n":"CAMARA DE BOLAS N5","tipo":"CAMARA REPOSO","area":"OBRADOR"},{"id":"MAQ-047","n":"CAMARA DE BOLAS N6","tipo":"CAMARA REPOSO","area":"OBRADOR"},{"id":"MAQ-048","n":"CAMARA DE BOLAS N7","tipo":"CAMARA REPOSO","area":"OBRADOR"},{"id":"MAQ-049","n":"EMBOLADORA N1","tipo":"EMBOLADORA","area":"OBRADOR"},{"id":"MAQ-050","n":"EMBOLADORA N2","tipo":"EMBOLADORA","area":"OBRADOR"},{"id":"MAQ-051","n":"EMBOLADORA N3","tipo":"EMBOLADORA","area":"OBRADOR"},{"id":"MAQ-052","n":"EMBOLADORA N4","tipo":"EMBOLADORA","area":"OBRADOR"},{"id":"MAQ-053","n":"EMBOLADORA N5","tipo":"EMBOLADORA","area":"OBRADOR"},{"id":"MAQ-054","n":"EMBOLADORA N6","tipo":"EMBOLADORA","area":"OBRADOR"},{"id":"MAQ-055","n":"EMBOLADORA N7","tipo":"EMBOLADORA","area":"OBRADOR"},{"id":"MAQ-056","n":"EMBOLADORA N8","tipo":"EMBOLADORA","area":"OBRADOR"},{"id":"MAQ-057","n":"EMBOLADORA N9","tipo":"EMBOLADORA","area":"OBRADOR"},{"id":"MAQ-058","n":"FERMENTADORA RELAMPAGO","tipo":"FERMENTADORA","area":"FRIO/CLIMA"},{"id":"MAQ-059","n":"FERMENTADORA TRUENO","tipo":"FERMENTADORA","area":"FRIO/CLIMA"},{"id":"MAQ-060","n":"HORNO 1","tipo":"HORNO","area":"HORNOS"},{"id":"MAQ-061","n":"HORNO 2","tipo":"HORNO","area":"HORNOS"},{"id":"MAQ-062","n":"HORNO 3","tipo":"HORNO","area":"HORNOS"},{"id":"MAQ-063","n":"HORNO 4","tipo":"HORNO","area":"HORNOS"},{"id":"MAQ-064","n":"HORNO 5","tipo":"HORNO","area":"HORNOS"},{"id":"MAQ-065","n":"HORNO 6","tipo":"HORNO","area":"HORNOS"},{"id":"MAQ-066","n":"HORNO 7","tipo":"HORNO","area":"HORNOS"},{"id":"MAQ-067","n":"HORNO 8","tipo":"HORNO","area":"HORNOS"},{"id":"MAQ-068","n":"HORNO 9","tipo":"HORNO","area":"HORNOS"},{"id":"MAQ-069","n":"HORNO 10","tipo":"HORNO","area":"HORNOS"},{"id":"MAQ-070","n":"HORNO 11","tipo":"HORNO","area":"HORNOS"},{"id":"MAQ-071","n":"HORNO 12","tipo":"HORNO","area":"HORNOS"},{"id":"MAQ-072","n":"HORNO 13","tipo":"HORNO","area":"HORNOS"},{"id":"MAQ-073","n":"HORNO 14","tipo":"HORNO","area":"HORNOS"},{"id":"MAQ-074","n":"HORNO 15","tipo":"HORNO","area":"HORNOS"},{"id":"MAQ-075","n":"HORNO 16 (1TRUENO)","tipo":"HORNO","area":"HORNOS"},{"id":"MAQ-076","n":"HORNO 17 (2TRUENO)","tipo":"HORNO","area":"HORNOS"},{"id":"MAQ-077","n":"HORNO 18 (3TRUENO)","tipo":"HORNO","area":"HORNOS"},{"id":"MAQ-078","n":"HORNO 19 (4TRUENO)","tipo":"HORNO","area":"HORNOS"},{"id":"MAQ-079","n":"TALLADORA RELAMPAGO","tipo":"TALLADORA","area":"HORNOS"},{"id":"MAQ-080","n":"TALLADORA TRUENO","tipo":"TALLADORA","area":"HORNOS"},{"id":"MAQ-081","n":"TUNEL PREFRIO","tipo":"TUNEL PREFRIO","area":"FRIO/CLIMA"},{"id":"MAQ-082","n":"TUNEL 1","tipo":"TUNEL CONGELACION","area":"FRIO/CLIMA"},{"id":"MAQ-083","n":"TUNEL 2","tipo":"TUNEL CONGELACION","area":"FRIO/CLIMA"},{"id":"MAQ-084","n":"TUNEL 3","tipo":"TUNEL CONGELACION","area":"FRIO/CLIMA"},{"id":"MAQ-085","n":"TUNEL 4","tipo":"TUNEL CONGELACION","area":"FRIO/CLIMA"},{"id":"MAQ-086","n":"TUNEL 5","tipo":"TUNEL CONGELACION","area":"FRIO/CLIMA"},{"id":"MAQ-087","n":"TUNEL 6","tipo":"TUNEL CONGELACION","area":"FRIO/CLIMA"},{"id":"MAQ-088","n":"TUNEL 7","tipo":"TUNEL CONGELACION","area":"FRIO/CLIMA"},{"id":"MAQ-089","n":"TUNEL 8","tipo":"TUNEL CONGELACION","area":"FRIO/CLIMA"},{"id":"MAQ-090","n":"TUNEL 9 (1 TRUENO)","tipo":"TUNEL CONGELACION","area":"FRIO/CLIMA"},{"id":"MAQ-091","n":"TUNEL 10 (2 TRUENO)","tipo":"TUNEL CONGELACION","area":"FRIO/CLIMA"},{"id":"MAQ-092","n":"MAQUINA DE CAJAS","tipo":"FORMADORA CAJAS","area":"ENVASADO"},{"id":"MAQ-093","n":"FORMADORA-EMBOLSADORA","tipo":"FORMADORA CAJAS","area":"ENVASADO"},{"id":"MAQ-094","n":"MAQUINA DE BOLSAS","tipo":"EMBOLSADORA","area":"ENVASADO"},{"id":"MAQ-095","n":"DESCARGADOR 1","tipo":"CARGADOR/DESCARGADOR","area":"ENVASADO"},{"id":"MAQ-096","n":"DESCARGADOR 2","tipo":"CARGADOR/DESCARGADOR","area":"ENVASADO"},{"id":"MAQ-097","n":"CARGADOR 1","tipo":"CARGADOR/DESCARGADOR","area":"ENVASADO"},{"id":"MAQ-098","n":"CARGADOR 2","tipo":"CARGADOR/DESCARGADOR","area":"ENVASADO"},{"id":"MAQ-099","n":"DESMOLDEO 1","tipo":"DESMOLDEO","area":"ENVASADO"},{"id":"MAQ-100","n":"DESMOLDEO 2","tipo":"DESMOLDEO","area":"ENVASADO"},{"id":"MAQ-101","n":"CONTADORA 1","tipo":"CONTADORA","area":"ENVASADO"},{"id":"MAQ-102","n":"CONTADORA 2","tipo":"CONTADORA","area":"ENVASADO"},{"id":"MAQ-103","n":"CAMINO DE RODILLOS","tipo":"C. RODILLOS","area":"ENVASADO"},{"id":"MAQ-104","n":"IMPRESORA RELAMPAGO","tipo":"IMPRESORA","area":"ENVASADO"},{"id":"MAQ-105","n":"IMPRESORA TRUENO","tipo":"IMPRESORA","area":"ENVASADO"},{"id":"MAQ-106","n":"PRECINTADORA","tipo":"PRECINTADORA","area":"ENVASADO"},{"id":"MAQ-107","n":"M. PEGATINAS","tipo":"M. PEGATINAS","area":"ENVASADO"},{"id":"MAQ-108","n":"ROBOT","tipo":"ROBOT","area":"ENVASADO"},{"id":"MAQ-109","n":"ENFARDADORA RELAMPAGO","tipo":"ENFARDADORA","area":"ENVASADO"},{"id":"MAQ-110","n":"ENFARDADORA TRUENO","tipo":"ENFARDADORA","area":"ENVASADO"},{"id":"MAQ-111","n":"LAVADORA","tipo":"EMBOLADORA","area":"OBRADOR"},{"id":"MAQ-112","n":"SILOS","tipo":"SILOS HARINA","area":"SILOS"},{"id":"MAQ-113","n":"TURBINAS","tipo":"SILOS HARINA","area":"SILOS"},{"id":"MAQ-114","n":"CUADRO SILOS","tipo":"SILOS HARINA","area":"SILOS"},{"id":"MAQ-115","n":"CUADRO HARINA","tipo":"SILOS HARINA","area":"SILOS"},{"id":"MAQ-116","n":"ADITIVOS","tipo":"ADITIVOS","area":"OBRADOR"},{"id":"MAQ-117","n":"CUADRO ADITIVOS","tipo":"ADITIVOS","area":"OBRADOR"},{"id":"MAQ-118","n":"REVOLVER","tipo":"ADITIVOS","area":"OBRADOR"},{"id":"MAQ-119","n":"TOLVA 1","tipo":"SILOS HARINA","area":"OBRADOR"},{"id":"MAQ-120","n":"TOLVA 2","tipo":"SILOS HARINA","area":"OBRADOR"},{"id":"MAQ-121","n":"TOLVA 3","tipo":"SILOS HARINA","area":"OBRADOR"},{"id":"MAQ-122","n":"TOLVA 4","tipo":"SILOS HARINA","area":"OBRADOR"},{"id":"MAQ-123","n":"TOLVA 5","tipo":"SILOS HARINA","area":"OBRADOR"},{"id":"MAQ-124","n":"TOLVA 6","tipo":"SILOS HARINA","area":"OBRADOR"},{"id":"MAQ-125","n":"TOLVA 7","tipo":"SILOS HARINA","area":"OBRADOR"},{"id":"MAQ-126","n":"LEVADURA TANQUE 1","tipo":"LEVADURA","area":"SILOS"},{"id":"MAQ-127","n":"LEVADURA TANQUE 2","tipo":"LEVADURA","area":"SILOS"},{"id":"MAQ-128","n":"LEVADURA CUADRO GENERAL Y BOMBAS","tipo":"LEVADURA","area":"SILOS"},{"id":"MAQ-129","n":"LEVADURA CUADRO GLICOL","tipo":"LEVADURA","area":"SILOS"},{"id":"MAQ-130","n":"CAMARA STOCK 1","tipo":"CAMARA","area":"FRIO/CLIMA"},{"id":"MAQ-131","n":"CAMARA STOCK 2","tipo":"CAMARA","area":"FRIO/CLIMA"},{"id":"MAQ-132","n":"CAMARA STOCK 3","tipo":"CAMARA","area":"FRIO/CLIMA"},{"id":"MAQ-133","n":"CAMARA STOCK 4","tipo":"CAMARA","area":"FRIO/CLIMA"},{"id":"MAQ-134","n":"CAMARA STOCK 5 (TRUENO)","tipo":"CAMARA","area":"FRIO/CLIMA"},{"id":"MAQ-135","n":"TANQUE 1","tipo":"AGUA","area":"FRIO/CLIMA"},{"id":"MAQ-136","n":"TANQUE 2","tipo":"AGUA","area":"FRIO/CLIMA"},{"id":"MAQ-137","n":"TANQUE 3","tipo":"AGUA","area":"FRIO/CLIMA"},{"id":"MAQ-138","n":"TANQUE 4","tipo":"AGUA","area":"FRIO/CLIMA"},{"id":"MAQ-139","n":"TANQUE 5 (TRUENO)","tipo":"AGUA","area":"FRIO/CLIMA"},{"id":"MAQ-140","n":"A/A OBRADOR","tipo":"A/A","area":"FRIO/CLIMA"},{"id":"MAQ-141","n":"A/A VESTUARIO","tipo":"A/A","area":"FRIO/CLIMA"},{"id":"MAQ-142","n":"A/A OFICINAS","tipo":"A/A","area":"FRIO/CLIMA"},{"id":"MAQ-143","n":"TRANSFORMADOR","tipo":"A/A","area":"FRIO/CLIMA"},{"id":"MAQ-144","n":"CONDENSADORES ELECTRICOS","tipo":"ELECTRICIDAD","area":"FRIO/CLIMA"},{"id":"MAQ-145","n":"CUADROS GENERALES","tipo":"ELECTRICIDAD","area":"FRIO/CLIMA"},{"id":"MAQ-146","n":"A/A MUELLE","tipo":"A/A","area":"FRIO/CLIMA"},{"id":"MAQ-147","n":"EXTRACTORES RELAMPAGO","tipo":"EXTRACTORES","area":"FRIO/CLIMA"},{"id":"MAQ-148","n":"EXTRACTORES TRUENO","tipo":"EXTRACTORES","area":"FRIO/CLIMA"},{"id":"MAQ-149","n":"EVAPORATIVAS","tipo":"EVAPORATIVAS","area":"FRIO/CLIMA"}];
+
 var maquinasListaCompleta = [];
 var selMaqIds = new Set();
 var asigMaquinasCache = {}; // { mes: { maqId: mecNombre } }
 
 function cargarMaquinasParaAsig(){
-  var base = [];
-  DB.ref('maquinas').once('value').then(function(snap){
-    var v = snap.val();
-    base = Array.isArray(v) ? v.filter(Boolean) : (v ? Object.values(v).filter(Boolean) : []);
-    return DB.ref('maquinas_extra').once('value');
-  }).then(function(snap){
+  // Máquinas base embebidas + extras de Firebase
+  var base = MAQUINAS_PREV.slice();
+  DB.ref('maquinas_extra').once('value').then(function(snap){
     var extra = snap.val() || {};
     Object.values(extra).forEach(function(m){
-      base.push({ID:m.id, NOMBRE:m.n, TIPO:m.t, AREA:m.a, CRITICIDAD:m.c});
+      base.push({id:m.id, n:m.n, tipo:m.t||'', area:m.a||''});
     });
     maquinasListaCompleta = base;
     onAsigMesChange();
-  }).catch(function(){ maquinasListaCompleta = []; renderMaquinasAsig(); });
+  }).catch(function(){ maquinasListaCompleta = base; onAsigMesChange(); });
 }
 
 function onAsigMesChange(){
@@ -1288,15 +1287,15 @@ function renderMaquinasAsig(){
   var cat  = getCatalogo();
 
   var lista = maquinasListaCompleta.filter(function(m){
-    if(area && m.AREA !== area) return false;
-    if(q && !((m.ID||'')+' '+(m.NOMBRE||'')).toLowerCase().includes(q)) return false;
+    if(area && m.area !== area) return false;
+    if(q && !((m.id||'')+' '+(m.n||'')).toLowerCase().includes(q)) return false;
     return true;
   });
 
   // agrupar por área
   var grupos = {};
   lista.forEach(function(m){
-    var a = m.AREA||'SIN ÁREA';
+    var a = m.area||'SIN ÁREA';
     if(!grupos[a]) grupos[a]=[];
     grupos[a].push(m);
   });
@@ -1308,11 +1307,11 @@ function renderMaquinasAsig(){
     html+='<div style="font-size:0.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid rgba(201,162,39,0.2)">'+areaKey+'</div>';
     html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px">';
     grupos[areaKey].forEach(function(m){
-      var mecAsig = asignadas[m.ID];
-      var grupo   = getCatalogoGrupo(m.TIPO, m.NOMBRE);
+      var mecAsig = asignadas[m.id];
+      var grupo   = getCatalogoGrupo(m.tipo, m.n);
       var nTareas = grupo ? cat.filter(function(t){ return t.maquina===grupo; }).length : 0;
       var libre   = !mecAsig;
-      var sel     = selMaqIds.has(m.ID);
+      var sel     = selMaqIds.has(m.id);
       if(libre){ totalLibres++; } else { totalAsig++; }
 
       if(libre){
@@ -1321,10 +1320,10 @@ function renderMaquinasAsig(){
           +';border:1px solid '+(sel?'rgba(201,162,39,0.5)':'rgba(255,255,255,0.1)')
           +';border-radius:8px;cursor:pointer;transition:all .15s">'
           +'<input type="checkbox" '+(sel?'checked':'')
-          +' onchange="toggleMaq(\''+m.ID+'\',this.checked)" style="width:16px;height:16px;accent-color:var(--gold);cursor:pointer">'
+          +' onchange="toggleMaq(\''+m.id+'\',this.checked)" style="width:16px;height:16px;accent-color:var(--gold);cursor:pointer">'
           +'<div style="flex:1;min-width:0">'
-          +'<div style="font-weight:700;font-size:0.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(m.NOMBRE)+'</div>'
-          +'<div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-top:1px">'+m.ID
+          +'<div style="font-weight:700;font-size:0.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(m.n)+'</div>'
+          +'<div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-top:1px">'+m.id
           +(nTareas?' · <span style="color:rgba(46,204,113,0.8)">'+nTareas+' tareas</span>':'· <span style="color:rgba(231,76,60,0.6)">sin catálogo</span>')
           +'</div></div></label>';
       } else {
@@ -1332,7 +1331,7 @@ function renderMaquinasAsig(){
           +'background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:8px;opacity:0.5">'
           +'<div style="width:16px;height:16px;border-radius:3px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.06);flex-shrink:0"></div>'
           +'<div style="flex:1;min-width:0">'
-          +'<div style="font-weight:700;font-size:0.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(m.NOMBRE)+'</div>'
+          +'<div style="font-weight:700;font-size:0.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(m.n)+'</div>'
           +'<div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-top:1px">→ '+escH(mecAsig)+'</div>'
           +'</div></div>';
       }
@@ -1380,11 +1379,11 @@ function asignarMaquinasSel(){
 
   var cat     = getCatalogo();
   var semanas = calcSemanasValidas(mes);
-  var maqsSel = maquinasListaCompleta.filter(function(m){ return selMaqIds.has(m.ID); });
+  var maqsSel = maquinasListaCompleta.filter(function(m){ return selMaqIds.has(m.id); });
 
   var totalTareas = 0;
   maqsSel.forEach(function(m){
-    var grupo = getCatalogoGrupo(m.TIPO, m.NOMBRE);
+    var grupo = getCatalogoGrupo(m.tipo, m.n);
     if(!grupo) return;
     cat.filter(function(t){ return t.maquina===grupo; }).forEach(function(t){
       var reps = repeticionesPorFrecuencia(t.frecuencia, semanas);
@@ -1397,7 +1396,7 @@ function asignarMaquinasSel(){
     return;
   }
 
-  var nombres = maqsSel.map(function(m){ return m.NOMBRE; }).join(', ');
+  var nombres = maqsSel.map(function(m){ return m.n; }).join(', ');
   if(!confirm('Asignar a '+mec+'\n'+maqsSel.length+' máquina(s) · '+totalTareas+' tareas para '+mes+'\n\n'+nombres+'\n\n¿Continuar?')) return;
 
   _ejecutarAsignacionMaquinas(mec, mes, semanas, cat, maqsSel);
@@ -1408,7 +1407,7 @@ function _ejecutarAsignacionMaquinas(mec, mes, semanas, cat, maquinas){
   var count   = 0;
 
   maquinas.forEach(function(m){
-    var grupo = getCatalogoGrupo(m.TIPO, m.NOMBRE);
+    var grupo = getCatalogoGrupo(m.tipo, m.n);
     if(!grupo) return;
     cat.filter(function(t){ return t.maquina===grupo; }).forEach(function(t){
       var reps = repeticionesPorFrecuencia(t.frecuencia, semanas);
@@ -1418,9 +1417,9 @@ function _ejecutarAsignacionMaquinas(mec, mes, semanas, cat, maquinas){
         var sem  = semanas[i*paso] || semanas[semanas.length-1] || null;
         var key  = DB.ref('asignaciones/'+mes).push().key;
         var obj  = {
-          catalogId:t.id, maqId:m.ID, maquina:grupo, maqNombre:m.NOMBRE,
+          catalogId:t.id, maqId:m.id, maquina:grupo, maqNombre:m.n,
           subtipo:t.subtipo||'', tarea:t.tarea, frecuencia:t.frecuencia,
-          instancia:m.NOMBRE, mecanico:mec, mes:mes,
+          instancia:m.n, mecanico:mec, mes:mes,
           hecho:false, hechoEn:null, turno:null, notas:''
         };
         if(sem){ obj.semana=sem.num; obj.semanaInfo='Semana '+sem.num+' ('+sem.inicio+' – '+sem.fin+')'; }
@@ -1428,14 +1427,14 @@ function _ejecutarAsignacionMaquinas(mec, mes, semanas, cat, maquinas){
         count++;
       }
     });
-    updates['preventivo_maquinas/'+mes+'/'+m.ID] = mec;
+    updates['preventivo_maquinas/'+mes+'/'+m.id] = mec;
   });
 
   if(!count){ showToast('⚠️ No se generaron tareas'); return; }
 
   DB.ref().update(updates).then(function(){
     if(!asigMaquinasCache[mes]) asigMaquinasCache[mes]={};
-    maquinas.forEach(function(m){ asigMaquinasCache[mes][m.ID]=mec; });
+    maquinas.forEach(function(m){ asigMaquinasCache[mes][m.id]=mec; });
     selMaqIds.clear();
     renderMaquinasAsig();
     showToast('✅ '+count+' tareas asignadas a '+mec);
