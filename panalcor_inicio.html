@@ -581,18 +581,17 @@ firebase.initializeApp(FB_CFG);
 var DB = firebase.database();
 
 // ── CREDENCIALES ─────────────────────────────────────────────
-var ENC_PWD = {
-  'PINILLA':'321567','MAGER':'888666','LUISMI':'456123',
-  'SERGIO':'555222','COSTI':'299456','IVAN':'444234'
-};
-var COMPRAS_PWD = { 'COMPRAS':'compras2024' };
 var ADMIN_PWD = 'admin1234';
 var PS_KEY    = 'panalcor_session';
 var mecPwdCache = null;
+var encPwdCache = null;
 
-// Precargar passwords mecanicos para respuesta rapida
+// Precargar passwords en paralelo para respuesta rapida
 DB.ref('config/mecanicos_pwd').once('value')
   .then(function(snap){ mecPwdCache = snap.val() || {}; })
+  .catch(function(){});
+DB.ref('config/encargados_pwd').once('value')
+  .then(function(snap){ encPwdCache = snap.val() || {}; })
   .catch(function(){});
 
 // ── SESSION ───────────────────────────────────────────────────
@@ -656,26 +655,31 @@ function doLogin(){
   if(nombre === 'ADMIN' && pwd === ADMIN_PWD){
     saveSession('ADMIN','admin'); mostrarPortal({nombre:'ADMIN',rol:'admin'}); return;
   }
-  if(ENC_PWD[nombre] !== undefined && ENC_PWD[nombre] === pwd){
-    saveSession(nombre,'encargado'); mostrarPortal({nombre:nombre,rol:'encargado'}); return;
+  if(encPwdCache){
+    if(_checkEnc(nombre, pwd)) return;
+    if(mecPwdCache){ _checkMec(nombre, pwd); return; }
   }
-  if(COMPRAS_PWD[nombre] !== undefined && COMPRAS_PWD[nombre] === pwd){
-    saveSession(nombre,'compras'); mostrarPortal({nombre:nombre,rol:'compras'}); return;
-  }
-  if(mecPwdCache){
+  var btn = document.getElementById('loginBtn');
+  btn.textContent = 'Verificando...'; btn.disabled = true;
+  var p1 = encPwdCache ? Promise.resolve(encPwdCache)
+         : DB.ref('config/encargados_pwd').once('value').then(function(s){ encPwdCache = s.val()||{}; return encPwdCache; }).catch(function(){ encPwdCache={}; return {}; });
+  var p2 = mecPwdCache ? Promise.resolve(mecPwdCache)
+         : DB.ref('config/mecanicos_pwd').once('value').then(function(s){ mecPwdCache = s.val()||{}; return mecPwdCache; }).catch(function(){ mecPwdCache={}; return {}; });
+  Promise.all([p1, p2]).then(function(){
+    btn.textContent = 'ENTRAR'; btn.disabled = false;
+    if(_checkEnc(nombre, pwd)) return;
     _checkMec(nombre, pwd);
-  } else {
-    var btn = document.getElementById('loginBtn');
-    btn.textContent = 'Verificando...'; btn.disabled = true;
-    DB.ref('config/mecanicos_pwd').once('value').then(function(snap){
-      mecPwdCache = snap.val() || {};
-      btn.textContent = 'ENTRAR'; btn.disabled = false;
-      _checkMec(nombre, pwd);
-    }).catch(function(){
-      btn.textContent = 'ENTRAR'; btn.disabled = false;
-      err.textContent = 'Error de conexion. Intentalo de nuevo.';
-    });
+  }).catch(function(){
+    btn.textContent = 'ENTRAR'; btn.disabled = false;
+    err.textContent = 'Error de conexion. Intentalo de nuevo.';
+  });
+}
+
+function _checkEnc(nombre, pwd){
+  if(encPwdCache[nombre] !== undefined && encPwdCache[nombre] === pwd){
+    saveSession(nombre,'encargado'); mostrarPortal({nombre:nombre,rol:'encargado'}); return true;
   }
+  return false;
 }
 
 function _checkMec(nombre, pwd){

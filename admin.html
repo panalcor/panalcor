@@ -1270,6 +1270,19 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card config-section">
+    <div class="sec-title">👷 Contraseñas de encargados</div>
+    <p style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:14px;line-height:1.6">
+      Gestiona el acceso de los encargados. Cada línea: <b>NOMBRE:contraseña</b>
+    </p>
+    <textarea id="cfgEncPwd" rows="8" placeholder="PINILLA:321567&#10;MAGER:888666&#10;LUISMI:456123"
+      style="width:100%;background:var(--navy-deep);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 12px;font-family:monospace;font-size:0.88rem;resize:vertical"></textarea>
+    <div style="display:flex;gap:12px;align-items:center;margin-top:10px">
+      <button class="btn-export btn-gold" onclick="guardarEncPwd()">💾 Guardar</button>
+      <span id="encPwdMsg" style="font-size:0.82rem;color:var(--green)"></span>
+    </div>
+  </div>
+
+  <div class="card config-section">
     <div class="sec-title">🔑 Cambiar contraseña de administrador</div>
     <div class="field">
       <label>Contraseña actual</label>
@@ -3502,6 +3515,41 @@ function guardarSesionConfig(){
   }).catch(()=>{ showToast('❌ Error al guardar. Comprueba la conexión.'); });
 }
 
+function cargarEncPwd(){
+  DB.ref('config/encargados_pwd').once('value').then(function(snap){
+    var data = snap.val();
+    var ta = document.getElementById('cfgEncPwd');
+    if(!ta) return;
+    if(data && typeof data === 'object'){
+      ta.value = Object.entries(data).map(function(e){ return e[0]+':'+e[1]; }).join('\n');
+    } else {
+      // Seed defaults on first open
+      ta.value = 'PINILLA:321567\nMAGER:888666\nLUISMI:456123\nSERGIO:555222\nCOSTI:299456\nIVAN:444234';
+    }
+  }).catch(function(){});
+}
+
+function guardarEncPwd(){
+  var ta = document.getElementById('cfgEncPwd');
+  var msg = document.getElementById('encPwdMsg');
+  if(!ta) return;
+  var pwds = {};
+  ta.value.split('\n').forEach(function(line){
+    line = line.trim();
+    if(!line) return;
+    var idx = line.indexOf(':');
+    if(idx < 1) return;
+    var nombre = line.slice(0, idx).trim().toUpperCase();
+    var pwd    = line.slice(idx+1).trim();
+    if(nombre && pwd) pwds[nombre] = pwd;
+  });
+  if(!Object.keys(pwds).length){ msg.style.color='var(--red)'; msg.textContent='Sin datos válidos'; return; }
+  DB.ref('config/encargados_pwd').set(pwds).then(function(){
+    msg.style.color='var(--green)'; msg.textContent='✓ Guardado';
+    setTimeout(function(){ msg.textContent=''; }, 3000);
+  }).catch(function(){ msg.style.color='var(--red)'; msg.textContent='Error al guardar'; });
+}
+
 function cargarFrioMecs(){
   var ta = document.getElementById('cfgFrioMecs');
   if(!ta) return;
@@ -4625,6 +4673,7 @@ function switchTab(name){
   if(name==='cfg') cargarPinsTablet();
   if(name==='cfg') cargarFrases();
   if(name==='cfg') cargarFrioMecs();
+  if(name==='cfg') cargarEncPwd();
   if(name==='rec') { cargarMecanicosParaRec(); cargarRecordatorios(); }
   if(name==='enc') cargarAvisosEncargados();
   if(name==='int') { cargarCatalogoRepuestos(); initIntegrales(); }

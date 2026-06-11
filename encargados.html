@@ -1213,7 +1213,6 @@ function cargarAdminView(){
 }
 
 // ── LOGIN ENCARGADOS ─────────────────────────────────────────────
-var ENC_PW = 'encargados2025';
 var ENC_SESSION_KEY = 'enc_session';
 
 function _arrancaEncApp(esAdmin, nombreEnc){
@@ -1240,17 +1239,7 @@ function _arrancaEncApp(esAdmin, nombreEnc){
 }
 
 function encLoginCheck(){
-  var pw  = document.getElementById('encPwInput').value;
-  var err = document.getElementById('encLoginErr');
-  if(pw === ENC_PW){
-    sessionStorage.setItem(ENC_SESSION_KEY, '1');
-    err.textContent = '';
-    _arrancaEncApp(false, null);
-  } else {
-    err.textContent = 'Contrasena incorrecta';
-    document.getElementById('encPwInput').value = '';
-    document.getElementById('encPwInput').focus();
-  }
+  /* no-op: auth is handled by panalcor_inicio.html */
 }
 
 (function(){
