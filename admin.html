@@ -1067,6 +1067,25 @@ if('serviceWorker' in navigator){
     </div>
   </div>
 
+  <!-- ══ SEMÁFORO OCA / REVISIONES ══ -->
+  <div class="card" style="margin-top:16px">
+    <div class="sec-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <span>🚦 OCA / Revisiones — semáforo</span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="ocaSetFiltro('todas')"   id="ocaFTodas"   style="padding:5px 12px;border-radius:7px;font-family:'Barlow',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.12);color:#fff">Todas</button>
+        <button onclick="ocaSetFiltro('vencida')" id="ocaFVencida" style="padding:5px 12px;border-radius:7px;font-family:'Barlow',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;border:1px solid rgba(231,76,60,.4);background:rgba(231,76,60,.08);color:#e74c3c">⛔ Vencidas</button>
+        <button onclick="ocaSetFiltro('proxima')" id="ocaFProxima" style="padding:5px 12px;border-radius:7px;font-family:'Barlow',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;border:1px solid rgba(243,156,18,.4);background:rgba(243,156,18,.08);color:#f39c12">⚠️ Próximas</button>
+        <button onclick="ocaSetFiltro('ok')"      id="ocaFOk"      style="padding:5px 12px;border-radius:7px;font-family:'Barlow',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;border:1px solid rgba(46,204,113,.4);background:rgba(46,204,113,.08);color:#2ecc71">✅ Al día</button>
+        <button onclick="ocaSetFiltro('sin')"     id="ocaFSin"     style="padding:5px 12px;border-radius:7px;font-family:'Barlow',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:rgba(255,255,255,.4)">Sin fecha</button>
+      </div>
+    </div>
+    <!-- KPIs resumen -->
+    <div id="ocaKpis" style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0"></div>
+    <div id="ocaLista" style="max-height:460px;overflow-y:auto">
+      <div style="text-align:center;color:rgba(255,255,255,.3);padding:20px;font-size:.85rem">Cargando...</div>
+    </div>
+  </div>
+
 </div>
 
 <!-- ═══ REPUESTOS ═══ -->
@@ -3742,6 +3761,107 @@ function fichasActualizarCount() {
   var conFicha = todas.filter(function(m){ return !!_fichasData[m.id]; }).length;
   var el = document.getElementById('fichasCount');
   if (el) el.textContent = conFicha + ' de ' + todas.length + ' con ficha';
+  ocaRender();
+}
+
+// ══════════════════════════════════════════════════
+// SEMÁFORO OCA
+// ══════════════════════════════════════════════════
+var _ocaFiltro = 'todas';
+
+function ocaSetFiltro(f) {
+  _ocaFiltro = f;
+  ['todas','vencida','proxima','ok','sin'].forEach(function(x) {
+    var b = document.getElementById('ocaF' + x.charAt(0).toUpperCase() + x.slice(1));
+    if (!b) return;
+    var activo = f === x;
+    var cols = { todas:['255,255,255','255,255,255'], vencida:['231,76,60','231,76,60'], proxima:['243,156,18','243,156,18'], ok:['46,204,113','46,204,113'], sin:['255,255,255','255,255,255'] };
+    var c = cols[x];
+    b.style.background = activo ? 'rgba('+c[0]+',.22)' : 'rgba('+c[0]+',.06)';
+    b.style.borderColor = activo ? 'rgba('+c[1]+',.7)' : 'rgba('+c[1]+',.25)';
+  });
+  ocaRender();
+}
+
+function ocaEstado(proxRev) {
+  if (!proxRev) return 'sin';
+  var dias = Math.round((new Date(proxRev) - new Date()) / 86400000);
+  if (dias < 0)   return 'vencida';
+  if (dias <= 60) return 'proxima';
+  return 'ok';
+}
+
+function ocaRender() {
+  var el = document.getElementById('ocaLista');
+  var kpiEl = document.getElementById('ocaKpis');
+  if (!el) return;
+
+  var todas = (typeof MAQUINAS_BASE_ADMIN !== 'undefined' ? MAQUINAS_BASE_ADMIN : []).concat(maquinasExtra || []);
+  var items = todas.map(function(m) {
+    var ficha = _fichasData[m.id];
+    var proxRev = ficha ? (ficha.proxRev || '') : '';
+    var estado = ocaEstado(proxRev);
+    var dias = proxRev ? Math.round((new Date(proxRev) - new Date()) / 86400000) : null;
+    return { m: m, ficha: ficha, proxRev: proxRev, estado: estado, dias: dias };
+  });
+
+  // KPIs
+  var cnts = { vencida:0, proxima:0, ok:0, sin:0 };
+  items.forEach(function(i){ cnts[i.estado]++; });
+  if (kpiEl) {
+    kpiEl.innerHTML = [
+      ['⛔','VENCIDAS', cnts.vencida, '#e74c3c','rgba(231,76,60,.15)'],
+      ['⚠️','≤60 DÍAS',  cnts.proxima, '#f39c12','rgba(243,156,18,.12)'],
+      ['✅','AL DÍA',    cnts.ok,      '#2ecc71','rgba(46,204,113,.1)'],
+      ['—', 'SIN FECHA', cnts.sin,     '#888',   'rgba(255,255,255,.06)']
+    ].map(function(r){
+      return '<div onclick="ocaSetFiltro(\''+({'⛔':'vencida','⚠️':'proxima','✅':'ok','—':'sin'}[r[0]])+'\')" style="cursor:pointer;padding:10px 16px;border-radius:10px;background:'+r[4]+';border:1px solid '+r[3]+'44;text-align:center;min-width:80px">'
+        +'<div style="font-size:1.5rem;font-weight:900;color:'+r[3]+'">'+r[2]+'</div>'
+        +'<div style="font-size:.65rem;color:'+r[3]+';letter-spacing:.09em;font-weight:700">'+r[1]+'</div>'
+        +'</div>';
+    }).join('');
+  }
+
+  // Filtrar
+  var filtrados = _ocaFiltro === 'todas' ? items : items.filter(function(i){ return i.estado === _ocaFiltro; });
+
+  // Ordenar: vencidas primero (más vencida arriba), luego próximas, luego ok, luego sin fecha
+  var orden = { vencida:0, proxima:1, ok:2, sin:3 };
+  filtrados.sort(function(a, b) {
+    if (orden[a.estado] !== orden[b.estado]) return orden[a.estado] - orden[b.estado];
+    if (a.dias !== null && b.dias !== null) return a.dias - b.dias;
+    return (a.m.n||'').localeCompare(b.m.n||'');
+  });
+
+  if (!filtrados.length) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:rgba(255,255,255,.3);font-size:.85rem">No hay máquinas en esta categoría.</div>';
+    return;
+  }
+
+  var colMap = { vencida:'#e74c3c', proxima:'#f39c12', ok:'#2ecc71', sin:'rgba(255,255,255,.2)' };
+  var txtMap = {
+    vencida: function(d){ return '⛔ Vencida hace '+Math.abs(d)+' días'; },
+    proxima: function(d){ return '⚠️ Vence en '+d+' días'; },
+    ok:      function(d){ return '✅ OK — '+d+' días'; },
+    sin:     function()  { return '— Sin fecha'; }
+  };
+
+  el.innerHTML = filtrados.map(function(i) {
+    var col = colMap[i.estado];
+    var txt = txtMap[i.estado](i.dias);
+    var tipoRev = i.ficha && i.ficha.tipoRev ? '<span style="font-size:.7rem;color:rgba(255,255,255,.35);margin-left:8px">'+escHtml(i.ficha.tipoRev)+'</span>' : '';
+    var proxStr = i.proxRev ? '<span style="font-size:.72rem;color:rgba(255,255,255,.4);margin-left:8px">'+i.proxRev+'</span>' : '';
+    return '<div style="display:flex;align-items:center;gap:12px;padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.05);flex-wrap:wrap">'
+      + '<div style="width:10px;height:10px;border-radius:50%;flex-shrink:0;background:'+col+'"></div>'
+      + '<div style="flex:1;min-width:0">'
+        + '<span style="font-size:.88rem;font-weight:700">'+escHtml(i.m.n||i.m.id)+'</span>'
+        + '<span style="font-size:.72rem;color:rgba(255,255,255,.3);margin-left:8px">'+escHtml(i.m.id)+'</span>'
+        + tipoRev + proxStr
+      + '</div>'
+      + '<span style="font-size:.75rem;font-weight:700;color:'+col+';white-space:nowrap">'+txt+'</span>'
+      + '<button onclick="abrirFichaMaq(\''+escHtml(i.m.id)+'\',\''+escHtml((i.m.n||'').replace(/'/g,"\\'"))+'\')" style="background:rgba(240,192,64,.1);border:1px solid rgba(240,192,64,.3);color:#f0c040;border-radius:7px;padding:5px 12px;cursor:pointer;font-family:\'Barlow\',sans-serif;font-size:.78rem;font-weight:700;white-space:nowrap;flex-shrink:0">📋 Ficha</button>'
+      + '</div>';
+  }).join('');
 }
 
 function fichasRenderLista() {
