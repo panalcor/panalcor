@@ -472,9 +472,6 @@ if('serviceWorker' in navigator){
     <a href="maquinas_admin.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:linear-gradient(135deg,rgba(52,152,219,0.2),rgba(52,152,219,0.08));border:1px solid rgba(52,152,219,0.4);border-radius:8px;color:#3498db;text-decoration:none;font-family:'Barlow',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.04em;transition:all .2s" onmouseover="this.style.background='linear-gradient(135deg,rgba(52,152,219,0.35),rgba(52,152,219,0.15))'" onmouseout="this.style.background='linear-gradient(135deg,rgba(52,152,219,0.2),rgba(52,152,219,0.08))'">
       🏭 Fichas de Máquinas
     </a>
-    <a href="personal.html" onclick="sessionStorage.setItem('turnosAuth','1')" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:linear-gradient(135deg,rgba(46,204,113,0.2),rgba(46,204,113,0.08));border:1px solid rgba(46,204,113,0.4);border-radius:8px;color:#2ecc71;text-decoration:none;font-family:'Barlow',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.04em;transition:all .2s" onmouseover="this.style.background='linear-gradient(135deg,rgba(46,204,113,0.35),rgba(46,204,113,0.15))'" onmouseout="this.style.background='linear-gradient(135deg,rgba(46,204,113,0.2),rgba(46,204,113,0.08))'">
-      📅 Gestión de Turnos
-    </a>
     <button onclick="switchTab('proy')" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:linear-gradient(135deg,rgba(255,80,120,0.2),rgba(255,80,120,0.06));border:1px solid rgba(255,80,120,0.45);border-radius:8px;color:#ff5078;font-family:'Barlow',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.04em;cursor:pointer;transition:all .2s" onmouseover="this.style.background='linear-gradient(135deg,rgba(255,80,120,0.35),rgba(255,80,120,0.15))'" onmouseout="this.style.background='linear-gradient(135deg,rgba(255,80,120,0.2),rgba(255,80,120,0.06))'">
       🚀 Proyectos
     </button>
@@ -4361,8 +4358,7 @@ function generarQRMaquina(){
   var maqId     = sel.value;
   var maqNombre = sel.options[sel.selectedIndex].textContent.replace(/\s*\(MAQ-\d+\)$/, '');
   var maqData   = MAQUINAS_FULL_DATA[maqId] || {a:'',t:'',f:''};
-  var url = 'https://panalcor.github.io/panalcor/maquina.html?id=' + encodeURIComponent(maqId)
-          + '&n=' + encodeURIComponent(maqNombre);
+  var url = 'https://panalcor.github.io/panalcor/averias.html?maq=' + encodeURIComponent(maqId);
 
   // Generar QR en contenedor oculto
   var tmp = document.createElement('div');
