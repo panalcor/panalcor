@@ -4873,7 +4873,7 @@ document.getElementById('pwInput').addEventListener('keydown',e=>{ if(e.key==='E
 // GESTIÓN TAREAS DIARIAS
 // ══════════════════════════════════════════════════
 var tdEditId = null;
-var TD_BASE = [{"id":"DI-001","tarea":"REVISION ACEITES 1","maquina":"DIVISORAS","area":"OBRADOR","detalle":"MAÑANA LIMPIAR GARRAFAS Y RELLENAR","turno":"TODOS","prioridad":"ALTA"},{"id":"DI-002","tarea":"REVISION ACEITES 2","maquina":"DIVISORAS","area":"OBRADOR","detalle":"RELLENAR ACEITES","turno":"TODOS","prioridad":"ALTA"},{"id":"DI-003","tarea":"FILTROS AIRE ACONDICIONADO OBRADOR","maquina":"A/A","area":"OBRADOR","detalle":"QUITAR FILTROS Y SOPLAR","turno":"TODOS","prioridad":"MEDIA"},{"id":"DI-004","tarea":"VACIAR BANDEJAS DIVISORAS","maquina":"DIVISORAS","area":"OBRADOR","detalle":"VACIAR Y LIMPIAR","turno":"TODOS","prioridad":"BAJA"},{"id":"DI-005","tarea":"FILTROS Y RADIADORES COMPRESORES","maquina":"COMPRESORES","area":"SALA COMPRESORES","detalle":"SOPLAR","turno":"TODOS","prioridad":"MEDIA"},{"id":"DI-006","tarea":"TENSION CADENAS LINEAS","maquina":"LINEAS","area":"OBRADOR","detalle":"","turno":"MAÑANA","prioridad":"ALTA"}];
+var TD_BASE = [{"id":"DI-001","tarea":"REVISION ACEITES 1","maquina":"DIVISORAS","area":"OBRADOR","detalle":"MAÑANA LIMPIAR GARRAFAS Y RELLENAR","turno":"TODOS","prioridad":"ALTA"},{"id":"DI-002","tarea":"REVISION ACEITES 2","maquina":"DIVISORAS","area":"OBRADOR","detalle":"RELLENAR ACEITES","turno":"TODOS","prioridad":"ALTA"},{"id":"DI-003","tarea":"FILTROS AIRE ACONDICIONADO OBRADOR","maquina":"A/A","area":"OBRADOR","detalle":"QUITAR FILTROS Y SOPLAR","turno":"TODOS","prioridad":"MEDIA"},{"id":"DI-004","tarea":"VACIAR BANDEJAS DIVISORAS","maquina":"DIVISORAS","area":"OBRADOR","detalle":"VACIAR Y LIMPIAR","turno":"TODOS","prioridad":"BAJA"},{"id":"DI-005","tarea":"FILTROS Y RADIADORES COMPRESORES","maquina":"COMPRESORES","area":"SALA COMPRESORES","detalle":"SOPLAR","turno":"TODOS","prioridad":"MEDIA"},{"id":"DI-006","tarea":"TENSION CADENAS LINEAS","maquina":"LINEAS","area":"OBRADOR","detalle":"","turno":"MAÑANA","prioridad":"ALTA"},{"id":"DI-007","tarea":"RECIRCULACION ACEITE","maquina":"DIVISORAS 1-6","area":"OBRADOR","detalle":"TODOS LOS TURNOS","turno":"TODOS","prioridad":"ALTA"},{"id":"DI-008","tarea":"ESTADO VISUAL JUNTAS","maquina":"DIVISORAS 1-6","area":"OBRADOR","detalle":"NO RESTOS O MANCHADO","turno":"TODOS","prioridad":"ALTA"},{"id":"DI-009","tarea":"BOTONERA","maquina":"DIVISORAS 1-6","area":"OBRADOR","detalle":"REVISAR ESTADO","turno":"TODOS","prioridad":"MEDIA"},{"id":"DI-010","tarea":"SETAS","maquina":"DIVISORAS 1-6","area":"OBRADOR","detalle":"COMPROBAR FUNCIONAMIENTO","turno":"TODOS","prioridad":"ALTA"},{"id":"DI-011","tarea":"PERDIDAS DE ACEITE","maquina":"DIVISORAS 1-6","area":"OBRADOR","detalle":"INSPECCIÓN VISUAL","turno":"TODOS","prioridad":"ALTA"},{"id":"DI-012","tarea":"ESTADO VISUAL DE FUNCIONAMIENTO","maquina":"DIVISORAS 1-6","area":"OBRADOR","detalle":"","turno":"TODOS","prioridad":"MEDIA"}];
 
 function cargarTareasDiariasAdmin(){
   DB.ref('tareas_diarias').once('value').then(function(snap){
@@ -10431,7 +10431,7 @@ function guardarFichaMaq() {
     cerrarFichaMaq();
     // Actualizar indicador visual en la tabla si está visible
     if (typeof renderMaquinas === 'function') renderMaquinas();
-  }).catch(function(){ showToast('❌ Error al guardar'); });
+  }).catch(function(e){ showToast('❌ Error al guardar: ' + (e && e.message ? e.message : e)); console.error('guardarFichaMaq error:', e); });
 }
 
 // ══════════════════════════════════════════════════
