@@ -5447,10 +5447,40 @@ function abrirAvModal(av) {
     fila('Acción tomada', av.accion) +
     fila('Observaciones', av.observaciones) +
     fila('Materiales', mats) +
-    costeHtml + firmaHtml;
+    costeHtml + firmaHtml +
+    (av.foto ? '<div style="margin-top:14px"><div style="font-size:0.7rem;letter-spacing:.12em;text-transform:uppercase;color:#3498db;margin-bottom:6px">📷 Foto</div><img src="'+av.foto+'" style="max-width:260px;border-radius:8px;border:1px solid rgba(255,255,255,0.15)"></div>' : '') +
+    (av.estado === 'RESUELTA' ?
+      '<div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08)">' +
+      '<div style="font-size:0.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:10px">🔁 Crear tarea preventiva a partir de esta avería</div>' +
+      '<div style="font-size:0.82rem;color:rgba(255,255,255,0.45);margin-bottom:10px">Si la causa fue recurrente, puedes convertirla en una tarea preventiva para evitar que vuelva a ocurrir.</div>' +
+      '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">' +
+        '<input id="prevMaquina" value="'+escHtml(av.maqNombre||'')+'" placeholder="Máquina" style="flex:1;min-width:140px;background:var(--navy-deep);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 12px;font-family:Barlow,sans-serif;font-size:.85rem">' +
+        '<select id="prevFrec" style="background:var(--navy-deep);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 12px;font-family:Barlow,sans-serif;font-size:.85rem">' +
+          '<option>SEMANAL</option><option>QUINCENAL</option><option selected>MENSUAL</option><option>TRIMESTRAL</option><option>SEMESTRAL</option><option>ANUAL</option>' +
+        '</select>' +
+      '</div>' +
+      '<textarea id="prevTarea" placeholder="Descripción de la tarea preventiva..." rows="2" style="width:100%;background:var(--navy-deep);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:8px 12px;font-family:Barlow,sans-serif;font-size:.85rem;resize:vertical;box-sizing:border-box;margin-bottom:10px">Revisar '+escHtml(av.parte||av.tipo||'componente')+' — causa: '+escHtml(av.causa||'')+'. Acción: '+escHtml(av.accion||'')+'</textarea>' +
+      '<button onclick="crearPreventivoDesdeAveria()" style="background:rgba(201,162,39,.2);border:1px solid rgba(201,162,39,.5);color:#f0c040;border-radius:8px;padding:9px 20px;cursor:pointer;font-family:Barlow,sans-serif;font-size:.85rem;font-weight:700">📋 Guardar en catálogo preventivo</button>' +
+      '<span id="prevMsg" style="font-size:.8rem;color:#2ecc71;margin-left:12px"></span>' +
+      '</div>'
+    : '');
 
   m.style.display = 'block';
   document.body.style.overflow = 'hidden';
+}
+
+function crearPreventivoDesdeAveria() {
+  var maquina = (document.getElementById('prevMaquina').value||'').trim().toUpperCase();
+  var tarea   = (document.getElementById('prevTarea').value||'').trim();
+  var frec    = document.getElementById('prevFrec').value;
+  if (!maquina || !tarea) { showToast('Rellena la máquina y la tarea'); return; }
+  var id = 'CAT-PREV-' + Date.now();
+  var obj = { id: id, maquina: maquina, subtipo: 'CORRECTIVO→PREVENTIVO', tarea: tarea, frecuencia: frec, instancias: [maquina], origen: 'averia', tsCreado: Date.now() };
+  DB.ref('catalogo/' + id).set(obj).then(function() {
+    var msg = document.getElementById('prevMsg');
+    if (msg) msg.textContent = '✅ Guardado en catálogo';
+    showToast('✅ Tarea añadida al catálogo preventivo');
+  }).catch(function() { showToast('❌ Error al guardar'); });
 }
 
 function cerrarAvModal() {
