@@ -1099,11 +1099,18 @@ function _aplicarSesionMec(nombre){
       if(o.value && o.value.toUpperCase() === nombre.toUpperCase()) sel.value = o.value;
     });
   }
-  // Mostrar pestaña Frío solo a Gregorio y Jose
+  // Mostrar pestaña Frío según lista en Firebase config/frio_mecanicos (o fallback hardcoded)
   var tabFrio = document.getElementById('tabFrioMec');
   if(tabFrio){
     var n = nombre.toUpperCase();
-    tabFrio.style.display = (n === 'GREGORIO' || n === 'JOSE' || n === 'JAVIER H') ? '' : 'none';
+    DB.ref('config/frio_mecanicos').once('value').then(function(snap){
+      var lista = snap.val();
+      var permitidos = Array.isArray(lista) ? lista.map(function(x){ return x.toUpperCase(); })
+                     : ['GREGORIO','JOSE','JAVIER H'];
+      tabFrio.style.display = (permitidos.indexOf(n) !== -1) ? '' : 'none';
+    }).catch(function(){
+      tabFrio.style.display = (n === 'GREGORIO' || n === 'JOSE' || n === 'JAVIER H') ? '' : 'none';
+    });
   }
 }
 

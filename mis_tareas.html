@@ -1739,12 +1739,28 @@ function ckMecNota(intId, ckKey, nota) {
 }
 
 // ── Componentes mecánico ──────────────────────────────────────
+var _repCacheLocal = null;
+
+function _getRepCache(cb) {
+  if (_repCacheLocal) { cb(_repCacheLocal); return; }
+  try {
+    var ls = JSON.parse(localStorage.getItem('repuestosCache')||'[]');
+    if (ls.length) { _repCacheLocal = ls; cb(ls); return; }
+  } catch(e){}
+  // Cargar desde Firebase si no hay cache local
+  DB.ref('repuestos_base').once('value').then(function(snap){
+    var data = snap.val() || {};
+    var lista = Object.values(data).filter(function(r){ return r && (r.desc||r.ref); });
+    _repCacheLocal = lista;
+    cb(lista);
+  }).catch(function(){ cb([]); });
+}
+
 function intMecBuscarRep() {
   var q    = (document.getElementById('intMecRepQ').value||'').trim().toLowerCase();
   var drop = document.getElementById('intMecRepDrop');
   if (q.length < 2) { drop.style.display='none'; _intMecRepSel=null; return; }
-  var base = [];
-  try { base = JSON.parse(localStorage.getItem('repuestosCache')||'[]'); } catch(e){}
+  _getRepCache(function(base) {
   var res = base.filter(function(r){
     return (r.desc||'').toLowerCase().includes(q) || String(r.ref||'').toLowerCase().includes(q);
   }).slice(0,8);
@@ -1758,6 +1774,7 @@ function intMecBuscarRep() {
          + '</div>';
   }).join('');
   drop.style.display = 'block';
+  }); // _getRepCache
 }
 function intMecSelRep(i) {
   _intMecRepSel = _intMecRepRes[i];

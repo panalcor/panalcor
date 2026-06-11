@@ -1244,6 +1244,19 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card config-section">
+    <div class="sec-title">❄️ Acceso al módulo Frío</div>
+    <p style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:14px;line-height:1.6">
+      Mecánicos que pueden ver la pestaña Frío en su panel. Escribe los nombres exactos (mayúsculas), uno por línea.
+    </p>
+    <textarea id="cfgFrioMecs" rows="4" placeholder="GREGORIO&#10;JOSE&#10;JAVIER H"
+      style="width:100%;background:var(--navy-deep);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 12px;font-family:Barlow,sans-serif;font-size:0.9rem;resize:vertical"></textarea>
+    <div style="display:flex;gap:12px;align-items:center;margin-top:10px">
+      <button class="btn-export btn-gold" onclick="guardarFrioMecs()">💾 Guardar</button>
+      <span id="frioMecsMsg" style="font-size:0.82rem;color:var(--green)"></span>
+    </div>
+  </div>
+
+  <div class="card config-section">
     <div class="sec-title">💬 Frases motivadoras de turno</div>
     <p style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:14px;line-height:1.6">
       Una frase aleatoria aparece al inicio de cada turno. Se evita repetir la última mostrada. Añade, edita o elimina frases.
@@ -3489,6 +3502,25 @@ function guardarSesionConfig(){
   }).catch(()=>{ showToast('❌ Error al guardar. Comprueba la conexión.'); });
 }
 
+function cargarFrioMecs(){
+  var ta = document.getElementById('cfgFrioMecs');
+  if(!ta) return;
+  DB.ref('config/frio_mecanicos').once('value').then(function(snap){
+    var lista = snap.val();
+    ta.value = Array.isArray(lista) ? lista.join('\n') : 'GREGORIO\nJOSE\nJAVIER H';
+  }).catch(function(){ ta.value = 'GREGORIO\nJOSE\nJAVIER H'; });
+}
+
+function guardarFrioMecs(){
+  var ta = document.getElementById('cfgFrioMecs');
+  var lista = (ta.value||'').split('\n').map(function(l){ return l.trim().toUpperCase(); }).filter(Boolean);
+  DB.ref('config/frio_mecanicos').set(lista).then(function(){
+    var msg = document.getElementById('frioMecsMsg');
+    if(msg){ msg.textContent = '✅ Guardado'; setTimeout(function(){ msg.textContent=''; }, 2000); }
+    showToast('✅ Acceso a Frío actualizado');
+  }).catch(function(){ showToast('❌ Error al guardar'); });
+}
+
 function cambiarPwMecanicos(){
   // Mantenida por compatibilidad — ahora las contraseñas son por mecánico (pestaña Mecánicos)
   showToast('ℹ️ Las contraseñas ahora son individuales. Edítalas en la pestaña Mecánicos.');
@@ -4592,6 +4624,7 @@ function switchTab(name){
   if(name==='cfg') renderEstadoDatos();
   if(name==='cfg') cargarPinsTablet();
   if(name==='cfg') cargarFrases();
+  if(name==='cfg') cargarFrioMecs();
   if(name==='rec') { cargarMecanicosParaRec(); cargarRecordatorios(); }
   if(name==='enc') cargarAvisosEncargados();
   if(name==='int') { cargarCatalogoRepuestos(); initIntegrales(); }
