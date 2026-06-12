@@ -358,6 +358,34 @@ if('serviceWorker' in navigator){
     </div>
   </div>
 </div>
+<!-- MODAL ASIGNACIÓN POR TAREA -->
+<div class="modal-bg" id="modalTareasBg">
+  <div class="modal" style="max-width:680px;max-height:90vh;display:flex;flex-direction:column">
+    <h3 id="modalTareasTitle" style="margin-bottom:4px">⚡ Asignar tareas</h3>
+    <p id="modalTareasSub" style="font-size:0.8rem;color:rgba(255,255,255,0.4);margin-bottom:14px"></p>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <label style="font-size:0.82rem;color:rgba(255,255,255,0.5)">Aplicar todos a:</label>
+      <select id="modalTareasMecTodos" style="flex:1;min-width:160px" onchange="modalTareasAplicarTodos(this.value)">
+        <option value="">— Mecánico —</option>
+      </select>
+    </div>
+    <div style="overflow-y:auto;flex:1;margin-bottom:14px">
+      <table style="width:100%">
+        <thead><tr>
+          <th style="font-size:0.75rem">Tarea</th>
+          <th style="font-size:0.75rem;width:90px">Frec.</th>
+          <th style="font-size:0.75rem;width:180px">Mecánico</th>
+        </tr></thead>
+        <tbody id="modalTareasBody"></tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-gold" style="flex:1" onclick="confirmarAsignacionTareas()">✅ Asignar</button>
+      <button class="btn" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5)" onclick="document.getElementById('modalTareasBg').classList.remove('open')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1470,36 +1498,109 @@ function _updateSelBarMaq(){
   bar.style.display = cnt > 0 ? 'flex' : 'none';
 }
 
+var _asigTareasCtx = {}; // contexto del modal por tarea
+
 function asignarMaquinasSel(){
   var mes = document.getElementById('asigMes').value;
-  var mec = document.getElementById('asigMec').value;
   if(!mes){ showToast('⚠️ Selecciona un mes'); return; }
-  if(!mec){ showToast('⚠️ Selecciona un mecánico'); return; }
   if(!selMaqIds.size){ showToast('⚠️ Selecciona al menos una máquina'); return; }
 
   var cat     = getCatalogo();
   var semanas = calcSemanasValidas(mes);
   var maqsSel = maquinasListaCompleta.filter(function(m){ return selMaqIds.has(m.id); });
+  var mecDef  = document.getElementById('asigMec').value;
 
-  var totalTareas = 0;
+  // Construir lista de filas: una por tarea única (sin multiplicar por repeticiones)
+  var filas = [];
   maqsSel.forEach(function(m){
     var grupo = getCatalogoGrupo(m.tipo, m.subtipo||'');
     if(!grupo) return;
     cat.filter(function(t){ return t.tipo===grupo.tipo && (!grupo.subtipo||t.subtipo===grupo.subtipo); }).forEach(function(t){
       var reps = repeticionesPorFrecuencia(t.frecuencia, semanas);
-      if(reps !== null) totalTareas += reps;
+      if(reps === null) return;
+      filas.push({maq:m, tarea:t, reps:reps});
     });
   });
 
-  if(!totalTareas){
-    showToast('⚠️ Las máquinas seleccionadas no tienen tareas en el catálogo');
-    return;
-  }
+  if(!filas.length){ showToast('⚠️ Las máquinas seleccionadas no tienen tareas en el catálogo'); return; }
 
-  var nombres = maqsSel.map(function(m){ return m.n; }).join(', ');
-  if(!confirm('Asignar a '+mec+'\n'+maqsSel.length+' máquina(s) · '+totalTareas+' tareas para '+mes+'\n\n'+nombres+'\n\n¿Continuar?')) return;
+  _asigTareasCtx = {mes:mes, semanas:semanas, filas:filas};
 
-  _ejecutarAsignacionMaquinas(mec, mes, semanas, cat, maqsSel);
+  // Poblar selector "aplicar todos"
+  var selTodos = document.getElementById('modalTareasMecTodos');
+  selTodos.innerHTML = '<option value="">— Mecánico —</option>';
+  mecanicosLista.forEach(function(m){ selTodos.innerHTML += '<option'+(m===mecDef?' selected':'')+' value="'+escH(m)+'">'+escH(m)+'</option>'; });
+
+  // Construir tabla de tareas
+  var tbody = document.getElementById('modalTareasBody');
+  var mecOpts = '<option value="">— —</option>' + mecanicosLista.map(function(m){
+    return '<option'+(m===mecDef?' selected':'')+' value="'+escH(m)+'">'+escH(m)+'</option>';
+  }).join('');
+
+  var prevMaq = '';
+  tbody.innerHTML = filas.map(function(f, i){
+    var sepRow = '';
+    if(f.maq.n !== prevMaq){
+      sepRow = '<tr><td colspan="3" style="padding:8px 4px 4px;font-size:0.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid rgba(201,162,39,0.2)">'+escH(f.maq.n)+'</td></tr>';
+      prevMaq = f.maq.n;
+    }
+    return sepRow + '<tr>'
+      +'<td style="font-size:0.82rem;padding:6px 4px">'+escH(f.tarea.tarea)+'<span style="font-size:0.7rem;color:rgba(255,255,255,0.3);margin-left:6px">×'+f.reps+'</span></td>'
+      +'<td>'+freqBadge(f.tarea.frecuencia)+'</td>'
+      +'<td><select class="modal-tareas-mec" data-idx="'+i+'" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:var(--white);border-radius:6px;padding:4px 6px;font-size:0.8rem">'+mecOpts+'</select></td>'
+      +'</tr>';
+  }).join('');
+
+  var nMaq = maqsSel.length;
+  document.getElementById('modalTareasTitle').textContent = '⚡ Asignar tareas — '+mes;
+  document.getElementById('modalTareasSub').textContent = nMaq+' máquina'+(nMaq>1?'s':'')+' · '+filas.length+' tareas';
+  document.getElementById('modalTareasBg').classList.add('open');
+}
+
+function modalTareasAplicarTodos(mec){
+  document.querySelectorAll('.modal-tareas-mec').forEach(function(s){ s.value = mec; });
+}
+
+function confirmarAsignacionTareas(){
+  var ctx = _asigTareasCtx;
+  if(!ctx.mes) return;
+  var sels = document.querySelectorAll('.modal-tareas-mec');
+  var updates = {}, count = 0;
+  var maqsAsig = {};
+
+  ctx.filas.forEach(function(f, i){
+    var mec = sels[i] ? sels[i].value : '';
+    if(!mec) return;
+    var paso = ctx.semanas.length > 0 ? Math.max(1, Math.round(ctx.semanas.length / f.reps)) : 1;
+    for(var r=0; r<f.reps; r++){
+      var sem = ctx.semanas[r*paso] || ctx.semanas[ctx.semanas.length-1] || null;
+      var key = DB.ref('asignaciones/'+ctx.mes).push().key;
+      var obj = {
+        catalogId:f.tarea.id, maqId:f.maq.id, maquina:f.tarea.tipo, maqNombre:f.maq.n,
+        subtipo:f.tarea.subtipo||'', tarea:f.tarea.tarea, frecuencia:f.tarea.frecuencia,
+        instancia:f.maq.n, mecanico:mec, mes:ctx.mes,
+        hecho:false, hechoEn:null, turno:null, notas:''
+      };
+      if(sem){ obj.semana=sem.num; obj.semanaInfo='Semana '+sem.num+' ('+sem.inicio+' – '+sem.fin+')'; }
+      updates['asignaciones/'+ctx.mes+'/'+key] = obj;
+      maqsAsig[f.maq.id] = mec;
+      count++;
+    }
+  });
+
+  if(!count){ showToast('⚠️ Asigna al menos un mecánico'); return; }
+
+  Object.keys(maqsAsig).forEach(function(mid){ updates['preventivo_maquinas/'+ctx.mes+'/'+mid] = maqsAsig[mid]; });
+
+  DB.ref().update(updates).then(function(){
+    if(!asigMaquinasCache[ctx.mes]) asigMaquinasCache[ctx.mes] = {};
+    Object.assign(asigMaquinasCache[ctx.mes], maqsAsig);
+    selMaqIds.clear();
+    document.getElementById('modalTareasBg').classList.remove('open');
+    renderMaquinasAsig();
+    if(document.getElementById('segMes').value===ctx.mes) cargarSeguimiento();
+    showToast('✅ '+count+' tareas asignadas');
+  }).catch(function(e){ showToast('Error: '+e.message); });
 }
 
 function _ejecutarAsignacionMaquinas(mec, mes, semanas, cat, maquinas){
