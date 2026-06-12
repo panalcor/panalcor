@@ -938,10 +938,8 @@ function cargarCatalogoFirebase(){
     } else {
       catalogoActivo = null; /* usar embebido */
     }
-    /* Re-renderizar si la pestaña asignar está activa */
-    if(document.getElementById('panel-asignar').classList.contains('active')){
-      renderCatalogo();
-    }
+    if(document.getElementById('panel-asignar').classList.contains('active')) renderCatalogo();
+    if(document.getElementById('panel-catalogo').classList.contains('active')) renderGestionCatalogo();
   }).catch(function(e){
     console.warn('No se pudo cargar catálogo de Firebase:', e);
     catalogoActivo = null;
@@ -1007,11 +1005,8 @@ function renderGestionCatalogo(){
   var tbody = document.getElementById('catGestionBody');
   tbody.innerHTML = vis.map(function(t){
     var bc = badgeCls[t.frecuencia] || '';
-    var isFirebase = catalogoActivo !== null;
-    var btns = isFirebase
-      ? '<button class="btn btn-blue btn-sm" onclick="abrirModalCat(\''+escH(t.id)+'\')">✏️</button> '
-        + '<button class="btn btn-red btn-sm" onclick="eliminarTareaFirebase(\''+escH(t.id)+'\')">🗑</button>'
-      : '<span style="font-size:0.7rem;color:rgba(255,255,255,0.25)">Importa para editar</span>';
+    var btns = '<button class="btn btn-blue btn-sm" onclick="abrirModalCat(\''+escH(t.id)+'\')">✏️</button> '
+      + (catalogoActivo !== null ? '<button class="btn btn-red btn-sm" onclick="eliminarTareaFirebase(\''+escH(t.id)+'\')">🗑</button>' : '');
     return '<tr>'
       + '<td style="font-weight:600">'+escH(t.maquina||'')+'</td>'
       + '<td style="color:rgba(255,255,255,0.5)">'+escH(t.subtipo||'')+'</td>'
@@ -1071,13 +1066,23 @@ function guardarTareaFirebase(){
 
   var id = catEditId;
   if(!id){
-    /* Nueva tarea: generar id único */
     var num = Date.now();
     id = 'CAT-' + num;
   }
   var obj = { id:id, maquina:maquina, subtipo:subtipo, tarea:tarea, frecuencia:frecuencia, instancia:instancia||maquina };
 
-  DB.ref('catalogo/'+id).set(obj).then(function(){
+  /* Si el catálogo no está en Firebase aún, importar la base completa primero */
+  var preImport = (catalogoActivo === null)
+    ? (function(){
+        var base = {};
+        CATALOGO.forEach(function(t){ base[t.id] = t; });
+        return DB.ref('catalogo').set(base).then(function(){ catalogoActivo = CATALOGO.slice(); });
+      })()
+    : Promise.resolve();
+
+  preImport.then(function(){
+  return DB.ref('catalogo/'+id).set(obj);
+  }).then(function(){
     cerrarModalCat();
     /* Actualizar array local */
     if(catalogoActivo === null) catalogoActivo = [];
