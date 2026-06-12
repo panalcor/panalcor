@@ -456,18 +456,21 @@ function switchTab(name){
 
 // ── ASIGNAR ──
 function renderCatalogo(){
-  var maq=document.getElementById('asigFiltMaq').value;
-  var freq=document.getElementById('asigFiltFreq').value;
-  var q=(document.getElementById('asigSearch').value||'').toLowerCase().trim();
-  var items=getCatalogo().filter(function(c){
+  var body = document.getElementById('catalogoBody');
+  if(!body) return;
+  var maq  = (document.getElementById('asigFiltMaq')||{}).value||'';
+  var freq = (document.getElementById('asigFiltFreq')||{}).value||'';
+  var q    = ((document.getElementById('asigSearch')||{}).value||'').toLowerCase().trim();
+  var items = getCatalogo().filter(function(c){
     return (!maq||c.maquina===maq)&&(!freq||c.frecuencia===freq)&&
       (!q||(c.tarea+' '+c.maquina+' '+(c.subtipo||'')).toLowerCase().indexOf(q)>=0);
   });
-  document.getElementById('asigCount').textContent=items.length+' tareas';
-  document.getElementById('catalogoBody').innerHTML=items.map(function(c){
-    var sel=selectedIds.has(c.id);
-    var _inst=c.instancias||[c.instancia||c.maquina];
-    var instText=_inst.length>1?_inst[0]+'… ('+_inst.length+')':(_inst[0]||'—');
+  var cnt = document.getElementById('asigCount');
+  if(cnt) cnt.textContent = items.length+' tareas';
+  body.innerHTML = items.map(function(c){
+    var sel  = selectedIds.has(c.id);
+    var _inst = c.instancias||[c.instancia||c.maquina];
+    var instText = _inst.length>1?_inst[0]+'… ('+_inst.length+')':(_inst[0]||'—');
     return '<tr class="'+(sel?'row-sel':'')+'" data-id="'+c.id+'">'
       +'<td><input type="checkbox" '+(sel?'checked':'')+' onclick="toggleSel(\''+c.id+'\',this.checked)"></td>'
       +'<td><b style="color:var(--gold-light);font-size:0.82rem">'+c.maquina+'</b></td>'
