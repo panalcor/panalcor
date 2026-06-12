@@ -931,12 +931,14 @@ function getCatalogo(){
 function cargarCatalogoFirebase(){
   DB.ref('catalogo').once('value').then(function(snap){
     var val = snap.val();
-    if(val && typeof val === 'object'){
-      /* Firebase devuelve objeto {id: {...}, ...} → convertir a array */
+    if(val && typeof val === 'object' && Object.keys(val).length > 0){
       catalogoActivo = Object.values(val);
-      console.log('Catálogo cargado desde Firebase:', catalogoActivo.length, 'tareas');
     } else {
-      catalogoActivo = null; /* usar embebido */
+      /* Firebase vacío — importar catálogo base automáticamente */
+      var base = {};
+      CATALOGO.forEach(function(t){ base[t.id] = t; });
+      DB.ref('catalogo').set(base).catch(function(){});
+      catalogoActivo = CATALOGO.slice();
     }
     if(document.getElementById('panel-asignar').classList.contains('active')) renderCatalogo();
     if(document.getElementById('panel-catalogo').classList.contains('active')) renderGestionCatalogo();
