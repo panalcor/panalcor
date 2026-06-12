@@ -1123,7 +1123,7 @@ function guardarTareaFirebase(){
     var num = Date.now();
     id = 'CAT-' + num;
   }
-  var obj = { id:id, maquina:maquina, subtipo:subtipo, tarea:tarea, frecuencia:frecuencia, instancia:instancia||maquina };
+  var obj = { id:id, maquina:maquina, tipo:maquina, subtipo:subtipo, tarea:tarea, frecuencia:frecuencia, instancia:instancia||maquina };
 
   /* Si el catálogo no está en Firebase aún, importar la base completa primero */
   var preImport = (catalogoActivo === null)
