@@ -320,8 +320,9 @@ if('serviceWorker' in navigator){
       </div>
     </div>
     <div class="vista-tabs">
-      <button class="vtab active" id="vtab-tareas"  onclick="switchVista('tareas')">📋 Mis Tareas</button>
-      <button class="vtab"        id="vtab-averias" onclick="switchVista('averias')">🔧 Mis Averías</button>
+      <button class="vtab active" id="vtab-tareas"   onclick="switchVista('tareas')">📋 Mis Tareas</button>
+      <button class="vtab"        id="vtab-historial" onclick="switchVista('historial')">🔍 Buscar Averías</button>
+      <button class="vtab"        id="vtab-averias"  onclick="switchVista('averias')">🔧 Mis Averías</button>
       <button class="vtab" onclick="abrirPedidoModal()" style="background:rgba(243,156,18,0.12);border-color:rgba(243,156,18,0.35);color:#f0c040">📦 Pedir</button>
     </div>
     <div id="mesWrap">
@@ -351,6 +352,30 @@ if('serviceWorker' in navigator){
         <p>Has terminado todas tus tareas de este período.</p>
       </div>
       <div id="tareasWrap"></div>
+    </div>
+
+    <!-- ── PANEL BUSCAR AVERÍAS ── -->
+    <div id="panelHistorial" style="display:none;padding-bottom:40px">
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+        <input type="search" id="hBusq" placeholder="🔍 Buscar por máquina, parte o descripción..." oninput="renderBuscadorAverias()"
+          style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#fff;font-size:0.95rem;box-sizing:border-box">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <select id="hFiltMaq" onchange="renderBuscadorAverias()"
+            style="flex:1;min-width:130px;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#fff;font-size:0.85rem">
+            <option value="">Todas las máquinas</option>
+          </select>
+          <select id="hFiltTipo" onchange="renderBuscadorAverias()"
+            style="flex:1;min-width:130px;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#fff;font-size:0.85rem">
+            <option value="">Todos los tipos</option>
+            <option>MECÁNICA</option><option>ELÉCTRICA</option><option>NEUMÁTICA</option>
+            <option>ELECTRÓNICA</option><option>HIDRÁULICA</option><option>LUBRICACIÓN</option><option>OTROS</option>
+          </select>
+        </div>
+        <div id="hCount" style="font-size:0.78rem;color:rgba(255,255,255,0.35);padding-left:2px"></div>
+      </div>
+      <div id="hResultados">
+        <div class="empty-state"><div class="ico">🔍</div><p>Escribe para buscar</p></div>
+      </div>
     </div>
 
     <!-- ── PANEL MIS AVERÍAS ── -->
@@ -1349,12 +1374,93 @@ var _vistaActual = 'tareas';
 
 function switchVista(v){
   _vistaActual = v;
-  document.getElementById('vtab-tareas').classList.toggle('active',  v === 'tareas');
-  document.getElementById('vtab-averias').classList.toggle('active', v === 'averias');
-  document.getElementById('panelTareas').style.display  = v === 'tareas'  ? '' : 'none';
-  document.getElementById('panelAverias').style.display = v === 'averias' ? '' : 'none';
-  document.getElementById('mesWrap').style.display      = v === 'tareas'  ? '' : 'none';
-  if(v === 'averias') cargarMisAverias();
+  document.getElementById('vtab-tareas').classList.toggle('active',    v === 'tareas');
+  document.getElementById('vtab-averias').classList.toggle('active',   v === 'averias');
+  document.getElementById('vtab-historial').classList.toggle('active', v === 'historial');
+  document.getElementById('panelTareas').style.display    = v === 'tareas'    ? '' : 'none';
+  document.getElementById('panelAverias').style.display   = v === 'averias'   ? '' : 'none';
+  document.getElementById('panelHistorial').style.display = v === 'historial' ? '' : 'none';
+  document.getElementById('mesWrap').style.display        = v === 'tareas'    ? '' : 'none';
+  if(v === 'averias')   cargarMisAverias();
+  if(v === 'historial') cargarBuscadorAverias();
+}
+
+// ══════════════════════════════════════════════════════
+// BUSCADOR GLOBAL DE AVERÍAS
+// ══════════════════════════════════════════════════════
+var _hAverias = null; // null = no cargado aún
+
+function cargarBuscadorAverias(){
+  if(_hAverias !== null){ _poblarFiltroMaq(); renderBuscadorAverias(); return; }
+  document.getElementById('hResultados').innerHTML =
+    '<div class="empty-state"><div class="ico">⏳</div><p>Cargando...</p></div>';
+  DB.ref('averias').orderByChild('estado').equalTo('RESUELTA').once('value').then(function(snap){
+    var data = snap.val() || {};
+    _hAverias = Object.values(data).filter(function(a){ return a && a.maqNombre && a.accion; });
+    _hAverias.sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+    _poblarFiltroMaq();
+    renderBuscadorAverias();
+  }).catch(function(){
+    document.getElementById('hResultados').innerHTML =
+      '<div class="empty-state"><div class="ico">❌</div><p>Error de conexión</p></div>';
+  });
+}
+
+function _poblarFiltroMaq(){
+  var sel = document.getElementById('hFiltMaq');
+  var val = sel.value;
+  var maqSet = {};
+  (_hAverias||[]).forEach(function(a){ if(a.maqNombre) maqSet[a.maqNombre]=1; });
+  sel.innerHTML = '<option value="">Todas las máquinas</option>';
+  Object.keys(maqSet).sort().forEach(function(m){
+    sel.innerHTML += '<option'+(m===val?' selected':'')+' value="'+m+'">'+m+'</option>';
+  });
+}
+
+function renderBuscadorAverias(){
+  if(!_hAverias){ cargarBuscadorAverias(); return; }
+  var q    = (document.getElementById('hBusq').value||'').toLowerCase().trim();
+  var maq  = document.getElementById('hFiltMaq').value;
+  var tipo = document.getElementById('hFiltTipo').value;
+
+  var lista = _hAverias.filter(function(a){
+    if(maq  && a.maqNombre !== maq)  return false;
+    if(tipo && a.tipo      !== tipo) return false;
+    if(q){
+      var hay = ((a.maqNombre||'')+(a.parte||'')+(a.descripcion||'')+(a.accion||'')).toLowerCase();
+      if(hay.indexOf(q) < 0) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('hCount').textContent = lista.length + ' avería' + (lista.length!==1?'s':'') + ' encontrada' + (lista.length!==1?'s':'');
+
+  if(!lista.length){
+    document.getElementById('hResultados').innerHTML =
+      '<div class="empty-state"><div class="ico">🔍</div><p>Sin resultados</p></div>';
+    return;
+  }
+
+  document.getElementById('hResultados').innerHTML = lista.slice(0,50).map(function(a){
+    var fecha = a.ts ? new Date(a.ts).toLocaleDateString('es-ES') : '—';
+    var mecsStr = (a.mecanicos||[]).join(', ') || '—';
+    var tiempoStr = a.tiempoMin ? (Math.floor(a.tiempoMin/60)+'h '+(a.tiempoMin%60)+'min') : '';
+    return '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:14px 16px;margin-bottom:10px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px">'
+      +'<div>'
+      +'<div style="font-weight:700;font-size:0.95rem;color:var(--gold, #c9a227)">'+a.maqNombre+'</div>'
+      +'<div style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin-top:2px">'+(a.parte||'—')+(a.tipo?' · '+a.tipo:'')+'</div>'
+      +'</div>'
+      +'<div style="text-align:right;flex-shrink:0">'
+      +'<div style="font-size:0.75rem;color:rgba(255,255,255,0.35)">'+fecha+'</div>'
+      +(tiempoStr?'<div style="font-size:0.75rem;color:rgba(255,255,255,0.3)">⏱ '+tiempoStr+'</div>':'')
+      +'</div>'
+      +'</div>'
+      +'<div style="font-size:0.88rem;color:rgba(255,255,255,0.75);margin-bottom:8px"><b>Problema:</b> '+a.descripcion+'</div>'
+      +'<div style="font-size:0.88rem;color:rgba(46,204,113,0.9)"><b>✅ Solución:</b> '+a.accion+'</div>'
+      +'<div style="font-size:0.72rem;color:rgba(255,255,255,0.3);margin-top:8px">👷 '+mecsStr+'</div>'
+      +'</div>';
+  }).join('') + (lista.length>50?'<div style="text-align:center;font-size:0.8rem;color:rgba(255,255,255,0.3);padding:10px">Mostrando 50 de '+lista.length+' resultados — afina la búsqueda</div>':'');
 }
 
 // ══════════════════════════════════════════════════════
