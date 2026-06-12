@@ -438,7 +438,8 @@ function renderCatalogo(){
   document.getElementById('asigCount').textContent=items.length+' tareas';
   document.getElementById('catalogoBody').innerHTML=items.map(function(c){
     var sel=selectedIds.has(c.id);
-    var instText=c.instancias.length>1?c.instancias[0]+'… ('+c.instancias.length+')':c.instancias[0];
+    var _inst=c.instancias||[c.instancia||c.maquina];
+    var instText=_inst.length>1?_inst[0]+'… ('+_inst.length+')':(_inst[0]||'—');
     return '<tr class="'+(sel?'row-sel':'')+'" data-id="'+c.id+'">'
       +'<td><input type="checkbox" '+(sel?'checked':'')+' onclick="toggleSel(\''+c.id+'\',this.checked)"></td>'
       +'<td><b style="color:var(--gold-light);font-size:0.82rem">'+c.maquina+'</b></td>'
