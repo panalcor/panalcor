@@ -282,7 +282,7 @@ if('serviceWorker' in navigator){
       <button class="btn btn-gold" onclick="abrirModalCat(null)">+ Nueva tarea</button>
       <button class="btn" onclick="exportarCatalogoJSON()" style="background:rgba(46,204,113,0.15);border:1px solid rgba(46,204,113,0.4);color:#2ecc71" title="Descargar copia de seguridad del catálogo actual">⬇️ Exportar copia</button>
       <button class="btn" onclick="exportarCatalogoExcel()" style="background:rgba(52,152,219,0.15);border:1px solid rgba(52,152,219,0.4);color:#74b9ff" title="Exportar catálogo a Excel">📊 Exportar Excel</button>
-      <button class="btn btn-blue" id="btnMigrar" onclick="migrarCatalogoAFirebase()">⬆️ Importar base</button>
+      <button class="btn btn-blue" id="btnMigrar" onclick="if(prompt('Contraseña para importar catálogo:')!=='panalcor2026'){showToast('❌ Contraseña incorrecta');return;}migrarCatalogoAFirebase()">⬆️ Importar base</button>
     </div>
     <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);margin-bottom:10px">
       <span id="catFuenteLabel"></span>
