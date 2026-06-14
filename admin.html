@@ -4842,6 +4842,14 @@ function regMsg(txt, tipo){
   setTimeout(function(){ el.innerHTML=''; }, 4000);
 }
 
+function regBorrar(id){
+  if(!confirm('¿Eliminar esta avería?\n\n'+id)) return;
+  DB.ref('averias/'+id).remove().then(function(){
+    regMsg('🗑 Avería eliminada', 'ok');
+    regCargarHistorial();
+  }).catch(function(e){ regMsg('❌ Error: '+e.message, 'err'); });
+}
+
 function regCargarHistorial(){
   DB.ref('averias').orderByChild('registradaManualmente').equalTo(true).limitToLast(20).once('value').then(function(snap){
     var data = snap.val() || {};
@@ -4850,10 +4858,11 @@ function regCargarHistorial(){
     document.getElementById('regHistorial').innerHTML = lista.map(function(a){
       var fecha = a.fecha || (a.ts ? new Date(a.ts).toLocaleDateString('es-ES') : '—');
       return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);gap:10px">'
-        +'<div><b style="color:var(--gold-light)">'+a.maqNombre+'</b>'
+        +'<div style="flex:1;min-width:0"><b style="color:var(--gold-light)">'+a.maqNombre+'</b>'
         +' <span style="color:rgba(255,255,255,0.4);font-size:0.78rem">'+a.parte+' · '+a.tipo+'</span>'
         +'<div style="font-size:0.8rem;color:rgba(255,255,255,0.6);margin-top:2px">'+a.descripcion.substring(0,80)+(a.descripcion.length>80?'…':'')+'</div></div>'
-        +'<div style="text-align:right;flex-shrink:0;font-size:0.75rem;color:rgba(255,255,255,0.35)">'+fecha+'<br>'+(a.mecanicos||[]).join(', ')+'</div>'
+        +'<div style="text-align:right;flex-shrink:0;font-size:0.75rem;color:rgba(255,255,255,0.35);margin-right:10px">'+fecha+'<br>'+(a.mecanicos||[]).join(', ')+'</div>'
+        +'<button onclick="regBorrar(\''+a.id+'\')" style="background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);color:#e74c3c;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:0.8rem;flex-shrink:0">🗑</button>'
         +'</div>';
     }).join('');
   });
