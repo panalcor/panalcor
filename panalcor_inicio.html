@@ -738,80 +738,75 @@ function _buildBtns(rol, nombre){
   var adm = (rol === 'admin');
   var n = (nombre||'').toUpperCase();
   var verFrio = adm || n==='GREGORIO' || n==='JOSE' || n==='JAVIER H';
-  var badge = '<span id="badgeAverias" style="display:none;position:absolute;top:8px;right:8px;background:#e74c3c;color:#fff;border-radius:50%;width:22px;height:22px;font-size:0.72rem;font-weight:900;line-height:22px;text-align:center;font-family:Barlow,sans-serif"></span>';
+  // Estilo base para botones fila compactos
+  var row = 'grid-column:1/-1;flex-direction:row;padding:0.8rem 1.4rem;gap:14px;align-items:center;text-decoration:none';
+  var ico = 'width:28px;height:28px;flex-shrink:0';
+  var badgeAv = '<span id="badgeAverias" style="display:none;position:absolute;top:8px;right:8px;background:#e74c3c;color:#fff;border-radius:50%;width:20px;height:20px;font-size:0.68rem;font-weight:900;line-height:20px;text-align:center;font-family:Barlow,sans-serif"></span>';
+  var badgeOt = '<span id="badgeOtros" style="display:none;position:absolute;top:8px;right:8px;background:#c9a227;color:#0d1b2a;border-radius:50%;width:20px;height:20px;font-size:0.68rem;font-weight:900;line-height:20px;text-align:center;font-family:Barlow,sans-serif"></span>';
+
   if(rol === 'mecanico'){
-    h += '<a class="btn btn-mec" href="landing.html" style="grid-column:1/-1;flex-direction:row;padding:0.9rem 1.5rem;gap:16px;justify-content:center">'
-       + '<div class="btn-icon" style="width:32px;height:32px">'+_SVGS.wrench+'</div>'
+    h += '<a class="btn btn-mec" href="landing.html" style="'+row+'">'
+       + '<div class="btn-icon" style="'+ico+'">'+_SVGS.wrench+'</div>'
        + '<div><div class="btn-label">Menú Mecánicos</div><div class="btn-sublabel">Averías, documentos y más</div></div></a>';
   }
   if(adm){
-    h += '<a class="btn btn-mec" href="landing.html" style="grid-column:1/-1;flex-direction:row;padding:0.9rem 1.5rem;gap:16px;justify-content:center">'
-       + '<div class="btn-icon" style="width:32px;height:32px">'+_SVGS.wrench+'</div>'
+    h += '<a class="btn btn-mec" href="landing.html" style="'+row+'">'
+       + '<div class="btn-icon" style="'+ico+'">'+_SVGS.wrench+'</div>'
        + '<div><div class="btn-label">Mecanicos</div><div class="btn-sublabel">Mantenimientos</div></div></a>';
-  }
-  if(adm){
-    h += '<a class="btn btn-admin" href="admin.html">'
-       + '<div class="btn-icon">'+_SVGS.shield+'</div>'
-       + '<div class="btn-label">Administrador</div><div class="btn-sublabel">Panel Control</div></a>';
+    h += '<a class="btn btn-admin" href="admin.html" style="'+row+'">'
+       + '<div class="btn-icon" style="'+ico+'">'+_SVGS.shield+'</div>'
+       + '<div><div class="btn-label">Administrador</div><div class="btn-sublabel">Panel Control</div></div></a>';
   }
   if(rol === 'mecanico' || adm){
-    h += '<a class="btn btn-prev" href="mis_tareas.html" style="grid-column:1/-1;flex-direction:row;padding:1.2rem 1.5rem;gap:16px;justify-content:center;border-color:rgba(52,152,219,0.3)">'
-       + '<div class="btn-icon" style="width:40px;height:40px;color:#3498db">'+_SVGS.task+'</div>'
+    h += '<a class="btn btn-prev" href="mis_tareas.html" style="'+row+';border-color:rgba(52,152,219,0.3)">'
+       + '<div class="btn-icon" style="'+ico+';color:#3498db">'+_SVGS.task+'</div>'
        + '<div><div class="btn-label" style="color:#74b9ff">Mis Tareas</div>'
        + '<div class="btn-sublabel" style="color:rgba(52,152,219,0.6)">Ver tareas asignadas</div></div></a>';
-    h += '<a class="btn" href="mecanicos.html#mantenimiento" style="grid-column:1/-1;flex-direction:row;padding:1.2rem 1.5rem;gap:16px;justify-content:center;border-color:rgba(39,174,96,0.35);background:rgba(39,174,96,0.07);text-decoration:none">'
-       + '<div class="btn-icon" style="width:40px;height:40px;color:#2ecc71">📅</div>'
+    h += '<a class="btn" href="mecanicos.html#mantenimiento" style="'+row+';border-color:rgba(39,174,96,0.35);background:rgba(39,174,96,0.07)">'
+       + '<div class="btn-icon" style="'+ico+';color:#2ecc71">📅</div>'
        + '<div><div class="btn-label" style="color:#5dde95">Mantenimiento Diario</div>'
        + '<div class="btn-sublabel" style="color:rgba(39,174,96,0.6)">Checklist de revisiones del día</div></div></a>';
   }
   if(rol === 'encargado' || adm){
-    h += '<a class="btn" href="encargados.html" style="grid-column:1/-1;flex-direction:row;padding:1.2rem 1.5rem;gap:16px;justify-content:center;border-color:rgba(155,89,182,0.3);background:rgba(155,89,182,0.07)">'
-       + '<div class="btn-icon" style="width:40px;height:40px;color:#9b59b6">'+_SVGS.group+'</div>'
+    h += '<a class="btn" href="encargados.html" style="'+row+';border-color:rgba(155,89,182,0.3);background:rgba(155,89,182,0.07)">'
+       + '<div class="btn-icon" style="'+ico+';color:#9b59b6">'+_SVGS.group+'</div>'
        + '<div><div class="btn-label" style="color:#c39bd3">Encargados</div>'
        + '<div class="btn-sublabel" style="color:rgba(155,89,182,0.6)">Panel de encargados</div></div></a>';
   }
   if(rol === 'mecanico' || adm){
-    h += '<a class="btn btn-averia" href="averias.html" style="position:relative">'
-       + '<div class="btn-icon">'+_SVGS.alert+'</div>'
-       + '<div><div class="btn-label">Averias</div>'
-       + '<div class="btn-sublabel">Registro de incidencias</div></div>'
-       + badge + '</a>';
-    h += '<a class="btn" href="mis_tareas.html#otros" style="position:relative;grid-column:1/-1;flex-direction:row;padding:1.2rem 1.5rem;gap:16px;justify-content:center;border-color:rgba(201,162,39,0.3);background:rgba(201,162,39,0.06);text-decoration:none">'
-       + '<div class="btn-icon" style="width:40px;height:40px;color:var(--gold)">🔩</div>'
+    h += '<a class="btn btn-averia" href="averias.html" style="position:relative;'+row+'">'
+       + '<div class="btn-icon" style="'+ico+'">'+_SVGS.alert+'</div>'
+       + '<div><div class="btn-label">Averias</div><div class="btn-sublabel">Registro de incidencias</div></div>'
+       + badgeAv + '</a>';
+    h += '<a class="btn" href="mis_tareas.html#otros" style="position:relative;'+row+';border-color:rgba(201,162,39,0.3);background:rgba(201,162,39,0.06)">'
+       + '<div class="btn-icon" style="'+ico+';color:var(--gold)">🔩</div>'
        + '<div><div class="btn-label" style="color:var(--gold)">Otros Trabajos</div>'
        + '<div class="btn-sublabel" style="color:rgba(201,162,39,0.6)">Trabajos no planificados</div></div>'
-       + '<span id="badgeOtros" style="display:none;position:absolute;top:8px;right:8px;background:#c9a227;color:#0d1b2a;border-radius:50%;width:22px;height:22px;font-size:0.72rem;font-weight:900;line-height:22px;text-align:center;font-family:Barlow,sans-serif"></span>'
-       + '</a>';
+       + badgeOt + '</a>';
   }
   if(verFrio){
-    h += '<a class="btn" href="frio_mec.html" style="border-color:rgba(100,210,255,0.35);background:rgba(100,210,255,0.07);text-decoration:none">'
-       + '<div class="btn-icon" style="color:#64d2ff">❄️</div>'
-       + '<div class="btn-label" style="color:#64d2ff">Frío</div>'
-       + '<div class="btn-sublabel" style="color:rgba(100,210,255,0.6)">Lecturas y equipos</div></a>';
+    h += '<a class="btn" href="frio_mec.html" style="'+row+';border-color:rgba(100,210,255,0.35);background:rgba(100,210,255,0.07)">'
+       + '<div class="btn-icon" style="'+ico+';color:#64d2ff">❄️</div>'
+       + '<div><div class="btn-label" style="color:#64d2ff">Frío</div>'
+       + '<div class="btn-sublabel" style="color:rgba(100,210,255,0.6)">Lecturas y equipos</div></div></a>';
   }
   if(rol === 'mecanico'){
-    h += '<button class="btn" onclick="abrirSugerenciaInicio()" style="border-color:rgba(155,89,182,0.35);background:rgba(155,89,182,0.07);cursor:pointer;font-family:inherit">'
-       + '<div class="btn-icon" style="color:#c39bd3">💬</div>'
-       + '<div class="btn-label" style="color:#c39bd3">Sugerencias</div>'
-       + '<div class="btn-sublabel" style="color:rgba(155,89,182,0.6)">Escribe al admin</div></button>';
-  }
-  if(rol === 'mecanico'){
-    h += '<button class="btn" onclick="abrirBuscadorRepInicio()" style="border-color:rgba(52,152,219,0.35);background:rgba(52,152,219,0.07);cursor:pointer;font-family:inherit">'
-       + '<div class="btn-icon" style="color:#74b9ff">🔍</div>'
-       + '<div class="btn-label" style="color:#74b9ff">Repuestos</div>'
-       + '<div class="btn-sublabel" style="color:rgba(52,152,219,0.6)">Buscar referencia</div></button>';
-  }
-  if(rol === 'mecanico'){
-    h += '<a class="btn" href="mecanicos.html#formacion" style="border-color:rgba(155,89,182,0.35);background:rgba(155,89,182,0.07);text-decoration:none">'
-       + '<div class="btn-icon" style="color:#c39bd3">🎓</div>'
-       + '<div class="btn-label" style="color:#c39bd3">Formación</div>'
-       + '<div class="btn-sublabel" style="color:rgba(155,89,182,0.6)">Cursos y manuales</div></a>';
-  }
-  if(rol === 'mecanico'){
-    h += '<button class="btn" onclick="abrirPedidoInicio()" style="border-color:rgba(243,156,18,0.35);background:rgba(243,156,18,0.07);cursor:pointer;font-family:inherit">'
-       + '<div class="btn-icon" style="color:#f0c040">📦</div>'
-       + '<div class="btn-label" style="color:#f0c040">Pedir repuesto</div>'
-       + '<div class="btn-sublabel" style="color:rgba(243,156,18,0.6)">Solicitud al admin</div></button>';
+    h += '<button class="btn" onclick="abrirSugerenciaInicio()" style="'+row+';border-color:rgba(155,89,182,0.35);background:rgba(155,89,182,0.07);cursor:pointer;font-family:inherit">'
+       + '<div class="btn-icon" style="'+ico+';color:#c39bd3">💬</div>'
+       + '<div><div class="btn-label" style="color:#c39bd3">Sugerencias</div>'
+       + '<div class="btn-sublabel" style="color:rgba(155,89,182,0.6)">Escribe al admin</div></div></button>';
+    h += '<button class="btn" onclick="abrirBuscadorRepInicio()" style="'+row+';border-color:rgba(52,152,219,0.35);background:rgba(52,152,219,0.07);cursor:pointer;font-family:inherit">'
+       + '<div class="btn-icon" style="'+ico+';color:#74b9ff">🔍</div>'
+       + '<div><div class="btn-label" style="color:#74b9ff">Repuestos</div>'
+       + '<div class="btn-sublabel" style="color:rgba(52,152,219,0.6)">Buscar referencia</div></div></button>';
+    h += '<a class="btn" href="mecanicos.html#formacion" style="'+row+';border-color:rgba(155,89,182,0.35);background:rgba(155,89,182,0.07)">'
+       + '<div class="btn-icon" style="'+ico+';color:#c39bd3">🎓</div>'
+       + '<div><div class="btn-label" style="color:#c39bd3">Formación</div>'
+       + '<div class="btn-sublabel" style="color:rgba(155,89,182,0.6)">Cursos y manuales</div></div></a>';
+    h += '<button class="btn" onclick="abrirPedidoInicio()" style="'+row+';border-color:rgba(243,156,18,0.35);background:rgba(243,156,18,0.07);cursor:pointer;font-family:inherit">'
+       + '<div class="btn-icon" style="'+ico+';color:#f0c040">📦</div>'
+       + '<div><div class="btn-label" style="color:#f0c040">Pedir repuesto</div>'
+       + '<div class="btn-sublabel" style="color:rgba(243,156,18,0.6)">Solicitud al admin</div></div></button>';
   }
   return h;
 }
