@@ -439,7 +439,7 @@ var tareasActivas = TAREAS.slice(); // fallback al array base
 function cargarTareasDiarias(){
   if(typeof firebase === 'undefined' || !firebase.apps.length) return;
   var DB2 = firebase.database();
-  DB2.ref('tareas_diarias').once('value').then(function(snap){
+  DB2.ref('tareas_diarias').on('value', function(snap){
     var val = snap.val();
     if(val && typeof val === 'object'){
       tareasActivas = Object.values(val).sort(function(a,b){
@@ -447,7 +447,7 @@ function cargarTareasDiarias(){
       });
       renderTasks();
     }
-  }).catch(function(){ /* usa tareasActivas base */ });
+  });
 }
 
 // ══════════════════════════════════════
