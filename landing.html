@@ -165,9 +165,17 @@ if('serviceWorker' in navigator){
 <body>
 
 <!-- Barra mecánico (visible en choice y docs) -->
-<div id="mecTopBar" style="display:none;position:fixed;top:0;left:0;right:0;background:rgba(13,27,42,0.96);border-bottom:1px solid rgba(46,204,113,0.3);padding:9px 16px;z-index:200;backdrop-filter:blur(6px)">
-  <span style="font-size:0.9rem;font-weight:700;color:#2ecc71">&#x1F477; <span id="mecTopBarName"></span></span>
-  <span style="font-size:0.72rem;color:rgba(255,255,255,0.3);margin-left:10px" id="mecTopBarMaq"></span>
+<div id="mecTopBar" style="display:none;position:fixed;top:0;left:0;right:0;background:rgba(13,27,42,0.96);border-bottom:1px solid rgba(46,204,113,0.3);padding:9px 16px;z-index:200;backdrop-filter:blur(6px);align-items:center;justify-content:space-between;gap:10px">
+  <div style="display:flex;align-items:center;gap:10px;min-width:0">
+    <span style="font-size:0.9rem;font-weight:700;color:#2ecc71">&#x1F477; <span id="mecTopBarName"></span></span>
+    <span style="font-size:0.72rem;color:rgba(255,255,255,0.3)" id="mecTopBarMaq"></span>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+    <a href="panalcor_inicio.html" title="Inicio" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;background:rgba(201,162,39,0.12);border:1.5px solid rgba(201,162,39,0.4);transition:all .2s;text-decoration:none">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z" fill="rgba(201,162,39,0.25)" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 21V15H15V21" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/></svg>
+    </a>
+    <button onclick="cambiarMecanico()" title="Cerrar sesión" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;background:rgba(231,76,60,0.1);border:1.5px solid rgba(231,76,60,0.35);color:#e74c3c;cursor:pointer;font-size:1rem">⏏</button>
+  </div>
 </div>
 
 <!-- ══ PANTALLA 1: LOGIN ══ -->
@@ -751,7 +759,7 @@ function mostrarChoice(){
   var bar  = document.getElementById('mecTopBar');
   var name = document.getElementById('mecTopBarName');
   var maq  = document.getElementById('mecTopBarMaq');
-  if(bar)  bar.style.display  = 'block';
+  if(bar)  bar.style.display  = 'flex';
   if(name) name.textContent   = mecActual;
   if(maq)  maq.textContent    = maqActual ? maqActual.n : '';
   // Dar espacio para la barra fija
