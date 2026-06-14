@@ -598,7 +598,13 @@ DB.ref('config/encargados_pwd').once('value')
 function getSession(){
   try{
     var s = JSON.parse(localStorage.getItem(PS_KEY) || 'null');
-    return (s && Date.now() < s.expires) ? s : null;
+    if(s && Date.now() < s.expires) return s;
+    // Fallback: sesión de mecánico guardada desde landing.html o mis_tareas.html
+    var m = JSON.parse(localStorage.getItem('mecSesion') || 'null');
+    if(m && m.nombre && (m.expires === null || Date.now() < m.expires)){
+      return {nombre: m.nombre, rol: 'mecanico', expires: Date.now() + 30*24*3600*1000};
+    }
+    return null;
   }catch(e){ return null; }
 }
 
