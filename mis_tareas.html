@@ -187,6 +187,27 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
 .banner-motiv-btn{padding:16px 48px;background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a;border:none;border-radius:12px;font-family:'Barlow',sans-serif;font-size:1.1rem;font-weight:900;letter-spacing:0.08em;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent}
 .banner-motiv-btn:active{transform:scale(0.96)}
 
+/* ── OTROS TRABAJOS ── */
+.ot-lbl{font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:0.08em;text-transform:uppercase;display:block;margin-bottom:5px}
+.ot-card{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.08);border-radius:12px;margin-bottom:10px;overflow:hidden;transition:border-color .2s}
+.ot-card.abierto{border-left:3px solid var(--red)}
+.ot-card.cerrado{border-left:3px solid var(--green)}
+.ot-card.urgente{border-left:3px solid #ff4444}
+.ot-head{padding:12px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ot-head:active{background:rgba(255,255,255,0.03)}
+.ot-titulo{font-size:0.95rem;font-weight:700;margin-bottom:4px;line-height:1.3}
+.ot-meta{font-size:0.72rem;color:rgba(255,255,255,0.38);display:flex;flex-wrap:wrap;gap:6px}
+.ot-badge{font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:20px}
+.ot-badge.ab{background:rgba(231,76,60,0.2);color:var(--red);border:1px solid rgba(231,76,60,0.3)}
+.ot-badge.ce{background:rgba(46,204,113,0.2);color:var(--green);border:1px solid rgba(46,204,113,0.3)}
+.ot-badge.urg{background:rgba(255,68,68,0.2);color:#ff6666;border:1px solid rgba(255,68,68,0.4)}
+.ot-body{display:none;padding:0 14px 14px;border-top:1px solid rgba(255,255,255,0.06)}
+.ot-body.open{display:block}
+.ot-dl{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;margin-top:12px}
+.ot-dl-item .lbl{font-size:0.67rem;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:.08em}
+.ot-dl-item .val{font-size:0.85rem;color:var(--white);margin-top:1px}
+.ot-dl-item.full{grid-column:1/-1}
+
 /* ── TABLET LOGOUT ── */
 .tablet-logout-btn{display:none;padding:10px 20px;background:rgba(231,76,60,0.15);border:2px solid rgba(231,76,60,0.5);color:#e74c3c;border-radius:9px;font-family:'Barlow',sans-serif;font-size:0.9rem;font-weight:900;cursor:pointer;letter-spacing:0.06em;transition:all .2s;-webkit-tap-highlight-color:transparent}
 .tablet-logout-btn:active{background:rgba(231,76,60,0.35)}
@@ -320,9 +341,10 @@ if('serviceWorker' in navigator){
       </div>
     </div>
     <div class="vista-tabs">
-      <button class="vtab active" id="vtab-tareas"   onclick="switchVista('tareas')">📋 Mis Tareas</button>
-      <button class="vtab"        id="vtab-historial" onclick="switchVista('historial')">🔍 Buscar Averías</button>
-      <button class="vtab"        id="vtab-averias"  onclick="switchVista('averias')">🔧 Mis Averías</button>
+      <button class="vtab active" id="vtab-tareas"    onclick="switchVista('tareas')">📋 Mis Tareas</button>
+      <button class="vtab"        id="vtab-historial"  onclick="switchVista('historial')">🔍 Averías</button>
+      <button class="vtab"        id="vtab-averias"   onclick="switchVista('averias')">🔧 Mis Averías</button>
+      <button class="vtab"        id="vtab-otros"     onclick="switchVista('otros')">🔩 Otros Trabajos</button>
       <button class="vtab" onclick="abrirPedidoModal()" style="background:rgba(243,156,18,0.12);border-color:rgba(243,156,18,0.35);color:#f0c040">📦 Pedir</button>
     </div>
     <div id="mesWrap">
@@ -394,6 +416,33 @@ if('serviceWorker' in navigator){
       </div>
     </div>
 
+    <!-- ── PANEL OTROS TRABAJOS ── -->
+    <div id="panelOtros" style="display:none;padding-bottom:40px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="display:flex;gap:8px">
+          <button onclick="otrosFiltro('ABIERTO')" id="otrosBtn-ABIERTO"
+            style="padding:7px 14px;border-radius:8px;border:1px solid rgba(231,76,60,0.5);background:rgba(231,76,60,0.15);color:#e74c3c;font-family:Barlow,sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer">
+            🔴 Abiertos
+          </button>
+          <button onclick="otrosFiltro('CERRADO')" id="otrosBtn-CERRADO"
+            style="padding:7px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.55);font-family:Barlow,sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer">
+            ✅ Cerrados
+          </button>
+          <button onclick="otrosFiltro('')" id="otrosBtn-"
+            style="padding:7px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.35);font-family:Barlow,sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer">
+            Todos
+          </button>
+        </div>
+        <button onclick="abrirNuevoTrabajo()"
+          style="padding:8px 14px;background:linear-gradient(135deg,var(--gold),#a07d1a);border:none;color:#0d1b2a;border-radius:9px;font-family:Barlow,sans-serif;font-size:0.85rem;font-weight:900;cursor:pointer">
+          + Nuevo
+        </button>
+      </div>
+      <div id="otrosList">
+        <div class="empty-state"><div class="ico">⏳</div><p>Cargando...</p></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -429,6 +478,136 @@ if('serviceWorker' in navigator){
       </div>
       <button onclick="enviarPedido()" style="width:100%;padding:12px;background:linear-gradient(135deg,rgba(243,156,18,0.3),rgba(243,156,18,0.15));border:2px solid rgba(243,156,18,0.6);color:#f0c040;border-radius:10px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.95rem;font-weight:900">
         📦 ENVIAR SOLICITUD
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL NUEVO TRABAJO ══ -->
+<div id="otrosModalBg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:700;overflow-y:auto;padding:16px 14px">
+  <div style="max-width:500px;margin:auto;background:#1a2d42;border:1px solid rgba(201,162,39,0.35);border-radius:16px;overflow:hidden">
+    <div style="background:linear-gradient(135deg,#0a1520,#1a2d42);border-bottom:1px solid rgba(201,162,39,0.2);padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:1rem;font-weight:800;color:var(--gold-light)" id="otrosModalTit">🔩 Nuevo trabajo</div>
+      <button onclick="cerrarOtrosModal()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem">✕</button>
+    </div>
+    <div style="padding:16px 18px;display:flex;flex-direction:column;gap:11px">
+      <!-- Tarea -->
+      <div>
+        <label class="ot-lbl">DESCRIPCIÓN DEL TRABAJO *</label>
+        <textarea id="otTarea" rows="2" placeholder="¿Qué hay que hacer?"
+          style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 12px;font-family:Barlow,sans-serif;font-size:0.9rem;resize:none;box-sizing:border-box"></textarea>
+      </div>
+      <!-- Tipo y Prioridad -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label class="ot-lbl">TIPO *</label>
+          <select id="otTipo" style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 10px;font-family:Barlow,sans-serif;font-size:0.88rem;box-sizing:border-box">
+            <option value="">— Selecciona —</option>
+            <option>REPARACIÓN</option>
+            <option>MEJORA</option>
+            <option>INSTALACIÓN NUEVA</option>
+            <option>MODIFICACIÓN</option>
+            <option>MANTENIMIENTO</option>
+            <option>LIMPIEZA TÉCNICA</option>
+            <option>REVISIÓN</option>
+            <option>OTROS</option>
+          </select>
+        </div>
+        <div>
+          <label class="ot-lbl">PRIORIDAD</label>
+          <select id="otPrioridad" style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 10px;font-family:Barlow,sans-serif;font-size:0.88rem;box-sizing:border-box">
+            <option value="NORMAL">Normal</option>
+            <option value="URGENTE">🔴 Urgente</option>
+            <option value="PUEDE ESPERAR">Puede esperar</option>
+          </select>
+        </div>
+      </div>
+      <!-- Zona -->
+      <div>
+        <label class="ot-lbl">ZONA DE TRABAJO *</label>
+        <select id="otZona" style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 10px;font-family:Barlow,sans-serif;font-size:0.88rem;box-sizing:border-box">
+          <option value="">— Selecciona zona —</option>
+          <option>OBRADOR</option>
+          <option>SILOS</option>
+          <option>HORNOS</option>
+          <option>ENVASADO</option>
+          <option>CÁMARAS</option>
+          <option>TÚNELES</option>
+          <option>FALSO TECHO</option>
+          <option>COMPRESORES</option>
+          <option>AGUA</option>
+          <option>TRUENO</option>
+          <option>OTROS</option>
+        </select>
+      </div>
+      <!-- Máquina afectada -->
+      <div>
+        <label class="ot-lbl">MÁQUINA AFECTADA (opcional)</label>
+        <input id="otMaquina" type="text" placeholder="Ej: FORMADORA 3, MAQ-012..."
+          style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 12px;font-family:Barlow,sans-serif;font-size:0.88rem;box-sizing:border-box">
+      </div>
+      <!-- Mecánicos que abren -->
+      <div>
+        <label class="ot-lbl">MECÁNICOS QUE ABREN *</label>
+        <div id="otMecsAbren" style="display:flex;flex-wrap:wrap;gap:8px;padding:8px;background:#0d1b2a;border:1px solid rgba(255,255,255,0.2);border-radius:8px"></div>
+      </div>
+      <!-- Hora inicio -->
+      <div>
+        <label class="ot-lbl">HORA INICIO</label>
+        <input id="otHoraInicio" type="time"
+          style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 12px;font-family:Barlow,sans-serif;font-size:0.95rem;box-sizing:border-box">
+      </div>
+      <!-- Observaciones -->
+      <div>
+        <label class="ot-lbl">OBSERVACIONES</label>
+        <textarea id="otObs" rows="2" placeholder="Cualquier detalle que ayude a entender el trabajo..."
+          style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 12px;font-family:Barlow,sans-serif;font-size:0.9rem;resize:none;box-sizing:border-box"></textarea>
+      </div>
+      <div id="otMsgAbrir" style="font-size:0.85rem;color:var(--red);min-height:18px"></div>
+      <button onclick="guardarNuevoTrabajo()"
+        style="width:100%;padding:13px;background:linear-gradient(135deg,var(--gold),#a07d1a);border:none;color:#0d1b2a;border-radius:9px;font-family:Barlow,sans-serif;font-size:0.95rem;font-weight:900;cursor:pointer">
+        🔩 ABRIR TRABAJO
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL CERRAR TRABAJO ══ -->
+<div id="otrosCerrarBg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:701;overflow-y:auto;padding:16px 14px">
+  <div style="max-width:500px;margin:auto;background:#1a2d42;border:1px solid rgba(46,204,113,0.35);border-radius:16px;overflow:hidden">
+    <div style="background:linear-gradient(135deg,#0a1520,#1a2d42);border-bottom:1px solid rgba(46,204,113,0.2);padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:1rem;font-weight:800;color:var(--green)">✅ Cerrar trabajo</div>
+      <button onclick="cerrarOtrosCerrarModal()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem">✕</button>
+    </div>
+    <div style="padding:16px 18px;display:flex;flex-direction:column;gap:11px">
+      <div id="otCerrarTareaDesc" style="padding:10px 12px;background:rgba(255,255,255,0.05);border-left:3px solid var(--green);border-radius:8px;font-size:0.9rem;color:rgba(255,255,255,0.75)"></div>
+      <!-- Mecánicos que cierran -->
+      <div>
+        <label class="ot-lbl">MECÁNICOS QUE CIERRAN *</label>
+        <div id="otMecsCierran" style="display:flex;flex-wrap:wrap;gap:8px;padding:8px;background:#0d1b2a;border:1px solid rgba(255,255,255,0.2);border-radius:8px"></div>
+      </div>
+      <!-- Hora fin -->
+      <div>
+        <label class="ot-lbl">HORA FIN</label>
+        <input id="otHoraFin" type="time"
+          style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 12px;font-family:Barlow,sans-serif;font-size:0.95rem;box-sizing:border-box">
+      </div>
+      <!-- Material -->
+      <div>
+        <label class="ot-lbl">MATERIAL USADO</label>
+        <textarea id="otMaterial" rows="2" placeholder="Repuestos, consumibles, materiales empleados..."
+          style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 12px;font-family:Barlow,sans-serif;font-size:0.9rem;resize:none;box-sizing:border-box"></textarea>
+      </div>
+      <!-- Observaciones cierre -->
+      <div>
+        <label class="ot-lbl">OBSERVACIONES DE CIERRE</label>
+        <textarea id="otObsCierre" rows="2" placeholder="Cómo se resolvió, qué se hizo exactamente..."
+          style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 12px;font-family:Barlow,sans-serif;font-size:0.9rem;resize:none;box-sizing:border-box"></textarea>
+      </div>
+      <div id="otMsgCerrar" style="font-size:0.85rem;color:var(--red);min-height:18px"></div>
+      <button onclick="confirmarCerrarTrabajo()"
+        style="width:100%;padding:13px;background:linear-gradient(135deg,#27ae60,#1a7a43);border:none;color:#fff;border-radius:9px;font-family:Barlow,sans-serif;font-size:0.95rem;font-weight:900;cursor:pointer">
+        ✅ CERRAR TRABAJO
       </button>
     </div>
   </div>
@@ -1374,15 +1553,18 @@ var _vistaActual = 'tareas';
 
 function switchVista(v){
   _vistaActual = v;
-  document.getElementById('vtab-tareas').classList.toggle('active',    v === 'tareas');
-  document.getElementById('vtab-averias').classList.toggle('active',   v === 'averias');
-  document.getElementById('vtab-historial').classList.toggle('active', v === 'historial');
+  ['tareas','averias','historial','otros'].forEach(function(id){
+    var btn = document.getElementById('vtab-'+id);
+    if(btn) btn.classList.toggle('active', v === id);
+  });
   document.getElementById('panelTareas').style.display    = v === 'tareas'    ? '' : 'none';
   document.getElementById('panelAverias').style.display   = v === 'averias'   ? '' : 'none';
   document.getElementById('panelHistorial').style.display = v === 'historial' ? '' : 'none';
+  document.getElementById('panelOtros').style.display     = v === 'otros'     ? '' : 'none';
   document.getElementById('mesWrap').style.display        = v === 'tareas'    ? '' : 'none';
   if(v === 'averias')   cargarMisAverias();
   if(v === 'historial') cargarBuscadorAverias();
+  if(v === 'otros')     cargarOtrosTrabajos();
 }
 
 // ══════════════════════════════════════════════════════
@@ -1976,6 +2158,228 @@ function showToastMec(msg) {
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(function(){ t.classList.remove('show'); }, 2500);
+}
+
+// ══════════════════════════════════════════════════════
+// OTROS TRABAJOS
+// ══════════════════════════════════════════════════════
+var _otrosCache   = null;
+var _otrosFiltro  = 'ABIERTO';
+var _otrosCerrarId = null;
+var _otrosMecs    = [];
+
+function cargarOtrosTrabajos(){
+  if(_otrosCache !== null){ renderOtros(); return; }
+  document.getElementById('otrosList').innerHTML =
+    '<div class="empty-state"><div class="ico">⏳</div><p>Cargando...</p></div>';
+  DB.ref('otros_trabajos').on('value', function(snap){
+    var data = snap.val() || {};
+    _otrosCache = Object.values(data).filter(function(t){ return t && t.id; });
+    _otrosCache.sort(function(a,b){ return (b.tsAbre||0)-(a.tsAbre||0); });
+    renderOtros();
+  });
+}
+
+function otrosFiltro(f){
+  _otrosFiltro = f;
+  ['ABIERTO','CERRADO',''].forEach(function(k){
+    var btn = document.getElementById('otrosBtn-'+k);
+    if(!btn) return;
+    var isActive = k === f;
+    btn.style.background   = isActive ? (k==='ABIERTO'?'rgba(231,76,60,0.3)':k==='CERRADO'?'rgba(46,204,113,0.2)':'rgba(255,255,255,0.12)') : 'transparent';
+    btn.style.borderColor  = isActive ? (k==='ABIERTO'?'rgba(231,76,60,0.7)':k==='CERRADO'?'rgba(46,204,113,0.5)':'rgba(255,255,255,0.3)') : 'rgba(255,255,255,0.1)';
+    btn.style.color        = isActive ? (k==='ABIERTO'?'#e74c3c':k==='CERRADO'?'#2ecc71':'rgba(255,255,255,0.8)') : 'rgba(255,255,255,0.35)';
+  });
+  renderOtros();
+}
+
+function renderOtros(){
+  var lista = (_otrosCache||[]).filter(function(t){
+    return !_otrosFiltro || t.estado === _otrosFiltro;
+  });
+  var el = document.getElementById('otrosList');
+  if(!lista.length){
+    el.innerHTML = '<div class="empty-state"><div class="ico">'
+      +(_otrosFiltro==='ABIERTO'?'🎉':'📋')+'</div><p>'
+      +(_otrosFiltro==='ABIERTO'?'No hay trabajos abiertos ahora mismo':'Sin registros')
+      +'</p></div>';
+    return;
+  }
+  el.innerHTML = lista.map(function(t){
+    var esCerrado = t.estado === 'CERRADO';
+    var esUrgente = t.prioridad === 'URGENTE';
+    var fecha = t.tsAbre ? new Date(t.tsAbre).toLocaleDateString('es-ES') : '—';
+    var hora  = t.horaInicio || '—';
+    var mecsAb = (t.mecanicosAbren||[]).join(', ') || '—';
+    var mecsCi = (t.mecanicosCierran||[]).join(', ') || '';
+    return '<div class="ot-card '+(esCerrado?'cerrado':'abierto')+(esUrgente?' urgente':'')+'" id="otc-'+t.id+'">'
+      +'<div class="ot-head" onclick="toggleOtCard(\''+t.id+'\')">'
+      +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">'
+      +'<div class="ot-titulo">'+t.tarea+'</div>'
+      +'<span class="ot-badge '+(esCerrado?'ce':'ab')+'">'+t.estado+'</span>'
+      +'</div>'
+      +'<div class="ot-meta">'
+      +(esUrgente?'<span class="ot-badge urg">🔴 URGENTE</span>':'')
+      +'<span>📍 '+(t.zona||'—')+'</span>'
+      +'<span>🗓 '+fecha+' '+hora+'</span>'
+      +'<span>🔩 '+(t.tipo||'—')+'</span>'
+      +(t.maquina?'<span>⚙️ '+t.maquina+'</span>':'')
+      +'</div>'
+      +'</div>'
+      +'<div class="ot-body" id="otb-'+t.id+'">'
+      +'<div class="ot-dl">'
+      +'<div class="ot-dl-item full"><div class="lbl">Descripción</div><div class="val">'+t.tarea+'</div></div>'
+      +'<div class="ot-dl-item"><div class="lbl">Zona</div><div class="val">'+(t.zona||'—')+'</div></div>'
+      +'<div class="ot-dl-item"><div class="lbl">Tipo</div><div class="val">'+(t.tipo||'—')+'</div></div>'
+      +'<div class="ot-dl-item"><div class="lbl">Prioridad</div><div class="val">'+(t.prioridad||'NORMAL')+'</div></div>'
+      +(t.maquina?'<div class="ot-dl-item"><div class="lbl">Máquina</div><div class="val">'+t.maquina+'</div></div>':'')
+      +'<div class="ot-dl-item"><div class="lbl">Abre</div><div class="val">'+mecsAb+'</div></div>'
+      +'<div class="ot-dl-item"><div class="lbl">Hora inicio</div><div class="val">'+(t.horaInicio||'—')+'</div></div>'
+      +(t.observaciones?'<div class="ot-dl-item full"><div class="lbl">Observaciones</div><div class="val">'+t.observaciones+'</div></div>':'')
+      +(esCerrado?'<div class="ot-dl-item"><div class="lbl">Cierra</div><div class="val">'+mecsCi+'</div></div>':'')
+      +(esCerrado&&t.horaFin?'<div class="ot-dl-item"><div class="lbl">Hora fin</div><div class="val">'+t.horaFin+'</div></div>':'')
+      +(esCerrado&&t.material?'<div class="ot-dl-item full"><div class="lbl">Material</div><div class="val">'+t.material+'</div></div>':'')
+      +(esCerrado&&t.observacionesCierre?'<div class="ot-dl-item full"><div class="lbl">Obs. cierre</div><div class="val">'+t.observacionesCierre+'</div></div>':'')
+      +'</div>'
+      +(!esCerrado?'<button onclick="abrirCerrarTrabajo(\''+t.id+'\')" style="margin-top:12px;width:100%;padding:10px;background:linear-gradient(135deg,#27ae60,#1a7a43);border:none;color:#fff;border-radius:8px;font-family:Barlow,sans-serif;font-size:0.88rem;font-weight:900;cursor:pointer">✅ Cerrar este trabajo</button>':'')
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function toggleOtCard(id){
+  var body = document.getElementById('otb-'+id);
+  if(body) body.classList.toggle('open');
+}
+
+function _cargarMecsEnOtros(containerEl, seleccionados){
+  var fb = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE'];
+  function poblar(lista){
+    _otrosMecs = lista;
+    containerEl.innerHTML = lista.map(function(m){
+      var sel = seleccionados && seleccionados.indexOf(m) !== -1;
+      return '<label style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:7px;background:'+(sel?'rgba(201,162,39,0.15)':'rgba(255,255,255,0.04)')+';border:1px solid '+(sel?'rgba(201,162,39,0.4)':'rgba(255,255,255,0.1)')+';cursor:pointer;font-size:0.85rem;transition:all .15s" onclick="otToggleMec(this)">'
+        +'<input type="checkbox" value="'+m+'"'+(sel?' checked':'')
+        +' style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer"> '+m+'</label>';
+    }).join('');
+  }
+  DB.ref('config/mecanicos').once('value')
+    .then(function(s){ var v=s.val(); poblar(v&&v.length?v:fb); })
+    .catch(function(){ poblar(fb); });
+}
+
+function otToggleMec(label){
+  var chk = label.querySelector('input');
+  var sel = chk.checked;
+  label.style.background = sel ? 'rgba(201,162,39,0.15)' : 'rgba(255,255,255,0.04)';
+  label.style.borderColor = sel ? 'rgba(201,162,39,0.4)' : 'rgba(255,255,255,0.1)';
+}
+
+function abrirNuevoTrabajo(){
+  document.getElementById('otTarea').value      = '';
+  document.getElementById('otTipo').value       = '';
+  document.getElementById('otPrioridad').value  = 'NORMAL';
+  document.getElementById('otZona').value       = '';
+  document.getElementById('otMaquina').value    = '';
+  document.getElementById('otObs').value        = '';
+  document.getElementById('otMsgAbrir').textContent = '';
+  var now = new Date();
+  document.getElementById('otHoraInicio').value = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+  var sel = mecActual ? [mecActual] : [];
+  _cargarMecsEnOtros(document.getElementById('otMecsAbren'), sel);
+  document.getElementById('otrosModalBg').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function cerrarOtrosModal(){
+  document.getElementById('otrosModalBg').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function guardarNuevoTrabajo(){
+  var tarea     = document.getElementById('otTarea').value.trim();
+  var tipo      = document.getElementById('otTipo').value;
+  var prioridad = document.getElementById('otPrioridad').value;
+  var zona      = document.getElementById('otZona').value;
+  var maquina   = document.getElementById('otMaquina').value.trim();
+  var horaInicio= document.getElementById('otHoraInicio').value;
+  var obs       = document.getElementById('otObs').value.trim();
+  var msgEl     = document.getElementById('otMsgAbrir');
+
+  var mecsAbren = Array.from(document.querySelectorAll('#otMecsAbren input:checked')).map(function(c){ return c.value; });
+
+  if(!tarea)        { msgEl.textContent = '⚠️ Escribe la descripción del trabajo'; return; }
+  if(!tipo)         { msgEl.textContent = '⚠️ Selecciona el tipo'; return; }
+  if(!zona)         { msgEl.textContent = '⚠️ Selecciona la zona'; return; }
+  if(!mecsAbren.length){ msgEl.textContent = '⚠️ Selecciona al menos un mecánico'; return; }
+  msgEl.textContent = '';
+
+  var id  = 'OT-' + Date.now();
+  var obj = {
+    id: id,
+    tarea: tarea,
+    tipo: tipo,
+    prioridad: prioridad,
+    zona: zona,
+    maquina: maquina || null,
+    mecanicosAbren: mecsAbren,
+    horaInicio: horaInicio || null,
+    observaciones: obs || null,
+    estado: 'ABIERTO',
+    tsAbre: Date.now(),
+    fecha: new Date().toISOString().slice(0,10)
+  };
+
+  DB.ref('otros_trabajos/'+id).set(obj).then(function(){
+    cerrarOtrosModal();
+    showToast('✅ Trabajo abierto');
+  }).catch(function(e){ msgEl.textContent = '❌ Error: '+e.message; });
+}
+
+function abrirCerrarTrabajo(id){
+  var t = (_otrosCache||[]).find(function(x){ return x.id===id; });
+  if(!t) return;
+  _otrosCerrarId = id;
+  document.getElementById('otCerrarTareaDesc').textContent = t.tarea;
+  document.getElementById('otMaterial').value    = '';
+  document.getElementById('otObsCierre').value   = '';
+  document.getElementById('otMsgCerrar').textContent = '';
+  var now = new Date();
+  document.getElementById('otHoraFin').value = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+  var sel = mecActual ? [mecActual] : [];
+  _cargarMecsEnOtros(document.getElementById('otMecsCierran'), sel);
+  document.getElementById('otrosCerrarBg').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function cerrarOtrosCerrarModal(){
+  document.getElementById('otrosCerrarBg').style.display = 'none';
+  document.body.style.overflow = '';
+  _otrosCerrarId = null;
+}
+
+function confirmarCerrarTrabajo(){
+  var msgEl = document.getElementById('otMsgCerrar');
+  var mecsCierran = Array.from(document.querySelectorAll('#otMecsCierran input:checked')).map(function(c){ return c.value; });
+  if(!mecsCierran.length){ msgEl.textContent = '⚠️ Selecciona quién lo cierra'; return; }
+  var horaFin  = document.getElementById('otHoraFin').value;
+  var material = document.getElementById('otMaterial').value.trim();
+  var obsCierre= document.getElementById('otObsCierre').value.trim();
+  msgEl.textContent = '';
+
+  var updates = {
+    estado: 'CERRADO',
+    mecanicosCierran: mecsCierran,
+    horaFin: horaFin || null,
+    material: material || null,
+    observacionesCierre: obsCierre || null,
+    tsCierre: Date.now()
+  };
+
+  DB.ref('otros_trabajos/'+_otrosCerrarId).update(updates).then(function(){
+    cerrarOtrosCerrarModal();
+    showToast('✅ Trabajo cerrado');
+  }).catch(function(e){ msgEl.textContent = '❌ Error: '+e.message; });
 }
 </script>
 <script src="fcm.js" defer></script>
