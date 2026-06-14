@@ -739,10 +739,15 @@ function _buildBtns(rol, nombre){
   var n = (nombre||'').toUpperCase();
   var verFrio = adm || n==='GREGORIO' || n==='JOSE' || n==='JAVIER H';
   var badge = '<span id="badgeAverias" style="display:none;position:absolute;top:8px;right:8px;background:#e74c3c;color:#fff;border-radius:50%;width:22px;height:22px;font-size:0.72rem;font-weight:900;line-height:22px;text-align:center;font-family:Barlow,sans-serif"></span>';
-  if(rol === 'mecanico' || adm){
-    h += '<a class="btn btn-mec" href="landing.html">'
-       + '<div class="btn-icon">'+_SVGS.wrench+'</div>'
-       + '<div class="btn-label">Mecanicos</div><div class="btn-sublabel">Mantenimientos</div></a>';
+  if(rol === 'mecanico'){
+    h += '<a class="btn btn-mec" href="landing.html" style="grid-column:1/-1;flex-direction:row;padding:0.9rem 1.5rem;gap:16px;justify-content:center">'
+       + '<div class="btn-icon" style="width:32px;height:32px">'+_SVGS.wrench+'</div>'
+       + '<div><div class="btn-label">Menú Mecánicos</div><div class="btn-sublabel">Averías, documentos y más</div></div></a>';
+  }
+  if(adm){
+    h += '<a class="btn btn-mec" href="landing.html" style="grid-column:1/-1;flex-direction:row;padding:0.9rem 1.5rem;gap:16px;justify-content:center">'
+       + '<div class="btn-icon" style="width:32px;height:32px">'+_SVGS.wrench+'</div>'
+       + '<div><div class="btn-label">Mecanicos</div><div class="btn-sublabel">Mantenimientos</div></div></a>';
   }
   if(adm){
     h += '<a class="btn btn-admin" href="admin.html">'
