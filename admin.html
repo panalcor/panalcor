@@ -457,6 +457,7 @@ if('serviceWorker' in navigator){
   <div class="tab" onclick="switchTab('cal')"  id="tab-cal">📐 Calibración</div>
   <div class="tab" onclick="switchTab('est')"  id="tab-est">🟢 Estado</div>
   <div class="tab" onclick="switchTab('proy')" id="tab-proy" style="color:#ff5078">🚀 Proyectos</div>
+  <div class="tab" onclick="switchTab('reg')"  id="tab-reg">📝 Reg. Pasados</div>
   <div class="tab" onclick="switchTab('sug')"  id="tab-sug">💬 Sugerencias <span id="badgeSug" style="display:none;background:#e74c3c;color:#fff;border-radius:50%;padding:1px 6px;font-size:0.7rem;font-weight:900;margin-left:4px">0</span></div>
   <a href="calendario.html" target="_blank" class="tab" style="text-decoration:none">📅 Calendario</a>
   <a href="manual.html" target="_blank" class="tab" style="text-decoration:none">📖 Manual</a>
@@ -4684,6 +4685,180 @@ function descargarQR(){
 // ══════════════════════════════════════════════════
 // TABS
 // ══════════════════════════════════════════════════
+// ══════════════════════════════════════════════════
+// REGISTRO DE AVERÍAS PASADAS
+// ══════════════════════════════════════════════════
+var _regInited = false;
+var REG_PARTES = {
+  'AMASADORA':['MODULO','BRAZO','RABO COCHINO','CUADRO','MOTORES','AJUSTE','OTROS'],
+  'FORMADORA-ENTABLADORA':['PULMON SALIDA','LONAS','ENTABLADO','CANGILONES','FORMADORA','AJUSTE','OTROS'],
+  'CARRUSEL':['MOTOR GIRO','CUADRO','BRAZOS','CONECTOR ROTATIVO','INDUCTIVOS PASOS','NEUMATICA','AJUSTE','OTROS'],
+  'VOLCADOR':['MOTOR-REDUCTOR','CADENA','BRAZO','FINAL CARRERA','VUELCO','AJUSTE','OTROS'],
+  'REPARTIDOR':['LONA','MOTOR LONAS','EJES-CADENA TRACCION','CUCHILLA','RUEDAS CARRO','CORREAS CARRO','CADENAS','CUADRO','INDUCTIVOS','AJUSTE','OTROS'],
+  'DIVISORAS':['MECANICA','ELECTRICO','TOLVA','AJUSTE','OTROS'],
+  'SILOS HARINA':['CONOS','EV','TELA','ESTRUCTURA','CUADRO','AJUSTE','OTROS'],
+  'LEVADURA':['TANQUE','BOMBA','LLAVES','FRIO','MOTOR','REDUCTOR','AJUSTE','OTROS'],
+  'ADITIVOS':['AJUSTE','VALVULAS','MANGUITOS','TUBERIAS','REVOLVER','CUADRO','OTROS'],
+  'CAMARA REPOSO':['MOTOR-REDUCTOR-EJE','CUADRO','CADENA','HUEVERAS','VUELCO','DETECTORES','AJUSTE','OTROS'],
+  'FERMENTADORA':['EQUIPOS','COMPRESORES','CUADRO','ELECTRICO','AJUSTE','OTROS'],
+  'HORNO':['PLATAFORMA-UÑA','CUADRO','MOTORES','QUEMADOR','MECANICO','AJUSTE','OTROS'],
+  'TALLADORA':['SERVOS','CORREAS','DETECTORES','CADENAS','ANGULOS','MOTORES-REDUCTORES','SEGURIDAD','AJUSTE','OTROS'],
+  'TUNEL':['EQUIPOS','PUERTAS','CUADRO','COMPRESOR','AJUSTE','OTROS'],
+  'CARGADOR/DESCARGADOR':['ANGULOS','CADENAS','MOTOR-REDUCTOR','SEGURIDAD','AJUSTE','OTROS'],
+  'DESMOLDEO':['CARRO','NEUMATICA','MOTOR-REDUCTOR','CUADRO','AJUSTE','OTROS'],
+  'CONTADORA':['CADENA','MOTOR-REDUCTOR','DETECTORES','NEUMATICA','MECANICO','ELECTRICO','CUADRO','AJUSTE','OTROS'],
+  'IMPRESORA':['TINTA','CABEZAL','CPU','AJUSTE','OTROS'],
+  'C. RODILLOS':['RODILLOS','CORREA','MOTOR-REDUCTOR','CUADRO','AJUSTE','OTROS'],
+  'FORMADORA CAJAS':['PEGAMENTO','NEUMATICA','VACIO-VENTOSAS','CORREA-SERVO','MECANICA','ELECTRICO','CUADRO','AJUSTE','OTROS'],
+  'EMBOLSADORA':['PINZAS','NEUMATICA','MECANICA','ELECTRICO','RODILLOS','SERVOS','CUADRO','AJUSTE','OTROS'],
+  'PRECINTADORA':['PRECINTO','RODILLOS','CORREAS','AJUSTE','OTROS'],
+  'M. PEGATINAS':['MECANICA','ELECTRICA','AJUSTE','OTROS'],
+  'ROBOT':['NEUMATICA','ELECTRICO','PINZA','SERVOS','AJUSTE','OTROS'],
+  'ENFARDADORA':['RESISTENCIAS','RODILLOS','NEUMATICA','CUADRO','AJUSTE','OTROS'],
+  'COMPRESORES':['COMPRESOR','FILTROS','ACEITE','CORREAS','CUADRO','AJUSTE','OTROS'],
+  'SECADORES':['FILTROS','VALVULAS','CUADRO','AJUSTE','OTROS'],
+  'REFINADORA':['MECANICA','ELECTRICA','AJUSTE','OTROS'],
+};
+
+function initRegPasados(){
+  if(_regInited) return;
+  _regInited = true;
+
+  // Poblar máquinas
+  var todas = MAQUINAS_BASE_ADMIN.concat(maquinasExtra||[]).sort(function(a,b){ return a.n.localeCompare(b.n); });
+  var sel = document.getElementById('regMaq');
+  sel.innerHTML = '<option value="">— Selecciona —</option>';
+  todas.forEach(function(m){
+    sel.innerHTML += '<option value="'+m.id+'">'+m.n+' ('+m.id+')</option>';
+  });
+
+  // Poblar mecánicos desde Firebase
+  DB.ref('config/mecanicos').once('value').then(function(snap){
+    var mecs = snap.val() || [];
+    var wrap = document.getElementById('regMecsWrap');
+    wrap.innerHTML = mecs.map(function(m){
+      return '<label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;cursor:pointer">'
+        +'<input type="checkbox" class="reg-mec-chk" value="'+m+'" style="accent-color:var(--gold)"> '+m+'</label>';
+    }).join('');
+  });
+
+  // Fecha por defecto: hoy
+  document.getElementById('regFecha').value = new Date().toISOString().slice(0,10);
+  regCargarHistorial();
+}
+
+function regOnMaqChange(){
+  var maqId = document.getElementById('regMaq').value;
+  var maqData = MAQUINAS_FULL_DATA[maqId] || {};
+  var tipo = maqData.t || '';
+  var partes = REG_PARTES[tipo] || ['MECANICA','ELECTRICA','NEUMATICA','AJUSTE','OTROS'];
+  var sel = document.getElementById('regParte');
+  sel.innerHTML = '<option value="">— Selecciona —</option>'
+    + partes.map(function(p){ return '<option>'+p+'</option>'; }).join('');
+}
+
+function regGuardar(){
+  var maqId   = document.getElementById('regMaq').value;
+  var parte   = document.getElementById('regParte').value;
+  var tipo    = document.getElementById('regTipo').value;
+  var gravedad= document.getElementById('regGravedad').value;
+  var fecha   = document.getElementById('regFecha').value;
+  var hora    = document.getElementById('regHora').value || '00:00';
+  var desc    = document.getElementById('regDesc').value.trim();
+  var accion  = document.getElementById('regAccion').value.trim();
+  var material= document.getElementById('regMaterial').value.trim();
+  var estado  = document.getElementById('regEstado').value;
+  var mecs    = Array.from(document.querySelectorAll('.reg-mec-chk:checked')).map(function(c){ return c.value; });
+
+  if(!maqId)   { regMsg('⚠️ Selecciona la máquina', 'warn'); return; }
+  if(!parte)   { regMsg('⚠️ Selecciona la parte', 'warn'); return; }
+  if(!tipo)    { regMsg('⚠️ Selecciona el tipo de avería', 'warn'); return; }
+  if(!gravedad){ regMsg('⚠️ Selecciona la gravedad', 'warn'); return; }
+  if(!fecha)   { regMsg('⚠️ Indica la fecha', 'warn'); return; }
+  if(!desc)    { regMsg('⚠️ Escribe la descripción', 'warn'); return; }
+  if(!mecs.length){ regMsg('⚠️ Selecciona al menos un mecánico', 'warn'); return; }
+
+  var todas = MAQUINAS_BASE_ADMIN.concat(maquinasExtra||[]);
+  var maq   = todas.find(function(m){ return m.id===maqId; }) || {};
+  var maqData = MAQUINAS_FULL_DATA[maqId] || {};
+  var ts    = new Date(fecha+'T'+hora).getTime();
+
+  var av = {
+    id: 'AVR-'+ts+'-'+Math.floor(Math.random()*1000),
+    ts: ts,
+    tsCierre: estado==='RESUELTA' ? ts : null,
+    fecha: fecha,
+    horaInicio: hora,
+    horaFin: hora,
+    tiempoMin: 0,
+    maqId: maqId,
+    maquina: maq.n || maqId,
+    maqNombre: maq.n || maqId,
+    maqTipo: maqData.t || '',
+    maqFabricante: maqData.f || '',
+    maqArea: maqData.a || '',
+    criticidad: gravedad,
+    parte: parte,
+    tipo: tipo,
+    gravedad: gravedad,
+    causa: '',
+    turno: '',
+    mecanicos: mecs,
+    descripcion: desc,
+    accion: accion,
+    observaciones: material ? 'Material: '+material : '',
+    materiales: material ? [{desc:material,ref:'',qty:1}] : [],
+    costeMateriales: 0,
+    firma: null, foto: null, firmada: false, firmadaPor: null, firmadaFecha: null,
+    estado: estado,
+    registradaManualmente: true,
+  };
+
+  DB.ref('averias/'+av.id).set(av).then(function(){
+    regMsg('✅ Avería guardada correctamente', 'ok');
+    regLimpiar();
+    regCargarHistorial();
+  }).catch(function(e){ regMsg('❌ Error: '+e.message, 'err'); });
+}
+
+function regLimpiar(){
+  document.getElementById('regMaq').value = '';
+  document.getElementById('regParte').innerHTML = '<option value="">— Selecciona máquina —</option>';
+  document.getElementById('regTipo').value = '';
+  document.getElementById('regGravedad').value = '';
+  document.getElementById('regFecha').value = new Date().toISOString().slice(0,10);
+  document.getElementById('regHora').value = '';
+  document.getElementById('regDesc').value = '';
+  document.getElementById('regAccion').value = '';
+  document.getElementById('regMaterial').value = '';
+  document.getElementById('regEstado').value = 'RESUELTA';
+  document.querySelectorAll('.reg-mec-chk').forEach(function(c){ c.checked=false; });
+}
+
+function regMsg(txt, tipo){
+  var el = document.getElementById('regMsg');
+  var color = tipo==='ok'?'#2ecc71':tipo==='warn'?'#f0c040':'#e74c3c';
+  el.innerHTML = '<div style="padding:10px 14px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid '+color+'40;color:'+color+';font-size:0.88rem;margin-top:4px">'+txt+'</div>';
+  setTimeout(function(){ el.innerHTML=''; }, 4000);
+}
+
+function regCargarHistorial(){
+  DB.ref('averias').orderByChild('registradaManualmente').equalTo(true).limitToLast(20).once('value').then(function(snap){
+    var data = snap.val() || {};
+    var lista = Object.values(data).sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+    if(!lista.length){ document.getElementById('regHistorial').innerHTML='<span style="color:rgba(255,255,255,0.3)">Ninguna registrada aún</span>'; return; }
+    document.getElementById('regHistorial').innerHTML = lista.map(function(a){
+      var fecha = a.fecha || (a.ts ? new Date(a.ts).toLocaleDateString('es-ES') : '—');
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);gap:10px">'
+        +'<div><b style="color:var(--gold-light)">'+a.maqNombre+'</b>'
+        +' <span style="color:rgba(255,255,255,0.4);font-size:0.78rem">'+a.parte+' · '+a.tipo+'</span>'
+        +'<div style="font-size:0.8rem;color:rgba(255,255,255,0.6);margin-top:2px">'+a.descripcion.substring(0,80)+(a.descripcion.length>80?'…':'')+'</div></div>'
+        +'<div style="text-align:right;flex-shrink:0;font-size:0.75rem;color:rgba(255,255,255,0.35)">'+fecha+'<br>'+(a.mecanicos||[]).join(', ')+'</div>'
+        +'</div>';
+    }).join('');
+  });
+}
+
 function switchTab(name){
   if(name==='inf' && typeof generarInformeSemanal==='function'){
     setTimeout(generarInformeSemanal, 50);
@@ -4710,6 +4885,7 @@ function switchTab(name){
   if(name==='int') { cargarCatalogoRepuestos(); initIntegrales(); }
   if(name==='est') loadMaquinasExtra(initEstado);
   if(name==='sug') initSugerencias();
+  if(name==='reg') initRegPasados();
   if(name==='proy') initProyectos();
   if(name==='cur') initCursos();
   if(name==='frio') initFrio();
@@ -8736,6 +8912,99 @@ function escAttr(s){ return String(s||'').replace(/'/g,'&#39;').replace(/"/g,'&q
 </div>
 
 <!-- ═══ PANEL SUGERENCIAS ═══ -->
+<div class="panel" id="panel-reg">
+  <h2 style="font-size:1.1rem;font-weight:800;color:var(--gold);margin-bottom:18px">📝 Registrar averías pasadas</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:860px">
+
+    <div class="field">
+      <label>Máquina *</label>
+      <select id="regMaq" onchange="regOnMaqChange()" style="width:100%">
+        <option value="">— Selecciona —</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Parte de la máquina *</label>
+      <select id="regParte" style="width:100%">
+        <option value="">— Selecciona máquina —</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Tipo de avería *</label>
+      <select id="regTipo" style="width:100%">
+        <option value="">— Selecciona —</option>
+        <option>MECÁNICA</option><option>ELÉCTRICA</option><option>NEUMÁTICA</option>
+        <option>ELECTRÓNICA</option><option>HIDRÁULICA</option><option>LUBRICACIÓN</option><option>OTROS</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Gravedad *</label>
+      <select id="regGravedad" style="width:100%">
+        <option value="">— Selecciona —</option>
+        <option value="1">⭐ 1 — Leve</option>
+        <option value="2">⭐⭐ 2 — Moderada</option>
+        <option value="3">⭐⭐⭐ 3 — Grave</option>
+        <option value="4">⭐⭐⭐⭐ 4 — Crítica</option>
+        <option value="5">⭐⭐⭐⭐⭐ 5 — Parada total</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Fecha *</label>
+      <input type="date" id="regFecha" style="width:100%">
+    </div>
+
+    <div class="field">
+      <label>Hora (aprox.)</label>
+      <input type="time" id="regHora" style="width:100%">
+    </div>
+
+    <div class="field" style="grid-column:1/-1">
+      <label>Mecánicos *</label>
+      <div id="regMecsWrap" style="display:flex;flex-wrap:wrap;gap:10px;padding:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:8px;min-height:42px">
+        <span style="color:rgba(255,255,255,0.3);font-size:0.82rem">Cargando...</span>
+      </div>
+    </div>
+
+    <div class="field" style="grid-column:1/-1">
+      <label>Descripción de la avería *</label>
+      <textarea id="regDesc" rows="3" placeholder="Qué ocurrió..." style="width:100%;resize:vertical"></textarea>
+    </div>
+
+    <div class="field" style="grid-column:1/-1">
+      <label>Acción correctiva / Solución</label>
+      <textarea id="regAccion" rows="2" placeholder="Qué se hizo para solucionarlo..." style="width:100%;resize:vertical"></textarea>
+    </div>
+
+    <div class="field" style="grid-column:1/-1">
+      <label>Material utilizado</label>
+      <input type="text" id="regMaterial" placeholder="Ej: Rodamiento 6205, correa B42..." style="width:100%">
+    </div>
+
+    <div class="field">
+      <label>Estado *</label>
+      <select id="regEstado" style="width:100%">
+        <option value="RESUELTA">🟢 Resuelta</option>
+        <option value="EN CURSO">🔴 En curso</option>
+        <option value="PENDIENTE REPUESTO">🟡 Pendiente repuesto</option>
+      </select>
+    </div>
+
+    <div style="grid-column:1/-1;display:flex;gap:10px;margin-top:6px">
+      <button class="btn btn-gold" onclick="regGuardar()" style="flex:1;padding:12px">💾 Guardar avería</button>
+      <button class="btn" onclick="regLimpiar()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);padding:12px 20px">✕ Limpiar</button>
+    </div>
+    <div id="regMsg" style="grid-column:1/-1"></div>
+  </div>
+
+  <div style="margin-top:32px;max-width:860px">
+    <h3 style="font-size:0.9rem;font-weight:700;color:var(--gold);margin-bottom:12px">Últimas 20 registradas manualmente</h3>
+    <div id="regHistorial" style="font-size:0.85rem;color:rgba(255,255,255,0.5)">—</div>
+  </div>
+</div>
+
 <div class="panel" id="panel-sug">
   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px">
     <div>
