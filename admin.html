@@ -4531,6 +4531,46 @@ function cargarEstadoMaquina(){
       + '📋 Ver historial completo →</a></div>';
     resDiv.innerHTML += histLink;
 
+    // Otros trabajos vinculados a esta máquina
+    DB.ref('otros_trabajos').once('value').then(function(otSnap){
+      var otData = otSnap.val() || {};
+      var maqNombreActual = (sel && sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].textContent.replace(/\s*\(MAQ-\d+\)$/,'').trim() : '').toUpperCase();
+      var trabajos = Object.values(otData).filter(function(t){
+        if(!t || !t.maquina) return false;
+        var tm = t.maquina.toUpperCase();
+        return tm === maqId.toUpperCase() || tm === maqNombreActual;
+      }).sort(function(a,b){ return (b.tsAbre||0)-(a.tsAbre||0); }).slice(0,10);
+
+      if(!trabajos.length) return;
+
+      var otHtml = '<div style="font-size:0.8rem;font-weight:700;color:rgba(201,162,39,0.7);letter-spacing:0.07em;margin:16px 0 8px">🔩 OTROS TRABAJOS VINCULADOS</div>';
+      trabajos.forEach(function(t){
+        var fecha   = t.fecha || (t.tsAbre ? new Date(t.tsAbre).toLocaleDateString('es-ES') : '—');
+        var cerrado = t.estado === 'CERRADO';
+        var color   = cerrado ? 'rgba(46,204,113,0.15)' : 'rgba(201,162,39,0.08)';
+        var border  = cerrado ? 'rgba(46,204,113,0.25)' : 'rgba(201,162,39,0.2)';
+        var badge   = cerrado
+          ? '<span style="font-size:0.65rem;padding:2px 8px;border-radius:20px;background:rgba(46,204,113,0.2);color:#2ecc71;border:1px solid rgba(46,204,113,0.3)">CERRADO</span>'
+          : '<span style="font-size:0.65rem;padding:2px 8px;border-radius:20px;background:rgba(231,76,60,0.2);color:#e74c3c;border:1px solid rgba(231,76,60,0.3)">ABIERTO</span>';
+        otHtml += '<div style="background:'+color+';border:1px solid '+border+';border-radius:8px;padding:9px 14px;margin-bottom:6px">'
+          + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px">'
+          + '<div style="font-size:0.85rem;font-weight:600;color:#f0f4f8;flex:1">'+_esc(t.tarea)+'</div>'
+          + badge
+          + '</div>'
+          + '<div style="font-size:0.73rem;color:rgba(255,255,255,0.4);display:flex;gap:14px;flex-wrap:wrap">'
+          + '<span>🔩 '+(t.tipo||'—')+'</span>'
+          + '<span>📍 '+(t.zona||'—')+'</span>'
+          + '<span>🗓 '+fecha+(t.horaInicio?' '+t.horaInicio:'')+'</span>'
+          + '<span>👷 '+((t.mecanicosAbren||[]).join(', ')||'—')+'</span>'
+          + (cerrado&&t.mecanicosCierran?'<span>✅ '+((t.mecanicosCierran||[]).join(', '))+'</span>':'')
+          + '</div>'
+          + (t.observaciones?'<div style="font-size:0.73rem;color:rgba(255,255,255,0.35);margin-top:4px;font-style:italic">'+_esc(t.observaciones)+'</div>':'')
+          + (cerrado&&t.material?'<div style="font-size:0.73rem;color:rgba(255,255,255,0.35);margin-top:2px">🔧 '+_esc(t.material)+'</div>':'')
+          + '</div>';
+      });
+      resDiv.innerHTML = otHtml + resDiv.innerHTML;
+    }).catch(function(){});
+
   }).catch(function(){
     abDiv.innerHTML = '<div style="color:#e74c3c;font-size:0.82rem">Error al cargar datos de Firebase.</div>';
   });
