@@ -715,6 +715,15 @@ function mostrarPortal(s){
       else { b.style.display = 'none'; }
     }
   });
+  DB.ref('otros_trabajos').on('value', function(snap){
+    var data = snap.val() || {};
+    var n = Object.values(data).filter(function(t){ return t && t.estado === 'ABIERTO'; }).length;
+    var b = document.getElementById('badgeOtros');
+    if(b){
+      if(n > 0){ b.style.display = 'block'; b.textContent = n > 9 ? '9+' : String(n); }
+      else { b.style.display = 'none'; }
+    }
+  });
   if(s.rol === 'admin') _checkRepuestos();
 }
 
@@ -752,6 +761,12 @@ function _buildBtns(rol, nombre){
        + '<div><div class="btn-label">Averias</div>'
        + '<div class="btn-sublabel">Registro de incidencias</div></div>'
        + badge + '</a>';
+    h += '<a class="btn" href="mis_tareas.html#otros" style="position:relative;grid-column:1/-1;flex-direction:row;padding:1.2rem 1.5rem;gap:16px;justify-content:center;border-color:rgba(201,162,39,0.3);background:rgba(201,162,39,0.06);text-decoration:none">'
+       + '<div class="btn-icon" style="width:40px;height:40px;color:var(--gold)">🔩</div>'
+       + '<div><div class="btn-label" style="color:var(--gold)">Otros Trabajos</div>'
+       + '<div class="btn-sublabel" style="color:rgba(201,162,39,0.6)">Trabajos no planificados</div></div>'
+       + '<span id="badgeOtros" style="display:none;position:absolute;top:8px;right:8px;background:#c9a227;color:#0d1b2a;border-radius:50%;width:22px;height:22px;font-size:0.72rem;font-weight:900;line-height:22px;text-align:center;font-family:Barlow,sans-serif"></span>'
+       + '</a>';
   }
   if(verFrio){
     h += '<a class="btn" href="frio_mec.html" style="border-color:rgba(100,210,255,0.35);background:rgba(100,210,255,0.07);text-decoration:none">'
