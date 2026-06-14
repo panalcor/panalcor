@@ -748,6 +748,10 @@ function _buildBtns(rol, nombre){
        + '<div class="btn-icon" style="width:40px;height:40px;color:#3498db">'+_SVGS.task+'</div>'
        + '<div><div class="btn-label" style="color:#74b9ff">Mis Tareas</div>'
        + '<div class="btn-sublabel" style="color:rgba(52,152,219,0.6)">Ver tareas asignadas</div></div></a>';
+    h += '<a class="btn" href="mecanicos.html#mantenimiento" style="grid-column:1/-1;flex-direction:row;padding:1.2rem 1.5rem;gap:16px;justify-content:center;border-color:rgba(39,174,96,0.35);background:rgba(39,174,96,0.07);text-decoration:none">'
+       + '<div class="btn-icon" style="width:40px;height:40px;color:#2ecc71">📅</div>'
+       + '<div><div class="btn-label" style="color:#5dde95">Mantenimiento Diario</div>'
+       + '<div class="btn-sublabel" style="color:rgba(39,174,96,0.6)">Checklist de revisiones del día</div></div></a>';
   }
   if(rol === 'encargado' || adm){
     h += '<a class="btn" href="encargados.html" style="grid-column:1/-1;flex-direction:row;padding:1.2rem 1.5rem;gap:16px;justify-content:center;border-color:rgba(155,89,182,0.3);background:rgba(155,89,182,0.07)">'

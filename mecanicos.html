@@ -260,10 +260,9 @@ if('serviceWorker' in navigator){
         if(e.data && e.data.type === 'SW_UPDATED') window.location.reload();
       });
     }).catch(function(){});
-    // Si se accede con #formacion, abrir esa pestaña directamente
-    if(window.location.hash === '#formacion') {
-      setTimeout(function(){ switchTab('formacion'); }, 300);
-    }
+    // Si se accede con hash, abrir esa pestaña directamente
+    if(window.location.hash === '#formacion')     { setTimeout(function(){ switchTab('formacion'); }, 300); }
+    if(window.location.hash === '#mantenimiento') { setTimeout(function(){ switchTab('mantenimiento'); }, 300); }
   });
 }
 </script>
