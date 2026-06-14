@@ -260,9 +260,6 @@ if('serviceWorker' in navigator){
         if(e.data && e.data.type === 'SW_UPDATED') window.location.reload();
       });
     }).catch(function(){});
-    // Si se accede con hash, abrir esa pestaña directamente
-    if(window.location.hash === '#formacion')     { setTimeout(function(){ switchTab('formacion'); }, 300); }
-    if(window.location.hash === '#mantenimiento') { setTimeout(function(){ switchTab('mantenimiento'); }, 300); }
   });
 }
 </script>
@@ -1090,6 +1087,10 @@ function _adminSesionValida(){
 
 function _aplicarSesionMec(nombre){
   document.getElementById('mecLoginOverlay').style.display = 'none';
+  var h = window.location.hash;
+  if(h === '#mantenimiento' || h === '#formacion') {
+    setTimeout(function(){ switchTab(h.slice(1)); }, 100);
+  }
   var el = document.getElementById('mecNomTopbar');
   if(el){ el.textContent = '\u{1F477} ' + nombre; el.style.display = 'block'; }
   var sel = document.getElementById('mecSelect');
