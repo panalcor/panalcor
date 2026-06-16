@@ -437,9 +437,8 @@ const TAREAS    = [{"id":"DI-001","tarea":"REVISION ACEITES 1","maquina":"DIVISO
 var tareasActivas = TAREAS.slice(); // fallback al array base
 
 function cargarTareasDiarias(){
-  if(typeof firebase === 'undefined' || !firebase.apps.length) return;
-  var DB2 = firebase.database();
-  DB2.ref('tareas_diarias').on('value', function(snap){
+  if(typeof _DB_MEC === 'undefined') return;
+  _DB_MEC.ref('tareas_diarias').on('value', function(snap){
     var val = snap.val();
     if(val && typeof val === 'object'){
       tareasActivas = Object.values(val).sort(function(a,b){
@@ -970,6 +969,7 @@ const _FB_MEC = {
 };
 const _FB_APP_MEC = firebase.apps.find(a=>a.name==='mec') || firebase.initializeApp(_FB_MEC,'mec');
 const _DB_MEC = _FB_APP_MEC.database();
+cargarTareasDiarias();
 
 const _MEC_FALLBACK = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE'];
 

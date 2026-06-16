@@ -108,6 +108,14 @@ a{color:inherit;text-decoration:none}
 .tipo-ele2 .tipo-radio:checked + .tipo-label{background:rgba(230,126,34,0.25);border-color:#e67e22;color:#e67e22}
 .tipo-otr .tipo-radio:checked + .tipo-label{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.5);color:var(--white)}
 
+/* ── PRIORIDAD ── */
+.prio-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.prio-radio{display:none}
+.prio-label{padding:10px 18px;border-radius:8px;cursor:pointer;font-size:0.9rem;font-weight:700;border:2px solid rgba(255,255,255,0.2);background:var(--navy-deep);transition:all .2s}
+.prio-urg  .prio-radio:checked + .prio-label{background:rgba(231,76,60,0.25);border-color:var(--red);color:var(--red)}
+.prio-imp  .prio-radio:checked + .prio-label{background:rgba(243,156,18,0.25);border-color:var(--yellow);color:var(--yellow)}
+.prio-prog .prio-radio:checked + .prio-label{background:rgba(46,204,113,0.2);border-color:var(--green);color:var(--green)}
+
 /* ── GRAVEDAD ── */
 .grav-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
 .grav-radio{display:none}
@@ -343,6 +351,14 @@ if('serviceWorker' in navigator){
           <div class="grav-media"><input type="radio" name="grav" id="g2" value="MEDIA" class="grav-radio"><label for="g2" class="grav-label">🟡 Media</label></div>
           <div class="grav-alta"><input type="radio" name="grav" id="g3" value="ALTA" class="grav-radio"><label for="g3" class="grav-label">🔴 Alta</label></div>
           <div class="grav-crit"><input type="radio" name="grav" id="g4" value="CRÍTICA" class="grav-radio"><label for="g4" class="grav-label">🚨 Crítica — Parada total</label></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Prioridad de atención</label>
+        <div class="prio-grid">
+          <div class="prio-urg"><input type="radio" name="prio" id="p1" value="URGENTE" class="prio-radio"><label for="p1" class="prio-label">🔴 Urgente — Resolver ya</label></div>
+          <div class="prio-imp"><input type="radio" name="prio" id="p2" value="IMPORTANTE" class="prio-radio" checked><label for="p2" class="prio-label">🟡 Importante — Puede esperar</label></div>
+          <div class="prio-prog"><input type="radio" name="prio" id="p3" value="PROGRAMABLE" class="prio-radio"><label for="p3" class="prio-label">🟢 Programable — En próxima parada</label></div>
         </div>
       </div>
       <div class="field">
@@ -1482,6 +1498,7 @@ function guardarAveria(){
     parte: document.getElementById('fParte').value,
     tipo: tipo.value,
     gravedad: grav.value,
+    prioridad: (document.querySelector('input[name="prio"]:checked')||{}).value || 'IMPORTANTE',
     causa: document.getElementById('fCausa').value,
     turno: document.getElementById('fTurno').value,
     mecanicos: mecsSelec,
@@ -1555,6 +1572,7 @@ function limpiarForm(){
   document.querySelectorAll('.mec-check').forEach(c=>c.checked=false);
   document.querySelectorAll('input[name=tipo]').forEach(r=>r.checked=false);
   document.querySelectorAll('input[name=grav]').forEach(r=>r.checked=false);
+  document.querySelectorAll('input[name=prio]').forEach(r=>r.checked=(r.value==='IMPORTANTE'));
   materialesForm=[];
   renderMatList();
   quitarFoto();
@@ -1593,11 +1611,12 @@ function renderHistorial(){
     const dotCls = a.estado==='RESUELTA'?'dot-green':a.estado==='EN CURSO'?'dot-red':'dot-yellow';
     const tStr = a.tiempoMin? Math.floor(a.tiempoMin/60)+'h '+((a.tiempoMin%60)+'').padStart(2,'0')+'min':'—';
     const crit = a.criticidad?`<span class="crit-badge crit-${a.criticidad}">★${a.criticidad}</span>`:'';
+    const prioBadge = a.prioridad==='URGENTE'?'<span class="crit-badge" style="background:rgba(231,76,60,0.25);color:#ff6b6b">🔴 URGENTE</span>':a.prioridad==='PROGRAMABLE'?'<span class="crit-badge" style="background:rgba(46,204,113,0.2);color:#2ecc71">🟢 PROG.</span>':'';
     return `
     <div class="averia-card">
       <div class="averia-head" onclick="toggleAv('av${i}')">
         <span class="averia-id">${a.id}</span>
-        <span class="averia-maq">${a.maqNombre} ${crit}</span>
+        <span class="averia-maq">${a.maqNombre} ${crit} ${prioBadge}</span>
         <span class="averia-desc">${a.parte?a.parte+' · ':''}${a.descripcion}</span>
         <span style="font-size:0.8rem;color:rgba(255,255,255,0.4);white-space:nowrap;margin-right:8px">${a.fecha} ${a.horaInicio}</span>
         ${a.foto?`<img src="${a.foto}" style="width:32px;height:32px;object-fit:cover;border-radius:5px;flex-shrink:0;margin-right:4px">`:''}
@@ -1672,6 +1691,7 @@ function retomarAveria(id){
 
   document.querySelectorAll('input[name=tipo]').forEach(function(r){r.checked=(r.value===av.tipo);});
   document.querySelectorAll('input[name=grav]').forEach(function(r){r.checked=(r.value===av.gravedad);});
+  document.querySelectorAll('input[name=prio]').forEach(function(r){r.checked=(r.value===(av.prioridad||'IMPORTANTE'));});
   document.querySelectorAll('.mec-check').forEach(function(c){c.checked=!!(av.mecanicos&&av.mecanicos.includes(c.value));});
   // Si hay mecanico logado y es distinto al que abrió la avería, marcarlo también
   var mecActualRet = _mecSesionValida();
