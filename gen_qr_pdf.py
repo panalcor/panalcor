@@ -19,7 +19,7 @@ from reportlab.pdfgen import canvas as rl_canvas
 from reportlab.lib.utils import ImageReader
 import io, urllib.parse
 
-BASE_URL = "https://panalcor.github.io/panalcor/maquina.html"
+BASE_URL = "https://panalcor.github.io/panalcor/averias.html"
 OUT = r"C:\Users\fjha_\Downloads\GESTION 3.0\QR_maquinas_PANALCOR.pdf"
 
 MAQUINAS = [
@@ -208,9 +208,7 @@ QR_PX = 150   # QR en pixeles dentro de la tarjeta
 CW, CH = 290, 310
 
 def make_card(m):
-    url = (BASE_URL
-           + '?id=' + urllib.parse.quote(m['id'])
-           + '&n='  + urllib.parse.quote(m['n']))
+    url = BASE_URL + '?maq=' + urllib.parse.quote(m['id'])
 
     # QR negro sobre blanco
     qr = qrcode.QRCode(version=None,
