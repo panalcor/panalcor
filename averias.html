@@ -1659,16 +1659,24 @@ function renderHistorial(){
                 ? `<div style="margin-top:10px;font-size:0.82rem;color:#2ecc71">✍️ Firmado por mecánico</div>`
                 : `<div style="margin-top:10px;font-size:0.82rem;color:#f39c12">⏳ Pendiente de firma</div>`)
           : ''}
-        ${a.estado!=='RESUELTA'
-          ? `<div style="margin-top:14px"><button class="btn btn-gold" style="font-size:0.8rem;padding:7px 14px" onclick="retomarAveria('${a.id}')">🔄 Retomar avería</button></div>`
-          : (()=>{
-              const mecN = typeof _mecSesionValida==='function' ? _mecSesionValida() : false;
-              const dentroPlazo = a.tsCierre && (Date.now()-a.tsCierre)<28800000;
-              const involucrado = mecN && a.mecanicos && a.mecanicos.indexOf(mecN)!==-1;
-              return (dentroPlazo && involucrado)
-                ? `<div style="margin-top:14px"><button class="btn btn-gold" style="font-size:0.8rem;padding:7px 14px;background:rgba(46,204,113,0.15);border-color:rgba(46,204,113,0.5);color:#2ecc71" onclick="retomarAveria('${a.id}')">✏️ Añadir información</button></div>`
-                : '';
-            })()
+        ${(()=>{
+            try{
+              var ps=JSON.parse(localStorage.getItem('panalcor_session')||'null');
+              var esAdmin = ps && ps.rol==='admin' && Date.now()<ps.expires;
+            }catch(e){ var esAdmin=false; }
+            if(a.estado!=='RESUELTA'){
+              return `<div style="margin-top:14px"><button class="btn btn-gold" style="font-size:0.8rem;padding:7px 14px" onclick="retomarAveria('${a.id}')">🔄 Retomar avería</button></div>`;
+            }
+            if(esAdmin){
+              return `<div style="margin-top:14px"><button class="btn btn-gold" style="font-size:0.8rem;padding:7px 14px;background:rgba(46,204,113,0.15);border-color:rgba(46,204,113,0.5);color:#2ecc71" onclick="retomarAveria('${a.id}')">✏️ Editar avería</button></div>`;
+            }
+            const mecN = typeof _mecSesionValida==='function' ? _mecSesionValida() : false;
+            const dentroPlazo = a.tsCierre && (Date.now()-a.tsCierre)<28800000;
+            const involucrado = mecN && a.mecanicos && a.mecanicos.indexOf(mecN)!==-1;
+            return (dentroPlazo && involucrado)
+              ? `<div style="margin-top:14px"><button class="btn btn-gold" style="font-size:0.8rem;padding:7px 14px;background:rgba(46,204,113,0.15);border-color:rgba(46,204,113,0.5);color:#2ecc71" onclick="retomarAveria('${a.id}')">✏️ Añadir información</button></div>`
+              : '';
+          })()
         }
 
       </div>
