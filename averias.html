@@ -406,6 +406,10 @@ if('serviceWorker' in navigator){
       </div>
       <div class="row2">
         <div class="field">
+          <label>Fecha fin <span style="font-size:.78rem;opacity:.6">(si es otro día)</span></label>
+          <input type="date" id="fFechaFin" oninput="calcTiempo()">
+        </div>
+        <div class="field">
           <label>Hora fin / reparación</label>
           <input type="time" id="fHoraFin" oninput="calcTiempo()">
         </div>
@@ -1353,16 +1357,20 @@ function checkRecurrencia(){
 // TIEMPO PARADA
 // ══════════════════════════════════════════════
 function calcTiempo(){
-  const ini = document.getElementById('fHoraInicio').value;
-  const fin = document.getElementById('fHoraFin').value;
-  const disp = document.getElementById('tiempoDisplay');
+  const fechaIni = document.getElementById('fFecha').value;
+  const ini      = document.getElementById('fHoraInicio').value;
+  const fechaFin = document.getElementById('fFechaFin').value;
+  const fin      = document.getElementById('fHoraFin').value;
+  const disp     = document.getElementById('tiempoDisplay');
   if(!ini||!fin){disp.textContent='— h — min';return;}
-  const [ih,im]=ini.split(':').map(Number);
-  const [fh,fm]=fin.split(':').map(Number);
-  let mins = (fh*60+fm)-(ih*60+im);
-  if(mins<0) mins+=24*60;
+  const dIni = new Date((fechaIni||fechaFin||new Date().toISOString().split('T')[0])+'T'+ini);
+  const dFin = new Date((fechaFin||fechaIni||new Date().toISOString().split('T')[0])+'T'+fin);
+  let mins = Math.round((dFin - dIni) / 60000);
+  if(mins < 0) mins += 24*60; // fallback mismo día
   const h=Math.floor(mins/60), m=mins%60;
-  disp.textContent = h+'h '+m.toString().padStart(2,'0')+'min';
+  const dias = Math.floor(h/24);
+  if(dias>=1) disp.textContent = dias+'d '+(h%24)+'h '+m.toString().padStart(2,'0')+'min';
+  else disp.textContent = h+'h '+m.toString().padStart(2,'0')+'min';
 }
 
 // ══════════════════════════════════════════════
@@ -1476,13 +1484,14 @@ function guardarAveria(){
   }
 
   const maq = MAQUINAS.find(m=>m.id===maqId);
-  const horaFin = document.getElementById('fHoraFin').value;
-  const [ih,im]=horaIni.split(':').map(Number);
+  const horaFin  = document.getElementById('fHoraFin').value;
+  const fechaFin = document.getElementById('fFechaFin').value || fecha;
   let tiempoMin = 0;
   if(horaFin){
-    const [fh,fm]=horaFin.split(':').map(Number);
-    tiempoMin=(fh*60+fm)-(ih*60+im);
-    if(tiempoMin<0) tiempoMin+=24*60;
+    const dIni = new Date(fecha+'T'+horaIni);
+    const dFin = new Date(fechaFin+'T'+horaFin);
+    tiempoMin = Math.round((dFin - dIni) / 60000);
+    if(tiempoMin < 0) tiempoMin += 24*60;
   }
 
   const mecsSelec = [...document.querySelectorAll('.mec-check:checked')].map(c=>c.value);
@@ -1492,7 +1501,7 @@ function guardarAveria(){
   const av = {
     id:  _editandoId || ('AVR-'+Date.now()),
     ts:  avOriginal ? avOriginal.ts : Date.now(),
-    fecha, horaInicio:horaIni, horaFin,
+    fecha, horaInicio:horaIni, horaFin, fechaFin: fechaFin !== fecha ? fechaFin : '',
     tiempoMin,
     maqId, maquina:maq?maq.n:maqId, maqNombre:maq?maq.n:maqId,
     maqTipo:maq?maq.t:'',
@@ -1570,6 +1579,7 @@ function limpiarForm(){
   document.getElementById('fAccion').value='';
   document.getElementById('fObs').value='';
   document.getElementById('fHoraFin').value='';
+  document.getElementById('fFechaFin').value='';
   document.getElementById('fCausa').value='';
   document.getElementById('fEstado').value='';
   document.getElementById('tiempoDisplay').textContent='— h — min';
@@ -1685,6 +1695,7 @@ function retomarAveria(id){
   document.getElementById('fFecha').value       = av.fecha       || '';
   document.getElementById('fHoraInicio').value  = av.horaInicio  || '';
   document.getElementById('fHoraFin').value     = av.horaFin     || '';
+  document.getElementById('fFechaFin').value    = av.fechaFin    || '';
   document.getElementById('fDesc').value        = av.descripcion || '';
   document.getElementById('fAccion').value      = av.accion      || '';
   document.getElementById('fObs').value         = av.observaciones|| '';
