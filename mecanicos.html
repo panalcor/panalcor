@@ -673,7 +673,7 @@ function poblarFechas(){
   const sel = document.getElementById('fechaSelect');
   const hoy = new Date();
   const opciones = [];
-  for(let i = -30; i <= 7; i++){
+  for(let i = -120; i <= 7; i++){
     const d = new Date(hoy);
     d.setDate(hoy.getDate() + i);
     const key = d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0');
