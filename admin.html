@@ -878,22 +878,22 @@ if('serviceWorker' in navigator){
   </div>
 
   <div class="card" style="margin-top:12px;border:1px solid rgba(201,162,39,0.25)">
-    <div class="sec-title">📊 Informe Mensual de Mantenimiento Preventivo</div>
+    <div class="sec-title">📊 Informe Mensual de Mantenimiento Preventivo Diario</div>
     <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:12px">
       <div>
         <label style="font-size:0.75rem;color:var(--gold);display:block;margin-bottom:4px;letter-spacing:0.1em">MES</label>
         <input type="month" id="expMes" style="background:var(--navy-mid);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:8px 12px;font-family:'Barlow',sans-serif;font-size:0.95rem">
       </div>
       <button class="btn-export btn-gold" onclick="exportarInformeMensual()" style="padding:9px 20px;font-size:0.9rem">
-        📊 Generar Informe Excel
+        📊 Exportar Excel
+      </button>
+      <button onclick="verInformeDiarioMensual()" style="background:linear-gradient(135deg,#27ae60,#1a7a40);color:#fff;border:none;border-radius:8px;padding:9px 20px;font-family:'Barlow',sans-serif;font-size:0.9rem;font-weight:700;cursor:pointer;letter-spacing:0.04em">
+        🖨️ Ver / Imprimir PDF
       </button>
       <span id="expMesInfo" style="font-size:0.8rem;color:rgba(255,255,255,0.45);font-style:italic;align-self:center"></span>
     </div>
     <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);line-height:1.7">
-      Genera un <b style="color:rgba(255,255,255,0.55)">.xlsx</b> con 3 hojas:
-      <b style="color:var(--gold)">Por Máquina</b> — tareas agrupadas con fechas de realización ·
-      <b style="color:var(--gold)">Resumen Turnos</b> — cumplimiento por día/turno ·
-      <b style="color:var(--gold)">Registro Completo</b> — tabla plana con filtros Excel
+      <b style="color:var(--gold)">Excel</b>: matriz de iniciales por día/turno · <b style="color:var(--gold)">PDF</b>: mismo formato con colores — 🟢 ≥100% · 🟠 ≥60% · 🔴 &lt;60%
     </div>
   </div>
 
@@ -2915,57 +2915,117 @@ function exportarInformeMensual(){
   });
 }
 
-function _generarExcelMensual(mes, mesLabel, turnos, tareasMap){
-  var wb = XLSX.utils.book_new();
+function _mecIniciales(nombre){
+  if(!nombre) return '?';
+  var p = nombre.trim().split(/\s+/);
+  return p.length === 1 ? p[0].substring(0,2).toUpperCase() : (p[0][0]+p[p.length-1][0]).toUpperCase();
+}
 
-  // ── HOJA 1: POR MÁQUINA ──────────────────────────────────
-  // maqMap: { maquina: { taskId: { meta, completions[] } } }
-  var maqMap = {};
+function _buildMatrixData(mes, turnos, tareasMap){
+  var parts = mes.split('-');
+  var anio = parseInt(parts[0]), mm = parseInt(parts[1]);
+  var diasMes = new Date(anio, mm, 0).getDate();
+  var TURNOS = ['NOCHE','MAÑANA','TARDE'];
 
-  // Seed from tareasMap so we include tasks even if never completed that month
+  // taskMeta: id → {tarea, maquina, area, turnoConfig, prioridad}
+  var taskMeta = {};
   Object.values(tareasMap).forEach(function(t){
-    var maq = (t.maquina || 'SIN MAQUINA').toUpperCase();
-    if(!maqMap[maq]) maqMap[maq] = {};
-    maqMap[maq][t.id] = { tarea: t.tarea, maquina: maq, area: t.area||'', turnoConfig: t.turno||'TODOS', prioridad: t.prioridad||'', completions: [] };
+    taskMeta[t.id] = { tarea:t.tarea, maquina:(t.maquina||'SIN MAQUINA').toUpperCase(), area:t.area||'', turnoConfig:t.turno||'TODOS', prioridad:t.prioridad||'' };
   });
 
-  // Fill completions from turno records
+  // matrix: id → fecha → turno → iniciales
+  var matrix = {};
   turnos.forEach(function(r){
     if(!r.tareas) return;
     r.tareas.forEach(function(t){
       if(!t.ok) return;
-      var def = tareasMap[t.id];
-      var maq = def ? (def.maquina||'SIN MAQUINA').toUpperCase() : 'SIN MAQUINA';
-      if(!maqMap[maq]) maqMap[maq] = {};
-      if(!maqMap[maq][t.id]){
-        maqMap[maq][t.id] = { tarea: t.tarea||t.id, maquina: maq, area: def?def.area||'':'', turnoConfig: def?def.turno||'TODOS':'TODOS', prioridad: def?def.prioridad||'':'', completions: [] };
+      var id = t.id;
+      if(!taskMeta[id]){
+        var def = tareasMap[id];
+        taskMeta[id] = { tarea:t.tarea||id, maquina:def?(def.maquina||'SIN MAQUINA').toUpperCase():'SIN MAQUINA', area:def?def.area||'':'', turnoConfig:def?def.turno||'TODOS':'TODOS', prioridad:def?def.prioridad||'':'' };
       }
-      maqMap[maq][t.id].completions.push({ fecha: r.fecha, turno: r.turno, mecanico: r.mecanico, hora: (t.info&&t.info.time)?t.info.time:r.hora||'' });
+      if(!matrix[id]) matrix[id] = {};
+      if(!matrix[id][r.fecha]) matrix[id][r.fecha] = {};
+      matrix[id][r.fecha][r.turno] = _mecIniciales(r.mecanico||'?');
     });
   });
 
-  var rows1 = [['INFORME MANTENIMIENTO PREVENTIVO — ' + mesLabel.toUpperCase(),'','','','','','','','']];
-  rows1.push(['GENERADO: ' + new Date().toLocaleDateString('es-ES'),'','','','','','','','']);
-  rows1.push([]);
-  rows1.push(['MÁQUINA','TAREA','ÁREA','TURNO ASIG.','PRIORIDAD','FECHA','TURNO REAL','MECÁNICO','HORA']);
+  // Collect active days (days with at least one turno record)
+  var activeDays = {};
+  turnos.forEach(function(r){ if(r.fecha) activeDays[r.fecha] = true; });
+  var activeDaysList = Object.keys(activeDays).sort();
+
+  // Group by machine
+  var maqMap = {};
+  Object.keys(taskMeta).forEach(function(id){
+    var maq = taskMeta[id].maquina;
+    if(!maqMap[maq]) maqMap[maq] = [];
+    maqMap[maq].push(id);
+  });
+
+  return { taskMeta:taskMeta, matrix:matrix, maqMap:maqMap, diasMes:diasMes, TURNOS:TURNOS, activeDaysList:activeDaysList, mes:mes, anio:anio, mm:mm };
+}
+
+function _generarExcelMensual(mes, mesLabel, turnos, tareasMap){
+  var wb = XLSX.utils.book_new();
+  var d = _buildMatrixData(mes, turnos, tareasMap);
+  var diasMes = d.diasMes, TURNOS = d.TURNOS, matrix = d.matrix, taskMeta = d.taskMeta, maqMap = d.maqMap;
+  var SIGLAS = ['N','M','T'];
+
+  // ── HOJA 1: POR MÁQUINA — MATRIZ ─────────────────────────
+  // Legend row: mechanics initials
+  var mecsVistos = {};
+  turnos.forEach(function(r){ if(r.mecanico) mecsVistos[r.mecanico] = _mecIniciales(r.mecanico); });
+  var legendStr = Object.keys(mecsVistos).map(function(n){ return n+' → '+mecsVistos[n]; }).join('   ');
+
+  var blank5 = ['','','','',''];
+  var totalCols = 5 + diasMes * 3;
+  function padRow(r){ while(r.length < totalCols) r.push(''); return r; }
+
+  var rows1 = [];
+  rows1.push(padRow(['INFORME MANTENIMIENTO PREVENTIVO DIARIO — ' + mesLabel.toUpperCase()]));
+  rows1.push(padRow(['GENERADO: ' + new Date().toLocaleDateString('es-ES') + '   |   ' + legendStr]));
+  rows1.push(padRow([]));
+
+  // Day header
+  var dayHdr = ['MÁQUINA','TAREA','ÁREA','TURNO ASIG.','PRIORIDAD'];
+  for(var dd=1; dd<=diasMes; dd++){ dayHdr.push(dd); dayHdr.push(''); dayHdr.push(''); }
+  rows1.push(dayHdr);
+
+  // N/M/T sub-header
+  var turnoHdr = ['','','','',''];
+  for(var dd=1; dd<=diasMes; dd++){ SIGLAS.forEach(function(s){ turnoHdr.push(s); }); }
+  rows1.push(turnoHdr);
 
   Object.keys(maqMap).sort().forEach(function(maq){
-    rows1.push([]);
-    rows1.push(['══ ' + maq + ' ══','','','','','','','','']);
-    var tareas = Object.values(maqMap[maq]).sort(function(a,b){ return a.tarea.localeCompare(b.tarea); });
-    tareas.forEach(function(task){
-      if(task.completions.length === 0){
-        rows1.push(['', task.tarea, task.area, task.turnoConfig, task.prioridad, '—', '—', '—', 'PENDIENTE']);
-      } else {
-        task.completions.sort(function(a,b){ return a.fecha.localeCompare(b.fecha); }).forEach(function(c, i){
-          rows1.push(['', i===0?task.tarea:'', i===0?task.area:'', i===0?task.turnoConfig:'', i===0?task.prioridad:'', c.fecha, c.turno, c.mecanico, c.hora]);
+    var secRow = ['══ '+maq+' ══']; while(secRow.length<totalCols) secRow.push('');
+    rows1.push(secRow);
+
+    maqMap[maq].slice().sort(function(a,b){ return taskMeta[a].tarea.localeCompare(taskMeta[b].tarea); }).forEach(function(id){
+      var meta = taskMeta[id];
+      var row = ['', meta.tarea, meta.area, meta.turnoConfig, meta.prioridad];
+      var done=0, total=0;
+      for(var dd=1; dd<=diasMes; dd++){
+        var fk = mes+'-'+dd.toString().padStart(2,'0');
+        var dayData = matrix[id] && matrix[id][fk] ? matrix[id][fk] : {};
+        TURNOS.forEach(function(turno, ti){
+          var val = dayData[turno] || '';
+          if(val) done++;
+          total++;
+          row.push(val);
         });
       }
+      var pct = total ? Math.round(done/total*100) : 0;
+      row.push(done+'/'+diasMes+' ('+pct+'%)');
+      rows1.push(row);
     });
   });
 
   var ws1 = XLSX.utils.aoa_to_sheet(rows1);
-  ws1['!cols'] = [{wch:28},{wch:40},{wch:14},{wch:12},{wch:10},{wch:12},{wch:12},{wch:14},{wch:8}];
+  var wscols = [{wch:26},{wch:36},{wch:12},{wch:10},{wch:9}];
+  for(var dd=0; dd<diasMes; dd++){ wscols.push({wch:3}); wscols.push({wch:3}); wscols.push({wch:3}); }
+  wscols.push({wch:12});
+  ws1['!cols'] = wscols;
   XLSX.utils.book_append_sheet(wb, ws1, 'Por Maquina');
 
   // ── HOJA 2: RESUMEN POR TURNO ────────────────────────────
@@ -3019,6 +3079,157 @@ function _generarExcelMensual(mes, mesLabel, turnos, tareasMap){
 
   XLSX.writeFile(wb, 'informe_mantenimiento_' + mes + '.xlsx');
   showToast('📊 Informe ' + mesLabel + ' generado correctamente');
+}
+
+// ── INFORME DIARIO IMPRIMIBLE CON COLORES ─────────────────
+function verInformeDiarioMensual(){
+  var mes = document.getElementById('expMes').value;
+  if(!mes){ showToast('⚠️ Selecciona un mes'); return; }
+  var parts = mes.split('-');
+  var mesLabel = _MESES_ES[parseInt(parts[1])-1] + ' ' + parts[0];
+  var info = document.getElementById('expMesInfo');
+  if(info) info.textContent = 'Cargando...';
+  Promise.all([
+    DB.ref('registros_turno').once('value'),
+    DB.ref('tareas_diarias').once('value')
+  ]).then(function(snaps){
+    var fbTurnos = snaps[0].val() || {};
+    var tareasMap = {};
+    Object.values(snaps[1].val() || {}).forEach(function(t){ tareasMap[t.id] = t; });
+    var seenKeys = {};
+    var allTurnos = Object.values(fbTurnos).filter(function(r){
+      if(!r.fecha || !r.fecha.startsWith(mes)) return false;
+      var k = r.fecha+'|'+(r.turno||'')+'|'+(r.mecanico||'');
+      if(seenKeys[k] && seenKeys[k].ts >= (r.ts||0)) return false;
+      seenKeys[k] = r; return true;
+    });
+    getTurnos().filter(function(r){ return r.fecha && r.fecha.startsWith(mes); }).forEach(function(r){
+      var k = r.fecha+'|'+(r.turno||'')+'|'+(r.mecanico||'');
+      if(!seenKeys[k]){ allTurnos.push(r); seenKeys[k]=r; }
+    });
+    if(!allTurnos.length){ if(info) info.textContent='Sin registros'; showToast('Sin datos para ese mes'); return; }
+    if(info) info.textContent = allTurnos.length+' turnos';
+    _abrirInformeDiario(mes, mesLabel, allTurnos, tareasMap);
+  }).catch(function(){
+    var allTurnos = getTurnos().filter(function(r){ return r.fecha && r.fecha.startsWith(mes); });
+    if(!allTurnos.length){ showToast('Sin datos'); return; }
+    _abrirInformeDiario(mes, mesLabel, allTurnos, {});
+  });
+}
+
+function _abrirInformeDiario(mes, mesLabel, turnos, tareasMap){
+  var d = _buildMatrixData(mes, turnos, tareasMap);
+  var diasMes=d.diasMes, TURNOS=d.TURNOS, matrix=d.matrix, taskMeta=d.taskMeta, maqMap=d.maqMap;
+  var SIGLAS=['N','M','T'];
+  var TURNO_LABEL={'NOCHE':'Noche','MAÑANA':'Mañana','TARDE':'Tarde'};
+
+  // Mechanic legend
+  var mecsVistos={};
+  turnos.forEach(function(r){ if(r.mecanico) mecsVistos[r.mecanico]=_mecIniciales(r.mecanico); });
+  var legendHTML = Object.keys(mecsVistos).sort().map(function(n){
+    return '<span style="margin-right:14px"><b>'+mecsVistos[n]+'</b> = '+n+'</span>';
+  }).join('');
+
+  // KPIs
+  var totalDone=0, totalAll=0;
+  turnos.forEach(function(r){ totalDone+=(r.done||0); totalAll+=(r.total||0); });
+  var pctGlobal = totalAll ? Math.round(totalDone/totalAll*100) : 0;
+  var kpiColor = pctGlobal>=100?'#1e8449':pctGlobal>=60?'#b7770d':'#c0392b';
+
+  // Day headers (with day of week)
+  var diasSem=['D','L','M','X','J','V','S'];
+  var dayHeaders='';
+  for(var dd=1; dd<=diasMes; dd++){
+    var dow = new Date(d.anio, d.mm-1, dd).getDay();
+    var isWe = dow===0||dow===6;
+    dayHeaders += '<th colspan="3" style="background:#1a2d42;color:'+(isWe?'#f39c12':'#c9a227')+';font-size:9px;padding:3px 1px;text-align:center;border:1px solid #2a3d52">'
+      + dd+'<br><span style="font-weight:400;opacity:.7">'+diasSem[dow]+'</span></th>';
+  }
+  var turnoHeaders='<th style="width:22px;background:#0f1e2e;color:#888;font-size:8px;padding:2px 1px;text-align:center;border:1px solid #2a3d52">N</th>'
+    +'<th style="width:22px;background:#0f1e2e;color:#888;font-size:8px;padding:2px 1px;text-align:center;border:1px solid #2a3d52">M</th>'
+    +'<th style="width:22px;background:#0f1e2e;color:#888;font-size:8px;padding:2px 1px;text-align:center;border:1px solid #2a3d52">T</th>';
+  var turnoColHeaders = '<th></th><th></th><th></th><th></th><th></th>'
+    + Array(diasMes).fill(turnoHeaders).join('');
+
+  // Build machine sections
+  var sectionsHTML = Object.keys(maqMap).sort().map(function(maq){
+    var taskRows = maqMap[maq].slice().sort(function(a,b){ return taskMeta[a].tarea.localeCompare(taskMeta[b].tarea); }).map(function(id){
+      var meta = taskMeta[id];
+      var done=0, total=0;
+      var cells='';
+      for(var dd=1; dd<=diasMes; dd++){
+        var fk = mes+'-'+dd.toString().padStart(2,'0');
+        var dayData = matrix[id] && matrix[id][fk] ? matrix[id][fk] : {};
+        TURNOS.forEach(function(turno){
+          var val = dayData[turno]||'';
+          if(val) done++;
+          total++;
+          cells += '<td style="text-align:center;font-size:8px;font-weight:700;padding:2px 1px;border:1px solid #e8e8e8;color:#1e6e3a;white-space:nowrap">'+val+'</td>';
+        });
+      }
+      var pct = total ? Math.round(done/total*100) : 0;
+      var bg = pct>=100?'#d4edda':pct>=60?'#fff3cd':'#f8d7da';
+      var pctColor = pct>=100?'#155724':pct>=60?'#856404':'#721c24';
+      return '<tr style="background:'+bg+'">'
+        +'<td style="padding:3px 6px;font-size:10px;color:#555;border:1px solid #ddd;white-space:nowrap">'+meta.area+'</td>'
+        +'<td style="padding:3px 8px;font-size:10px;font-weight:600;color:#1a1a2e;border:1px solid #ddd">'+meta.tarea+'</td>'
+        +'<td style="text-align:center;font-size:9px;color:#666;border:1px solid #ddd;white-space:nowrap">'+meta.turnoConfig+'</td>'
+        +'<td style="text-align:center;font-size:9px;color:#666;border:1px solid #ddd">'+meta.prioridad+'</td>'
+        +'<td style="text-align:center;font-size:9px;font-weight:700;color:'+pctColor+';border:1px solid #ddd;white-space:nowrap">'+pct+'%</td>'
+        +cells+'</tr>';
+    }).join('');
+
+    return '<tr><td colspan="'+(5+diasMes*3)+'" style="background:#0d1b2a;color:#c9a227;font-weight:900;font-size:10px;letter-spacing:.1em;padding:5px 10px;border:1px solid #2a3d52">══ '+maq+' ══</td></tr>'
+      + taskRows;
+  }).join('');
+
+  var fd = new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'});
+  var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">'
+    +'<title>Preventivo Diario '+mesLabel+' — PANALCOR</title>'
+    +'<style>'
+    +'*{box-sizing:border-box;margin:0;padding:0}'
+    +'body{font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#1a1a2e;background:#fff;padding:8mm}'
+    +'@media print{.np{display:none!important} @page{margin:5mm;size:A4 landscape} body{padding:0}}'
+    +'.pbtn{position:fixed;top:12px;right:12px;background:#0d1b2a;color:#c9a227;border:2px solid #c9a227;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif;z-index:99}'
+    +'.pbtn:hover{background:#c9a227;color:#0d1b2a}'
+    +'table{border-collapse:collapse;width:100%}'
+    +'</style></head><body>'
+    +'<button class="pbtn np" onclick="window.print()">🖨️ Imprimir / PDF</button>'
+    // Header
+    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #c9a227;padding-bottom:8px;margin-bottom:10px">'
+    +'<div><div style="font-size:16px;font-weight:900;color:#0d1b2a;letter-spacing:.04em">PANALCOR S.L.</div>'
+    +'<div style="font-size:11px;font-weight:700;color:#555;margin-top:2px">Informe Mensual Mantenimiento Preventivo Diario</div></div>'
+    +'<div style="text-align:right;font-size:10px;color:#888;line-height:1.7">Mes: <b>'+mesLabel.toUpperCase()+'</b><br>Generado: '+fd+'</div></div>'
+    // KPIs
+    +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px">'
+    +'<div style="border:1px solid #ddd;border-radius:5px;padding:8px;text-align:center"><div style="font-size:20px;font-weight:900;color:#2980b9">'+totalAll+'</div><div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#888;margin-top:2px">Total registros</div></div>'
+    +'<div style="border:1px solid #ddd;border-radius:5px;padding:8px;text-align:center"><div style="font-size:20px;font-weight:900;color:#1e8449">'+totalDone+'</div><div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#888;margin-top:2px">Realizadas</div></div>'
+    +'<div style="border:1px solid #ddd;border-radius:5px;padding:8px;text-align:center"><div style="font-size:20px;font-weight:900;color:#c0392b">'+(totalAll-totalDone)+'</div><div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#888;margin-top:2px">Pendientes</div></div>'
+    +'<div style="border:1px solid #ddd;border-radius:5px;padding:8px;text-align:center"><div style="font-size:20px;font-weight:900;color:'+kpiColor+'">'+pctGlobal+'%</div><div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#888;margin-top:2px">Cumplimiento</div></div>'
+    +'</div>'
+    // Legend
+    +'<div style="font-size:9px;color:#555;margin-bottom:8px;padding:5px 8px;background:#f8f9fa;border-radius:4px;border:1px solid #eee">'
+    +'<b style="color:#0d1b2a">MECÁNICOS:</b> '+legendHTML
+    +'&nbsp;&nbsp;&nbsp;<b style="color:#155724">■</b> ≥100% &nbsp;<b style="color:#856404">■</b> ≥60% &nbsp;<b style="color:#721c24">■</b> &lt;60%</div>'
+    // Matrix table
+    +'<div style="overflow-x:auto"><table>'
+    +'<thead>'
+    +'<tr style="background:#0d1b2a">'
+    +'<th style="padding:4px 6px;color:#c9a227;font-size:9px;text-align:left;border:1px solid #2a3d52;white-space:nowrap">ÁREA</th>'
+    +'<th style="padding:4px 8px;color:#c9a227;font-size:9px;text-align:left;border:1px solid #2a3d52;min-width:140px">TAREA</th>'
+    +'<th style="padding:4px 6px;color:#c9a227;font-size:9px;text-align:center;border:1px solid #2a3d52;white-space:nowrap">TURNO</th>'
+    +'<th style="padding:4px 6px;color:#c9a227;font-size:9px;text-align:center;border:1px solid #2a3d52">PRIO.</th>'
+    +'<th style="padding:4px 6px;color:#c9a227;font-size:9px;text-align:center;border:1px solid #2a3d52">%</th>'
+    +dayHeaders+'</tr>'
+    +'<tr style="background:#0a1520">'+turnoColHeaders+'</tr>'
+    +'</thead><tbody>'+sectionsHTML+'</tbody></table></div>'
+    +'<div style="margin-top:10px;border-top:1px solid #eee;padding-top:5px;font-size:9px;color:#aaa;display:flex;justify-content:space-between">'
+    +'<span>PANALCOR S.L. — Sistema GESTION 3.0</span><span>'+mesLabel+' | '+pctGlobal+'% cumplimiento global</span></div>'
+    +'</body></html>';
+
+  var w = window.open('','_blank','width=1200,height=800,scrollbars=yes,resizable=yes');
+  if(w){ w.document.write(html); w.document.close(); }
+  else { showToast('⚠️ Activa las ventanas emergentes'); }
 }
 
 // ══════════════════════════════════════════════════
