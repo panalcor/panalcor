@@ -1092,8 +1092,11 @@ function _aplicarSesionMec(nombre){
   document.getElementById('mecLoginOverlay').style.display = 'none';
   cargarTareasDiarias();
   var h = window.location.hash;
-  if(h === '#mantenimiento' || h === '#formacion') {
-    setTimeout(function(){ switchTab(h.slice(1)); }, 100);
+  if(h === '#mantenimiento' || h === '#formacion' || h === '#cierre') {
+    setTimeout(function(){
+      switchTab(h.slice(1));
+      if(h === '#cierre') cargarCierreTurno();
+    }, 100);
   }
   var el = document.getElementById('mecNomTopbar');
   if(el){ el.textContent = '\u{1F477} ' + nombre; el.style.display = 'block'; }
