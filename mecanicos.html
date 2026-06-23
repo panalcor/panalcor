@@ -325,6 +325,9 @@ if('serviceWorker' in navigator){
   <div class="tab" id="tabFrioMec" onclick="switchTab('frio')" style="display:none">
     <span class="tab-icon">❄️</span>Frío
   </div>
+  <div class="tab" onclick="switchTab('cierre'); cargarCierreTurno()">
+    <span class="tab-icon">🚪</span>Cerrar Turno
+  </div>
 </div>
 
 <!-- ══════════ PANEL REPUESTOS ══════════ -->
@@ -1375,6 +1378,42 @@ function mecOvLogin(){
 </div><!-- /padding -->
 </div><!-- /panel-frio -->
 
+<!-- ══════════ PANEL CIERRE DE TURNO ══════════ -->
+<div class="panel" id="panel-cierre" style="max-width:700px">
+
+  <!-- Nota del turno anterior -->
+  <div id="cierreNotaAnterior" style="display:none;background:rgba(52,152,219,0.1);border:2px solid rgba(52,152,219,0.4);border-radius:12px;padding:16px 18px;margin-bottom:20px">
+    <div style="font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:#74b9ff;font-weight:700;margin-bottom:6px">📩 Nota del turno anterior</div>
+    <div id="cierreNotaAnteriorTexto" style="font-size:0.95rem;color:rgba(255,255,255,0.85);line-height:1.6"></div>
+    <div id="cierreNotaAnteriorMeta" style="font-size:0.75rem;color:rgba(255,255,255,0.35);margin-top:8px"></div>
+  </div>
+
+  <!-- Averías abiertas -->
+  <div style="font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid rgba(201,162,39,0.2)">🔴 Averías abiertas en este momento</div>
+  <div id="cierreAverias">
+    <div style="color:rgba(255,255,255,0.3);font-size:0.9rem;padding:14px 0">Cargando...</div>
+  </div>
+
+  <div style="height:1px;background:rgba(255,255,255,0.07);margin:20px 0"></div>
+
+  <!-- Nota para el relevo -->
+  <div style="font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);margin-bottom:10px">📝 Nota para el turno siguiente</div>
+  <textarea id="cierreNota" rows="5" placeholder="Escribe aquí lo que el turno siguiente necesita saber: qué ha pasado, qué queda pendiente, si falta algún repuesto, si hay que vigilar algo..." style="width:100%;background:#0d1b2a;color:#f0f4f8;border:1px solid rgba(255,255,255,0.2);border-radius:9px;padding:13px 15px;font-family:'Barlow',sans-serif;font-size:1rem;resize:vertical;line-height:1.55"></textarea>
+
+  <div style="display:flex;gap:12px;margin-top:14px;flex-wrap:wrap">
+    <button onclick="guardarCierreTurno()" style="flex:1;padding:15px;background:linear-gradient(135deg,#c9a227,#a07d1a);color:#0d1b2a;border:none;border-radius:9px;font-family:'Barlow',sans-serif;font-size:1.05rem;font-weight:900;cursor:pointer;letter-spacing:0.06em;min-width:180px">
+      ✅ Guardar y cerrar turno
+    </button>
+    <button onclick="switchTab('mantenimiento')" style="padding:15px 20px;background:transparent;border:2px solid rgba(255,255,255,0.2);border-radius:9px;color:rgba(255,255,255,0.6);font-family:'Barlow',sans-serif;font-size:0.95rem;cursor:pointer">
+      ← Volver
+    </button>
+  </div>
+
+  <div id="cierreMsgOk" style="display:none;margin-top:14px;background:rgba(46,204,113,0.15);border:1px solid rgba(46,204,113,0.4);border-radius:9px;padding:13px 16px;color:#2ecc71;font-weight:700;font-size:0.95rem">
+    ✅ Nota guardada. ¡Buen descanso!
+  </div>
+</div><!-- /panel-cierre -->
+
 <script>
 // ══════════════════════════════════════
 // FRÍO — mecanicos.html
@@ -1642,6 +1681,106 @@ function frioGuardarPrev() {
     FRIO_CHECKLIST.forEach((_,i)=>{const el=document.getElementById('frioPrChk_'+i);if(el)el.checked=false;});
     frioLoadPrev();
     frioToast('✅ Revisión preventiva guardada');
+  });
+}
+
+// ══════════ CIERRE DE TURNO ══════════
+function _turnoAnterior(turno){
+  if(turno==='MAÑANA') return 'NOCHE';
+  if(turno==='TARDE')  return 'MAÑANA';
+  return 'TARDE';
+}
+function _fechaTurnoAnterior(fecha, turno){
+  // Si el turno actual es MAÑANA, la nota del anterior (NOCHE) es del día anterior
+  if(turno==='MAÑANA'){
+    var d = new Date(fecha+'T12:00:00');
+    d.setDate(d.getDate()-1);
+    return d.toISOString().slice(0,10);
+  }
+  return fecha;
+}
+
+function cargarCierreTurno(){
+  var turno = getTurnoActual();
+  var fecha = document.getElementById('fechaSelect').value || getTodayKey();
+
+  // Cargar nota del turno anterior
+  var tAnt  = _turnoAnterior(turno);
+  var fAnt  = _fechaTurnoAnterior(fecha, turno);
+  var refAnt = 'traspasos_turno/' + fAnt + '/' + tAnt;
+  _FB_APP_MEC.database().ref(refAnt).once('value').then(function(snap){
+    var datos = snap.val();
+    var bloque = document.getElementById('cierreNotaAnterior');
+    if(datos && datos.nota && datos.nota.trim()){
+      document.getElementById('cierreNotaAnteriorTexto').textContent = datos.nota;
+      document.getElementById('cierreNotaAnteriorMeta').textContent =
+        'Escrito por ' + (datos.mecanico||'—') + ' · Turno ' + tAnt + ' del ' + fAnt;
+      bloque.style.display = 'block';
+    } else {
+      bloque.style.display = 'none';
+    }
+  });
+
+  // Cargar averías abiertas desde Firebase
+  var divAv = document.getElementById('cierreAverias');
+  divAv.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:0.9rem;padding:14px 0">Cargando...</div>';
+  _FB_APP_MEC.database().ref('averias').once('value').then(function(snap){
+    var val = snap.val();
+    var abiertas = [];
+    if(val){
+      Object.values(val).forEach(function(a){
+        if(a.estado === 'en_curso' || a.estado === 'pendiente') abiertas.push(a);
+      });
+      abiertas.sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+    }
+    if(abiertas.length === 0){
+      divAv.innerHTML = '<div style="color:#2ecc71;font-size:0.95rem;padding:12px 0;font-weight:700">✅ No hay averías abiertas ahora mismo. ¡Todo en orden!</div>';
+    } else {
+      var html = '';
+      abiertas.forEach(function(a){
+        var mecs = a.mecanicos ? (Array.isArray(a.mecanicos)?a.mecanicos.join(', '):a.mecanicos) : '—';
+        html += '<div style="background:#1a2d42;border:1px solid rgba(231,76,60,0.35);border-radius:9px;padding:12px 15px;margin-bottom:8px">';
+        html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">';
+        html += '<span style="background:rgba(231,76,60,0.2);color:#ff6b6b;border:1px solid rgba(231,76,60,0.4);border-radius:5px;padding:2px 9px;font-size:0.75rem;font-weight:700">' + (a.estado==='en_curso'?'EN CURSO':'PENDIENTE') + '</span>';
+        html += '<span style="font-weight:700;font-size:0.95rem">' + (a.maqNombre||a.maquina||'—') + '</span>';
+        html += '<span style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-left:auto">' + (a.fecha||'') + '</span>';
+        html += '</div>';
+        html += '<div style="font-size:0.88rem;color:rgba(255,255,255,0.7)">' + (a.parte?'<strong>'+a.parte+'</strong> — ':'') + (a.descripcion||'').substring(0,100) + '</div>';
+        html += '<div style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-top:4px">👷 ' + mecs + '</div>';
+        html += '</div>';
+      });
+      divAv.innerHTML = html;
+    }
+  }).catch(function(){
+    divAv.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:0.85rem">No se pudo cargar. Revisa la conexión.</div>';
+  });
+
+  // Limpiar campos
+  document.getElementById('cierreNota').value = '';
+  document.getElementById('cierreMsgOk').style.display = 'none';
+}
+
+function guardarCierreTurno(){
+  var nota = document.getElementById('cierreNota').value.trim();
+  if(!nota){ alert('Escribe algo para el turno siguiente antes de guardar.'); return; }
+
+  var turno   = getTurnoActual();
+  var fecha   = document.getElementById('fechaSelect').value || getTodayKey();
+  var mecanico = _mecSesionValida() || 'Mecánico';
+  var ref = 'traspasos_turno/' + fecha + '/' + turno;
+
+  _FB_APP_MEC.database().ref(ref).set({
+    nota: nota,
+    mecanico: mecanico,
+    fecha: fecha,
+    turno: turno,
+    ts: Date.now()
+  }).then(function(){
+    document.getElementById('cierreMsgOk').style.display = 'block';
+    document.getElementById('cierreNota').value = '';
+    setTimeout(function(){ document.getElementById('cierreMsgOk').style.display='none'; }, 4000);
+  }).catch(function(){
+    alert('Error al guardar. Revisa la conexión a internet.');
   });
 }
 </script>
