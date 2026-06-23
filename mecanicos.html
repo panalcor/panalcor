@@ -1707,18 +1707,31 @@ function cargarCierreTurno(){
   var turno = getTurnoActual();
   var fecha = document.getElementById('fechaSelect').value || getTodayKey();
 
-  // Cargar nota del turno anterior
+  // Cargar notas del turno anterior (una por mecánico)
   var tAnt  = _turnoAnterior(turno);
   var fAnt  = _fechaTurnoAnterior(fecha, turno);
   var refAnt = 'traspasos_turno/' + fAnt + '/' + tAnt;
   _FB_APP_MEC.database().ref(refAnt).once('value').then(function(snap){
     var datos = snap.val();
     var bloque = document.getElementById('cierreNotaAnterior');
-    if(datos && datos.nota && datos.nota.trim()){
-      document.getElementById('cierreNotaAnteriorTexto').textContent = datos.nota;
-      document.getElementById('cierreNotaAnteriorMeta').textContent =
-        'Escrito por ' + (datos.mecanico||'—') + ' · Turno ' + tAnt + ' del ' + fAnt;
-      bloque.style.display = 'block';
+    if(datos && typeof datos === 'object'){
+      var notas = Object.values(datos).filter(function(n){ return n && n.nota && n.nota.trim(); });
+      notas.sort(function(a,b){ return (a.ts||0)-(b.ts||0); });
+      if(notas.length > 0){
+        var html = '';
+        notas.forEach(function(n){
+          html += '<div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.08)">';
+          html += '<div style="font-size:0.8rem;color:rgba(100,180,255,0.7);font-weight:700;margin-bottom:4px">👷 ' + (n.mecanico||'—') + '</div>';
+          html += '<div style="font-size:0.95rem;color:rgba(255,255,255,0.85);line-height:1.55">' + n.nota.replace(/\n/g,'<br>') + '</div>';
+          html += '</div>';
+        });
+        document.getElementById('cierreNotaAnteriorTexto').innerHTML = html;
+        document.getElementById('cierreNotaAnteriorMeta').textContent =
+          notas.length + ' nota(s) del turno ' + tAnt + ' del ' + fAnt;
+        bloque.style.display = 'block';
+      } else {
+        bloque.style.display = 'none';
+      }
     } else {
       bloque.style.display = 'none';
     }
@@ -1767,10 +1780,12 @@ function guardarCierreTurno(){
   var nota = document.getElementById('cierreNota').value.trim();
   if(!nota){ alert('Escribe algo para el turno siguiente antes de guardar.'); return; }
 
-  var turno   = getTurnoActual();
-  var fecha   = document.getElementById('fechaSelect').value || getTodayKey();
-  var mecanico = _mecSesionValida() || 'Mecánico';
-  var ref = 'traspasos_turno/' + fecha + '/' + turno;
+  var turno    = getTurnoActual();
+  var fecha    = document.getElementById('fechaSelect').value || getTodayKey();
+  var mecanico = _mecSesionValida() || 'Mecanico';
+  // Clave segura para Firebase (sin espacios ni caracteres especiales)
+  var mecKey   = mecanico.toUpperCase().replace(/[^A-Z0-9]/g, '_');
+  var ref = 'traspasos_turno/' + fecha + '/' + turno + '/' + mecKey;
 
   _FB_APP_MEC.database().ref(ref).set({
     nota: nota,
