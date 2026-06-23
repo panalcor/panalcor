@@ -240,6 +240,35 @@ a{color:inherit;text-decoration:none}
 .foto-preview .foto-del{position:absolute;top:-6px;left:66px;background:#e74c3c;color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:0.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:900;line-height:1}
 .btn-foto{background:rgba(52,152,219,0.15);border:1px dashed rgba(52,152,219,0.5);color:#74b9ff;border-radius:8px;padding:10px 16px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.9rem;display:flex;align-items:center;gap:8px;width:100%;justify-content:center;margin-bottom:10px}
 .btn-foto:active{background:rgba(52,152,219,0.25)}
+
+/* ── FICHA MÁQUINA ── */
+.ficha-header{background:linear-gradient(135deg,var(--navy-mid),var(--navy-light));border:2px solid rgba(201,162,39,0.4);border-radius:14px;padding:20px 22px;margin-bottom:18px;display:flex;align-items:center;gap:18px}
+.ficha-icon{font-size:2.6rem;line-height:1}
+.ficha-header-info{flex:1}
+.ficha-maq-nombre{font-size:1.5rem;font-weight:900;color:var(--white);letter-spacing:0.04em}
+.ficha-maq-id{font-size:0.8rem;color:var(--gold);letter-spacing:0.15em;font-weight:700;margin-top:2px}
+.ficha-maq-tipo{font-size:0.85rem;color:rgba(255,255,255,0.5);margin-top:4px}
+.ficha-kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:18px}
+.ficha-kpi{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px;text-align:center}
+.ficha-kpi-num{font-size:1.8rem;font-weight:900;color:var(--gold-light)}
+.ficha-kpi-label{font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-top:4px}
+.ficha-kpi.ficha-kpi-alert .ficha-kpi-num{color:#ff6b6b}
+.ficha-kpi.ficha-kpi-ok .ficha-kpi-num{color:var(--green)}
+.ficha-averia-row{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.08);border-radius:9px;padding:13px 16px;margin-bottom:8px;cursor:pointer;transition:border-color .2s}
+.ficha-averia-row:hover{border-color:rgba(201,162,39,0.3)}
+.ficha-av-top{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.ficha-av-fecha{font-size:0.75rem;color:rgba(255,255,255,0.4);min-width:80px}
+.ficha-av-desc{font-size:0.92rem;font-weight:600;flex:1}
+.ficha-av-body{font-size:0.82rem;color:rgba(255,255,255,0.6);line-height:1.5;display:none;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.07)}
+.ficha-av-body.open{display:block}
+.ficha-av-sol{color:rgba(46,204,113,0.9);margin-top:4px}
+.ficha-recurrente{background:rgba(231,76,60,0.12);border:2px solid rgba(231,76,60,0.45);border-radius:10px;padding:14px 18px;margin-bottom:16px}
+.ficha-recurrente-title{font-size:0.95rem;font-weight:800;color:#ff6b6b;margin-bottom:4px}
+.ficha-recurrente-body{font-size:0.85rem;color:rgba(255,255,255,0.75)}
+.ficha-sep{height:1px;background:rgba(255,255,255,0.07);margin:18px 0}
+.ficha-nueva-btn{width:100%;padding:16px;background:linear-gradient(135deg,rgba(231,76,60,0.35),rgba(180,40,30,0.35));border:2px solid rgba(231,76,60,0.6);border-radius:10px;color:#ff8a80;font-family:'Barlow',sans-serif;font-size:1.05rem;font-weight:800;cursor:pointer;letter-spacing:0.06em;transition:all .2s;margin-top:4px}
+.ficha-nueva-btn:hover{background:linear-gradient(135deg,rgba(231,76,60,0.55),rgba(180,40,30,0.55))}
+.ficha-empty{text-align:center;padding:28px;color:rgba(255,255,255,0.3);font-size:0.95rem}
 </style>
 <script>
 if('serviceWorker' in navigator){
@@ -290,9 +319,17 @@ if('serviceWorker' in navigator){
 
 <div class="tabs">
   <div class="tab active" onclick="switchTab('nueva')" id="tab-nueva">🔴 Nueva Avería</div>
+  <div class="tab" onclick="switchTab('ficha')" id="tab-ficha" style="display:none">🏭 Ficha Máquina</div>
   <div class="tab" onclick="switchTab('historial')" id="tab-historial">📋 Historial</div>
   <div class="tab" onclick="switchTab('stats')" id="tab-stats">📊 Estadísticas</div>
   <div class="tab" onclick="switchTab('otros')" id="tab-otros">🔨 Otros Trabajos</div>
+</div>
+
+<!-- ══════════ PANEL FICHA MÁQUINA ══════════ -->
+<div class="panel" id="panel-ficha">
+  <div id="fichaContenido">
+    <div class="ficha-empty">Selecciona una máquina para ver su ficha.</div>
+  </div>
 </div>
 
 <!-- ══════════ PANEL NUEVA AVERÍA ══════════ -->
@@ -1091,6 +1128,12 @@ function init(){
        document.getElementById('tab-historial').style.display !== 'none'){
       renderHistorial();
     }
+    // Refrescar ficha si está activa (datos llegaron de Firebase después del primer render)
+    var panelFicha = document.getElementById('panel-ficha');
+    if(panelFicha && panelFicha.classList.contains('active')){
+      var maqQRr = new URLSearchParams(window.location.search).get('maq');
+      if(maqQRr) mostrarFichaMaquina(maqQRr);
+    }
   });
 
   // ── Parámetros URL ──
@@ -1151,8 +1194,9 @@ function init(){
         }
       }
 
-      switchTab('nueva');
-      showToast('📱 ' + (maqObj ? maqObj.n : maqQR) + ' — Registra la avería');
+      // Mostrar ficha histórica primero; desde ahí el mecánico puede declarar avería
+      mostrarFichaMaquina(maqQR);
+      showToast('📱 ' + (maqObj ? maqObj.n : maqQR) + ' — Ficha de la máquina');
       setTimeout(function(){ window.scrollTo({top:0, behavior:'smooth'}); }, 100);
     }, 400);
   }
@@ -2518,6 +2562,131 @@ function secInst(titulo, texto){
 
 function cerrarInstrucciones(){
   document.getElementById('instOverlay').classList.remove('open');
+}
+
+// ══════════ FICHA HISTÓRICA DE MÁQUINA ══════════
+function mostrarFichaMaquina(maqId){
+  var maqObj = MAQUINAS.find(function(m){ return m.id === maqId; });
+  if(!maqObj) return;
+
+  // Mostrar la pestaña
+  var tabFicha = document.getElementById('tab-ficha');
+  if(tabFicha) tabFicha.style.display = '';
+
+  // Filtrar averías de esta máquina (resueltas, ordenadas de más reciente a más antigua)
+  var todas = averias || [];
+  var deEstaMaq = todas.filter(function(a){ return a.maqId === maqId; });
+  deEstaMaq.sort(function(a,b){
+    var fa = (a.fecha||'') + (a.horaInicio||'');
+    var fb = (b.fecha||'') + (b.horaInicio||'');
+    return fb.localeCompare(fa);
+  });
+
+  var resueltas = deEstaMaq.filter(function(a){ return a.estado === 'resuelta'; });
+  var enCurso   = deEstaMaq.filter(function(a){ return a.estado === 'en_curso' || a.estado === 'pendiente'; });
+
+  // Tiempo medio de parada (en minutos, solo resueltas con tiempoMin)
+  var tiempos = resueltas.map(function(a){ return parseFloat(a.tiempoMin)||0; }).filter(function(t){ return t > 0; });
+  var tMedio = tiempos.length ? Math.round(tiempos.reduce(function(s,t){ return s+t; },0) / tiempos.length) : null;
+
+  // Detectar recurrencias: si la misma parte falla más de 2 veces en 90 días
+  var hace90 = new Date(); hace90.setDate(hace90.getDate()-90);
+  var porParte = {};
+  resueltas.forEach(function(a){
+    if(!a.fecha || new Date(a.fecha) < hace90) return;
+    var k = a.parte || 'GENERAL';
+    porParte[k] = (porParte[k]||0) + 1;
+  });
+  var recurrentes = Object.keys(porParte).filter(function(k){ return porParte[k] >= 3; });
+
+  // ── Construir HTML ──
+  var html = '';
+
+  // Cabecera con nombre e ID
+  var iconos = {'AMASADORA':'🥣','FORMADORA-ENTABLADORA':'🏭','HORNO':'🔥','CARRUSEL':'🔄',
+                'TUNEL CONGELACION':'❄️','CAMARA':'🧊','COMPRESOR':'💨','SECADOR':'🌬️',
+                'DIVISORA':'✂️','EMBOLADORA':'⚙️','FERMENTADORA':'🧪','A/A':'🌡️',
+                'ROBOT':'🤖','LAVADORA':'🫧','OTROS':'🔧','HORNO CLIENTE':'🔥'};
+  var icono = iconos[maqObj.t] || '⚙️';
+
+  html += '<div class="ficha-header">';
+  html += '<div class="ficha-icon">' + icono + '</div>';
+  html += '<div class="ficha-header-info">';
+  html += '<div class="ficha-maq-nombre">' + maqObj.n + '</div>';
+  html += '<div class="ficha-maq-id">' + maqObj.id + '</div>';
+  html += '<div class="ficha-maq-tipo">' + maqObj.t + (maqObj.f ? ' · ' + maqObj.f : '') + ' &nbsp;|&nbsp; ' + (maqObj.a||'') + '</div>';
+  html += '</div></div>';
+
+  // KPIs rápidos
+  var tMedioStr = tMedio ? (tMedio >= 60 ? Math.floor(tMedio/60)+'h '+(tMedio%60)+'min' : tMedio+'min') : '—';
+  var kpiAlerta = enCurso.length > 0 ? ' ficha-kpi-alert' : ' ficha-kpi-ok';
+  html += '<div class="ficha-kpi-row">';
+  html += '<div class="ficha-kpi"><div class="ficha-kpi-num">' + deEstaMaq.length + '</div><div class="ficha-kpi-label">Averías totales</div></div>';
+  html += '<div class="ficha-kpi' + kpiAlerta + '"><div class="ficha-kpi-num">' + enCurso.length + '</div><div class="ficha-kpi-label">En curso ahora</div></div>';
+  html += '<div class="ficha-kpi"><div class="ficha-kpi-num">' + tMedioStr + '</div><div class="ficha-kpi-label">Tiempo medio parada</div></div>';
+  html += '<div class="ficha-kpi"><div class="ficha-kpi-num">' + resueltas.length + '</div><div class="ficha-kpi-label">Resueltas</div></div>';
+  html += '</div>';
+
+  // Aviso de recurrencia
+  if(recurrentes.length > 0){
+    html += '<div class="ficha-recurrente">';
+    html += '<div class="ficha-recurrente-title">⚠️ FALLO RECURRENTE — últimos 90 días</div>';
+    html += '<div class="ficha-recurrente-body">Estas partes han fallado 3 o más veces: <strong>' + recurrentes.join(', ') + '</strong>. Puede ser que necesiten revisión o sustitución programada.</div>';
+    html += '</div>';
+  }
+
+  // Averías en curso
+  if(enCurso.length > 0){
+    html += '<div class="sec-title" style="color:#ff6b6b">🔴 Avería abierta ahora mismo</div>';
+    enCurso.forEach(function(a){
+      html += _fichaAveriaRow(a, true);
+    });
+    html += '<div class="ficha-sep"></div>';
+  }
+
+  // Historial reciente (últimas 10 resueltas)
+  html += '<div class="sec-title">Últimas averías resueltas</div>';
+  if(resueltas.length === 0){
+    html += '<div class="ficha-empty">Esta máquina no tiene averías resueltas registradas. ¡Buena señal! 👍</div>';
+  } else {
+    resueltas.slice(0,10).forEach(function(a){
+      html += _fichaAveriaRow(a, false);
+    });
+    if(resueltas.length > 10){
+      html += '<div style="text-align:center;font-size:0.8rem;color:rgba(255,255,255,0.3);padding:10px 0">... y ' + (resueltas.length-10) + ' averías más antiguas. Búscalas en la pestaña Historial.</div>';
+    }
+  }
+
+  html += '<div class="ficha-sep"></div>';
+  html += '<button class="ficha-nueva-btn" onclick="switchTab(\'nueva\')">🔴 Declarar nueva avería en esta máquina</button>';
+
+  document.getElementById('fichaContenido').innerHTML = html;
+  switchTab('ficha');
+}
+
+function _fichaAveriaRow(a, destacado){
+  var colorBadge = a.estado === 'resuelta' ? 'badge-resuel' : (a.estado === 'en_curso' ? 'badge-curso' : 'badge-pend');
+  var textBadge  = a.estado === 'resuelta' ? 'Resuelta' : (a.estado === 'en_curso' ? 'En curso' : 'Pendiente');
+  var desc = a.descripcion || a.desc || '(sin descripción)';
+  var solucion = a.accion || a.solucion || '';
+  var mecanicos = a.mecanicos ? (Array.isArray(a.mecanicos) ? a.mecanicos.join(', ') : a.mecanicos) : '';
+  var tiempo = a.tiempoMin ? (parseFloat(a.tiempoMin) >= 60 ? Math.floor(a.tiempoMin/60)+'h '+(a.tiempoMin%60)+'min' : a.tiempoMin+'min') : '';
+  var uid = 'fav_' + (a.id||Math.random().toString(36).slice(2));
+  var borde = destacado ? 'border-color:rgba(231,76,60,0.5)' : '';
+
+  var html = '<div class="ficha-averia-row" style="' + borde + '" onclick="document.getElementById(\'' + uid + '\').classList.toggle(\'open\')">';
+  html += '<div class="ficha-av-top">';
+  html += '<span class="ficha-av-fecha">' + (a.fecha||'—') + '</span>';
+  html += '<span class="ficha-av-desc">' + (a.parte ? '<strong>' + a.parte + '</strong> — ' : '') + desc.substring(0,80) + (desc.length>80?'…':'') + '</span>';
+  html += '<span class="averia-badge ' + colorBadge + '">' + textBadge + '</span>';
+  html += '</div>';
+  html += '<div class="ficha-av-body" id="' + uid + '">';
+  if(mecanicos) html += '<div>👷 <strong>' + mecanicos + '</strong></div>';
+  if(tiempo)    html += '<div>⏱️ Parada: <strong>' + tiempo + '</strong></div>';
+  if(solucion)  html += '<div class="ficha-av-sol">✅ Solución: ' + solucion + '</div>';
+  html += '</div>';
+  html += '</div>';
+  return html;
 }
 </script>
 
