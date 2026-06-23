@@ -2191,7 +2191,7 @@ function otrosGuardar() {
     otrosLimpiar();
     showToast(_otrosEditId ? '✅ Trabajo actualizado' : '✅ Trabajo guardado');
     _otrosEditId = null;
-  }).catch(function(){ showToast('❌ Error al guardar'); });
+  }).catch(function(e){ console.error('otrosGuardar error:', e && e.code, e && e.message, e); showToast('❌ Error al guardar: ' + (e && e.code || e && e.message || 'desconocido')); });
 }
 
 function otrosLimpiar() {
