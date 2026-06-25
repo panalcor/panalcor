@@ -1210,18 +1210,14 @@ function openCellEdit(mecId, dateStr){
   const nota  = mDat.nota   || '';
 
   const turnoWrap = document.getElementById('turnoFieldWrap');
-  if(mecId==='4' || mecId==='5'){
-    turnoWrap.style.display = 'block';
-    // Show computed default as hint
-    const wMon = getWeekMonday(dateStr);
-    const shifts = getWeekShifts(wMon);
-    const computed = shifts[mecId];
-    document.getElementById('editTurno').value = mDat.turno || computed;
-    turnoWrap.querySelector('label').textContent =
-      `Turno (por rotación: ${shiftLbl(computed)})`;
-  } else {
-    turnoWrap.style.display = 'none';
-  }
+  turnoWrap.style.display = 'block';
+  const wMon = getWeekMonday(dateStr);
+  const shifts = getWeekShifts(wMon);
+  const computed = shifts[mecId];
+  document.getElementById('editTurno').value = mDat.turno || computed || 'mañana';
+  turnoWrap.querySelector('label').textContent = computed
+    ? `Turno (rotación automática: ${shiftLbl(computed)})`
+    : 'Turno';
 
   document.getElementById('editEstado').value = est;
   document.getElementById('editNota').value   = nota;
@@ -1251,13 +1247,8 @@ function saveCellEdit(){
   const nota = document.getElementById('editNota').value.trim();
   const entry = { estado: est, nota };
 
-  if(mecId==='4' || mecId==='5'){
-    const wMon    = getWeekMonday(dateStr);
-    const shifts  = getWeekShifts(wMon);
-    const picked  = document.getElementById('editTurno').value;
-    // Only store turno if it differs from computed default
-    if(picked !== shifts[mecId]) entry.turno = picked;
-  }
+  const picked = document.getElementById('editTurno').value;
+  if(picked) entry.turno = picked;
 
   if(!S.dias[dateStr]) S.dias[dateStr] = {};
   if(est==='normal' && !nota && !entry.turno){
