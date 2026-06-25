@@ -1138,20 +1138,53 @@ function renderCalendar(){
       const k   = String(mId);
       const t   = effectiveTurno[k];
       const excs = excByMec[k];
-      const hasExc = excs.length > 0;
+
+      // Estado efectivo de la semana: si todos los días L-V tienen el mismo estado, mostrarlo
+      const estadosCounts = {};
+      let labDays = 0;
+      for(let i=0;i<7;i++){
+        const d = new Date(wMon); d.setDate(wMon.getDate()+i);
+        if(d.getDay()===0||d.getDay()===6) continue;
+        labDays++;
+        const est = S.dias[toDS(d)]?.[k]?.estado || 'normal';
+        estadosCounts[est] = (estadosCounts[est]||0) + 1;
+      }
+      // Estado dominante (≥ 4 días laborables de 5)
+      let estadoSemana = 'normal';
+      Object.entries(estadosCounts).forEach(([e,c])=>{
+        if(e!=='normal' && c >= Math.min(4, labDays)) estadoSemana = e;
+      });
+
+      // Si hay estado dominante toda la semana, no mostrar los chips individuales
+      const excsFiltered = estadoSemana !== 'normal'
+        ? excs.filter(e => e.estado !== estadoSemana)
+        : excs;
+      const hasExc = excsFiltered.length > 0;
 
       let excHtml = '';
       if(hasExc){
-        excHtml = '<div class="exc-days">' + excs.map(e =>
+        excHtml = '<div class="exc-days">' + excsFiltered.map(e =>
           `<span class="exc-chip exc-${e.estado}" onclick="event.stopPropagation();openCellEdit('${k}','${e.ds}')"
                  title="${e.parts.join(' | ')}">${DAYS_SH[e.dow]}</span>`
         ).join('') + '</div>';
       }
 
+      // Badge principal: estado si domina, sino turno
+      let mainBadge;
+      if(estadoSemana !== 'normal'){
+        const COLOR = {vacaciones:'#2ecc71',asunto:'#3498db',baja:'#e74c3c',sancion:'#e74c3c',libre:'#3498db'};
+        const BG    = {vacaciones:'rgba(46,204,113,0.18)',asunto:'rgba(52,152,219,0.18)',baja:'rgba(231,76,60,0.18)',sancion:'rgba(231,76,60,0.18)',libre:'rgba(52,152,219,0.18)'};
+        const col = COLOR[estadoSemana]||'#ccc';
+        const bg  = BG[estadoSemana]||'rgba(255,255,255,0.1)';
+        mainBadge = `<span class="sh-badge" style="background:${bg};color:${col};border:1px solid ${col}40">${estadoLbl(estadoSemana)}</span>`;
+      } else {
+        mainBadge = `<span class="sh-badge sh-${t}">${shiftLbl(t)}</span>`;
+      }
+
       const td = document.createElement('td');
       td.innerHTML = `<div class="week-cell${hasExc?' has-exc':''}"
             onclick="openWeekModal('${k}','${toDS(wMon)}')">
-        <span class="sh-badge sh-${t}">${shiftLbl(t)}</span>
+        ${mainBadge}
         ${excHtml}
       </div>`;
       tr.appendChild(td);
