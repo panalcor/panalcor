@@ -331,6 +331,13 @@ if('serviceWorker' in navigator){
     <h2 id="monthTitle">—</h2>
     <button class="nav-btn" onclick="nextWeek()">▶</button>
   </div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+    <span style="font-size:0.78rem;color:rgba(255,255,255,0.45)">Imprimir / PDF:</span>
+    <input type="date" id="printDesde" style="background:#0d1b2a;color:#f0f4f8;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:5px 10px;font-family:Barlow,sans-serif;font-size:0.82rem">
+    <span style="color:rgba(255,255,255,0.3);font-size:0.8rem">→</span>
+    <input type="date" id="printHasta" style="background:#0d1b2a;color:#f0f4f8;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:5px 10px;font-family:Barlow,sans-serif;font-size:0.82rem">
+    <button class="btn btn-primary" onclick="printCalendario()" style="padding:6px 16px;font-size:0.82rem">🖨️ Generar PDF / Imprimir</button>
+  </div>
   <div class="alert-banner error" id="coverageAlert"></div>
   <div class="legend">
     <div class="leg-item"><span class="sh-badge sh-mañana">MAÑ</span> Mañana</div>
@@ -842,6 +849,18 @@ function showTab(name){
   if(name==='config')    renderConfig();
 }
 function refreshAll(){
+  // Inicializar fechas del imprimible si aún están vacías
+  const pd = document.getElementById('printDesde');
+  const ph = document.getElementById('printHasta');
+  if(pd && !pd.value){
+    const hoy = new Date();
+    // Lunes de la semana actual
+    const lun = new Date(hoy); lun.setDate(hoy.getDate() - (hoy.getDay()||7) + 1);
+    // 4 semanas después
+    const fin = new Date(lun); fin.setDate(lun.getDate() + 27);
+    pd.value = toDS(lun);
+    ph.value = toDS(fin);
+  }
   renderCalendar();
   updateHeaders();
   const activeId = document.querySelector('.panel.active')?.id;
@@ -2088,6 +2107,147 @@ function saveWeekBulk(){
 }
 
 // Borrar todos los turnos guardados desde una fecha en adelante
+function printCalendario(){
+  const desde = document.getElementById('printDesde').value;
+  const hasta = document.getElementById('printHasta').value;
+  if(!desde || !hasta){ showToast('⚠️ Indica fecha inicio y fin'); return; }
+  if(hasta < desde){ showToast('⚠️ La fecha fin debe ser mayor que el inicio'); return; }
+
+  // Calcular lunes de la primera semana
+  let d = new Date(desde + 'T00:00:00');
+  while(d.getDay() !== 1) d.setDate(d.getDate()-1);
+  const endDate = new Date(hasta + 'T00:00:00');
+
+  const DAYS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const MONTHS = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+  // Obtener nombres de mecánicos
+  const mecNames = {};
+  [1,2,3,4,5].forEach(i => { mecNames[String(i)] = S.mecanicos[String(i)]?.nombre || 'Mec '+i; });
+
+  // Función helper: turno efectivo de un mecánico en una semana
+  function getTurnoSemana(mecId, wMon){
+    const k = String(mecId);
+    for(let i=0; i<7; i++){
+      const dd = new Date(wMon); dd.setDate(wMon.getDate()+i);
+      if(dd.getDay()===0||dd.getDay()===6) continue;
+      const stored = S.dias[toDS(dd)]?.[k]?.turno;
+      if(stored) return stored;
+    }
+    return getWeekShifts(wMon)[k] || 'mañana';
+  }
+
+  // Función helper: estado dominante de un mecánico en una semana
+  function getEstadoSemana(mecId, wMon){
+    const k = String(mecId);
+    const cnt = {};
+    for(let i=0; i<7; i++){
+      const dd = new Date(wMon); dd.setDate(wMon.getDate()+i);
+      if(dd.getDay()===0||dd.getDay()===6) continue;
+      const est = S.dias[toDS(dd)]?.[k]?.estado || 'normal';
+      cnt[est] = (cnt[est]||0)+1;
+    }
+    let dom = 'normal';
+    Object.entries(cnt).forEach(([e,c]) => { if(e!=='normal' && c>=4) dom=e; });
+    return dom;
+  }
+
+  // Colores de estado para impresión
+  const ESTADO_COLOR = { vacaciones:'#1a7a3f', asunto:'#1a4a7a', baja:'#7a1a1a', sancion:'#7a1a1a', libre:'#1a4a7a' };
+  const ESTADO_LBL   = { vacaciones:'VAC', asunto:'ASU', baja:'BAJA', sancion:'SAN', libre:'LIBRE' };
+  const TURNO_COLOR  = { mañana:'#1a4a7a', tarde:'#7a3a00', noche:'#3a1a7a', st:'#aaa' };
+  const TURNO_BG     = { mañana:'#dbeeff', tarde:'#fff0db', noche:'#ede0ff', st:'#f0f0f0' };
+
+  // Generar filas por semana
+  let rows = '';
+  let wMon = new Date(d);
+  while(wMon <= endDate){
+    const wSun = new Date(wMon); wSun.setDate(wMon.getDate()+6);
+    const wLabel = `${wMon.getDate()} ${MONTHS[wMon.getMonth()]} – ${wSun.getDate()} ${MONTHS[wSun.getMonth()]}`;
+    const semNum = getWeekNumber(wMon);
+
+    // Agrupar mecánicos por turno
+    const grupos = { mañana:[], tarde:[], noche:[], st:[], ausente:[] };
+    [1,2,3,4,5].forEach(i => {
+      const k = String(i);
+      const nombre = mecNames[k];
+      const estado = getEstadoSemana(k, wMon);
+      if(estado !== 'normal'){
+        grupos.ausente.push({ nombre, estado });
+        return;
+      }
+      const turno = getTurnoSemana(k, wMon);
+      (grupos[turno] || grupos.st).push({ nombre });
+    });
+
+    const celda = (lista, color, bg, etiqueta) => {
+      if(!lista.length) return `<td style="background:#fafafa;color:#ccc;text-align:center;font-size:9pt">—</td>`;
+      const names = lista.map(m => `<div style="font-weight:600;color:${color}">${m.nombre}</div>`).join('');
+      return `<td style="background:${bg};padding:6px 10px;vertical-align:top">${names}</td>`;
+    };
+
+    const ausenteCell = () => {
+      if(!grupos.ausente.length) return `<td style="background:#fafafa;color:#ccc;text-align:center;font-size:9pt">—</td>`;
+      const names = grupos.ausente.map(m =>
+        `<div style="font-weight:600;color:${ESTADO_COLOR[m.estado]||'#555'}">${m.nombre} <span style="font-size:8pt">(${ESTADO_LBL[m.estado]||m.estado})</span></div>`
+      ).join('');
+      return `<td style="background:#fff5f5;padding:6px 10px;vertical-align:top">${names}</td>`;
+    };
+
+    rows += `<tr>
+      <td style="padding:6px 10px;white-space:nowrap;border-right:2px solid #ddd">
+        <div style="font-size:8pt;color:#999">Sem ${semNum}</div>
+        <div style="font-weight:700;font-size:9.5pt">${wLabel}</div>
+      </td>
+      ${celda(grupos.mañana, '#1a4a7a', '#dbeeff')}
+      ${celda(grupos.tarde,  '#7a3a00', '#fff0db')}
+      ${celda(grupos.noche,  '#3a1a7a', '#ede0ff')}
+      ${celda(grupos.st,     '#888',    '#f5f5f5')}
+      ${ausenteCell()}
+    </tr>`;
+
+    wMon.setDate(wMon.getDate()+7);
+  }
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  <title>Turnos PANALCOR — ${desde} a ${hasta}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,sans-serif;font-size:10pt;color:#222;padding:20px}
+    h1{font-size:14pt;margin-bottom:4px}
+    .sub{font-size:9pt;color:#666;margin-bottom:16px}
+    table{width:100%;border-collapse:collapse;font-size:9.5pt}
+    th{padding:7px 10px;text-align:left;font-size:8.5pt;letter-spacing:0.06em;text-transform:uppercase;border-bottom:2px solid #333}
+    td{border-bottom:1px solid #e0e0e0;font-size:9.5pt}
+    tr:nth-child(even) td:first-child{background:#fafafa}
+    .th-man{background:#dbeeff;color:#1a4a7a}
+    .th-tar{background:#fff0db;color:#7a3a00}
+    .th-noc{background:#ede0ff;color:#3a1a7a}
+    .th-st{background:#f0f0f0;color:#888}
+    .th-aus{background:#fff5f5;color:#7a1a1a}
+    @media print{body{padding:10px} @page{size:A4 landscape;margin:12mm}}
+  </style></head><body>
+  <h1>📅 Turnos PANALCOR</h1>
+  <div class="sub">Período: ${desde} → ${hasta} · Generado el ${new Date().toLocaleDateString('es-ES')}</div>
+  <table>
+    <thead><tr>
+      <th style="width:160px">SEMANA</th>
+      <th class="th-man">☀️ MAÑANA</th>
+      <th class="th-tar">🌅 TARDE</th>
+      <th class="th-noc">🌙 NOCHE</th>
+      <th class="th-st">⬜ SIN ASIGNAR</th>
+      <th class="th-aus">🏖️ AUSENCIAS</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <script>window.onload=()=>window.print();<\/script>
+  </body></html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+}
+
 function asignarSTDesde(){
   const desde = document.getElementById('stDesde').value;
   if(!desde){ showToast('⚠️ Indica una fecha'); return; }
