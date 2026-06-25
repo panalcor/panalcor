@@ -2077,41 +2077,26 @@ function saveWeekBulk(){
 function limpiarTurnosDesde(){
   const desde = document.getElementById('limpiarDesde').value;
   if(!desde){ showToast('⚠️ Indica una fecha'); return; }
-  if(!confirm('¿Borrar TODOS los turnos y estados manuales desde ' + desde + ' en adelante?\n\nLas ausencias del panel Ausencias NO se borran (solo los días del calendario).')){ return; }
+  if(!confirm('¿Borrar los turnos asignados manualmente (mañana/tarde/noche) desde ' + desde + ' en adelante?\n\nLas vacaciones, bajas y ausencias NO se tocan.')){ return; }
   let borrados = 0;
   Object.keys(S.dias).forEach(function(ds){
     if(ds >= desde){
-      const mecIds = Object.keys(S.dias[ds]);
-      mecIds.forEach(function(k){
+      Object.keys(S.dias[ds]).forEach(function(k){
         const entry = S.dias[ds][k];
-        if(!entry) return;
-        // Borrar turno manual
-        if(entry.turno){ delete entry.turno; borrados++; }
-        // Borrar estado si es manual (sin _aid) y no es normal
-        if(entry.estado && entry.estado !== 'normal' && !entry._aid){ delete entry.estado; borrados++; }
-        // Si el día queda vacío, eliminarlo
-        if(!entry.turno && (!entry.estado || entry.estado === 'normal') && !entry.nota && !entry._aid){
+        if(!entry || !entry.turno) return;
+        delete entry.turno;
+        borrados++;
+        // Si el día queda sin nada relevante, eliminarlo
+        if((!entry.estado || entry.estado === 'normal') && !entry.nota && !entry._aid){
           delete S.dias[ds][k];
         }
       });
       if(!Object.keys(S.dias[ds]).length) delete S.dias[ds];
     }
   });
-  // También limpiar ausencias registradas desde esa fecha y sus entradas en dias
-  let ausencias_borradas = 0;
-  Object.keys(S.ausencias).forEach(function(id){
-    const aus = S.ausencias[id];
-    if(aus.hasta >= desde){
-      removeRangeFromDias(id);
-      delete S.ausencias[id];
-      ausencias_borradas++;
-    }
-  });
   fbSet('dias', S.dias);
-  fbSet('ausencias', S.ausencias);
-  recalcAllBolsas();
   renderCalendar();
-  showToast('🗑️ Limpiados ' + borrados + ' entradas de turno/estado + ' + ausencias_borradas + ' ausencias desde ' + desde);
+  showToast('🗑️ Borrados ' + borrados + ' turnos manuales desde ' + desde + (borrados===0 ? ' (no había ninguno asignado)' : ''));
 }
 let toastT;
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2500); }
