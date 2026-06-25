@@ -526,6 +526,16 @@ if('serviceWorker' in navigator){
     </div>
 
     <div class="card">
+      <div class="sec-title">🗑️ Limpiar asignaciones desde una fecha</div>
+      <div class="field">
+        <label>Borrar todos los turnos asignados a partir de</label>
+        <input type="date" id="limpiarDesde" value="2026-07-01">
+        <div class="field-hint">Esto borra los turnos guardados en Firebase desde esa fecha en adelante. Las ausencias y bolsas no se tocan.</div>
+      </div>
+      <button class="btn btn-secondary" onclick="limpiarTurnosDesde()" style="border-color:rgba(231,76,60,0.4);color:#e74c3c">🗑️ Borrar turnos desde esa fecha</button>
+    </div>
+
+    <div class="card">
       <div class="sec-title">Mecánicos de seguimiento (lista global)</div>
       <p style="font-size:0.8rem;color:rgba(255,255,255,0.35);margin-bottom:14px;line-height:1.5">Se cargan automáticamente desde tu lista general de mecánicos. Aparecen en sábados y ausencias pero <strong>no computan en la rotación de turnos</strong>.</p>
       <div id="extraMecsForm"></div>
@@ -543,6 +553,15 @@ if('serviceWorker' in navigator){
   <div class="modal-box" style="max-width:460px">
     <div class="modal-title" id="weekModalTitle">Semana</div>
     <div class="modal-sub" id="weekModalSub"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:12px;background:rgba(201,162,39,0.08);border:1px solid rgba(201,162,39,0.25);border-radius:8px">
+      <span style="font-size:0.8rem;color:rgba(255,255,255,0.6);white-space:nowrap">Toda la semana:</span>
+      <select id="weekBulkTurno" style="flex:1;background:#0d1b2a;color:#f0f4f8;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:7px 10px;font-family:Barlow,sans-serif;font-size:0.9rem">
+        <option value="mañana">☀️ Mañana</option>
+        <option value="tarde">🌅 Tarde</option>
+        <option value="noche">🌙 Noche</option>
+      </select>
+      <button class="btn btn-primary" style="white-space:nowrap;padding:7px 14px;font-size:0.85rem" onclick="saveWeekBulk()">Aplicar</button>
+    </div>
     <div id="weekModalDays"></div>
     <div class="modal-btns" style="margin-top:12px">
       <button class="btn btn-secondary" onclick="closeModal('weekModal')">Cerrar</button>
@@ -560,6 +579,7 @@ if('serviceWorker' in navigator){
       <select id="editTurno">
         <option value="mañana">☀️ Mañana</option>
         <option value="tarde">🌅 Tarde</option>
+        <option value="noche">🌙 Noche</option>
       </select>
     </div>
     <div class="modal-field">
@@ -1966,6 +1986,50 @@ function renderAusencias(){
 // ════════════════════════════════════════════
 function closeModal(id){ document.getElementById(id).style.display='none'; editCell=null; editBolsaMecId=null; }
 function bgClose(e,id){ if(e.target.classList.contains('modal-bg')) closeModal(id); }
+
+// Asignar el mismo turno a todos los días de la semana para un mecánico
+function saveWeekBulk(){
+  if(!weekEditMecId || !weekEditMonday) return;
+  const turno = document.getElementById('weekBulkTurno').value;
+  for(let i=0; i<7; i++){
+    const d = new Date(weekEditMonday); d.setDate(weekEditMonday.getDate()+i);
+    const ds = toDS(d);
+    if(!S.dias[ds]) S.dias[ds] = {};
+    if(!S.dias[ds][weekEditMecId]) S.dias[ds][weekEditMecId] = { estado:'normal', nota:'' };
+    S.dias[ds][weekEditMecId].turno = turno;
+  }
+  fbSet('dias', S.dias);
+  closeModal('weekModal');
+  renderCalendar();
+  showToast('✅ Turno ' + turno.toUpperCase() + ' asignado toda la semana a ' + (S.mecanicos[weekEditMecId]?.nombre || ''));
+}
+
+// Borrar todos los turnos guardados desde una fecha en adelante
+function limpiarTurnosDesde(){
+  const desde = document.getElementById('limpiarDesde').value;
+  if(!desde){ showToast('⚠️ Indica una fecha'); return; }
+  if(!confirm('¿Borrar todos los turnos asignados desde ' + desde + ' en adelante? Las ausencias y bolsas no se tocan.')){ return; }
+  let borrados = 0;
+  Object.keys(S.dias).forEach(function(ds){
+    if(ds >= desde){
+      const mecIds = Object.keys(S.dias[ds]);
+      mecIds.forEach(function(k){
+        if(S.dias[ds][k] && S.dias[ds][k].turno){
+          delete S.dias[ds][k].turno;
+          borrados++;
+          // Si el día queda vacío (solo tenía turno), borrarlo
+          if(!S.dias[ds][k].nota && (!S.dias[ds][k].estado || S.dias[ds][k].estado === 'normal')){
+            delete S.dias[ds][k];
+          }
+        }
+      });
+      if(!Object.keys(S.dias[ds]).length) delete S.dias[ds];
+    }
+  });
+  fbSet('dias', S.dias);
+  renderCalendar();
+  showToast('🗑️ Eliminados ' + borrados + ' turnos desde ' + desde);
+}
 let toastT;
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2500); }
 
