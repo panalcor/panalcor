@@ -74,6 +74,7 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 .sh-mañana{background:rgba(52,152,219,0.22);color:#7bb8f0;border:1px solid rgba(52,152,219,0.3)}
 .sh-tarde{background:rgba(230,126,34,0.22);color:#f0a060;border:1px solid rgba(230,126,34,0.3)}
 .sh-noche{background:rgba(155,89,182,0.22);color:#c39bd3;border:1px solid rgba(155,89,182,0.3)}
+.sh-st{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.35);border:1px solid rgba(255,255,255,0.15)}
 
 /* ── STATUS BADGES ── */
 .st-badge{font-size:0.57rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;padding:1px 5px;border-radius:3px;line-height:1.4}
@@ -505,11 +506,21 @@ if('serviceWorker' in navigator){
     </div>
 
     <div class="card">
-      <div class="sec-title">🗑️ Limpiar asignaciones desde una fecha</div>
+      <div class="sec-title">⬜ Asignar ST (sin turno) a todos los mecánicos</div>
+      <div class="field">
+        <label>Desde la fecha</label>
+        <input type="date" id="stDesde" value="2026-09-14">
+        <div class="field-hint">Asigna ST a todos los mecánicos desde esa fecha hasta fin de año. Así el calendario queda en blanco hasta que vayas poniendo los turnos manualmente.</div>
+      </div>
+      <button class="btn btn-primary" onclick="asignarSTDesde()">⬜ Asignar ST a todos desde esta fecha</button>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">🗑️ Limpiar turnos asignados desde una fecha</div>
       <div class="field">
         <label>Borrar todos los turnos asignados a partir de</label>
         <input type="date" id="limpiarDesde" value="2026-07-01">
-        <div class="field-hint">Esto borra los turnos guardados en Firebase desde esa fecha en adelante. Las ausencias y bolsas no se tocan.</div>
+        <div class="field-hint">Borra los turnos (MAÑ/TAR/NOC/ST) guardados manualmente. Las ausencias y bolsas no se tocan.</div>
       </div>
       <button class="btn btn-secondary" onclick="limpiarTurnosDesde()" style="border-color:rgba(231,76,60,0.4);color:#e74c3c">🗑️ Borrar turnos asignados desde esta fecha</button>
     </div>
@@ -541,6 +552,7 @@ if('serviceWorker' in navigator){
           <option value="mañana">☀️ Mañana</option>
           <option value="tarde">🌅 Tarde</option>
           <option value="noche">🌙 Noche</option>
+          <option value="st">⬜ ST — Sin turno asignado</option>
         </select>
       </div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
@@ -570,11 +582,13 @@ if('serviceWorker' in navigator){
     <div class="modal-title" id="cellModalTitle">Mecánico</div>
     <div class="modal-sub" id="cellModalSub"></div>
     <div class="modal-field" id="turnoFieldWrap" style="display:none">
-      <label>Turno (solo Javier E. y Jose)</label>
+      <label>Turno</label>
       <select id="editTurno">
+        <option value="">— no cambiar —</option>
         <option value="mañana">☀️ Mañana</option>
         <option value="tarde">🌅 Tarde</option>
         <option value="noche">🌙 Noche</option>
+        <option value="st">⬜ ST — Sin turno asignado</option>
       </select>
     </div>
     <div class="modal-field">
@@ -1010,7 +1024,7 @@ function updateHeaders(){
   }
 }
 
-function shiftLbl(t){ return t==='mañana'?'MAÑ':t==='tarde'?'TAR':'NOC'; }
+function shiftLbl(t){ return t==='mañana'?'MAÑ':t==='tarde'?'TAR':t==='st'?'ST':'NOC'; }
 function estadoLbl(e){ return {vacaciones:'VAC',asunto:'ASU',baja:'BAJA',sancion:'SAN',libre:'LIBRE'}[e]||e.toUpperCase(); }
 
 function getWeekNumber(d){
@@ -2074,6 +2088,33 @@ function saveWeekBulk(){
 }
 
 // Borrar todos los turnos guardados desde una fecha en adelante
+function asignarSTDesde(){
+  const desde = document.getElementById('stDesde').value;
+  if(!desde){ showToast('⚠️ Indica una fecha'); return; }
+  const hasta = desde.slice(0,4) + '-12-31'; // hasta fin de año
+  if(!confirm('¿Asignar ST (sin turno) a TODOS los mecánicos desde ' + desde + ' hasta ' + hasta + '?\n\nLuego puedes ir sustituyendo ST por el turno real semana a semana.')){ return; }
+  const mecIds = [1,2,3,4,5].map(String);
+  let asignados = 0;
+  let d = new Date(desde + 'T00:00:00');
+  const end = new Date(hasta + 'T00:00:00');
+  while(d <= end){
+    const dw = d.getDay();
+    if(dw !== 0 && dw !== 6){
+      const ds = toDS(d);
+      if(!S.dias[ds]) S.dias[ds] = {};
+      mecIds.forEach(k => {
+        if(!S.dias[ds][k]) S.dias[ds][k] = { estado:'normal', nota:'' };
+        S.dias[ds][k].turno = 'st';
+        asignados++;
+      });
+    }
+    d.setDate(d.getDate()+1);
+  }
+  fbSet('dias', S.dias);
+  renderCalendar();
+  showToast('⬜ ST asignado a ' + mecIds.length + ' mecánicos durante ' + (asignados/mecIds.length) + ' días laborables desde ' + desde);
+}
+
 function limpiarTurnosDesde(){
   const desde = document.getElementById('limpiarDesde').value;
   if(!desde){ showToast('⚠️ Indica una fecha'); return; }
