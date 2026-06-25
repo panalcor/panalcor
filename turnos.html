@@ -1065,9 +1065,24 @@ function renderCalendar(){
     const excByMec = { '1':[],'2':[],'3':[],'4':[],'5':[] };
     const obsParts = [];
 
+    // Calcular turno efectivo por mecánico: el guardado manualmente tiene prioridad
+    const effectiveTurno = {};
     for(let mId=1; mId<=5; mId++){
       const k = String(mId);
-      const defaultTurno = shifts[k];
+      // Buscar el primer día L-V de la semana que tenga turno guardado
+      let manualT = null;
+      for(let i=0; i<7; i++){
+        const d = new Date(wMon); d.setDate(wMon.getDate()+i);
+        if(d.getDay()===0||d.getDay()===6) continue;
+        const stored = S.dias[toDS(d)]?.[k]?.turno;
+        if(stored){ manualT = stored; break; }
+      }
+      effectiveTurno[k] = manualT || shifts[k];
+    }
+
+    for(let mId=1; mId<=5; mId++){
+      const k = String(mId);
+      const defaultTurno = effectiveTurno[k];
 
       for(let i=0; i<7; i++){
         const d = new Date(wMon); d.setDate(wMon.getDate()+i);
@@ -1080,7 +1095,7 @@ function renderCalendar(){
         let isExc = false;
         const parts = [];
         if(estado !== 'normal'){ parts.push(estadoLbl(estado)); isExc = true; }
-        if((mId===4||mId===5) && storedT && storedT !== defaultTurno){
+        if(storedT && storedT !== defaultTurno){
           parts.push(shiftLbl(storedT));
           isExc = true;
         }
@@ -1121,7 +1136,7 @@ function renderCalendar(){
     // Mechanic cells
     for(let mId=1;mId<=5;mId++){
       const k   = String(mId);
-      const t   = shifts[k];
+      const t   = effectiveTurno[k];
       const excs = excByMec[k];
       const hasExc = excs.length > 0;
 
