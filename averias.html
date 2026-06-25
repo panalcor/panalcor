@@ -2148,6 +2148,8 @@ function imprimirQRMaq() {
   setTimeout(function(){ win.print(); }, 400);
 }
 
+function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
 function otrosGuardar() {
   var tipo = (document.querySelector('input[name="otrosTipo"]:checked') || {}).value || '';
   var maqId = document.getElementById('otrosMaquina').value;
