@@ -553,14 +553,30 @@ if('serviceWorker' in navigator){
   <div class="modal-box" style="max-width:460px">
     <div class="modal-title" id="weekModalTitle">Semana</div>
     <div class="modal-sub" id="weekModalSub"></div>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:12px;background:rgba(201,162,39,0.08);border:1px solid rgba(201,162,39,0.25);border-radius:8px">
-      <span style="font-size:0.8rem;color:rgba(255,255,255,0.6);white-space:nowrap">Toda la semana:</span>
-      <select id="weekBulkTurno" style="flex:1;background:#0d1b2a;color:#f0f4f8;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:7px 10px;font-family:Barlow,sans-serif;font-size:0.9rem">
-        <option value="mañana">☀️ Mañana</option>
-        <option value="tarde">🌅 Tarde</option>
-        <option value="noche">🌙 Noche</option>
-      </select>
-      <button class="btn btn-primary" style="white-space:nowrap;padding:7px 14px;font-size:0.85rem" onclick="saveWeekBulk()">Aplicar</button>
+    <div style="background:rgba(201,162,39,0.08);border:1px solid rgba(201,162,39,0.25);border-radius:8px;padding:12px;margin-bottom:14px">
+      <div style="font-size:0.72rem;color:var(--gold);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px">Aplicar a toda la semana</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:0.8rem;color:rgba(255,255,255,0.5);min-width:60px">Turno:</span>
+        <select id="weekBulkTurno" style="flex:1;background:#0d1b2a;color:#f0f4f8;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:7px 10px;font-family:Barlow,sans-serif;font-size:0.88rem">
+          <option value="">(no cambiar)</option>
+          <option value="mañana">☀️ Mañana</option>
+          <option value="tarde">🌅 Tarde</option>
+          <option value="noche">🌙 Noche</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span style="font-size:0.8rem;color:rgba(255,255,255,0.5);min-width:60px">Estado:</span>
+        <select id="weekBulkEstado" style="flex:1;background:#0d1b2a;color:#f0f4f8;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:7px 10px;font-family:Barlow,sans-serif;font-size:0.88rem">
+          <option value="">(no cambiar)</option>
+          <option value="normal">✅ Normal</option>
+          <option value="vacaciones">🌴 Vacaciones</option>
+          <option value="asunto">📋 Asunto propio</option>
+          <option value="baja">🤒 Baja / Ausente</option>
+          <option value="libre">🔵 Día libre (sábado)</option>
+          <option value="sancion">🔴 Sanción</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" style="width:100%;padding:8px 14px;font-size:0.88rem" onclick="saveWeekBulk()">Aplicar a los días laborables de la semana</button>
     </div>
     <div id="weekModalDays"></div>
     <div class="modal-btns" style="margin-top:12px">
@@ -1291,9 +1307,10 @@ function recalcBolsaFromDias(mecId){
   Object.entries(S.dias).forEach(([ds, dayObj]) => {
     const m = dayObj[k];
     if(!m) return;
-    // Solo laborables (L-V) cuentan contra bolsa
+    // Solo laborables (L-V) y no festivos cuentan contra bolsa
     const dow = new Date(ds + 'T12:00:00').getDay();
     if(dow === 0 || dow === 6) return;
+    if(S.festivos[ds]) return;
     if(m.estado==='vacaciones') vac++;
     if(m.estado==='asunto')     asu++;
   });
@@ -1750,7 +1767,11 @@ function countWeekdays(desde, hasta){
   let n=0;
   let d=new Date(desde+'T00:00:00');
   const end=new Date(hasta+'T00:00:00');
-  while(d<=end){ const dw=d.getDay(); if(dw!==0&&dw!==6) n++; d.setDate(d.getDate()+1); }
+  while(d<=end){
+    const dw=d.getDay(); const ds=toDS(d);
+    if(dw!==0 && dw!==6 && !S.festivos[ds]) n++;
+    d.setDate(d.getDate()+1);
+  }
   return n;
 }
 
@@ -1758,9 +1779,8 @@ function applyRangeToDias(mecId, desde, hasta, tipo, nota, aid){
   let d=new Date(desde+'T00:00:00');
   const end=new Date(hasta+'T00:00:00');
   while(d<=end){
-    const dw=d.getDay();
-    if(dw!==0&&dw!==6){
-      const ds=toDS(d);
+    const dw=d.getDay(); const ds=toDS(d);
+    if(dw!==0 && dw!==6 && !S.festivos[ds]){
       if(!S.dias[ds]) S.dias[ds]={};
       S.dias[ds][mecId]={ estado:tipo, nota, _aid:aid };
     }
@@ -1987,21 +2007,34 @@ function renderAusencias(){
 function closeModal(id){ document.getElementById(id).style.display='none'; editCell=null; editBolsaMecId=null; }
 function bgClose(e,id){ if(e.target.classList.contains('modal-bg')) closeModal(id); }
 
-// Asignar el mismo turno a todos los días de la semana para un mecánico
+// Asignar turno y/o estado a todos los días laborables (L-V, no festivo) de la semana
 function saveWeekBulk(){
   if(!weekEditMecId || !weekEditMonday) return;
-  const turno = document.getElementById('weekBulkTurno').value;
+  const turno  = document.getElementById('weekBulkTurno').value;
+  const estado = document.getElementById('weekBulkEstado').value;
+  if(!turno && !estado){ showToast('⚠️ Selecciona turno o estado'); return; }
+
+  let aplicados = 0;
   for(let i=0; i<7; i++){
     const d = new Date(weekEditMonday); d.setDate(weekEditMonday.getDate()+i);
+    const dw = d.getDay();
     const ds = toDS(d);
+    // Solo laborables (L-V) y no festivos
+    if(dw === 0 || dw === 6) continue;
+    if(S.festivos[ds]) continue;
     if(!S.dias[ds]) S.dias[ds] = {};
     if(!S.dias[ds][weekEditMecId]) S.dias[ds][weekEditMecId] = { estado:'normal', nota:'' };
-    S.dias[ds][weekEditMecId].turno = turno;
+    if(turno)  S.dias[ds][weekEditMecId].turno  = turno;
+    if(estado) S.dias[ds][weekEditMecId].estado = estado;
+    aplicados++;
   }
   fbSet('dias', S.dias);
+  recalcAllBolsas();
   closeModal('weekModal');
   renderCalendar();
-  showToast('✅ Turno ' + turno.toUpperCase() + ' asignado toda la semana a ' + (S.mecanicos[weekEditMecId]?.nombre || ''));
+  const nom = S.mecanicos[weekEditMecId]?.nombre || '';
+  const lbl = [turno && shiftLbl(turno), estado && estadoLbl(estado)].filter(Boolean).join(' + ');
+  showToast('✅ ' + lbl + ' aplicado a ' + aplicados + ' días de ' + nom);
 }
 
 // Borrar todos los turnos guardados desde una fecha en adelante
