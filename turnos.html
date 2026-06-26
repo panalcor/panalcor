@@ -513,6 +513,19 @@ if('serviceWorker' in navigator){
     </div>
 
     <div class="card">
+      <div class="sec-title">📅 Festivos oficiales del año</div>
+      <p style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-bottom:12px;line-height:1.5">
+        Estos días no descuentan vacaciones ni asuntos aunque el mecánico tenga ausencia asignada ese día.
+      </p>
+      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        <input type="date" id="addFestivoOficial" style="background:#0d1b2a;color:#f0f4f8;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:6px 10px;font-family:Barlow,sans-serif;font-size:0.85rem">
+        <button class="btn btn-add" onclick="addFestivoOficial()">+ Añadir festivo</button>
+        <button class="btn btn-secondary" onclick="cargarFestivos2026()" style="font-size:0.78rem;opacity:0.7">📋 Cargar festivos 2026</button>
+      </div>
+      <div id="festivosOficialList" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div>
+    </div>
+
+    <div class="card">
       <div class="sec-title">⬜ Asignar ST (sin turno) a todos los mecánicos</div>
       <div class="field">
         <label>Desde la fecha</label>
@@ -868,7 +881,7 @@ function refreshAll(){
   if(activeId==='panel-ausencias') renderAusencias();
   if(activeId==='panel-sabados')   renderSabados();
   if(activeId==='panel-horas')     renderHoras();
-  if(activeId==='panel-config')    renderConfig();
+  if(activeId==='panel-config')    { renderConfig(); renderFestivosOficial(); }
 }
 
 // ════════════════════════════════════════════
@@ -1608,6 +1621,72 @@ function addFestivo(){
   showToast('Festivo registrado');
   getAllMecIds().forEach(k=>{ const cb=document.getElementById('festCb'+k); if(cb) cb.checked=false; });
 }
+// ── Festivos oficiales del año ──────────────────────────────────────────────
+const FESTIVOS_2026 = [
+  '2026-01-01','2026-01-06','2026-04-02','2026-04-03',
+  '2026-05-01','2026-06-24','2026-08-15','2026-10-12',
+  '2026-11-02','2026-12-08','2026-12-25'
+];
+const FESTIVOS_NOMBRE = {
+  '01-01':'Año Nuevo','01-06':'Reyes','04-02':'Jue. Santo','04-03':'Vie. Santo',
+  '05-01':'Día Trabajo','06-24':'San Juan','08-15':'Asunción','10-12':'Fiesta Nacional',
+  '11-02':'Todos los Santos','12-08':'Inmaculada','12-25':'Navidad'
+};
+
+function renderFestivosOficial(){
+  const el = document.getElementById('festivosOficialList');
+  if(!el) return;
+  const lista = Object.keys(S.festivos)
+    .filter(f => S.festivos[f]?.oficial)
+    .sort();
+  if(!lista.length){ el.innerHTML='<span style="font-size:0.78rem;color:rgba(255,255,255,0.3)">Sin festivos registrados</span>'; return; }
+  el.innerHTML = lista.map(f => {
+    const d = new Date(f+'T12:00:00');
+    const mmdd = f.slice(5);
+    const nombre = FESTIVOS_NOMBRE[mmdd] || '';
+    const lbl = d.toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'});
+    return `<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:5px;padding:3px 9px;font-size:0.78rem">
+      📅 ${lbl}${nombre?' — '+nombre:''}
+      <button onclick="deleteFestivoOficial('${f}')" style="background:none;border:none;color:rgba(255,80,80,0.7);cursor:pointer;font-size:0.85rem;padding:0 2px">✕</button>
+    </span>`;
+  }).join('');
+}
+
+function addFestivoOficial(){
+  const fecha = document.getElementById('addFestivoOficial').value;
+  if(!fecha){ showToast('⚠️ Selecciona una fecha'); return; }
+  if(!S.festivos[fecha]) S.festivos[fecha] = {};
+  S.festivos[fecha].oficial = true;
+  fbSet('festivos', S.festivos);
+  recalcAllBolsas();
+  renderFestivosOficial();
+  document.getElementById('addFestivoOficial').value = '';
+  showToast('✅ Festivo añadido');
+}
+
+function deleteFestivoOficial(fecha){
+  if(!S.festivos[fecha]) return;
+  delete S.festivos[fecha].oficial;
+  if(!Object.keys(S.festivos[fecha]).length) delete S.festivos[fecha];
+  fbSet('festivos', S.festivos);
+  recalcAllBolsas();
+  renderFestivosOficial();
+  showToast('Festivo eliminado');
+}
+
+function cargarFestivos2026(){
+  if(!confirm('¿Cargar los festivos nacionales de 2026? Se añadirán a los que ya tienes.')) return;
+  FESTIVOS_2026.forEach(f => {
+    if(!S.festivos[f]) S.festivos[f] = {};
+    S.festivos[f].oficial = true;
+  });
+  fbSet('festivos', S.festivos);
+  recalcAllBolsas();
+  renderFestivosOficial();
+  showToast('✅ Festivos 2026 cargados');
+}
+// ────────────────────────────────────────────────────────────────────────────
+
 function deleteFestivo(fecha){
   if(!confirm('¿Eliminar el festivo '+fecha+'?')) return;
   delete S.festivos[fecha];
