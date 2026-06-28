@@ -1128,10 +1128,25 @@ function renderCalendar(){
         }
         if(isExc){
           excByMec[k].push({ ds, dow: d.getDay(), estado, parts, nota });
-          const nomMec = S.mecanicos[k]?.nombre || 'Mec'+k;
-          obsParts.push(`${nomMec}: ${DAYS_SH[d.getDay()]} ${parts.join('/')}`);
         }
       }
+    }
+
+    // Agrupar observaciones por mecánico (un línea por mecánico con todos sus días)
+    for(let mId=1; mId<=5; mId++){
+      const k = String(mId);
+      const excs = excByMec[k];
+      if(!excs.length) continue;
+      const nomMec = S.mecanicos[k]?.nombre || 'Mec'+k;
+      // Agrupar días por tipo de excepción
+      const grupos = {};
+      for(const e of excs){
+        const key = e.parts.join('/');
+        if(!grupos[key]) grupos[key] = [];
+        grupos[key].push(DAYS_SH[e.dow]);
+      }
+      const partes = Object.entries(grupos).map(([tipo, dias]) => `${dias.join(' ')} — ${tipo}`);
+      obsParts.push(`${nomMec}: ${partes.join(' · ')}`);
     }
 
     // ── Shift coverage count (base week, rotation defaults) ──
