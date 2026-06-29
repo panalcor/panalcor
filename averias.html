@@ -1569,6 +1569,10 @@ function guardarAveria(){
     causa: document.getElementById('fCausa').value,
     turno: document.getElementById('fTurno').value,
     mecanicos: mecsSelec,
+    mecApertura: avOriginal ? (avOriginal.mecApertura || null) : (_mecSesionValida() || mecsSelec[0] || null),
+    mecCierre: (estado === 'RESUELTA' && !(avOriginal && avOriginal.mecCierre))
+      ? (_mecSesionValida() || null)
+      : (avOriginal ? (avOriginal.mecCierre || null) : null),
     descripcion: desc,
     accion: document.getElementById('fAccion').value.trim(),
     observaciones: document.getElementById('fObs').value.trim(),
@@ -1698,6 +1702,8 @@ function renderHistorial(){
           <div class="detail-item"><div class="di-label">Turno</div><div class="di-val">${a.turno||'—'}</div></div>
           <div class="detail-item"><div class="di-label">Tiempo parada</div><div class="di-val">${tStr}</div></div>
           <div class="detail-item"><div class="di-label">Mecánicos</div><div class="di-val">${a.mecanicos.join(', ')||'—'}</div></div>
+          ${a.mecApertura?`<div class="detail-item"><div class="di-label">Abre</div><div class="di-val">${a.mecApertura}</div></div>`:''}
+          ${a.mecCierre?`<div class="detail-item"><div class="di-label">Cierra</div><div class="di-val">${a.mecCierre}</div></div>`:''}
           <div class="detail-item"><div class="di-label">Causa</div><div class="di-val">${a.causa||'—'}</div></div>
           <div class="detail-item"><div class="di-label">Fabricante</div><div class="di-val">${a.maqFabricante||'—'}</div></div>
         </div>
