@@ -1674,6 +1674,8 @@ function renderHistorial(){
     return true;
   });
 
+  data.sort((a,b)=> (b.fecha||'') > (a.fecha||'') ? 1 : (b.fecha||'') < (a.fecha||'') ? -1 : (b.ts||0)-(a.ts||0));
+
   document.getElementById('histCount').textContent = data.length+' averías';
   const el = document.getElementById('histList');
   if(!data.length){el.innerHTML='<div class="no-data">No hay averías registradas con esos filtros</div>';return;}
