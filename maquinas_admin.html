@@ -774,8 +774,9 @@ function guardarInfo(){
     msg.className = 'save-msg ok';
     setTimeout(function(){ msg.className = 'save-msg'; }, 2500);
   }).catch(function(e){
+    console.error('Error guardando ficha máquina:', e);
     var msg = document.getElementById('saveMsg');
-    msg.textContent = '✗ Error al guardar';
+    msg.textContent = '✗ Error al guardar: ' + (e && e.message ? e.message : e);
     msg.className = 'save-msg err';
   });
 }
@@ -811,9 +812,10 @@ function guardarInstrucciones(){
     msg.textContent = '✓ Guardado';
     setTimeout(function(){ msg.textContent = ''; }, 2500);
     if(btn) btn.disabled = false;
-  }).catch(function(){
+  }).catch(function(e){
+    console.error('Error guardando instrucciones máquina:', e);
     var msg = document.getElementById('instSaveMsgBtn');
-    msg.textContent = '✗ Error al guardar';
+    msg.textContent = '✗ Error al guardar: ' + (e && e.message ? e.message : e);
     if(btn) btn.disabled = false;
   });
 }
