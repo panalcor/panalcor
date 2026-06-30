@@ -1850,6 +1850,25 @@ function renderAlertasDash(av){
   });
   const recs=Object.values(recMap).filter(r=>r.cnt>=3);
   if(recs.length) alertas.push({tipo:'red',icon:'🔄',title:`${recs.length} avería${recs.length>1?'s':''} recurrente${recs.length>1?'s':''}`,text:recs.map(r=>`${r.maq} — ${r.parte||'S/P'} (${r.cnt}×)`).join(' | ')});
+
+  // Plazos vencidos según prioridad (URGENTE 48h · IMPORTANTE 72h · PROGRAMABLE 2 semanas)
+  const LIMITES_PRIO = { URGENTE: 48*3600*1000, IMPORTANTE: 72*3600*1000, PROGRAMABLE: 14*24*3600*1000 };
+  const ahora = Date.now();
+  const vencidas = pendientes.filter(a=>{
+    const limite = LIMITES_PRIO[a.prioridad||'IMPORTANTE'];
+    const apertura = a.ts || (a.fecha ? new Date(a.fecha+'T00:00:00').getTime() : null);
+    return limite && apertura && (ahora-apertura) > limite;
+  }).sort((a,b)=>(a.ts||0)-(b.ts||0));
+  if(vencidas.length){
+    const fmtPlazo = h => h>=24 ? Math.round(h/24)+'d' : Math.round(h)+'h';
+    alertas.push({tipo:'red',icon:'⏰',title:`${vencidas.length} avería${vencidas.length>1?'s':''} fuera de plazo`,
+      text: vencidas.map(a=>{
+        const apertura = a.ts || new Date(a.fecha+'T00:00:00').getTime();
+        const horas = (ahora-apertura)/3600000;
+        return `${a.maqNombre} — ${a.prioridad||'IMPORTANTE'} (${fmtPlazo(horas)} abierta)`;
+      }).join(' | ')});
+  }
+
   if(!alertas.length) alertas.push({tipo:'ok',icon:'✅',title:'Todo bajo control',text:'No hay alertas críticas en este momento'});
   el.innerHTML=alertas.map(a=>`<div class="alert-item ${a.tipo==='warn'?'alert-warn':a.tipo==='ok'?'alert-ok':''}">
     <div class="ai-icon">${a.icon}</div>
