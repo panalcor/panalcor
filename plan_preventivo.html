@@ -1405,7 +1405,7 @@ function getCatalogoGrupo(tipo, subtipo){
   var t = (tipo||'').trim();
   var s = (subtipo||'').trim();
   if(!t) return null;
-  var tiene = getCatalogo().some(function(c){ return c.tipo===t && (!s||c.subtipo===s); });
+  var tiene = getCatalogo().some(function(c){ return c.tipo===t; });
   return tiene ? {tipo:t, subtipo:s} : null;
 }
 
@@ -1440,7 +1440,7 @@ function renderMaquinasAsig(){
     grupos[areaKey].forEach(function(m){
       var mecAsig = asignadas[m.id];
       var grupo   = getCatalogoGrupo(m.tipo, m.subtipo||'');
-      var nTareas = grupo ? cat.filter(function(t){ return t.tipo===grupo.tipo && (!grupo.subtipo||t.subtipo===grupo.subtipo); }).length : 0;
+      var nTareas = grupo ? cat.filter(function(t){ return t.tipo===grupo.tipo;}).length : 0;
       var libre   = !mecAsig;
       var sel     = selMaqIds.has(m.id);
       if(libre){ totalLibres++; } else { totalAsig++; }
@@ -1518,7 +1518,7 @@ function asignarMaquinasSel(){
   maqsSel.forEach(function(m){
     var grupo = getCatalogoGrupo(m.tipo, m.subtipo||'');
     if(!grupo) return;
-    cat.filter(function(t){ return t.tipo===grupo.tipo && (!grupo.subtipo||t.subtipo===grupo.subtipo); }).forEach(function(t){
+    cat.filter(function(t){ return t.tipo===grupo.tipo;}).forEach(function(t){
       var reps = repeticionesPorFrecuencia(t.frecuencia, semanas);
       if(reps === null) return;
       filas.push({maq:m, tarea:t, reps:reps});
@@ -1613,7 +1613,7 @@ function _ejecutarAsignacionMaquinas(mec, mes, semanas, cat, maquinas){
   maquinas.forEach(function(m){
     var grupo = getCatalogoGrupo(m.tipo, m.subtipo||'');
     if(!grupo) return;
-    cat.filter(function(t){ return t.tipo===grupo.tipo && (!grupo.subtipo||t.subtipo===grupo.subtipo); }).forEach(function(t){
+    cat.filter(function(t){ return t.tipo===grupo.tipo;}).forEach(function(t){
       var reps = repeticionesPorFrecuencia(t.frecuencia, semanas);
       if(reps === null) return;
       var paso = semanas.length>0 ? Math.max(1,Math.round(semanas.length/reps)) : 1;
