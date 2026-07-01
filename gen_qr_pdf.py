@@ -186,6 +186,7 @@ MAQUINAS = [
   {'id':'MAQ-163','n':'SILO 1 TRUENO','t':'SILOS TRUENO','f':'GASHOR','a':'TRUENO'},
   {'id':'MAQ-164','n':'SILO 2 TRUENO','t':'SILOS TRUENO','f':'GASHOR','a':'TRUENO'},
   {'id':'MAQ-165','n':'CUADRO SILOS TRUENO','t':'ELECTRICIDAD','f':'GASHOR','a':'TRUENO'},
+  {'id':'MAQ-166','n':'FORMADORA CAJAS TRUENO','t':'F TRUENO','f':'','a':'TRUENO'},
 ]
 
 # ── Fonts ──────────────────────────────────────────────────────
