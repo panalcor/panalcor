@@ -182,6 +182,10 @@ MAQUINAS = [
   {'id':'MAQ-157','n':'SECADOR 1','t':'SECADORES','f':'','a':'COMPRESORES'},
   {'id':'MAQ-158','n':'SECADOR 2','t':'SECADORES','f':'','a':'COMPRESORES'},
   {'id':'MAQ-159','n':'SECADOR ABSORCION','t':'SECADORES','f':'','a':'COMPRESORES'},
+  {'id':'MAQ-162','n':'ESCARCHADORA','t':'ESCARCHADORA','f':'','a':'TRUENO'},
+  {'id':'MAQ-163','n':'SILO 1 TRUENO','t':'SILOS TRUENO','f':'GASHOR','a':'TRUENO'},
+  {'id':'MAQ-164','n':'SILO 2 TRUENO','t':'SILOS TRUENO','f':'GASHOR','a':'TRUENO'},
+  {'id':'MAQ-165','n':'CUADRO SILOS TRUENO','t':'ELECTRICIDAD','f':'GASHOR','a':'TRUENO'},
 ]
 
 # ── Fonts ──────────────────────────────────────────────────────
