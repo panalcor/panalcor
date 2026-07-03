@@ -1556,10 +1556,20 @@ window.onerror = function(msg, src, line, col, err) {
 const PW_KEY = 'adminPwd';
 function getPwd(){ return localStorage.getItem(PW_KEY) || 'admin'; }
 
+// Administradores adicionales (nombre → contraseña fija)
+const ADMINS_EXTRA = [
+  {n:'IVAN', pwd:'ivan2026'},
+];
+
+function _checkLogin(val){
+  if(val === getPwd()) return true;
+  return ADMINS_EXTRA.some(function(a){ return a.pwd === val; });
+}
+
 function login(){
   try {
     const val = document.getElementById('pwInput').value;
-    if(val === getPwd()){
+    if(_checkLogin(val)){
       localStorage.setItem('adminSession', Date.now());
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('app').style.display = 'block';
