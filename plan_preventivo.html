@@ -1405,7 +1405,7 @@ function getCatalogoGrupo(tipo, subtipo){
   var t = (tipo||'').trim();
   var s = (subtipo||'').trim();
   if(!t) return null;
-  var tiene = CATALOGO.some(function(c){ return c.tipo===t; });
+  var tiene = getCatalogo().some(function(c){ return c.tipo===t; });
   return tiene ? {tipo:t, subtipo:s} : null;
 }
 
