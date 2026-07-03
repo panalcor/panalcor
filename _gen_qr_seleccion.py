@@ -5,7 +5,7 @@ from reportlab.lib.utils import ImageReader
 import gen_qr_pdf as g
 
 ids_imprimir = {
-  'MAQ-151','MAQ-153','MAQ-156'
+  'MAQ-118'
 }
 maquinas_sel = [m for m in g.MAQUINAS if m['id'] in ids_imprimir]
 
