@@ -173,7 +173,7 @@ MAQUINAS = [
   {'id':'MAQ-148','n':'EXTRACTORES TRUENO','t':'EXTRACTORES','f':'','a':'FRIO/CLIMA'},
   {'id':'MAQ-149','n':'EVAPORATIVAS','t':'EVAPORATIVAS','f':'','a':'FRIO/CLIMA'},
   {'id':'MAQ-150','n':'REFINADORA','t':'REFINADORA','f':'','a':'OBRADOR TRUENO'},
-  {'id':'MAQ-151','n':'TUNEL PREFRIO ARRASTRE','t':'PRECINTADORA','f':'','a':'ENVASADO'},
+  {'id':'MAQ-151','n':'TUNEL PREFRIO ARRASTRE','t':'TUNEL ARRASTRE','f':'','a':'ENVASADO'},
   {'id':'MAQ-152','n':'PRECINTADORA TRUENO','t':'PRECINTADORA','f':'','a':'ENVASADO'},
   {'id':'MAQ-153','n':'COMPRESOR TRUENO 1','t':'COMPRESORES','f':'','a':'COMPRESORES'},
   {'id':'MAQ-154','n':'COMPRESOR 1','t':'COMPRESORES','f':'','a':'COMPRESORES'},
@@ -196,7 +196,7 @@ MAQUINAS = [
   {'id':'MAQ-171','n':'BASCULA ENVASADO','t':'BASCULAS','f':'','a':'FRIO'},
   {'id':'MAQ-172','n':'BASCULA DOSIFICADOR','t':'BASCULAS','f':'','a':'PRODUCCION'},
   {'id':'MAQ-173','n':'BASCULA OBRADOR','t':'BASCULAS','f':'','a':'PRODUCCION'},
-  {'id':'MAQ-174','n':'BASCULA CAJAS','t':'BASCULAS','f':'','a':'FRIO'},
+  {'id':'MAQ-174','n':'BASCULA CAJAS','t':'BASCULAS','f':'','a':'FRIO'},{'id':'MAQ-175','n':'EVAPORATIVA 2','t':'EVAPORATIVAS','f':'','a':'FRIO/CLIMA'},{'id':'MAQ-176','n':'SECADOR CARROS','t':'SECADO','f':'','a':'FRIO/CLIMA'},{'id':'MAQ-177','n':'APILADORES TALLER','t':'APILADORES','f':'','a':'ENVASADO'},{'id':'MAQ-178','n':'APILADORES ENVASADO-CARTON','t':'APILADORES','f':'','a':'ENVASADO'},{'id':'MAQ-181','n':'DETECTOR 1','t':'DETECTORES','f':'','a':'FABRICA'},{'id':'MAQ-182','n':'DETECTOR 2','t':'DETECTORES','f':'','a':'FABRICA'},{'id':'MAQ-183','n':'DETECTOR 3','t':'DETECTORES','f':'','a':'FABRICA'},
 ]
 
 # ── Fonts ──────────────────────────────────────────────────────
