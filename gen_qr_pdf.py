@@ -187,6 +187,14 @@ MAQUINAS = [
   {'id':'MAQ-164','n':'SILO 2 TRUENO','t':'SILOS TRUENO','f':'GASHOR','a':'TRUENO'},
   {'id':'MAQ-165','n':'CUADRO SILOS TRUENO','t':'ELECTRICIDAD','f':'GASHOR','a':'TRUENO'},
   {'id':'MAQ-166','n':'FORMADORA CAJAS TRUENO','t':'F TRUENO','f':'','a':'TRUENO'},
+  {'id':'MAQ-167','n':'COMPRESOR N5','t':'COMPRESORES','f':'KAESER','a':'PRODUCCION'},
+  {'id':'MAQ-168','n':'SECADOR N5','t':'SECADORES','f':'FRIULAR','a':'PRODUCCION'},
+  {'id':'MAQ-169','n':'A/A TRANSFORMADOR','t':'A/A','f':'INFRISA','a':'FRIO'},
+  {'id':'MAQ-170','n':'CUADRO REPAR. AUTOMATICO','t':'ELECTRICIDAD','f':'JAVI','a':'PRODUCCION'},
+  {'id':'MAQ-171','n':'BASCULA ENVASADO','t':'BASCULAS','f':'','a':'FRIO'},
+  {'id':'MAQ-172','n':'BASCULA DOSIFICADOR','t':'BASCULAS','f':'','a':'PRODUCCION'},
+  {'id':'MAQ-173','n':'BASCULA OBRADOR','t':'BASCULAS','f':'','a':'PRODUCCION'},
+  {'id':'MAQ-174','n':'BASCULA CAJAS','t':'BASCULAS','f':'','a':'FRIO'},
 ]
 
 # ── Fonts ──────────────────────────────────────────────────────
