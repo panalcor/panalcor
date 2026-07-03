@@ -53,18 +53,23 @@ html,body{height:100%;font-family:'Barlow',sans-serif;background:var(--navy-deep
 
 /* ── MECÁNICO SELECTOR ── */
 .mec-bar{
-  display:flex;align-items:center;gap:10px;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
   background:var(--navy-mid);border-radius:8px;padding:12px 16px;
   margin-bottom:16px;border:1px solid rgba(201,162,39,0.25);
 }
 .mec-bar label{font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);white-space:nowrap}
 .mec-bar select{
-  flex:1;background:var(--navy-deep);color:var(--white);
+  flex:1;min-width:140px;background:var(--navy-deep);color:var(--white);
   border:1px solid rgba(255,255,255,0.2);border-radius:6px;
   padding:8px 12px;font-family:'Barlow',sans-serif;font-size:0.95rem;
   cursor:pointer;
 }
 .mec-bar select:focus{outline:none;border-color:var(--gold)}
+@media(max-width:480px){
+  .mec-bar{gap:6px 10px}
+  .mec-bar label{width:100%}
+  .mec-bar select{width:100%;flex:unset;min-width:unset}
+}
 
 /* ── SEARCH BOX ── */
 .search-wrap{position:relative;margin-bottom:12px}
