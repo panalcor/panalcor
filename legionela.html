@@ -135,6 +135,7 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
     <button class="tab" onclick="showTab('termos')">♨️ Termos</button>
     <button class="tab" onclick="showTab('grifos')">🚿 Grifos no usados</button>
     <button class="tab" onclick="showTab('incidencias')">⚠️ Incidencias</button>
+    <button class="tab" onclick="showTab('config')" style="margin-left:auto;opacity:0.7">⚙️ Config</button>
   </div>
 
   <div class="content">
@@ -147,7 +148,6 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
         <label>MES:</label>
         <input type="month" id="mesDepositos" onchange="renderDepositos()">
         <button class="btn btn-gold" onclick="guardarDepositos()">💾 GUARDAR</button>
-        <button class="btn btn-outline" onclick="autoRellenar('depositos')" style="border-color:rgba(46,204,113,0.4);color:#82e0aa">🤖 AUTO-RELLENAR</button>
         <button class="btn btn-outline" onclick="borrarMes('depositos')" style="border-color:rgba(231,76,60,0.4);color:#e74c3c">🗑️ BORRAR</button>
         <button class="btn btn-outline" onclick="exportarMes('depositos')">📥 EXPORTAR EXCEL</button>
       </div>
@@ -193,7 +193,6 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
         <label>MES:</label>
         <input type="month" id="mesAfchAcs" onchange="renderAfchAcs()">
         <button class="btn btn-gold" onclick="guardarAfchAcs()">💾 GUARDAR</button>
-        <button class="btn btn-outline" onclick="autoRellenar('afchacs')" style="border-color:rgba(46,204,113,0.4);color:#82e0aa">🤖 AUTO-RELLENAR</button>
         <button class="btn btn-outline" onclick="borrarMes('afchacs')" style="border-color:rgba(231,76,60,0.4);color:#e74c3c">🗑️ BORRAR</button>
         <button class="btn btn-outline" onclick="exportarMes('afch-acs')">📥 EXPORTAR EXCEL</button>
       </div>
@@ -235,7 +234,6 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
         <label>MES:</label>
         <input type="month" id="mesTermos" onchange="renderTermos()">
         <button class="btn btn-gold" onclick="guardarTermos()">💾 GUARDAR</button>
-        <button class="btn btn-outline" onclick="autoRellenar('termos')" style="border-color:rgba(46,204,113,0.4);color:#82e0aa">🤖 AUTO-RELLENAR</button>
         <button class="btn btn-outline" onclick="borrarMes('termos')" style="border-color:rgba(231,76,60,0.4);color:#e74c3c">🗑️ BORRAR</button>
         <button class="btn btn-outline" onclick="exportarMes('termos')">📥 EXPORTAR EXCEL</button>
       </div>
@@ -330,6 +328,39 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
         </thead>
         <tbody id="bodyIncidencias"></tbody>
       </table>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         PANEL 6: CONFIG
+    ════════════════════════════════════════════════════════════════ -->
+    <div id="panel-config" class="panel">
+      <div class="sec-title">⚙️ CONFIGURACIÓN — AUTO-RELLENAR</div>
+      <p style="color:var(--gray);font-size:0.85rem;margin-bottom:24px">
+        Genera datos de ejemplo para el mes seleccionado en cada registro. Selecciona el mes en la pestaña correspondiente antes de usar estos botones.
+      </p>
+      <div style="display:flex;flex-direction:column;gap:14px;max-width:420px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px">
+          <div>
+            <div style="color:var(--white);font-weight:600;margin-bottom:2px">💧 Depósitos AFCH</div>
+            <div style="color:var(--gray);font-size:0.78rem">Tª, turbidez, pH, cloro — semanal/diario</div>
+          </div>
+          <button class="btn btn-outline" onclick="autoRellenar('depositos')" style="border-color:rgba(46,204,113,0.4);color:#82e0aa;white-space:nowrap">🤖 AUTO-RELLENAR</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px">
+          <div>
+            <div style="color:var(--white);font-weight:600;margin-bottom:2px">🌡️ AFCH/ACS Puntos</div>
+            <div style="color:var(--gray);font-size:0.78rem">Tª, pH, cloro, turbidez, estado grifo — diario</div>
+          </div>
+          <button class="btn btn-outline" onclick="autoRellenar('afchacs')" style="border-color:rgba(46,204,113,0.4);color:#82e0aa;white-space:nowrap">🤖 AUTO-RELLENAR</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px">
+          <div>
+            <div style="color:var(--white);font-weight:600;margin-bottom:2px">♨️ Termos</div>
+            <div style="color:var(--gray);font-size:0.78rem">Temperatura — diario, 1–4 bajo 60°C en rojo</div>
+          </div>
+          <button class="btn btn-outline" onclick="autoRellenar('termos')" style="border-color:rgba(46,204,113,0.4);color:#82e0aa;white-space:nowrap">🤖 AUTO-RELLENAR</button>
+        </div>
+      </div>
     </div>
 
   </div><!-- /content -->
@@ -427,7 +458,7 @@ function showToast(msg, dur=3000){
 }
 function showTab(id){
   document.querySelectorAll('.tab').forEach((t,i)=>{
-    const ids=['depositos','afch-acs','termos','grifos','incidencias'];
+    const ids=['depositos','afch-acs','termos','grifos','incidencias','config'];
     t.classList.toggle('active', ids[i]===id);
   });
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
