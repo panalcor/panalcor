@@ -282,6 +282,7 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
         <input type="month" id="mesGrifos" onchange="renderGrifos()">
         <button class="btn btn-gold" onclick="guardarGrifos()">💾 GUARDAR</button>
         <button class="btn btn-outline" onclick="addGrifoRow()">+ AÑADIR ENTRADA</button>
+        <button class="btn btn-outline" onclick="gestionarCuartos()" style="border-color:rgba(201,162,39,0.4);color:#c9a227">⚙ CUARTOS HÚMEDOS</button>
         <button class="btn btn-outline" onclick="exportarMes('grifos')">📥 EXPORTAR EXCEL</button>
       </div>
       <div style="overflow-x:auto">
@@ -796,6 +797,92 @@ function autoRellenar(tipo){
 // ══════════════════════════════════════════════════════════════════════════════
 var grifosData = [];
 
+const CUARTOS_BASE = ['RELÁMPAGO 18','CICLÓN 20','CICLÓN 18','VENTISCA 19'];
+
+function getCuartos(){
+  try {
+    const extra = JSON.parse(localStorage.getItem('leg_cuartos')||'[]');
+    return [...CUARTOS_BASE, ...extra.filter(x=>x&&!CUARTOS_BASE.includes(x))];
+  } catch(e){ return [...CUARTOS_BASE]; }
+}
+
+function selCuarto(idx, val){
+  const opts = getCuartos().map(c=>`<option value="${escH(c)}" style="background:#1a2d40;color:#fff" ${val===c?'selected':''}>${escH(c)}</option>`).join('');
+  return `<select onchange="grifosData[${idx}].lugar=this.value" style="width:100%;background:#1a2d40;border:1px solid rgba(255,255,255,0.12);color:var(--white);border-radius:5px;padding:4px">
+    <option value="" style="background:#1a2d40;color:#888">${val&&!getCuartos().includes(val)?escH(val):'— Seleccionar —'}</option>
+    ${opts}
+  </select>`;
+}
+
+function gestionarCuartos(){
+  const extra = JSON.parse(localStorage.getItem('leg_cuartos')||'[]');
+  const all = getCuartos();
+  const list = all.map((c,i)=>{
+    const esBase = CUARTOS_BASE.includes(c);
+    return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.07)">
+      <span style="flex:1;color:${esBase?'var(--gray)':'var(--white)'}">${escH(c)}${esBase?' <em style="font-size:0.75rem;color:var(--gray)">(predefinido)</em>':''}</span>
+      ${esBase?'':`<button onclick="eliminarCuarto('${escH(c)}')" style="background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.4);color:#e74c3c;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:0.78rem">✕</button>`}
+    </div>`;
+  }).join('');
+
+  const modal = document.createElement('div');
+  modal.id = 'modalCuartos';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center';
+  modal.innerHTML = `
+    <div style="background:#0d1b2a;border:1px solid rgba(201,162,39,0.3);border-radius:12px;padding:24px;min-width:340px;max-width:460px;width:90%">
+      <div style="font-size:1.05rem;font-weight:700;color:var(--gold);margin-bottom:16px">⚙ CUARTOS HÚMEDOS</div>
+      <div id="listaCuartos" style="margin-bottom:16px;max-height:260px;overflow-y:auto">${list}</div>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <input id="nuevoCuarto" placeholder="Nombre del cuarto húmedo..." style="flex:1;padding:7px 10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:var(--white);font-size:0.88rem">
+        <button onclick="agregarCuarto()" style="padding:7px 14px;background:rgba(46,204,113,0.15);border:1px solid rgba(46,204,113,0.35);color:#2ecc71;border-radius:6px;cursor:pointer;font-weight:700">+ AÑADIR</button>
+      </div>
+      <div style="text-align:right">
+        <button onclick="document.getElementById('modalCuartos').remove();renderGrifosTable()" style="padding:7px 20px;background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.35);color:var(--gold);border-radius:6px;cursor:pointer;font-weight:700">CERRAR</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function agregarCuarto(){
+  const inp = document.getElementById('nuevoCuarto');
+  const nombre = inp.value.trim().toUpperCase();
+  if(!nombre) return;
+  const extra = JSON.parse(localStorage.getItem('leg_cuartos')||'[]');
+  if(getCuartos().includes(nombre)){ showToast('⚠️ Ya existe ese cuarto'); return; }
+  extra.push(nombre);
+  localStorage.setItem('leg_cuartos', JSON.stringify(extra));
+  inp.value='';
+  // Refrescar lista dentro del modal
+  const modal = document.getElementById('modalCuartos');
+  if(modal){
+    const all2 = getCuartos();
+    document.getElementById('listaCuartos').innerHTML = all2.map(c=>{
+      const esBase = CUARTOS_BASE.includes(c);
+      return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.07)">
+        <span style="flex:1;color:${esBase?'var(--gray)':'var(--white)'}">${escH(c)}${esBase?' <em style="font-size:0.75rem;color:var(--gray)">(predefinido)</em>':''}</span>
+        ${esBase?'':`<button onclick="eliminarCuarto('${escH(c)}')" style="background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.4);color:#e74c3c;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:0.78rem">✕</button>`}
+      </div>`;
+    }).join('');
+  }
+  showToast(`✓ Cuarto "${nombre}" añadido`);
+}
+
+function eliminarCuarto(nombre){
+  const extra = JSON.parse(localStorage.getItem('leg_cuartos')||'[]');
+  const nuevo = extra.filter(x=>x!==nombre);
+  localStorage.setItem('leg_cuartos', JSON.stringify(nuevo));
+  // Refrescar lista dentro del modal
+  const all2 = getCuartos();
+  document.getElementById('listaCuartos').innerHTML = all2.map(c=>{
+    const esBase = CUARTOS_BASE.includes(c);
+    return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.07)">
+      <span style="flex:1;color:${esBase?'var(--gray)':'var(--white)'}">${escH(c)}${esBase?' <em style="font-size:0.75rem;color:var(--gray)">(predefinido)</em>':''}</span>
+      ${esBase?'':`<button onclick="eliminarCuarto('${escH(c)}')" style="background:rgba(231,76,60,0.2);border:1px solid rgba(231,76,60,0.4);color:#e74c3c;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:0.78rem">✕</button>`}
+    </div>`;
+  }).join('');
+  showToast(`✓ "${nombre}" eliminado`);
+}
+
 function renderGrifos(){
   const mes = document.getElementById('mesGrifos').value;
   if(!mes) return;
@@ -814,7 +901,7 @@ function renderGrifosTable(){
   tbody.innerHTML = grifosData.map((r,i)=>`
     <tr>
       <td><input type="date" value="${escH(r.fecha||'')}" onchange="grifosData[${i}].fecha=this.value" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:var(--white);border-radius:5px;padding:4px;width:130px"></td>
-      <td><input type="text" value="${escH(r.lugar||'')}" onchange="grifosData[${i}].lugar=this.value" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:var(--white);border-radius:5px;padding:4px"></td>
+      <td>${selCuarto(i, r.lugar||'')}</td>
       <td><input type="number" value="${escH(r.npuntos||'')}" onchange="grifosData[${i}].npuntos=this.value" style="width:70px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:var(--white);border-radius:5px;padding:4px"></td>
       <td><input type="text" value="${escH(r.obs||'')}" onchange="grifosData[${i}].obs=this.value" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:var(--white);border-radius:5px;padding:4px"></td>
       <td><input type="text" value="${escH(r.realizado||'')}" onchange="grifosData[${i}].realizado=this.value" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:var(--white);border-radius:5px;padding:4px"></td>
