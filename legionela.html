@@ -124,6 +124,7 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
     </div>
     <div class="topbar-right">
       <a href="panalcor_inicio.html"><button class="btn btn-back">← Inicio</button></a>
+      <button class="btn btn-gold" onclick="exportarMesCompleto()" style="font-size:0.8rem">📥 EXPORTAR MES</button>
       <button class="btn btn-outline" onclick="logout()">Salir</button>
     </div>
   </div>
@@ -335,6 +336,8 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
 
 <div id="toast"></div>
 
+<!-- SheetJS -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -918,6 +921,137 @@ function exportarCSV(tipo, mes, data){
   a.download=`PANALCOR_LEGIONELA_${tipo}_${mes}.csv`;
   a.click();
   showToast('📋 Exportado como CSV (servidor no disponible)');
+}
+
+// ── Exportar mes completo (SheetJS) ──────────────────────────────────────────
+function exportarMesCompleto(){
+  const mes = document.getElementById('mesDepositos').value || mesActual();
+  const [y,m] = mes.split('-').map(Number);
+  const mesNombre = new Date(y,m-1,1).toLocaleDateString('es-ES',{month:'long',year:'numeric'}).toUpperCase();
+  const dias = diasDelMes(mes);
+  const diasTrab = dias.filter(x=>!x.blocked);
+  const DIAS_SEMANA = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+  showToast('⏳ Generando Excel...');
+
+  // Cargar todos los datos en paralelo
+  const tipos = ['depositos','afchacs','termos','grifos','incidencias'];
+  Promise.all(tipos.map(t=>
+    new Promise(res=>cargar(t,mes,d=>res({t,d})))
+  )).then(results=>{
+    const datos={};
+    results.forEach(({t,d})=>datos[t]=d);
+    const wb = XLSX.utils.book_new();
+
+    // ── Estilos comunes ──────────────────────────────────────────────────────
+    // SheetJS CE no soporta estilos nativos, usamos comentarios de celda para notas
+    // y valores bien organizados para que sea lo más fiel posible al Excel original
+
+    // ── HOJA 1: DEPÓSITOS AFCH ───────────────────────────────────────────────
+    {
+      const d = datos['depositos']||{};
+      const depNames = ['DEPÓSITO Nº1 V17','DEPÓSITO Nº2 V17','DEPÓSITO Nº3 V17','DEPÓSITO Nº4 V17','DEPÓSITO TRUENO'];
+      const rows = [];
+      rows.push([`MEDICIONES DE DEPÓSITOS AFCH — ${mesNombre}`,,,,,,,,,,,,,,,,,,,,,,,]);
+      rows.push(['','',
+        ...depNames.flatMap(n=>[n,'','','']),
+        'TÉCNICO','OBSERVACIONES'
+      ]);
+      rows.push(['DÍA','',
+        ...depNames.flatMap(()=>['Tª AFCH (<20°C)','TURBIDEZ (<4 UNF)','pH (6,5-9,5)','CLORO TOTAL (0,2-2 mg/l)']),
+        '',''
+      ]);
+      diasTrab.forEach(({d:dia,ds})=>{
+        const r = d[ds]||{};
+        const dow = DIAS_SEMANA[new Date(ds+'T12:00:00').getDay()];
+        const fest = FESTIVOS.has(ds) ? ' (Fest.)' : '';
+        rows.push([`${dia} ${dow}${fest}`, '',
+          ...(r.D1?[r.D1.temp||'',r.D1.turb||'',r.D1.ph||'',r.D1.cloro||'']:['','','','']),
+          ...(r.D2?[r.D2.temp||'',r.D2.turb||'',r.D2.ph||'',r.D2.cloro||'']:['','','','']),
+          ...(r.D3?[r.D3.temp||'',r.D3.turb||'',r.D3.ph||'',r.D3.cloro||'']:['','','','']),
+          ...(r.D4?[r.D4.temp||'',r.D4.turb||'',r.D4.ph||'',r.D4.cloro||'']:['','','','']),
+          ...(r.DT?[r.DT.temp||'',r.DT.turb||'',r.DT.ph||'',r.DT.cloro||'']:['','','','']),
+          r.tecnico||'', r.obs||''
+        ]);
+      });
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols'] = [12,6,...Array(20).fill(14),16,22].map(w=>({wch:w}));
+      ws['!merges'] = [
+        {s:{r:0,c:0},e:{r:0,c:21}},
+        ...depNames.map((_,i)=>({s:{r:1,c:2+i*4},e:{r:1,c:5+i*4}}))
+      ];
+      XLSX.utils.book_append_sheet(wb, ws, 'DEPÓSITOS AFCH');
+    }
+
+    // ── HOJA 2: AFCH/ACS PUNTOS ──────────────────────────────────────────────
+    {
+      const d = datos['afchacs']||{};
+      const rows = [];
+      rows.push([`MEDICIONES AFCH Y ACS — ${mesNombre}`,,,,,,,,,,]);
+      rows.push(['DÍA','PUNTO DE MUESTREO','Tª AFCH (<20°C)','Tª ACS (>50°C)','pH (6,5-9,5)','CLORO TOTAL (0,2-2 mg/l)','TURBIDEZ (<4 UNF)','ESTADO GRIFO','TÉCNICO','OBSERVACIONES']);
+      diasTrab.forEach(({d:dia,ds})=>{
+        const r = d[ds]||{};
+        const dow = DIAS_SEMANA[new Date(ds+'T12:00:00').getDay()];
+        rows.push([`${dia} ${dow}`, r.punto||'', r.tafch||'', r.tacs||'', r.ph||'', r.cloro||'', r.turb||'', r.grifo||'', r.tecnico||'', r.obs||'']);
+      });
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols'] = [12,18,16,16,12,20,16,14,14,24].map(w=>({wch:w}));
+      ws['!merges'] = [{s:{r:0,c:0},e:{r:0,c:9}}];
+      XLSX.utils.book_append_sheet(wb, ws, 'AFCH-ACS PUNTOS');
+    }
+
+    // ── HOJA 3: TERMOS ───────────────────────────────────────────────────────
+    {
+      const d = datos['termos']||{};
+      const rows = [];
+      rows.push([`MEDICIONES DE TERMOS (>60°C) — ${mesNombre}`,,,,,,,,,,,,]);
+      rows.push(['DÍA',...TERMOS_LABELS,'TÉCNICO','OBSERVACIONES']);
+      diasTrab.forEach(({d:dia,ds})=>{
+        const r = d[ds]||{};
+        const dow = DIAS_SEMANA[new Date(ds+'T12:00:00').getDay()];
+        rows.push([`${dia} ${dow}`, ...TERMOS.map(k=>r[k]||''), r.tecnico||'', r.obs||'']);
+      });
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols'] = [12,...Array(10).fill(14),14,24].map(w=>({wch:w}));
+      ws['!merges'] = [{s:{r:0,c:0},e:{r:0,c:12}}];
+      XLSX.utils.book_append_sheet(wb, ws, 'TERMOS');
+    }
+
+    // ── HOJA 4: GRIFOS NO UTILIZADOS ─────────────────────────────────────────
+    {
+      const rows_data = (datos['grifos']?.rows)||[];
+      const rows = [];
+      rows.push([`APERTURA DE GRIFOS NO UTILIZADOS — ${mesNombre}`,,,,,]);
+      rows.push(['FECHA','IDENTIFICACIÓN (CUARTO HÚMEDO)','Nº PUNTOS EN CUARTO HÚMEDO','OBSERVACIONES','REALIZADO POR']);
+      rows_data.forEach(r=>{
+        rows.push([r.fecha||'', r.lugar||'', r.npuntos||'', r.obs||'', r.realizado||'']);
+      });
+      if(!rows_data.length) rows.push(['','','','','']);
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols'] = [14,28,20,28,18].map(w=>({wch:w}));
+      ws['!merges'] = [{s:{r:0,c:0},e:{r:0,c:4}}];
+      XLSX.utils.book_append_sheet(wb, ws, 'GRIFOS NO UTILIZADOS');
+    }
+
+    // ── HOJA 5: INCIDENCIAS ──────────────────────────────────────────────────
+    {
+      const rows_data = (datos['incidencias']?.rows)||[];
+      const rows = [];
+      rows.push([`REGISTRO DE INCIDENCIAS — ${mesNombre}`,,,,,,,,]);
+      rows.push(['INCIDENCIA','DÍA','HORA','LUGAR','ACCIONES CORRECTORAS','CIERRE (DÍA Y HORA)','OPERARIO','REVISIÓN RT (FECHA Y FIRMA)']);
+      rows_data.forEach(r=>{
+        rows.push([r.desc||'', r.dia||'', r.hora||'', r.lugar||'', r.acciones||'', r.cierre||'', r.operario||'', r.revision||'']);
+      });
+      if(!rows_data.length) rows.push(['','','','','','','','']);
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols'] = [28,12,10,16,28,18,14,22].map(w=>({wch:w}));
+      ws['!merges'] = [{s:{r:0,c:0},e:{r:0,c:7}}];
+      XLSX.utils.book_append_sheet(wb, ws, 'INCIDENCIAS');
+    }
+
+    XLSX.writeFile(wb, `PANALCOR_LEGIONELA_${mes}.xlsx`);
+    showToast('✅ Excel generado: PANALCOR_LEGIONELA_'+mes+'.xlsx');
+  });
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
