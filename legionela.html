@@ -1016,235 +1016,338 @@ async function exportarMesCompleto(){
   const wb = new ExcelJS.Workbook();
   wb.creator='PANALCOR'; wb.created=new Date();
 
-  const C_GREEN='FF00B050', C_AMBER='FFFFC000', C_WHITE='FFFFFFFF', C_RED='FFE74C3C';
-  const C_AMBER_LIGHT='FFFFF0C0', C_GRAY='FFF2F2F2';
-  const BORDER={top:{style:'thin',color:{argb:'FFCCCCCC'}},left:{style:'thin',color:{argb:'FFCCCCCC'}},bottom:{style:'thin',color:{argb:'FFCCCCCC'}},right:{style:'thin',color:{argb:'FFCCCCCC'}}};
+  // Colores exactos del original
+  const GREEN='FF00B050', AMBER='FFFFC000', WHITE='FFFFFFFF', RED='FFE74C3C';
+  const THIN={style:'thin',color:{argb:'FFB0B0B0'}};
+  const BDR={top:THIN,left:THIN,bottom:THIN,right:THIN};
 
-  function hdr(cell, bg, fg, sz, bold){
-    bg=bg||C_GREEN; fg=fg||C_WHITE; sz=sz||10; bold=(bold===undefined)?true:bold;
-    cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:bg}};
-    cell.font={bold,color:{argb:fg},name:'Calibri',size:sz};
+  // Celda cabecera verde
+  function G(cell, txt, sz, bold){
+    sz=sz||10; bold=(bold===undefined)?true:bold;
+    cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:GREEN}};
+    cell.font={bold,color:{argb:WHITE},name:'Calibri',size:sz};
     cell.alignment={horizontal:'center',vertical:'middle',wrapText:true};
-    cell.border=BORDER;
+    cell.border=BDR;
+    if(txt!==undefined) cell.value=txt;
   }
-  function dat(cell, bg, left, bold, fg){
-    if(bg) cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:bg}};
+  // Celda ámbar
+  function A(cell, txt){
+    cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:AMBER}};
+    cell.font={bold:true,color:{argb:'FF000000'},name:'Calibri',size:10};
+    cell.alignment={horizontal:'center',vertical:'middle',wrapText:true};
+    cell.border=BDR;
+    if(txt!==undefined) cell.value=txt;
+  }
+  // Celda datos (sin fondo)
+  function D(cell, txt, left, bold, fg){
     cell.font={bold:bold||false,color:{argb:fg||'FF000000'},name:'Calibri',size:10};
-    cell.alignment={horizontal:(left?'left':'center'),vertical:'middle',wrapText:true};
-    cell.border=BORDER;
+    cell.alignment={horizontal:left?'left':'center',vertical:'middle',wrapText:true};
+    cell.border=BDR;
+    if(txt!==undefined) cell.value=txt;
   }
-  function leyenda(ws, filaL){
-    ws.mergeCells('B'+filaL+':B'+(filaL+2));
-    const lc=ws.getCell('B'+filaL);
-    lc.value='LEYENDA\nDE\nCOLORES';
-    lc.font={bold:true,name:'Calibri',size:9};
-    lc.alignment={horizontal:'center',vertical:'middle',wrapText:true};
-    lc.border=BORDER;
-    dat(ws.getCell('C'+filaL)); ws.getCell('C'+filaL).value='DIARIO';
-    dat(ws.getCell('C'+(filaL+1)),C_AMBER); ws.getCell('C'+(filaL+1)).value='SEMANAL';
-    dat(ws.getCell('C'+(filaL+2))); ws.getCell('C'+(filaL+2)).value='MENSUAL';
+  // Celda sin relleno (texto negro, borde fino)
+  function N(cell, txt, bold){
+    cell.font={bold:bold||false,name:'Calibri',size:10};
+    cell.alignment={horizontal:'center',vertical:'middle',wrapText:true};
+    cell.border=BDR;
+    if(txt!==undefined) cell.value=txt;
+  }
+  function mc(ws,r){ ws.mergeCells(r); }
+  function col(ws,letter,w){ ws.getColumn(letter).width=w; }
+  function rh(ws,r,h){ ws.getRow(r).height=h; }
+
+  // Bloque leyenda + MES/AÑO genérico
+  // filaL=fila donde va LEYENDA (B merge 3 rows), colMes=col de "MES" label, colMesV=col valor, colAno=col "AÑO" label, colAnoV=col valor
+  function leyendaMesAnio(ws, filaL, colMes, colMesV, colAno, colAnoV){
+    // LEYENDA merge B filaL:filaL+2
+    mc(ws,'B'+filaL+':B'+(filaL+2));
+    N(ws.getCell('B'+filaL),'LEYENDA\nDE\nCOLORES',true);
+    ws.getCell('B'+filaL).font={bold:true,name:'Calibri',size:9};
+    // DIARIO (sin relleno)
+    N(ws.getCell('C'+filaL),'DIARIO');
+    // SEMANAL (ámbar)
+    A(ws.getCell('C'+(filaL+1)),'SEMANAL');
+    // MENSUAL (sin relleno)
+    N(ws.getCell('C'+(filaL+2)),'MENSUAL');
+    // MES label y valor
+    G(ws.getCell(colMes+(filaL+1)),'MES');
+    ws.getCell(colMesV+(filaL+1)).value=mesNombre;
+    ws.getCell(colMesV+(filaL+1)).font={name:'Calibri',size:10};
+    ws.getCell(colMesV+(filaL+1)).border=BDR;
+    ws.getCell(colMesV+(filaL+1)).alignment={horizontal:'center',vertical:'middle'};
+    // AÑO label y valor
+    G(ws.getCell(colAno+(filaL+1)),'AÑO');
+    ws.getCell(colAnoV+(filaL+1)).value=y;
+    ws.getCell(colAnoV+(filaL+1)).font={name:'Calibri',size:10};
+    ws.getCell(colAnoV+(filaL+1)).border=BDR;
+    ws.getCell(colAnoV+(filaL+1)).alignment={horizontal:'center',vertical:'middle'};
   }
 
-  // === HOJA 1: INCIDENCIAS ===
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HOJA 1: REGISTRO Nº1 — INCIDENCIAS
+  // ═══════════════════════════════════════════════════════════════════════════
   {
     const ws=wb.addWorksheet('REGISTRO N1');
     ws.views=[{showGridLines:false}];
-    ws.getColumn('A').width=2; ws.getColumn('B').width=30; ws.getColumn('C').width=13;
-    ws.getColumn('D').width=10; ws.getColumn('E').width=26; ws.getColumn('F').width=40;
-    ws.getColumn('G').width=15; ws.getColumn('H').width=20; ws.getColumn('I').width=17;
-    [1,2].forEach(r=>ws.getRow(r).height=15);
-    ws.getRow(3).height=31.8; ws.getRow(4).height=31.8;
-    ws.mergeCells('B3:I3');
-    hdr(ws.getCell('B3'),C_GREEN,C_WHITE,11,true);
-    ws.getCell('B3').value='REGISTRO Nº1-INC.-REGISTRO DE INCIDENCIAS';
-    ['INCIDENCIA','DÍA','HORA','LUGAR','ACCIONES CORRECTORAS','CIERRE\n(DÍA Y HORA)','OPERARIO','REVISIÓN DEL RT\n(FECHA Y FIRMA)'].forEach((v,i)=>{
-      const c=ws.getCell(String.fromCharCode('B'.charCodeAt(0)+i)+'4');
-      hdr(c); c.value=v;
+    col(ws,'A',2); col(ws,'B',63); col(ws,'C',13); col(ws,'D',10);
+    col(ws,'E',26); col(ws,'F',77); col(ws,'G',15); col(ws,'H',30); col(ws,'I',17);
+    [1,2].forEach(r=>rh(ws,r,15));
+    rh(ws,3,31.8); rh(ws,4,31.8);
+
+    mc(ws,'B3:I3');
+    G(ws.getCell('B3'),'REGISTRO Nº1-INC.-REGISTRO DE INCIDENCIAS',11,true);
+
+    ['INCIDENCIA','DIA','HORA','LUGAR','ACCIONES CORRECTORAS','CIERRE\n(DIA Y HORA)','OPERARIO','REVISION DEL RT\n(FECHA Y FIRMA)'].forEach((v,i)=>{
+      G(ws.getCell(String.fromCharCode('B'.charCodeAt(0)+i)+'4'),v,10,true);
     });
+
     const rd=(datos['incidencias']?.rows)||[];
-    (rd.length?rd:Array(10).fill({})).forEach((r,i)=>{
-      const row=5+i; ws.getRow(row).height=22.8;
+    const rows=rd.length?rd:Array(20).fill({});
+    rows.forEach((r,i)=>{
+      const row=5+i; rh(ws,row,22.8);
       ['desc','dia','hora','lugar','acciones','cierre','operario','revision'].forEach((f,j)=>{
-        const c=ws.getCell(String.fromCharCode('B'.charCodeAt(0)+j)+row);
-        c.value=r[f]||''; dat(c,null,j===0||j===4);
+        D(ws.getCell(String.fromCharCode('B'.charCodeAt(0)+j)+row),r[f]||'',j===0||j===4);
       });
     });
   }
 
-  // === HOJA 2: AFCH Y ACS ===
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HOJA 2: MEDICIONES AFCH Y ACS
+  // ═══════════════════════════════════════════════════════════════════════════
   {
     const ws=wb.addWorksheet('MEDICIONES AFCH Y ACS');
     ws.views=[{showGridLines:false}];
-    ws.getColumn('A').width=2; ws.getColumn('B').width=14; ws.getColumn('C').width=24;
-    ['D','E','F','G','H'].forEach(c=>ws.getColumn(c).width=11);
-    ws.getColumn('I').width=14; ws.getColumn('J').width=22;
-    [1,2,3,4].forEach(r=>ws.getRow(r).height=15);
-    ws.getRow(5).height=37; ws.getRow(6).height=25;
-    ws.getRow(7).height=18; ws.getRow(8).height=16; ws.getRow(9).height=18;
-    ws.getRow(10).height=43; ws.getRow(11).height=43; ws.getRow(12).height=29;
-    ws.mergeCells('B5:J5');
-    hdr(ws.getCell('B5'),C_GREEN,C_WHITE,11,true);
-    ws.getCell('B5').value='REGISTRO Nº3-PMYR-AS.-REGISTRO DE REVISIÓN DIARIA, SEMANAL Y MENSUAL DE AFCH Y ACS';
-    ws.mergeCells('B6:C6'); hdr(ws.getCell('B6')); ws.getCell('B6').value='PANALCOR';
-    ws.mergeCells('D6:G6'); hdr(ws.getCell('D6')); ws.getCell('D6').value='MES: '+mesNombre;
-    ws.mergeCells('H6:J6'); hdr(ws.getCell('H6')); ws.getCell('H6').value='AÑO: '+y;
-    leyenda(ws,7);
-    ws.mergeCells('B10:B12'); hdr(ws.getCell('B10')); ws.getCell('B10').value='DÍA';
-    ws.mergeCells('C10:H10'); hdr(ws.getCell('C10')); ws.getCell('C10').value='PUNTO DE MUESTREO';
-    ws.mergeCells('I10:I12'); hdr(ws.getCell('I10')); ws.getCell('I10').value='TÉCNICO';
-    ws.mergeCells('J10:J12'); hdr(ws.getCell('J10')); ws.getCell('J10').value='OBSERVACIONES';
-    ['Tª AFCH\n(<20°C)','Tª ACS\n(>50°C)','pH\n(6,5-9,5)','CLORO\nTOTAL\n(mg/l)','TURBIDEZ\n(<4 NTU)','ESTADO\nGRIFO'].forEach((v,i)=>{
-      hdr(ws.getCell(String.fromCharCode('C'.charCodeAt(0)+i)+'11')); ws.getCell(String.fromCharCode('C'.charCodeAt(0)+i)+'11').value=v;
+    col(ws,'A',2); col(ws,'B',14); col(ws,'C',22);
+    ['D','E','F','G','H'].forEach(c=>col(ws,c,11));
+    col(ws,'I',14); col(ws,'J',20);
+    [1,2,3,4].forEach(r=>rh(ws,r,15));
+    rh(ws,5,37.2); rh(ws,6,25.2);
+    rh(ws,7,18); rh(ws,8,15.6); rh(ws,9,18);
+    rh(ws,10,43.2); rh(ws,11,43.2); rh(ws,12,28.8);
+
+    // R5: título
+    mc(ws,'B5:J5');
+    G(ws.getCell('B5'),'REGISTRO Nº3-PMYR-AS.-REGISTRO DE REVISION DIARIA, SEMANAL Y MENSUAL DE AFCH Y ACS',11,true);
+
+    // R6: PANALCOR (una sola celda merged)
+    mc(ws,'B6:J6');
+    G(ws.getCell('B6'),'PANALCOR',10,false);
+
+    // R7-9: LEYENDA + MES/AÑO (MES en F, valor en G, AÑO en I, valor en J)
+    leyendaMesAnio(ws,7,'F','G','I','J');
+
+    // R10-12: cabeceras
+    mc(ws,'B10:B11'); G(ws.getCell('B10'),'DIA 1',10,true);
+    mc(ws,'C10:H10'); G(ws.getCell('C10'),'PUNTO DE MUESTREO',10,true);
+    mc(ws,'I10:I12'); G(ws.getCell('I10'),'TECNICO',10,true);
+    mc(ws,'J10:J12'); G(ws.getCell('J10'),'OBSERVACIONES',10,true);
+
+    // R11: sub-cabeceras medición (G=Turbidez en ámbar como el original)
+    const afchSub=['Tª AFCH\n(ºC)','Tª ACS\n(ºC)','PH','CLORO\nTOTAL\n(mg/l)','TURBIDEZ\n(NTU)','ESTADO DEL\nGRIFO'];
+    ['C','D','E','F','G','H'].forEach((c,i)=>{
+      if(c==='G') A(ws.getCell('G11'),afchSub[i]); // Turbidez = ámbar
+      else G(ws.getCell(c+'11'),afchSub[i],10,true);
     });
-    ['<20°C','>50°C','6,5-9,5','0,2-2 mg/l','<4 NTU','CORRECTO'].forEach((v,i)=>{
-      hdr(ws.getCell(String.fromCharCode('C'.charCodeAt(0)+i)+'12'),C_GREEN,C_WHITE,9,false);
-      ws.getCell(String.fromCharCode('C'.charCodeAt(0)+i)+'12').value=v;
+
+    // R12: VALORES PARAMETRICOS (B verde, resto verde también)
+    G(ws.getCell('B12'),'VALORES\nPARAMETRICOS',9,true);
+    ['<20ºC','>50ºC','6,5 A 9,5','0,2-2mg/l','<4 UNF','CORRECTO'].forEach((v,i)=>{
+      G(ws.getCell(String.fromCharCode('C'.charCodeAt(0)+i)+'12'),v,9,false);
     });
+
+    // Datos: 2 filas por día laborable
     const d=datos['afchacs']||{};
     diasTrab.forEach(({d:dia,ds},idx)=>{
       const r=d[ds]||{};
       const r1=13+idx*2, r2=r1+1;
-      ws.getRow(r1).height=14; ws.getRow(r2).height=24;
-      ws.mergeCells('B'+r1+':B'+r2); dat(ws.getCell('B'+r1),null,false,true); ws.getCell('B'+r1).value=dia;
-      ws.mergeCells('C'+r1+':H'+r1); dat(ws.getCell('C'+r1),null,true); ws.getCell('C'+r1).value=r.punto||'';
-      ws.mergeCells('I'+r1+':I'+r2); dat(ws.getCell('I'+r1)); ws.getCell('I'+r1).value=r.tecnico||'';
-      ws.mergeCells('J'+r1+':J'+r2); dat(ws.getCell('J'+r1),null,true); ws.getCell('J'+r1).value=r.obs||'';
+      rh(ws,r1,15); rh(ws,r2,24);
+
+      mc(ws,'B'+r1+':B'+r2); D(ws.getCell('B'+r1),'DIA '+dia,false,true);
+      mc(ws,'C'+r1+':H'+r1); D(ws.getCell('C'+r1),r.punto||'',true);
+      mc(ws,'I'+r1+':I'+r2); D(ws.getCell('I'+r1),r.tecnico||'');
+      mc(ws,'J'+r1+':J'+r2); D(ws.getCell('J'+r1),r.obs||'',true);
+
       [r.tafch||'',r.tacs||'',r.ph||'',r.cloro||'',r.turb||'',r.grifo||''].forEach((v,i)=>{
-        const c=ws.getCell(String.fromCharCode('C'.charCodeAt(0)+i)+r2);
-        dat(c); c.value=v;
+        D(ws.getCell(String.fromCharCode('C'.charCodeAt(0)+i)+r2),v);
       });
     });
   }
 
-  // === HOJA 3: DEPOSITOS ===
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HOJA 3: MEDICIONES DE DEPOSITOS AFCH (con D4 añadido)
+  // Cols: A(margen) B(DIA) C-F(D1) G-J(D2) K-N(D3) O-R(D4) S-V(DT) W(TEC) X(OBS)
+  // ═══════════════════════════════════════════════════════════════════════════
   {
     const ws=wb.addWorksheet('MEDICIONES DE DEPOSITOS');
     ws.views=[{showGridLines:false}];
-    ws.getColumn('A').width=2; ws.getColumn('B').width=14;
-    'CDEFGHIJKLMNOPQRSTUV'.split('').forEach(c=>ws.getColumn(c).width=9.2);
-    ws.getColumn('W').width=14; ws.getColumn('X').width=40;
-    [1,2,3,4,5,6,7].forEach(r=>ws.getRow(r).height=15);
-    ws.getRow(8).height=26; ws.getRow(9).height=26;
-    ws.getRow(10).height=14; ws.getRow(11).height=14; ws.getRow(12).height=14;
-    ws.getRow(13).height=25; ws.getRow(14).height=43; ws.getRow(15).height=29;
-    ws.mergeCells('B8:X8');
-    hdr(ws.getCell('B8'),C_GREEN,C_WHITE,11,true);
-    ws.getCell('B8').value='REGISTRO Nº3-PMYR-AS.-REGISTRO DE REVISIÓN DIARIA, SEMANAL Y MENSUAL DE DEPÓSITOS';
-    ws.mergeCells('B9:D9'); hdr(ws.getCell('B9')); ws.getCell('B9').value='PANALCOR';
-    ws.mergeCells('E9:L9'); hdr(ws.getCell('E9')); ws.getCell('E9').value='MES: '+mesNombre;
-    ws.mergeCells('M9:X9'); hdr(ws.getCell('M9')); ws.getCell('M9').value='AÑO: '+y;
-    leyenda(ws,10);
-    ws.mergeCells('B13:B15'); hdr(ws.getCell('B13')); ws.getCell('B13').value='DÍA';
-    ws.mergeCells('W13:W15'); hdr(ws.getCell('W13')); ws.getCell('W13').value='TÉCNICO';
-    ws.mergeCells('X13:X15'); hdr(ws.getCell('X13')); ws.getCell('X13').value='OBSERVACIONES';
+    col(ws,'A',2); col(ws,'B',14);
+    'CDEFGHIJKLMNOPQRSTUV'.split('').forEach(c=>col(ws,c,9.2));
+    col(ws,'W',14.6); col(ws,'X',52);
+    [1,2,3,4,5,6,7].forEach(r=>rh(ws,r,15));
+    rh(ws,8,26.4); rh(ws,9,26.4);
+    rh(ws,10,14.4); rh(ws,11,14.4); rh(ws,12,14.4);
+    rh(ws,13,25); rh(ws,14,43.2); rh(ws,15,28.8);
+
+    // R8: título (extendido por D4: hasta col X)
+    mc(ws,'B8:X8');
+    G(ws.getCell('B8'),'REGISTRO Nº3-PMYR-AS.-REGISTRO DE REVISION DIARIA, SEMANAL Y MENSUAL DE DEPOSITOS',11,true);
+
+    // R9: PANALCOR una celda merged completa
+    mc(ws,'B9:X9');
+    G(ws.getCell('B9'),'PANALCOR',10,false);
+
+    // R10-12: LEYENDA + MES(F)/AÑO(J)
+    leyendaMesAnio(ws,10,'F','G','J','K');
+
+    // R13-15: cabeceras depósitos
+    // B13:B14 merged = DÍA (solo 2 filas)
+    mc(ws,'B13:B14'); G(ws.getCell('B13'),'DIA',10,true);
+    // W13:W15 = TÉCNICO (3 filas, igual que original S13:S15)
+    mc(ws,'W13:W15'); G(ws.getCell('W13'),'TECNICO',10,true);
+    // X13:X15 = OBSERVACIONES
+    mc(ws,'X13:X15'); G(ws.getCell('X13'),'OBSERVACIONES',10,true);
+
+    // 5 depósitos
     const depCols=[['C','D','E','F'],['G','H','I','J'],['K','L','M','N'],['O','P','Q','R'],['S','T','U','V']];
-    const depNames2=['DEPÓSITO Nº1 V17','DEPÓSITO Nº2 V17','DEPÓSITO Nº3 V17','DEPÓSITO Nº4 V17','DEPÓSITO TRUENO'];
+    const depNms=['DEPOSITO Nº1 V17','DEPOSITO Nº2 V17','DEPOSITO Nº3 V17','DEPOSITO Nº4 V17','DEPOSITO TRUENO'];
     const depKeys=['D1','D2','D3','D4','DT'];
-    const subHdr=['Tª AFCH\n(°C)','TURBIDEZ\n(UNF)','pH','CLORO\nTOTAL\n(mg/l)'];
-    const subPar=['<20°C','<4 UNF','6,5 a 9,5','0,2-2 mg/l'];
+    const subH=['Tª AFCH\n(ºC)','TURBIDEZ\n(UNF)','PH','CLORO\nTOTAL\n(mg/l)'];
+    const subP=['<20ºC','<4 UNF','6,5 A 9,5','0,2-2mg/l'];
+
     depCols.forEach((cols,di)=>{
-      ws.mergeCells(cols[0]+'13:'+cols[3]+'13');
-      hdr(ws.getCell(cols[0]+'13')); ws.getCell(cols[0]+'13').value=depNames2[di];
-      cols.forEach((col,fi)=>{
-        const isSem=fi<2;
-        hdr(ws.getCell(col+'14'),isSem?C_AMBER:C_GREEN,isSem?'FF000000':C_WHITE,9,true);
-        ws.getCell(col+'14').value=subHdr[fi];
-        hdr(ws.getCell(col+'15'),C_GREEN,C_WHITE,9,false);
-        ws.getCell(col+'15').value=subPar[fi];
+      mc(ws,cols[0]+'13:'+cols[3]+'13');
+      G(ws.getCell(cols[0]+'13'),depNms[di],10,true);
+      cols.forEach((c,fi)=>{
+        // R14: Tª y Turb = ámbar (semanal), PH y Cloro = verde
+        if(fi<2) A(ws.getCell(c+'14'),subH[fi]);
+        else G(ws.getCell(c+'14'),subH[fi],10,true);
       });
     });
+
+    // R15: B15='VALORES PARAMETRICOS' verde, valores en C-V verdes
+    G(ws.getCell('B15'),'VALORES\nPARAMETRICOS',9,true);
+    depCols.forEach(cols=>{
+      cols.forEach((c,fi)=>{
+        G(ws.getCell(c+'15'),subP[fi],9,false);
+      });
+    });
+
+    // Datos: 1 fila por día laborable (día = número entero)
     const d=datos['depositos']||{};
     diasTrab.forEach(({d:dia,ds},idx)=>{
       const r=d[ds]||{};
-      const row=16+idx; ws.getRow(row).height=31;
+      const row=16+idx; rh(ws,row,31.2);
       const esW=esPrimerDiaTrabajoDeSemana(ds);
-      dat(ws.getCell('B'+row),null,false,true); ws.getCell('B'+row).value=dia;
+
+      D(ws.getCell('B'+row),dia,false,true); // número del día
+
       depCols.forEach((cols,di)=>{
         const dep=r[depKeys[di]]||{};
         const vals=[dep.temp||'',dep.turb||'',dep.ph||'',dep.cloro||''];
-        cols.forEach((col,fi)=>{
-          const c=ws.getCell(col+row);
-          c.value=(fi<2)?(esW?vals[fi]:'—'):vals[fi];
-          dat(c,(fi<2)?(esW?C_AMBER_LIGHT:C_GRAY):null);
+        cols.forEach((c,fi)=>{
+          const v=(fi<2)?(esW?vals[fi]:'—'):vals[fi];
+          D(ws.getCell(c+row),v);
         });
       });
-      dat(ws.getCell('W'+row)); ws.getCell('W'+row).value=r.tecnico||'';
-      dat(ws.getCell('X'+row),null,true); ws.getCell('X'+row).value=r.obs||'';
+      D(ws.getCell('W'+row),r.tecnico||'');
+      D(ws.getCell('X'+row),r.obs||'',true);
     });
   }
 
-  // === HOJA 4: TERMOS ===
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HOJA 4: MEDICIONES DE TERMOS
+  // ═══════════════════════════════════════════════════════════════════════════
   {
     const ws=wb.addWorksheet('MEDICIONES DE TERMOS');
     ws.views=[{showGridLines:false}];
-    ws.getColumn('A').width=2; ws.getColumn('B').width=14;
-    'CDEFGHIJKL'.split('').forEach(c=>ws.getColumn(c).width=11.6);
-    ws.getColumn('M').width=15; ws.getColumn('N').width=40;
-    [1,2,3,4,5].forEach(r=>ws.getRow(r).height=15);
-    ws.getRow(6).height=26; ws.getRow(7).height=26;
-    ws.getRow(8).height=18; ws.getRow(9).height=16; ws.getRow(10).height=18;
-    ws.getRow(11).height=43; ws.getRow(12).height=43; ws.getRow(13).height=43;
-    ws.mergeCells('B6:N6');
-    hdr(ws.getCell('B6'),C_GREEN,C_WHITE,11,true);
-    ws.getCell('B6').value='REGISTRO Nº3-PMYR-AS.-REGISTRO DE REVISIÓN DIARIA DE TERMOS';
-    ws.mergeCells('B7:D7'); hdr(ws.getCell('B7')); ws.getCell('B7').value='PANALCOR';
-    ws.mergeCells('E7:I7'); hdr(ws.getCell('E7')); ws.getCell('E7').value='MES: '+mesNombre;
-    ws.mergeCells('J7:N7'); hdr(ws.getCell('J7')); ws.getCell('J7').value='AÑO: '+y;
-    leyenda(ws,8);
-    ws.mergeCells('B11:B13'); hdr(ws.getCell('B11')); ws.getCell('B11').value='DÍA';
-    ws.mergeCells('C11:L11'); hdr(ws.getCell('C11')); ws.getCell('C11').value='TEMPERATURA TERMOS';
-    ws.mergeCells('M11:M13'); hdr(ws.getCell('M11')); ws.getCell('M11').value='TÉCNICO';
-    ws.mergeCells('N11:N13'); hdr(ws.getCell('N11')); ws.getCell('N11').value='OBSERVACIONES';
+    col(ws,'A',2); col(ws,'B',16.2);
+    'CDEFGHIJKL'.split('').forEach(c=>col(ws,c,11.6));
+    col(ws,'M',15.9); col(ws,'N',54);
+    [1,2,3,4,5].forEach(r=>rh(ws,r,15));
+    rh(ws,6,25.8); rh(ws,7,25.8);
+    rh(ws,8,14); rh(ws,9,15.6); rh(ws,10,14);
+    rh(ws,11,43.2); rh(ws,12,43.2); rh(ws,13,43.2);
+
+    // R6: título
+    mc(ws,'B6:N6');
+    G(ws.getCell('B6'),'REGISTRO Nº3-PMYR-AS.-REGISTRO DE REVISION DIARIA DE TERMOS',11,true);
+
+    // R7: PANALCOR merged completo
+    mc(ws,'B7:N7');
+    G(ws.getCell('B7'),'PANALCOR',10,false);
+
+    // R8-10: LEYENDA + MES(F)/AÑO(J)
+    leyendaMesAnio(ws,8,'F','G','J','K');
+
+    // R11-13: cabeceras
+    mc(ws,'B11:B12'); G(ws.getCell('B11'),'DIA',10,true);
+    mc(ws,'C11:L11'); G(ws.getCell('C11'),'TEMPERATURA TERMOS',10,true);
+    mc(ws,'M11:M13'); G(ws.getCell('M11'),'TECNICO',10,true);
+    mc(ws,'N11:N13'); G(ws.getCell('N11'),'OBSERVACIONES',10,true);
+
+    // R12: etiquetas de termos (SIN relleno, igual que el original)
     const tCols='CDEFGHIJKL'.split('');
-    TERMOS_LABELS.forEach((label,i)=>{
-      hdr(ws.getCell(tCols[i]+'12'),C_GREEN,C_WHITE,9,true); ws.getCell(tCols[i]+'12').value=label;
-      hdr(ws.getCell(tCols[i]+'13'),C_GREEN,C_WHITE,9,false); ws.getCell(tCols[i]+'13').value='>60°C';
+    TERMOS_LABELS.forEach((lbl,i)=>{
+      N(ws.getCell(tCols[i]+'12'),lbl,true);
     });
+
+    // R13: B verde, valores '>60ºC' SIN relleno (igual que original)
+    G(ws.getCell('B13'),'VALORES\nPARAMETRICOS',9,true);
+    TERMOS_LABELS.forEach((_,i)=>{
+      N(ws.getCell(tCols[i]+'13'),'>60ºC');
+    });
+
+    // Datos: 1 fila por día laborable
     const d=datos['termos']||{};
     diasTrab.forEach(({d:dia,ds},idx)=>{
       const r=d[ds]||{};
-      const row=14+idx; ws.getRow(row).height=26;
-      dat(ws.getCell('B'+row),null,false,true); ws.getCell('B'+row).value=dia;
+      const row=14+idx; rh(ws,row,26.4);
+      D(ws.getCell('B'+row),dia,false,true);
       TERMOS.forEach((key,i)=>{
         const val=r[key]||'';
-        const c=ws.getCell(tCols[i]+row);
-        c.value=val;
         const bad=val&&parseFloat(val)<60;
-        dat(c,bad?C_RED:null,false,bad,bad?C_WHITE:'FF000000');
+        const c=ws.getCell(tCols[i]+row);
+        if(bad){ c.fill={type:'pattern',pattern:'solid',fgColor:{argb:RED}}; }
+        D(c,val,false,bad,bad?WHITE:'FF000000');
       });
-      dat(ws.getCell('M'+row)); ws.getCell('M'+row).value=r.tecnico||'';
-      dat(ws.getCell('N'+row),null,true); ws.getCell('N'+row).value=r.obs||'';
+      D(ws.getCell('M'+row),r.tecnico||'');
+      D(ws.getCell('N'+row),r.obs||'',true);
     });
   }
 
-  // === HOJA 5: GRIFOS ===
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HOJA 5: APERTURA DE GRIFOS NO UTILIZADOS
+  // ═══════════════════════════════════════════════════════════════════════════
   {
     const ws=wb.addWorksheet('APERTURA DE GRIFOS');
     ws.views=[{showGridLines:false}];
-    ws.getColumn('A').width=2; ws.getColumn('B').width=16; ws.getColumn('C').width=30;
-    ws.getColumn('D').width=16; ws.getColumn('E').width=30; ws.getColumn('F').width=18;
-    [1,2,3,4,5].forEach(r=>ws.getRow(r).height=15);
-    ws.getRow(6).height=26; ws.getRow(7).height=26; ws.getRow(8).height=54;
-    ws.mergeCells('B6:F6');
-    hdr(ws.getCell('B6'),C_GREEN,C_WHITE,11,true);
-    ws.getCell('B6').value='REGISTRO Nº6-PMYR-AS.-APERTURA DE GRIFOS NO UTILIZADOS';
-    ws.mergeCells('B7:C7'); hdr(ws.getCell('B7')); ws.getCell('B7').value='PANALCOR';
-    ws.mergeCells('D7:E7'); hdr(ws.getCell('D7')); ws.getCell('D7').value='MES: '+mesNombre;
-    hdr(ws.getCell('F7')); ws.getCell('F7').value='AÑO: '+y;
-    ['FECHA','IDENTIFICACIÓN\n(CUARTO HÚMEDO)','Nº PUNTOS EN\nCUARTO HÚMEDO','OBSERVACIONES','REALIZADO POR'].forEach((v,i)=>{
-      const c=ws.getCell(String.fromCharCode('B'.charCodeAt(0)+i)+'8');
-      hdr(c,C_GREEN,C_WHITE,10,true); c.value=v;
+    col(ws,'A',2); col(ws,'B',36.8); col(ws,'C',20); col(ws,'D',16); col(ws,'E',28); col(ws,'F',18);
+    [1,2,3,4,5].forEach(r=>rh(ws,r,15));
+    rh(ws,6,25.8); rh(ws,7,25.8); rh(ws,8,54);
+
+    // R6: título
+    mc(ws,'B6:F6');
+    G(ws.getCell('B6'),'REGISTRO Nº6-PMYR-AS.-APERTURA DE GRIFOS NO UTILIZADOS',11,true);
+
+    // R7: PANALCOR merged completo
+    mc(ws,'B7:F7');
+    G(ws.getCell('B7'),'PANALCOR',10,false);
+
+    // R8: cabeceras SIN relleno (igual que el original)
+    ['FECHA','IDENTIFICACION\n(CUARTO HUMEDO)','Nº PUNTOS EN\nCUARTO HUMEDO','OBSERVACIONES','REALIZADO POR'].forEach((v,i)=>{
+      N(ws.getCell(String.fromCharCode('B'.charCodeAt(0)+i)+'8'),v,true);
     });
+
     const rd=(datos['grifos']?.rows)||[];
-    (rd.length?rd:Array(10).fill({})).forEach((r,i)=>{
-      const row=9+i; ws.getRow(row).height=27.6;
+    (rd.length?rd:Array(15).fill({})).forEach((r,i)=>{
+      const row=9+i; rh(ws,row,27.6);
       [r.fecha||'',r.lugar||'',r.npuntos||'',r.obs||'',r.realizado||''].forEach((v,j)=>{
-        const c=ws.getCell(String.fromCharCode('B'.charCodeAt(0)+j)+row);
-        dat(c,null,j===3); c.value=v;
+        D(ws.getCell(String.fromCharCode('B'.charCodeAt(0)+j)+row),v,j===3);
       });
     });
   }
 
+  // Guardar
   const buffer=await wb.xlsx.writeBuffer();
   const blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
   const a=document.createElement('a');
