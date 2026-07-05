@@ -147,6 +147,7 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
         <input type="month" id="mesDepositos" onchange="renderDepositos()">
         <button class="btn btn-gold" onclick="guardarDepositos()">💾 GUARDAR</button>
         <button class="btn btn-outline" onclick="autoRellenar('depositos')" style="border-color:rgba(46,204,113,0.4);color:#82e0aa">🤖 AUTO-RELLENAR</button>
+        <button class="btn btn-outline" onclick="borrarMes('depositos')" style="border-color:rgba(231,76,60,0.4);color:#e74c3c">🗑️ BORRAR</button>
         <button class="btn btn-outline" onclick="exportarMes('depositos')">📥 EXPORTAR EXCEL</button>
       </div>
       <div style="overflow-x:auto">
@@ -192,6 +193,7 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
         <input type="month" id="mesAfchAcs" onchange="renderAfchAcs()">
         <button class="btn btn-gold" onclick="guardarAfchAcs()">💾 GUARDAR</button>
         <button class="btn btn-outline" onclick="autoRellenar('afchacs')" style="border-color:rgba(46,204,113,0.4);color:#82e0aa">🤖 AUTO-RELLENAR</button>
+        <button class="btn btn-outline" onclick="borrarMes('afchacs')" style="border-color:rgba(231,76,60,0.4);color:#e74c3c">🗑️ BORRAR</button>
         <button class="btn btn-outline" onclick="exportarMes('afch-acs')">📥 EXPORTAR EXCEL</button>
       </div>
       <div style="overflow-x:auto">
@@ -233,6 +235,7 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
         <input type="month" id="mesTermos" onchange="renderTermos()">
         <button class="btn btn-gold" onclick="guardarTermos()">💾 GUARDAR</button>
         <button class="btn btn-outline" onclick="autoRellenar('termos')" style="border-color:rgba(46,204,113,0.4);color:#82e0aa">🤖 AUTO-RELLENAR</button>
+        <button class="btn btn-outline" onclick="borrarMes('termos')" style="border-color:rgba(231,76,60,0.4);color:#e74c3c">🗑️ BORRAR</button>
         <button class="btn btn-outline" onclick="exportarMes('termos')">📥 EXPORTAR EXCEL</button>
       </div>
       <div style="overflow-x:auto">
@@ -670,6 +673,25 @@ function guardarTermos(){
     data[ds]=row;
   });
   guardar('termos', mes, data);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// BORRAR MES
+// ══════════════════════════════════════════════════════════════════════════════
+function borrarMes(tipo){
+  const mesEl = {depositos:'mesDepositos',afchacs:'mesAfchAcs',termos:'mesTermos'}[tipo];
+  const mes = document.getElementById(mesEl).value;
+  if(!mes){ showToast('⚠️ Selecciona un mes'); return; }
+  if(!confirm(`¿BORRAR todos los registros de ${tipo.toUpperCase()} para ${mes}?\nEsta acción no se puede deshacer.`)) return;
+  cache[tipo+'/'+mes]={};
+  DB.ref(fbPath(tipo,mes)).remove()
+    .then(()=>{
+      showToast('🗑️ Registros borrados');
+      if(tipo==='depositos') renderDepositos();
+      else if(tipo==='afchacs') renderAfchAcs();
+      else if(tipo==='termos') renderTermos();
+    })
+    .catch(e=>showToast('❌ Error: '+e.message));
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
