@@ -474,8 +474,20 @@ function checkBloqueadoHoy(){
 function rand(min, max, dec){
   return +(min + Math.random()*(max-min)).toFixed(dec);
 }
-function esMiercoles(ds){ return new Date(ds+'T12:00:00').getDay()===3; }
 function esDiaTrabajo(ds){ return !esBloqueado(ds); }
+// Primer día laborable de la semana (lunes o siguiente si festivo)
+function esPrimerDiaTrabajoDeSemana(ds){
+  if(esBloqueado(ds)) return false;
+  const d = new Date(ds+'T12:00:00');
+  const dow = d.getDay(); // 1=lun … 5=vie
+  if(dow===0||dow===6) return false;
+  for(let i=1; i<dow; i++){
+    const prev = new Date(d);
+    prev.setDate(d.getDate()-(dow-i));
+    if(!esBloqueado(prev.toISOString().slice(0,10))) return false;
+  }
+  return true;
+}
 
 // ── Puntos de muestreo AFCH/ACS ──────────────────────────────────────────────
 const PUNTOS_MUESTREO = ['MUELLE','OBRADOR','TALLER','OFICINA','TRUENO',
@@ -503,22 +515,29 @@ function renderDepositos(){
     const dias = diasDelMes(mes);
     let html = '';
     dias.forEach(({d,ds,blocked,today})=>{
-      const isMed = !blocked && esMiercoles(ds);
-      const cls = blocked?'blocked':today?'today':isMed?'weekly-day':'';
+      const isSemanal = !blocked && esPrimerDiaTrabajoDeSemana(ds);
+      const isDiario  = !blocked && !isSemanal;
+      const cls = blocked?'blocked':today?'today':isSemanal?'weekly-day':isDiario?'daily-day':'';
       const fn = festNombre(ds);
       const row = data[ds]||{};
       let cells = '';
       DEPOSITOS.forEach(dep=>{
-        DEP_FIELDS.forEach(f=>{
-          cells += `<td>${inp(row[dep]?.[f]||'', `${ds}_${dep}_${f}`, 'text','62px')}</td>`;
+        // Tª y Turb: solo semanal (primer día laborable semana)
+        ['temp','turb'].forEach(f=>{
+          const disabled = isDiario ? 'style="opacity:.3;pointer-events:none"' : '';
+          cells += `<td ${disabled}>${isSemanal||blocked?inp(row[dep]?.[f]||'',`${ds}_${dep}_${f}`,'text','62px'):'<span style="color:rgba(255,255,255,0.2);font-size:0.75rem">—</span>'}</td>`;
+        });
+        // pH y Cloro: diario
+        ['ph','cloro'].forEach(f=>{
+          cells += `<td>${!blocked?inp(row[dep]?.[f]||'',`${ds}_${dep}_${f}`,'text','62px'):'<span style="color:rgba(255,255,255,0.2);font-size:0.75rem">—</span>'}</td>`;
         });
       });
       html += `<tr class="${cls}" data-date="${ds}">
         <td class="day-lbl">${d}</td>
         <td class="festivo-lbl">${fn}</td>
         ${cells}
-        <td>${inp(row.tecnico||'',`${ds}_tec`)}</td>
-        <td>${inp(row.obs||'',`${ds}_obs`)}</td>
+        <td>${!blocked?inp(row.tecnico||'',`${ds}_tec`):''}  </td>
+        <td>${!blocked?inp(row.obs||'',`${ds}_obs`):''}  </td>
       </tr>`;
     });
     document.getElementById('bodyDepositos').innerHTML = html;
@@ -615,7 +634,7 @@ function renderTermos(){
     const dias = diasDelMes(mes);
     let html = '';
     dias.forEach(({d,ds,blocked,today})=>{
-      const isMed = !blocked && esMiercoles(ds);
+      const isMed = !blocked && esPrimerDiaTrabajoDeSemana(ds);
       const cls = blocked?'blocked':today?'today':isMed?'weekly-day':'';
       const fn = festNombre(ds);
       const row = data[ds]||{};
@@ -665,22 +684,30 @@ function autoRellenar(tipo){
   const [y,m] = mes.split('-').map(Number);
   const diasTodos = diasDelMes(mes);
   const diasTrabajo = diasTodos.filter(x=>!x.blocked);
-  const diasMiercoles = diasTrabajo.filter(x=>esMiercoles(x.ds));
+  const diasSemanalBase = diasTrabajo.filter(x=>esPrimerDiaTrabajoDeSemana(x.ds));
 
   if(tipo==='depositos'){
     const data = {};
-    diasMiercoles.forEach(({ds})=>{
-      const bTemp = rand(4,7,1), bPh = rand(7.9,8.4,2), bCloro = rand(0.18,0.35,2), bTurb = rand(1.8,2.7,1);
+    const diasSemanal = diasTrabajo.filter(x=>esPrimerDiaTrabajoDeSemana(x.ds));
+    // pH y Cloro: todos los días laborables
+    diasTrabajo.forEach(({ds})=>{
+      const bPh=rand(7.9,8.4,2), bCloro=rand(0.18,0.35,2);
       data[ds]={};
       DEPOSITOS.forEach(dep=>{
         data[ds][dep]={
-          temp: String(+(bTemp+(Math.random()-.5)*.4).toFixed(1)),
-          turb: String(Math.min(2.7,Math.max(1.8,+(bTurb+(Math.random()-.5)*.1).toFixed(1)))),
-          ph:   String(Math.min(8.4,Math.max(7.9,+(bPh+(Math.random()-.5)*.05).toFixed(2)))),
+          ph:   String(Math.min(8.4,Math.max(7.9,+(bPh  +(Math.random()-.5)*.04).toFixed(2)))),
           cloro:String(Math.min(0.35,Math.max(0.18,+(bCloro+(Math.random()-.5)*.02).toFixed(2))))
         };
       });
       data[ds].tecnico='JAVI'; data[ds].obs='';
+    });
+    // Tª y Turb: solo primer día laborable de cada semana
+    diasSemanal.forEach(({ds})=>{
+      const bTemp=rand(4,7,1), bTurb=rand(1.8,2.7,1);
+      DEPOSITOS.forEach(dep=>{
+        data[ds][dep].temp =String(+(bTemp+(Math.random()-.5)*.4).toFixed(1));
+        data[ds][dep].turb =String(Math.min(2.7,Math.max(1.8,+(bTurb+(Math.random()-.5)*.1).toFixed(1))));
+      });
     });
     cache['depositos/'+mes]=data;
     guardar('depositos',mes,data,()=>renderDepositos());
@@ -705,11 +732,10 @@ function autoRellenar(tipo){
     guardar('afchacs',mes,data,()=>renderAfchAcs());
 
   } else if(tipo==='termos'){
-    // Un termo aleatorio en un día aleatorio < 60°C
-    const lowDia = diasMiercoles[Math.floor(Math.random()*diasMiercoles.length)];
+    const lowDia = diasSemanalBase[Math.floor(Math.random()*diasSemanalBase.length)];
     const lowK   = TERMOS[Math.floor(Math.random()*TERMOS.length)];
     const data={};
-    diasMiercoles.forEach(({ds})=>{
+    diasSemanalBase.forEach(({ds})=>{
       const row={};
       TERMOS.forEach(k=>{
         const esLow = ds===lowDia?.ds && k===lowK;
