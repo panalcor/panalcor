@@ -59,6 +59,9 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
 .reg-table tr:nth-child(even) td{background:rgba(255,255,255,0.02)}
 .reg-table tr.today td{background:rgba(201,162,39,0.08)}
 .reg-table tr.blocked td{opacity:.35;pointer-events:none}
+.reg-table tr.weekly-day td{background:rgba(201,162,39,0.06);border-left:2px solid rgba(201,162,39,0.25)}
+.reg-table tr.daily-day td{background:rgba(26,107,138,0.05)}
+.reg-table td.termo-bajo{background:rgba(231,76,60,0.25)!important;color:#e74c3c!important;font-weight:700}
 .reg-table td.day-lbl{color:var(--gold);font-weight:700;text-align:center;width:38px;font-size:0.78rem}
 .reg-table td.dow-lbl{color:var(--gray);font-size:0.72rem;text-align:center;width:28px}
 .reg-table td.festivo-lbl{color:var(--red);font-size:0.68rem;text-align:center}
@@ -143,6 +146,7 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
         <label>MES:</label>
         <input type="month" id="mesDepositos" onchange="renderDepositos()">
         <button class="btn btn-gold" onclick="guardarDepositos()">💾 GUARDAR</button>
+        <button class="btn btn-outline" onclick="autoRellenar('depositos')" style="border-color:rgba(46,204,113,0.4);color:#82e0aa">🤖 AUTO-RELLENAR</button>
         <button class="btn btn-outline" onclick="exportarMes('depositos')">📥 EXPORTAR EXCEL</button>
       </div>
       <div style="overflow-x:auto">
@@ -187,6 +191,7 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
         <label>MES:</label>
         <input type="month" id="mesAfchAcs" onchange="renderAfchAcs()">
         <button class="btn btn-gold" onclick="guardarAfchAcs()">💾 GUARDAR</button>
+        <button class="btn btn-outline" onclick="autoRellenar('afchacs')" style="border-color:rgba(46,204,113,0.4);color:#82e0aa">🤖 AUTO-RELLENAR</button>
         <button class="btn btn-outline" onclick="exportarMes('afch-acs')">📥 EXPORTAR EXCEL</button>
       </div>
       <div style="overflow-x:auto">
@@ -227,6 +232,7 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
         <label>MES:</label>
         <input type="month" id="mesTermos" onchange="renderTermos()">
         <button class="btn btn-gold" onclick="guardarTermos()">💾 GUARDAR</button>
+        <button class="btn btn-outline" onclick="autoRellenar('termos')" style="border-color:rgba(46,204,113,0.4);color:#82e0aa">🤖 AUTO-RELLENAR</button>
         <button class="btn btn-outline" onclick="exportarMes('termos')">📥 EXPORTAR EXCEL</button>
       </div>
       <div style="overflow-x:auto">
@@ -464,6 +470,25 @@ function checkBloqueadoHoy(){
   document.getElementById('blockedMsg').style.display = bloq ? 'block' : 'none';
 }
 
+// ── Helpers numéricos y frecuencia ───────────────────────────────────────────
+function rand(min, max, dec){
+  return +(min + Math.random()*(max-min)).toFixed(dec);
+}
+function esMiercoles(ds){ return new Date(ds+'T12:00:00').getDay()===3; }
+function esDiaTrabajo(ds){ return !esBloqueado(ds); }
+
+// ── Puntos de muestreo AFCH/ACS ──────────────────────────────────────────────
+const PUNTOS_MUESTREO = ['MUELLE','OBRADOR','TALLER','OFICINA','TRUENO',
+  'VENTISCA 17','BAÑOS','RELÁMPAGO 14','CICLÓN 14','CICLÓN 20'];
+
+function selPunto(name, val){
+  const opts = PUNTOS_MUESTREO.map(p=>
+    `<option value="${p}" style="background:#1a2d40;color:#fff" ${val===p?'selected':''}>${p}</option>`
+  ).join('');
+  return `<select name="${name}" style="min-width:110px;background:#1a2d40;border:1px solid rgba(255,255,255,0.12);color:var(--white);border-radius:5px;padding:4px;font-size:0.78rem">
+    <option value="" style="background:#1a2d40;color:#aaa">— PUNTO —</option>${opts}</select>`;
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 // DEPÓSITOS AFCH
 // ══════════════════════════════════════════════════════════════════════════════
@@ -478,7 +503,8 @@ function renderDepositos(){
     const dias = diasDelMes(mes);
     let html = '';
     dias.forEach(({d,ds,blocked,today})=>{
-      const cls = blocked?'blocked':today?'today':'';
+      const isMed = !blocked && esMiercoles(ds);
+      const cls = blocked?'blocked':today?'today':isMed?'weekly-day':'';
       const fn = festNombre(ds);
       const row = data[ds]||{};
       let cells = '';
@@ -491,8 +517,8 @@ function renderDepositos(){
         <td class="day-lbl">${d}</td>
         <td class="festivo-lbl">${fn}</td>
         ${cells}
-        <td>${inp(row.tecnico||'','${ds}_tec')}</td>
-        <td>${inp(row.obs||'','${ds}_obs')}</td>
+        <td>${inp(row.tecnico||'',`${ds}_tec`)}</td>
+        <td>${inp(row.obs||'',`${ds}_obs`)}</td>
       </tr>`;
     });
     document.getElementById('bodyDepositos').innerHTML = html;
@@ -533,13 +559,14 @@ function renderAfchAcs(){
     const dias = diasDelMes(mes);
     let html = '';
     dias.forEach(({d,ds,blocked,today})=>{
-      const cls = blocked?'blocked':today?'today':'';
+      const isMed = !blocked;
+      const cls = blocked?'blocked':today?'today':isMed?'daily-day':'';
       const fn = festNombre(ds);
       const row = data[ds]||{};
       html += `<tr class="${cls}" data-date="${ds}">
         <td class="day-lbl">${d}</td>
         <td class="festivo-lbl">${fn}</td>
-        <td>${inp(row.punto||'',`${ds}_punto`)}</td>
+        <td>${selPunto(`${ds}_punto`, row.punto||'')}</td>
         <td>${inp(row.tafch||'',`${ds}_tafch`,'text','58px')}</td>
         <td>${inp(row.tacs||'',`${ds}_tacs`,'text','58px')}</td>
         <td>${inp(row.ph||'',`${ds}_ph`,'text','52px')}</td>
@@ -588,12 +615,15 @@ function renderTermos(){
     const dias = diasDelMes(mes);
     let html = '';
     dias.forEach(({d,ds,blocked,today})=>{
-      const cls = blocked?'blocked':today?'today':'';
+      const isMed = !blocked && esMiercoles(ds);
+      const cls = blocked?'blocked':today?'today':isMed?'weekly-day':'';
       const fn = festNombre(ds);
       const row = data[ds]||{};
-      let cells = TERMOS.map(k=>
-        `<td>${inp(row[k]||'',`${ds}_${k}`,'text','58px')}</td>`
-      ).join('');
+      let cells = TERMOS.map(k=>{
+        const val = row[k]||'';
+        const bajo = val!=='' && parseFloat(val)<60;
+        return `<td class="${bajo?'termo-bajo':''}">${inp(val,`${ds}_${k}`,'text','58px')}</td>`;
+      }).join('');
       html += `<tr class="${cls}" data-date="${ds}">
         <td class="day-lbl">${d}</td>
         <td class="festivo-lbl">${fn}</td>
@@ -621,6 +651,77 @@ function guardarTermos(){
     data[ds]=row;
   });
   guardar('termos', mes, data);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// AUTO-RELLENAR
+// ══════════════════════════════════════════════════════════════════════════════
+function autoRellenar(tipo){
+  const mesEl = {depositos:'mesDepositos','afchacs':'mesAfchAcs',termos:'mesTermos'}[tipo];
+  const mes = document.getElementById(mesEl).value;
+  if(!mes){ showToast('⚠️ Selecciona un mes'); return; }
+  if(!confirm(`¿AUTO-RELLENAR ${tipo.toUpperCase()} para ${mes}?\nSe sobreescribirán los datos existentes.`)) return;
+
+  const [y,m] = mes.split('-').map(Number);
+  const diasTodos = diasDelMes(mes);
+  const diasTrabajo = diasTodos.filter(x=>!x.blocked);
+  const diasMiercoles = diasTrabajo.filter(x=>esMiercoles(x.ds));
+
+  if(tipo==='depositos'){
+    const data = {};
+    diasMiercoles.forEach(({ds})=>{
+      const bTemp = rand(4,7,1), bPh = rand(7.9,8.4,2), bCloro = rand(0.18,0.35,2), bTurb = rand(1.8,2.7,1);
+      data[ds]={};
+      DEPOSITOS.forEach(dep=>{
+        data[ds][dep]={
+          temp: String(+(bTemp+(Math.random()-.5)*.4).toFixed(1)),
+          turb: String(Math.min(2.7,Math.max(1.8,+(bTurb+(Math.random()-.5)*.1).toFixed(1)))),
+          ph:   String(Math.min(8.4,Math.max(7.9,+(bPh+(Math.random()-.5)*.05).toFixed(2)))),
+          cloro:String(Math.min(0.35,Math.max(0.18,+(bCloro+(Math.random()-.5)*.02).toFixed(2))))
+        };
+      });
+      data[ds].tecnico='JAVI'; data[ds].obs='';
+    });
+    cache['depositos/'+mes]=data;
+    guardar('depositos',mes,data,()=>renderDepositos());
+
+  } else if(tipo==='afchacs'){
+    // Ciclo de puntos sin repetir
+    const puntos=[...PUNTOS_MUESTREO].sort(()=>Math.random()-.5);
+    let pi=0;
+    const data={};
+    diasTrabajo.forEach(({ds})=>{
+      if(pi>=puntos.length){ puntos.sort(()=>Math.random()-.5); pi=0; }
+      const tafch=rand(3,6,1), ph=rand(7.9,8.4,2), cloro=rand(0.18,0.35,2), turb=rand(1.8,2.7,1);
+      data[ds]={
+        punto:puntos[pi++],
+        tafch:String(tafch),
+        tacs:String(rand(60,65,1)),
+        ph:String(ph), cloro:String(cloro), turb:String(turb),
+        grifo:'Correcto', tecnico:'JAVI', obs:''
+      };
+    });
+    cache['afchacs/'+mes]=data;
+    guardar('afchacs',mes,data,()=>renderAfchAcs());
+
+  } else if(tipo==='termos'){
+    // Un termo aleatorio en un día aleatorio < 60°C
+    const lowDia = diasMiercoles[Math.floor(Math.random()*diasMiercoles.length)];
+    const lowK   = TERMOS[Math.floor(Math.random()*TERMOS.length)];
+    const data={};
+    diasMiercoles.forEach(({ds})=>{
+      const row={};
+      TERMOS.forEach(k=>{
+        const esLow = ds===lowDia?.ds && k===lowK;
+        row[k] = esLow ? String(rand(55,59.5,1)) : String(rand(60,65,1));
+      });
+      row.tecnico='JAVI';
+      row.obs = ds===lowDia?.ds ? 'SE SUBE LA TEMPERATURA' : '';
+      data[ds]=row;
+    });
+    cache['termos/'+mes]=data;
+    guardar('termos',mes,data,()=>renderTermos());
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
