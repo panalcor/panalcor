@@ -330,8 +330,8 @@ const FB_CFG = {
   databaseURL:"https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
   projectId:"panalcor-mantenimiento",
   storageBucket:"panalcor-mantenimiento.appspot.com",
-  messagingSenderId:"123456789",
-  appId:"1:123456789:web:abcdef"
+  messagingSenderId:"67593058609",
+  appId:"1:67593058609:web:c33fa1fa4fce2932485810"
 };
 if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
 const DB = firebase.database();
@@ -358,16 +358,6 @@ function logout(){
   localStorage.removeItem('legSession');
   location.reload();
 }
-// Auto-login: sesión propia reciente O ya logueado como admin en panalcor_inicio
-(function(){
-  const s = +localStorage.getItem('legSession')||0;
-  const adminOk = !!localStorage.getItem('adminSession');
-  if(Date.now()-s < 8*3600*1000 || adminOk){
-    document.getElementById('loginScreen').style.display='none';
-    document.getElementById('app').style.display='block';
-    initApp();
-  }
-})();
 
 // ── Festivos 2026 (Leganés) ───────────────────────────────────────────────────
 const FESTIVOS = new Set([
@@ -431,17 +421,24 @@ function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'
 function mesActual(){ return new Date().toISOString().slice(0,7); }
 
 // ── Cache datos ───────────────────────────────────────────────────────────────
-let cache = {};
+var cache = {};
 
 function fbPath(tipo, mes){ return `legionela/${tipo}/${mes}`; }
 
 function cargar(tipo, mes, cb){
   const key = tipo+'/'+mes;
   if(cache[key]){ cb(cache[key]); return; }
-  DB.ref(fbPath(tipo,mes)).once('value').then(s=>{
-    cache[key] = s.val()||{};
-    cb(cache[key]);
-  }).catch(()=>cb({}));
+  // Renderizar inmediatamente con datos vacíos para que aparezcan los campos
+  cb({});
+  try {
+    DB.ref(fbPath(tipo,mes)).once('value').then(s=>{
+      const val = s.val()||{};
+      if(Object.keys(val).length){
+        cache[key] = val;
+        cb(val); // re-renderizar con datos reales de Firebase
+      }
+    }).catch(()=>{});
+  } catch(e){}
 }
 
 function guardar(tipo, mes, data, cb){
@@ -621,7 +618,7 @@ function guardarTermos(){
 // ══════════════════════════════════════════════════════════════════════════════
 // GRIFOS NO UTILIZADOS
 // ══════════════════════════════════════════════════════════════════════════════
-let grifosData = [];
+var grifosData = [];
 
 function renderGrifos(){
   const mes = document.getElementById('mesGrifos').value;
@@ -664,7 +661,7 @@ function guardarGrifos(){
 // ══════════════════════════════════════════════════════════════════════════════
 // INCIDENCIAS
 // ══════════════════════════════════════════════════════════════════════════════
-let incData = [];
+var incData = [];
 
 function renderIncidencias(){
   const mes = document.getElementById('mesIncidencias').value;
@@ -782,6 +779,17 @@ function initApp(){
   renderGrifos();
   renderIncidencias();
 }
+
+// Auto-login: sesión propia reciente O ya logueado como admin en panalcor_inicio
+(function(){
+  const s = +localStorage.getItem('legSession')||0;
+  const adminOk = !!localStorage.getItem('adminSession');
+  if(Date.now()-s < 8*3600*1000 || adminOk){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('app').style.display='block';
+    initApp();
+  }
+})();
 </script>
 </body>
 </html>
