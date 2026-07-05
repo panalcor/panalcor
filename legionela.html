@@ -140,33 +140,38 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
     ════════════════════════════════════════════════════════════════ -->
     <div id="panel-depositos" class="panel active">
       <div class="mes-bar">
-        <label>Mes:</label>
+        <label>MES:</label>
         <input type="month" id="mesDepositos" onchange="renderDepositos()">
-        <button class="btn btn-gold" onclick="guardarDepositos()">💾 Guardar</button>
-        <button class="btn btn-outline" onclick="exportarMes('depositos')">📥 Exportar Excel</button>
-      </div>
-      <div class="param-ref">
-        <strong>Valores paramétricos:</strong>
-        Temperatura AFCH &lt;20°C · Turbidez &lt;4 UNF · pH 6,5–9,5 · Cloro total 0,2–2 mg/l
+        <button class="btn btn-gold" onclick="guardarDepositos()">💾 GUARDAR</button>
+        <button class="btn btn-outline" onclick="exportarMes('depositos')">📥 EXPORTAR EXCEL</button>
       </div>
       <div style="overflow-x:auto">
         <table class="reg-table" id="tblDepositos">
           <thead>
             <tr>
-              <th rowspan="2" style="width:32px">Día</th>
-              <th rowspan="2" style="width:24px"></th>
+              <th rowspan="3" style="width:32px">DÍA</th>
+              <th rowspan="3" style="width:24px"></th>
               <th colspan="4">DEPÓSITO Nº1 V17</th>
               <th colspan="4">DEPÓSITO Nº2 V17</th>
               <th colspan="4">DEPÓSITO Nº3 V17</th>
+              <th colspan="4">DEPÓSITO Nº4 V17</th>
               <th colspan="4">DEPÓSITO TRUENO</th>
-              <th rowspan="2" style="min-width:70px">Técnico</th>
-              <th rowspan="2" style="min-width:90px">Observaciones</th>
+              <th rowspan="3" style="min-width:70px">TÉCNICO</th>
+              <th rowspan="3" style="min-width:90px">OBSERVACIONES</th>
             </tr>
             <tr>
-              <th>Tª(°C)</th><th>Turb(UNF)</th><th>pH</th><th>Cloro(mg/l)</th>
-              <th>Tª(°C)</th><th>Turb(UNF)</th><th>pH</th><th>Cloro(mg/l)</th>
-              <th>Tª(°C)</th><th>Turb(UNF)</th><th>pH</th><th>Cloro(mg/l)</th>
-              <th>Tª(°C)</th><th>Turb(UNF)</th><th>pH</th><th>Cloro(mg/l)</th>
+              <th>Tª (°C)</th><th>TURB (UNF)</th><th>pH</th><th>CLORO (mg/l)</th>
+              <th>Tª (°C)</th><th>TURB (UNF)</th><th>pH</th><th>CLORO (mg/l)</th>
+              <th>Tª (°C)</th><th>TURB (UNF)</th><th>pH</th><th>CLORO (mg/l)</th>
+              <th>Tª (°C)</th><th>TURB (UNF)</th><th>pH</th><th>CLORO (mg/l)</th>
+              <th>Tª (°C)</th><th>TURB (UNF)</th><th>pH</th><th>CLORO (mg/l)</th>
+            </tr>
+            <tr>
+              <th style="font-size:0.65rem;color:var(--gold)">&lt;20°C</th><th style="font-size:0.65rem;color:var(--gold)">&lt;4 UNF</th><th style="font-size:0.65rem;color:var(--gold)">6,5–9,5</th><th style="font-size:0.65rem;color:var(--gold)">0,2–2</th>
+              <th style="font-size:0.65rem;color:var(--gold)">&lt;20°C</th><th style="font-size:0.65rem;color:var(--gold)">&lt;4 UNF</th><th style="font-size:0.65rem;color:var(--gold)">6,5–9,5</th><th style="font-size:0.65rem;color:var(--gold)">0,2–2</th>
+              <th style="font-size:0.65rem;color:var(--gold)">&lt;20°C</th><th style="font-size:0.65rem;color:var(--gold)">&lt;4 UNF</th><th style="font-size:0.65rem;color:var(--gold)">6,5–9,5</th><th style="font-size:0.65rem;color:var(--gold)">0,2–2</th>
+              <th style="font-size:0.65rem;color:var(--gold)">&lt;20°C</th><th style="font-size:0.65rem;color:var(--gold)">&lt;4 UNF</th><th style="font-size:0.65rem;color:var(--gold)">6,5–9,5</th><th style="font-size:0.65rem;color:var(--gold)">0,2–2</th>
+              <th style="font-size:0.65rem;color:var(--gold)">&lt;20°C</th><th style="font-size:0.65rem;color:var(--gold)">&lt;4 UNF</th><th style="font-size:0.65rem;color:var(--gold)">6,5–9,5</th><th style="font-size:0.65rem;color:var(--gold)">0,2–2</th>
             </tr>
           </thead>
           <tbody id="bodyDepositos"></tbody>
@@ -179,38 +184,34 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
     ════════════════════════════════════════════════════════════════ -->
     <div id="panel-afch-acs" class="panel">
       <div class="mes-bar">
-        <label>Mes:</label>
+        <label>MES:</label>
         <input type="month" id="mesAfchAcs" onchange="renderAfchAcs()">
-        <button class="btn btn-gold" onclick="guardarAfchAcs()">💾 Guardar</button>
-        <button class="btn btn-outline" onclick="exportarMes('afch-acs')">📥 Exportar Excel</button>
-      </div>
-      <div class="param-ref">
-        <strong>Valores paramétricos:</strong>
-        Tª AFCH &lt;20°C · Tª ACS &gt;50°C · pH 6,5–9,5 · Cloro total 0,2–2 mg/l · Turbidez &lt;4 UNF · Estado grifo: Correcto
+        <button class="btn btn-gold" onclick="guardarAfchAcs()">💾 GUARDAR</button>
+        <button class="btn btn-outline" onclick="exportarMes('afch-acs')">📥 EXPORTAR EXCEL</button>
       </div>
       <div style="overflow-x:auto">
         <table class="reg-table" id="tblAfchAcs">
           <thead>
             <tr>
-              <th rowspan="2" style="width:32px">Día</th>
-              <th rowspan="2" style="width:24px"></th>
-              <th rowspan="2" style="min-width:120px">Punto de muestreo</th>
+              <th rowspan="3" style="width:32px">DÍA</th>
+              <th rowspan="3" style="width:24px"></th>
+              <th rowspan="3" style="min-width:120px">PUNTO DE MUESTREO</th>
               <th>Tª AFCH (°C)</th>
               <th>Tª ACS (°C)</th>
               <th>pH</th>
-              <th>Cloro total (mg/l)</th>
-              <th>Turbidez (NTU)</th>
-              <th>Estado grifo</th>
-              <th rowspan="2" style="min-width:70px">Técnico</th>
-              <th rowspan="2" style="min-width:90px">Observaciones</th>
+              <th>CLORO TOTAL (mg/l)</th>
+              <th>TURBIDEZ (NTU)</th>
+              <th>ESTADO GRIFO</th>
+              <th rowspan="3" style="min-width:70px">TÉCNICO</th>
+              <th rowspan="3" style="min-width:90px">OBSERVACIONES</th>
             </tr>
             <tr>
-              <th style="font-size:0.68rem;color:var(--gray)">&lt;20°C</th>
-              <th style="font-size:0.68rem;color:var(--gray)">&gt;50°C</th>
-              <th style="font-size:0.68rem;color:var(--gray)">6,5–9,5</th>
-              <th style="font-size:0.68rem;color:var(--gray)">0,2–2</th>
-              <th style="font-size:0.68rem;color:var(--gray)">&lt;4 UNF</th>
-              <th style="font-size:0.68rem;color:var(--gray)">Correcto</th>
+              <th style="font-size:0.65rem;color:var(--gold)">&lt;20°C</th>
+              <th style="font-size:0.65rem;color:var(--gold)">&gt;50°C</th>
+              <th style="font-size:0.65rem;color:var(--gold)">6,5–9,5</th>
+              <th style="font-size:0.65rem;color:var(--gold)">0,2–2 mg/l</th>
+              <th style="font-size:0.65rem;color:var(--gold)">&lt;4 UNF</th>
+              <th style="font-size:0.65rem;color:var(--gold)">CORRECTO</th>
             </tr>
           </thead>
           <tbody id="bodyAfchAcs"></tbody>
@@ -223,29 +224,37 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
     ════════════════════════════════════════════════════════════════ -->
     <div id="panel-termos" class="panel">
       <div class="mes-bar">
-        <label>Mes:</label>
+        <label>MES:</label>
         <input type="month" id="mesTermos" onchange="renderTermos()">
-        <button class="btn btn-gold" onclick="guardarTermos()">💾 Guardar</button>
-        <button class="btn btn-outline" onclick="exportarMes('termos')">📥 Exportar Excel</button>
-      </div>
-      <div class="param-ref">
-        <strong>Valores paramétricos:</strong>
-        Temperatura termos &gt;60°C en todos los puntos
+        <button class="btn btn-gold" onclick="guardarTermos()">💾 GUARDAR</button>
+        <button class="btn btn-outline" onclick="exportarMes('termos')">📥 EXPORTAR EXCEL</button>
       </div>
       <div style="overflow-x:auto">
         <table class="reg-table" id="tblTermos">
           <thead>
             <tr>
-              <th rowspan="2" style="width:32px">Día</th>
-              <th rowspan="2" style="width:24px"></th>
-              <th colspan="10">Temperatura Termos (°C) — Valor paramétrico &gt;60°C</th>
-              <th rowspan="2" style="min-width:70px">Técnico</th>
-              <th rowspan="2" style="min-width:90px">Observaciones</th>
+              <th rowspan="3" style="width:32px">DÍA</th>
+              <th rowspan="3" style="width:24px"></th>
+              <th colspan="10">TEMPERATURA TERMOS (°C)</th>
+              <th rowspan="3" style="min-width:70px">TÉCNICO</th>
+              <th rowspan="3" style="min-width:90px">OBSERVACIONES</th>
             </tr>
             <tr>
               <th>VENTISCA 11 Nº1</th><th>VENTISCA 11 Nº2</th><th>VENTISCA 13</th><th>VENTISCA 17</th>
               <th>CICLON 12</th><th>CICLON 20</th>
               <th>RELAMPAGO 12</th><th>RELAMPAGO 14</th><th>RELAMPAGO 20</th><th>TRUENO</th>
+            </tr>
+            <tr>
+              <th style="font-size:0.65rem;color:var(--gold)">&gt;60°C</th>
+              <th style="font-size:0.65rem;color:var(--gold)">&gt;60°C</th>
+              <th style="font-size:0.65rem;color:var(--gold)">&gt;60°C</th>
+              <th style="font-size:0.65rem;color:var(--gold)">&gt;60°C</th>
+              <th style="font-size:0.65rem;color:var(--gold)">&gt;60°C</th>
+              <th style="font-size:0.65rem;color:var(--gold)">&gt;60°C</th>
+              <th style="font-size:0.65rem;color:var(--gold)">&gt;60°C</th>
+              <th style="font-size:0.65rem;color:var(--gold)">&gt;60°C</th>
+              <th style="font-size:0.65rem;color:var(--gold)">&gt;60°C</th>
+              <th style="font-size:0.65rem;color:var(--gold)">&gt;60°C</th>
             </tr>
           </thead>
           <tbody id="bodyTermos"></tbody>
@@ -257,23 +266,23 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
          PANEL 4: GRIFOS NO UTILIZADOS
     ════════════════════════════════════════════════════════════════ -->
     <div id="panel-grifos" class="panel">
-      <div class="sec-title">Registro Nº6 — Apertura de grifos no utilizados</div>
+      <div class="sec-title">REGISTRO Nº6 — APERTURA DE GRIFOS NO UTILIZADOS</div>
       <div class="mes-bar">
-        <label>Mes:</label>
+        <label>MES:</label>
         <input type="month" id="mesGrifos" onchange="renderGrifos()">
-        <button class="btn btn-gold" onclick="guardarGrifos()">💾 Guardar</button>
-        <button class="btn btn-outline" onclick="addGrifoRow()">+ Añadir entrada</button>
-        <button class="btn btn-outline" onclick="exportarMes('grifos')">📥 Exportar Excel</button>
+        <button class="btn btn-gold" onclick="guardarGrifos()">💾 GUARDAR</button>
+        <button class="btn btn-outline" onclick="addGrifoRow()">+ AÑADIR ENTRADA</button>
+        <button class="btn btn-outline" onclick="exportarMes('grifos')">📥 EXPORTAR EXCEL</button>
       </div>
       <div style="overflow-x:auto">
         <table class="reg-table" id="tblGrifos">
           <thead>
             <tr>
-              <th style="min-width:110px">Fecha</th>
-              <th style="min-width:160px">Identificación (cuarto húmedo)</th>
-              <th style="min-width:80px">Nº puntos</th>
-              <th style="min-width:140px">Observaciones</th>
-              <th style="min-width:100px">Realizado por</th>
+              <th style="min-width:110px">FECHA</th>
+              <th style="min-width:160px">IDENTIFICACIÓN (CUARTO HÚMEDO)</th>
+              <th style="min-width:80px">Nº PUNTOS</th>
+              <th style="min-width:140px">OBSERVACIONES</th>
+              <th style="min-width:100px">REALIZADO POR</th>
               <th style="width:36px"></th>
             </tr>
           </thead>
@@ -286,25 +295,25 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
          PANEL 5: INCIDENCIAS
     ════════════════════════════════════════════════════════════════ -->
     <div id="panel-incidencias" class="panel">
-      <div class="sec-title">Registro Nº1 — Registro de incidencias</div>
+      <div class="sec-title">REGISTRO Nº1 — REGISTRO DE INCIDENCIAS</div>
       <div class="mes-bar">
-        <label>Mes:</label>
+        <label>MES:</label>
         <input type="month" id="mesIncidencias" onchange="renderIncidencias()">
-        <button class="btn btn-gold" onclick="guardarIncidencias()">💾 Guardar</button>
-        <button class="btn btn-outline" onclick="addIncidencia()">+ Nueva incidencia</button>
-        <button class="btn btn-outline" onclick="exportarMes('incidencias')">📥 Exportar Excel</button>
+        <button class="btn btn-gold" onclick="guardarIncidencias()">💾 GUARDAR</button>
+        <button class="btn btn-outline" onclick="addIncidencia()">+ NUEVA INCIDENCIA</button>
+        <button class="btn btn-outline" onclick="exportarMes('incidencias')">📥 EXPORTAR EXCEL</button>
       </div>
       <table class="inc-table" id="tblIncidencias">
         <thead>
           <tr>
-            <th style="min-width:160px">Incidencia</th>
-            <th style="min-width:90px">Día</th>
-            <th style="min-width:70px">Hora</th>
-            <th style="min-width:100px">Lugar</th>
-            <th style="min-width:160px">Acciones correctoras</th>
-            <th style="min-width:120px">Cierre (día y hora)</th>
-            <th style="min-width:90px">Operario</th>
-            <th style="min-width:120px">Revisión RT (fecha y firma)</th>
+            <th style="min-width:160px">INCIDENCIA</th>
+            <th style="min-width:90px">DÍA</th>
+            <th style="min-width:70px">HORA</th>
+            <th style="min-width:100px">LUGAR</th>
+            <th style="min-width:160px">ACCIONES CORRECTORAS</th>
+            <th style="min-width:120px">CIERRE (DÍA Y HORA)</th>
+            <th style="min-width:90px">OPERARIO</th>
+            <th style="min-width:120px">REVISIÓN RT (FECHA Y FIRMA)</th>
             <th style="width:36px"></th>
           </tr>
         </thead>
@@ -458,8 +467,8 @@ function checkBloqueadoHoy(){
 // ══════════════════════════════════════════════════════════════════════════════
 // DEPÓSITOS AFCH
 // ══════════════════════════════════════════════════════════════════════════════
-const DEPOSITOS = ['D1','D2','D3','DT'];
-const DEPOSITO_LABELS = ['DEPÓSITO Nº1 V17','DEPÓSITO Nº2 V17','DEPÓSITO Nº3 V17','DEPÓSITO TRUENO'];
+const DEPOSITOS = ['D1','D2','D3','D4','DT'];
+const DEPOSITO_LABELS = ['DEPÓSITO Nº1 V17','DEPÓSITO Nº2 V17','DEPÓSITO Nº3 V17','DEPÓSITO Nº4 V17','DEPÓSITO TRUENO'];
 const DEP_FIELDS = ['temp','turb','ph','cloro'];
 
 function renderDepositos(){
