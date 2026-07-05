@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PANALCOR — Legionela</title>
+<style>
+:root{
+  --navy:#0D1B2A;--navy2:#112233;--navy3:#1a2d40;
+  --gold:#C9A227;--gold-light:#e0b840;
+  --white:#FFFFFF;--gray:rgba(255,255,255,0.55);
+  --red:#E74C3C;--green:#2ECC71;--blue:#1A6B8A;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans-serif;min-height:100vh}
+
+/* ── LOGIN ── */
+#loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--navy)}
+.login-box{background:var(--navy2);border:1px solid rgba(201,162,39,0.3);border-radius:16px;padding:40px 36px;width:320px;text-align:center}
+.login-box h2{color:var(--gold);font-size:1.4rem;margin-bottom:6px}
+.login-box p{color:var(--gray);font-size:0.82rem;margin-bottom:24px}
+.login-box input{width:100%;padding:10px 14px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:var(--white);font-size:1rem;margin-bottom:12px}
+.login-box button{width:100%;padding:11px;background:var(--gold);color:var(--navy);border:none;border-radius:8px;font-weight:700;font-size:1rem;cursor:pointer}
+#loginErr{color:var(--red);font-size:0.82rem;margin-top:8px;display:none}
+
+/* ── APP ── */
+#app{display:none}
+.topbar{background:var(--navy2);border-bottom:1px solid rgba(201,162,39,0.2);padding:0 20px;display:flex;align-items:center;gap:16px;height:52px}
+.topbar-title{color:var(--gold);font-weight:700;font-size:1.05rem;letter-spacing:.05em}
+.topbar-sub{color:var(--gray);font-size:0.8rem}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.btn{padding:7px 14px;border-radius:7px;border:none;cursor:pointer;font-size:0.82rem;font-weight:600;transition:opacity .15s}
+.btn:hover{opacity:.85}
+.btn-gold{background:var(--gold);color:var(--navy)}
+.btn-outline{background:transparent;border:1px solid rgba(255,255,255,0.2);color:var(--white)}
+.btn-red{background:var(--red);color:#fff}
+.btn-back{background:rgba(255,255,255,0.08);color:var(--white);border:1px solid rgba(255,255,255,0.15)}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:4px;padding:14px 20px 0;background:var(--navy2);border-bottom:1px solid rgba(255,255,255,0.07);overflow-x:auto}
+.tab{padding:9px 16px;border-radius:8px 8px 0 0;font-size:0.8rem;font-weight:600;cursor:pointer;color:var(--gray);white-space:nowrap;border:none;background:transparent;transition:all .15s}
+.tab.active{background:var(--navy);color:var(--gold);border:1px solid rgba(201,162,39,0.3);border-bottom:1px solid var(--navy)}
+.tab:hover:not(.active){color:var(--white)}
+
+/* ── CONTENT ── */
+.content{padding:20px;max-width:1100px;margin:0 auto}
+.panel{display:none}.panel.active{display:block}
+
+/* ── MES SELECTOR ── */
+.mes-bar{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.mes-bar label{color:var(--gray);font-size:0.82rem}
+.mes-bar input[type=month]{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:var(--white);padding:7px 12px;font-size:0.9rem}
+.blocked-msg{background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);border-radius:8px;padding:12px 16px;color:var(--red);font-weight:600;font-size:0.88rem;margin-bottom:16px;display:none}
+
+/* ── TABLE FORMS ── */
+.reg-table{width:100%;border-collapse:collapse;font-size:0.82rem}
+.reg-table th{background:var(--navy3);color:var(--gold);padding:8px 10px;text-align:center;font-size:0.75rem;letter-spacing:.05em;border:1px solid rgba(255,255,255,0.08)}
+.reg-table td{padding:5px 6px;border:1px solid rgba(255,255,255,0.07);vertical-align:middle}
+.reg-table tr:nth-child(even) td{background:rgba(255,255,255,0.02)}
+.reg-table tr.today td{background:rgba(201,162,39,0.08)}
+.reg-table tr.blocked td{opacity:.35;pointer-events:none}
+.reg-table td.day-lbl{color:var(--gold);font-weight:700;text-align:center;width:38px;font-size:0.78rem}
+.reg-table td.dow-lbl{color:var(--gray);font-size:0.72rem;text-align:center;width:28px}
+.reg-table td.festivo-lbl{color:var(--red);font-size:0.68rem;text-align:center}
+.reg-table input[type=text],.reg-table input[type=number],.reg-table select{
+  width:100%;padding:4px 6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
+  border-radius:5px;color:var(--white);font-size:0.8rem}
+.reg-table input:focus,.reg-table select:focus{outline:none;border-color:var(--gold)}
+
+/* ── INCIDENCIAS TABLE ── */
+.inc-table{width:100%;border-collapse:collapse;font-size:0.82rem;margin-bottom:12px}
+.inc-table th{background:var(--navy3);color:var(--gold);padding:8px 10px;text-align:left;font-size:0.75rem;letter-spacing:.05em;border:1px solid rgba(255,255,255,0.08)}
+.inc-table td{padding:6px 8px;border:1px solid rgba(255,255,255,0.07);vertical-align:top}
+.inc-table input,.inc-table textarea{width:100%;padding:4px 6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:5px;color:var(--white);font-size:0.8rem;resize:vertical}
+
+/* ── VALORES PARAMETRICOS ── */
+.param-ref{background:rgba(26,107,138,0.2);border:1px solid rgba(26,107,138,0.4);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:0.78rem;color:rgba(255,255,255,0.7)}
+.param-ref strong{color:var(--gold)}
+
+/* ── SECTION TITLE ── */
+.sec-title{color:var(--gold);font-weight:700;font-size:0.88rem;letter-spacing:.06em;text-transform:uppercase;margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid rgba(201,162,39,0.2)}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:24px;right:24px;background:var(--navy3);border:1px solid rgba(201,162,39,0.4);color:var(--white);padding:12px 20px;border-radius:10px;font-size:0.88rem;display:none;z-index:9999;max-width:320px}
+
+/* ── EXPORT BAR ── */
+.export-bar{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+
+/* ── GRIFOS ── */
+.grifo-rows{display:flex;flex-direction:column;gap:8px}
+.grifo-row{display:grid;grid-template-columns:140px 1fr 80px 1fr 1fr;gap:8px;align-items:center}
+.grifo-row label{color:var(--gray);font-size:0.8rem}
+.grifo-row input,.grifo-row textarea{padding:6px 10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:var(--white);font-size:0.82rem;width:100%}
+
+@media(max-width:700px){
+  .grifo-row{grid-template-columns:1fr 1fr}
+  .tabs{gap:2px}
+  .tab{padding:7px 10px;font-size:0.72rem}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <h2>🦠 LEGIONELA</h2>
+    <p>PANALCOR — Registros de control</p>
+    <input type="password" id="pwInput" placeholder="Contraseña" onkeydown="if(event.key==='Enter')login()">
+    <button onclick="login()">ENTRAR</button>
+    <div id="loginErr">Contraseña incorrecta</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">🦠 LEGIONELA — PANALCOR</div>
+      <div class="topbar-sub" id="topFecha"></div>
+    </div>
+    <div class="topbar-right">
+      <a href="panalcor_inicio.html"><button class="btn btn-back">← Inicio</button></a>
+      <button class="btn btn-outline" onclick="logout()">Salir</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('depositos')">💧 Depósitos AFCH</button>
+    <button class="tab" onclick="showTab('afch-acs')">🌡️ AFCH/ACS Puntos</button>
+    <button class="tab" onclick="showTab('termos')">♨️ Termos</button>
+    <button class="tab" onclick="showTab('grifos')">🚿 Grifos no usados</button>
+    <button class="tab" onclick="showTab('incidencias')">⚠️ Incidencias</button>
+  </div>
+
+  <div class="content">
+    <div id="blockedMsg" class="blocked-msg">⛔ Hoy es sábado, domingo o festivo — no se puede registrar.</div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         PANEL 1: DEPÓSITOS AFCH
+    ════════════════════════════════════════════════════════════════ -->
+    <div id="panel-depositos" class="panel active">
+      <div class="mes-bar">
+        <label>Mes:</label>
+        <input type="month" id="mesDepositos" onchange="renderDepositos()">
+        <button class="btn btn-gold" onclick="guardarDepositos()">💾 Guardar</button>
+        <button class="btn btn-outline" onclick="exportarMes('depositos')">📥 Exportar Excel</button>
+      </div>
+      <div class="param-ref">
+        <strong>Valores paramétricos:</strong>
+        Temperatura AFCH &lt;20°C · Turbidez &lt;4 UNF · pH 6,5–9,5 · Cloro total 0,2–2 mg/l
+      </div>
+      <div style="overflow-x:auto">
+        <table class="reg-table" id="tblDepositos">
+          <thead>
+            <tr>
+              <th rowspan="2" style="width:32px">Día</th>
+              <th rowspan="2" style="width:24px"></th>
+              <th colspan="4">DEPÓSITO Nº1 V17</th>
+              <th colspan="4">DEPÓSITO Nº2 V17</th>
+              <th colspan="4">DEPÓSITO Nº3 V17</th>
+              <th colspan="4">DEPÓSITO TRUENO</th>
+              <th rowspan="2" style="min-width:70px">Técnico</th>
+              <th rowspan="2" style="min-width:90px">Observaciones</th>
+            </tr>
+            <tr>
+              <th>Tª(°C)</th><th>Turb(UNF)</th><th>pH</th><th>Cloro(mg/l)</th>
+              <th>Tª(°C)</th><th>Turb(UNF)</th><th>pH</th><th>Cloro(mg/l)</th>
+              <th>Tª(°C)</th><th>Turb(UNF)</th><th>pH</th><th>Cloro(mg/l)</th>
+              <th>Tª(°C)</th><th>Turb(UNF)</th><th>pH</th><th>Cloro(mg/l)</th>
+            </tr>
+          </thead>
+          <tbody id="bodyDepositos"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         PANEL 2: AFCH/ACS PUNTOS DE MUESTREO
+    ════════════════════════════════════════════════════════════════ -->
+    <div id="panel-afch-acs" class="panel">
+      <div class="mes-bar">
+        <label>Mes:</label>
+        <input type="month" id="mesAfchAcs" onchange="renderAfchAcs()">
+        <button class="btn btn-gold" onclick="guardarAfchAcs()">💾 Guardar</button>
+        <button class="btn btn-outline" onclick="exportarMes('afch-acs')">📥 Exportar Excel</button>
+      </div>
+      <div class="param-ref">
+        <strong>Valores paramétricos:</strong>
+        Tª AFCH &lt;20°C · Tª ACS &gt;50°C · pH 6,5–9,5 · Cloro total 0,2–2 mg/l · Turbidez &lt;4 UNF · Estado grifo: Correcto
+      </div>
+      <div style="overflow-x:auto">
+        <table class="reg-table" id="tblAfchAcs">
+          <thead>
+            <tr>
+              <th rowspan="2" style="width:32px">Día</th>
+              <th rowspan="2" style="width:24px"></th>
+              <th rowspan="2" style="min-width:120px">Punto de muestreo</th>
+              <th>Tª AFCH (°C)</th>
+              <th>Tª ACS (°C)</th>
+              <th>pH</th>
+              <th>Cloro total (mg/l)</th>
+              <th>Turbidez (NTU)</th>
+              <th>Estado grifo</th>
+              <th rowspan="2" style="min-width:70px">Técnico</th>
+              <th rowspan="2" style="min-width:90px">Observaciones</th>
+            </tr>
+            <tr>
+              <th style="font-size:0.68rem;color:var(--gray)">&lt;20°C</th>
+              <th style="font-size:0.68rem;color:var(--gray)">&gt;50°C</th>
+              <th style="font-size:0.68rem;color:var(--gray)">6,5–9,5</th>
+              <th style="font-size:0.68rem;color:var(--gray)">0,2–2</th>
+              <th style="font-size:0.68rem;color:var(--gray)">&lt;4 UNF</th>
+              <th style="font-size:0.68rem;color:var(--gray)">Correcto</th>
+            </tr>
+          </thead>
+          <tbody id="bodyAfchAcs"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         PANEL 3: TERMOS
+    ════════════════════════════════════════════════════════════════ -->
+    <div id="panel-termos" class="panel">
+      <div class="mes-bar">
+        <label>Mes:</label>
+        <input type="month" id="mesTermos" onchange="renderTermos()">
+        <button class="btn btn-gold" onclick="guardarTermos()">💾 Guardar</button>
+        <button class="btn btn-outline" onclick="exportarMes('termos')">📥 Exportar Excel</button>
+      </div>
+      <div class="param-ref">
+        <strong>Valores paramétricos:</strong>
+        Temperatura termos &gt;60°C en todos los puntos
+      </div>
+      <div style="overflow-x:auto">
+        <table class="reg-table" id="tblTermos">
+          <thead>
+            <tr>
+              <th rowspan="2" style="width:32px">Día</th>
+              <th rowspan="2" style="width:24px"></th>
+              <th colspan="10">Temperatura Termos (°C) — Valor paramétrico &gt;60°C</th>
+              <th rowspan="2" style="min-width:70px">Técnico</th>
+              <th rowspan="2" style="min-width:90px">Observaciones</th>
+            </tr>
+            <tr>
+              <th>VENTISCA 11 Nº1</th><th>VENTISCA 11 Nº2</th><th>VENTISCA 13</th><th>VENTISCA 17</th>
+              <th>CICLON 12</th><th>CICLON 20</th>
+              <th>RELAMPAGO 12</th><th>RELAMPAGO 14</th><th>RELAMPAGO 20</th><th>TRUENO</th>
+            </tr>
+          </thead>
+          <tbody id="bodyTermos"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         PANEL 4: GRIFOS NO UTILIZADOS
+    ════════════════════════════════════════════════════════════════ -->
+    <div id="panel-grifos" class="panel">
+      <div class="sec-title">Registro Nº6 — Apertura de grifos no utilizados</div>
+      <div class="mes-bar">
+        <label>Mes:</label>
+        <input type="month" id="mesGrifos" onchange="renderGrifos()">
+        <button class="btn btn-gold" onclick="guardarGrifos()">💾 Guardar</button>
+        <button class="btn btn-outline" onclick="addGrifoRow()">+ Añadir entrada</button>
+        <button class="btn btn-outline" onclick="exportarMes('grifos')">📥 Exportar Excel</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="reg-table" id="tblGrifos">
+          <thead>
+            <tr>
+              <th style="min-width:110px">Fecha</th>
+              <th style="min-width:160px">Identificación (cuarto húmedo)</th>
+              <th style="min-width:80px">Nº puntos</th>
+              <th style="min-width:140px">Observaciones</th>
+              <th style="min-width:100px">Realizado por</th>
+              <th style="width:36px"></th>
+            </tr>
+          </thead>
+          <tbody id="bodyGrifos"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         PANEL 5: INCIDENCIAS
+    ════════════════════════════════════════════════════════════════ -->
+    <div id="panel-incidencias" class="panel">
+      <div class="sec-title">Registro Nº1 — Registro de incidencias</div>
+      <div class="mes-bar">
+        <label>Mes:</label>
+        <input type="month" id="mesIncidencias" onchange="renderIncidencias()">
+        <button class="btn btn-gold" onclick="guardarIncidencias()">💾 Guardar</button>
+        <button class="btn btn-outline" onclick="addIncidencia()">+ Nueva incidencia</button>
+        <button class="btn btn-outline" onclick="exportarMes('incidencias')">📥 Exportar Excel</button>
+      </div>
+      <table class="inc-table" id="tblIncidencias">
+        <thead>
+          <tr>
+            <th style="min-width:160px">Incidencia</th>
+            <th style="min-width:90px">Día</th>
+            <th style="min-width:70px">Hora</th>
+            <th style="min-width:100px">Lugar</th>
+            <th style="min-width:160px">Acciones correctoras</th>
+            <th style="min-width:120px">Cierre (día y hora)</th>
+            <th style="min-width:90px">Operario</th>
+            <th style="min-width:120px">Revisión RT (fecha y firma)</th>
+            <th style="width:36px"></th>
+          </tr>
+        </thead>
+        <tbody id="bodyIncidencias"></tbody>
+      </table>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /app -->
+
+<div id="toast"></div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<script>
+// ── Firebase ──────────────────────────────────────────────────────────────────
+const FB_CFG = {
+  apiKey:"AIzaSyC5IuDJbRPj1SgDL0cFGZlHu7IuFGJQAOA",
+  authDomain:"panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:"https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"panalcor-mantenimiento",
+  storageBucket:"panalcor-mantenimiento.appspot.com",
+  messagingSenderId:"123456789",
+  appId:"1:123456789:web:abcdef"
+};
+if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
+const DB = firebase.database();
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+const PW_KEY = 'adminPwd';
+const ADMINS_EXTRA = [{n:'IVAN',pwd:'ivan2026'}];
+function getPwd(){ return localStorage.getItem(PW_KEY)||'admin'; }
+function checkPwd(v){ return v===getPwd()||ADMINS_EXTRA.some(a=>a.pwd===v); }
+
+function login(){
+  const v = document.getElementById('pwInput').value;
+  if(checkPwd(v)){
+    localStorage.setItem('legSession', Date.now());
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('app').style.display='block';
+    initApp();
+  } else {
+    document.getElementById('loginErr').style.display='block';
+    document.getElementById('pwInput').value='';
+  }
+}
+function logout(){
+  localStorage.removeItem('legSession');
+  location.reload();
+}
+// Auto-login: sesión propia reciente O ya logueado como admin en panalcor_inicio
+(function(){
+  const s = +localStorage.getItem('legSession')||0;
+  const adminOk = !!localStorage.getItem('adminSession');
+  if(Date.now()-s < 8*3600*1000 || adminOk){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('app').style.display='block';
+    initApp();
+  }
+})();
+
+// ── Festivos 2026 (Leganés) ───────────────────────────────────────────────────
+const FESTIVOS = new Set([
+  '2026-01-01','2026-01-06','2026-04-02','2026-04-03',
+  '2026-05-01','2026-08-15','2026-10-12',
+  '2026-11-02','2026-12-08','2026-12-25'
+]);
+
+function esBloqueado(dateStr){
+  if(FESTIVOS.has(dateStr)) return true;
+  const d = new Date(dateStr+'T12:00:00');
+  const dow = d.getDay();
+  return dow===0||dow===6; // domingo o sábado
+}
+
+function esHoy(dateStr){
+  return dateStr === new Date().toISOString().slice(0,10);
+}
+
+function diasDelMes(mesISO){
+  const [y,m] = mesISO.split('-').map(Number);
+  const dias = [];
+  const total = new Date(y,m,0).getDate();
+  for(let d=1;d<=total;d++){
+    const ds = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    dias.push({d, ds, blocked:esBloqueado(ds), today:esHoy(ds)});
+  }
+  return dias;
+}
+
+const DIAS_ES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+function dowStr(ds){ return DIAS_ES[new Date(ds+'T12:00:00').getDay()]; }
+function festNombre(ds){
+  if(new Date(ds+'T12:00:00').getDay()===0) return 'Dom';
+  if(new Date(ds+'T12:00:00').getDay()===6) return 'Sáb';
+  if(FESTIVOS.has(ds)) return 'Fest';
+  return '';
+}
+
+// ── Helpers UI ────────────────────────────────────────────────────────────────
+function showToast(msg, dur=3000){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.style.display='block';
+  clearTimeout(t._t);
+  t._t=setTimeout(()=>t.style.display='none', dur);
+}
+function showTab(id){
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    const ids=['depositos','afch-acs','termos','grifos','incidencias'];
+    t.classList.toggle('active', ids[i]===id);
+  });
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+}
+function inp(val,name,type='text',w='100%'){
+  return `<input type="${type}" name="${name}" value="${escH(val||'')}" style="width:${w}">`;
+}
+function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── Mes actual por defecto ────────────────────────────────────────────────────
+function mesActual(){ return new Date().toISOString().slice(0,7); }
+
+// ── Cache datos ───────────────────────────────────────────────────────────────
+let cache = {};
+
+function fbPath(tipo, mes){ return `legionela/${tipo}/${mes}`; }
+
+function cargar(tipo, mes, cb){
+  const key = tipo+'/'+mes;
+  if(cache[key]){ cb(cache[key]); return; }
+  DB.ref(fbPath(tipo,mes)).once('value').then(s=>{
+    cache[key] = s.val()||{};
+    cb(cache[key]);
+  }).catch(()=>cb({}));
+}
+
+function guardar(tipo, mes, data, cb){
+  cache[tipo+'/'+mes] = data;
+  DB.ref(fbPath(tipo,mes)).set(data).then(()=>{
+    showToast('✅ Guardado correctamente');
+    if(cb) cb();
+  }).catch(e=>showToast('❌ Error al guardar: '+e.message));
+}
+
+// ── Check bloqueado hoy ───────────────────────────────────────────────────────
+function checkBloqueadoHoy(){
+  const hoy = new Date().toISOString().slice(0,10);
+  const bloq = esBloqueado(hoy);
+  document.getElementById('blockedMsg').style.display = bloq ? 'block' : 'none';
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DEPÓSITOS AFCH
+// ══════════════════════════════════════════════════════════════════════════════
+const DEPOSITOS = ['D1','D2','D3','DT'];
+const DEPOSITO_LABELS = ['DEPÓSITO Nº1 V17','DEPÓSITO Nº2 V17','DEPÓSITO Nº3 V17','DEPÓSITO TRUENO'];
+const DEP_FIELDS = ['temp','turb','ph','cloro'];
+
+function renderDepositos(){
+  const mes = document.getElementById('mesDepositos').value;
+  if(!mes) return;
+  cargar('depositos', mes, data=>{
+    const dias = diasDelMes(mes);
+    let html = '';
+    dias.forEach(({d,ds,blocked,today})=>{
+      const cls = blocked?'blocked':today?'today':'';
+      const fn = festNombre(ds);
+      const row = data[ds]||{};
+      let cells = '';
+      DEPOSITOS.forEach(dep=>{
+        DEP_FIELDS.forEach(f=>{
+          cells += `<td>${inp(row[dep]?.[f]||'', `${ds}_${dep}_${f}`, 'text','62px')}</td>`;
+        });
+      });
+      html += `<tr class="${cls}" data-date="${ds}">
+        <td class="day-lbl">${d}</td>
+        <td class="festivo-lbl">${fn}</td>
+        ${cells}
+        <td>${inp(row.tecnico||'','${ds}_tec')}</td>
+        <td>${inp(row.obs||'','${ds}_obs')}</td>
+      </tr>`;
+    });
+    document.getElementById('bodyDepositos').innerHTML = html;
+  });
+}
+
+function guardarDepositos(){
+  const mes = document.getElementById('mesDepositos').value;
+  if(!mes){ showToast('⚠️ Selecciona un mes'); return; }
+  const tbl = document.getElementById('tblDepositos');
+  const data = {};
+  tbl.querySelectorAll('tbody tr').forEach(tr=>{
+    const ds = tr.dataset.date;
+    if(!ds) return;
+    data[ds] = {};
+    DEPOSITOS.forEach(dep=>{
+      data[ds][dep]={};
+      DEP_FIELDS.forEach(f=>{
+        const inp = tr.querySelector(`[name="${ds}_${dep}_${f}"]`);
+        if(inp) data[ds][dep][f]=inp.value;
+      });
+    });
+    const tec = tr.querySelector(`[name="${ds}_tec"]`);
+    const obs = tr.querySelector(`[name="${ds}_obs"]`);
+    if(tec) data[ds].tecnico=tec.value;
+    if(obs) data[ds].obs=obs.value;
+  });
+  guardar('depositos', mes, data);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// AFCH/ACS PUNTOS
+// ══════════════════════════════════════════════════════════════════════════════
+function renderAfchAcs(){
+  const mes = document.getElementById('mesAfchAcs').value;
+  if(!mes) return;
+  cargar('afchacs', mes, data=>{
+    const dias = diasDelMes(mes);
+    let html = '';
+    dias.forEach(({d,ds,blocked,today})=>{
+      const cls = blocked?'blocked':today?'today':'';
+      const fn = festNombre(ds);
+      const row = data[ds]||{};
+      html += `<tr class="${cls}" data-date="${ds}">
+        <td class="day-lbl">${d}</td>
+        <td class="festivo-lbl">${fn}</td>
+        <td>${inp(row.punto||'',`${ds}_punto`)}</td>
+        <td>${inp(row.tafch||'',`${ds}_tafch`,'text','58px')}</td>
+        <td>${inp(row.tacs||'',`${ds}_tacs`,'text','58px')}</td>
+        <td>${inp(row.ph||'',`${ds}_ph`,'text','52px')}</td>
+        <td>${inp(row.cloro||'',`${ds}_cloro`,'text','62px')}</td>
+        <td>${inp(row.turb||'',`${ds}_turb`,'text','62px')}</td>
+        <td><select name="${ds}_grifo" style="width:90px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:var(--white);border-radius:5px;padding:4px">
+          <option value="">—</option>
+          <option value="Correcto" ${row.grifo==='Correcto'?'selected':''}>Correcto</option>
+          <option value="Incorrecto" ${row.grifo==='Incorrecto'?'selected':''}>Incorrecto</option>
+        </select></td>
+        <td>${inp(row.tecnico||'',`${ds}_tec`)}</td>
+        <td>${inp(row.obs||'',`${ds}_obs`)}</td>
+      </tr>`;
+    });
+    document.getElementById('bodyAfchAcs').innerHTML = html;
+  });
+}
+
+function guardarAfchAcs(){
+  const mes = document.getElementById('mesAfchAcs').value;
+  if(!mes){ showToast('⚠️ Selecciona un mes'); return; }
+  const tbl = document.getElementById('tblAfchAcs');
+  const data = {};
+  tbl.querySelectorAll('tbody tr').forEach(tr=>{
+    const ds = tr.dataset.date;
+    if(!ds) return;
+    const get = f => (tr.querySelector(`[name="${ds}_${f}"]`)||{}).value||'';
+    data[ds]={punto:get('punto'),tafch:get('tafch'),tacs:get('tacs'),ph:get('ph'),
+               cloro:get('cloro'),turb:get('turb'),grifo:get('grifo'),
+               tecnico:get('tec'),obs:get('obs')};
+  });
+  guardar('afchacs', mes, data);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TERMOS
+// ══════════════════════════════════════════════════════════════════════════════
+const TERMOS = ['v11_1','v11_2','v13','v17','c12','c20','r12','r14','r20','tru'];
+const TERMOS_LABELS = ['VENTISCA 11 Nº1','VENTISCA 11 Nº2','VENTISCA 13','VENTISCA 17',
+  'CICLON 12','CICLON 20','RELAMPAGO 12','RELAMPAGO 14','RELAMPAGO 20','TRUENO'];
+
+function renderTermos(){
+  const mes = document.getElementById('mesTermos').value;
+  if(!mes) return;
+  cargar('termos', mes, data=>{
+    const dias = diasDelMes(mes);
+    let html = '';
+    dias.forEach(({d,ds,blocked,today})=>{
+      const cls = blocked?'blocked':today?'today':'';
+      const fn = festNombre(ds);
+      const row = data[ds]||{};
+      let cells = TERMOS.map(k=>
+        `<td>${inp(row[k]||'',`${ds}_${k}`,'text','58px')}</td>`
+      ).join('');
+      html += `<tr class="${cls}" data-date="${ds}">
+        <td class="day-lbl">${d}</td>
+        <td class="festivo-lbl">${fn}</td>
+        ${cells}
+        <td>${inp(row.tecnico||'',`${ds}_tec`)}</td>
+        <td>${inp(row.obs||'',`${ds}_obs`)}</td>
+      </tr>`;
+    });
+    document.getElementById('bodyTermos').innerHTML = html;
+  });
+}
+
+function guardarTermos(){
+  const mes = document.getElementById('mesTermos').value;
+  if(!mes){ showToast('⚠️ Selecciona un mes'); return; }
+  const tbl = document.getElementById('tblTermos');
+  const data = {};
+  tbl.querySelectorAll('tbody tr').forEach(tr=>{
+    const ds = tr.dataset.date;
+    if(!ds) return;
+    const row = {};
+    TERMOS.forEach(k=>{ row[k]=(tr.querySelector(`[name="${ds}_${k}"]`)||{}).value||''; });
+    row.tecnico=(tr.querySelector(`[name="${ds}_tec"]`)||{}).value||'';
+    row.obs=(tr.querySelector(`[name="${ds}_obs"]`)||{}).value||'';
+    data[ds]=row;
+  });
+  guardar('termos', mes, data);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// GRIFOS NO UTILIZADOS
+// ══════════════════════════════════════════════════════════════════════════════
+let grifosData = [];
+
+function renderGrifos(){
+  const mes = document.getElementById('mesGrifos').value;
+  if(!mes) return;
+  cargar('grifos', mes, data=>{
+    grifosData = Array.isArray(data.rows) ? data.rows : [];
+    renderGrifosTable();
+  });
+}
+
+function renderGrifosTable(){
+  const tbody = document.getElementById('bodyGrifos');
+  if(!grifosData.length){
+    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--gray);padding:20px">Sin registros. Pulsa "+ Añadir entrada"</td></tr>';
+    return;
+  }
+  tbody.innerHTML = grifosData.map((r,i)=>`
+    <tr>
+      <td><input type="date" value="${escH(r.fecha||'')}" onchange="grifosData[${i}].fecha=this.value" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:var(--white);border-radius:5px;padding:4px;width:130px"></td>
+      <td><input type="text" value="${escH(r.lugar||'')}" onchange="grifosData[${i}].lugar=this.value" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:var(--white);border-radius:5px;padding:4px"></td>
+      <td><input type="number" value="${escH(r.npuntos||'')}" onchange="grifosData[${i}].npuntos=this.value" style="width:70px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:var(--white);border-radius:5px;padding:4px"></td>
+      <td><input type="text" value="${escH(r.obs||'')}" onchange="grifosData[${i}].obs=this.value" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:var(--white);border-radius:5px;padding:4px"></td>
+      <td><input type="text" value="${escH(r.realizado||'')}" onchange="grifosData[${i}].realizado=this.value" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:var(--white);border-radius:5px;padding:4px"></td>
+      <td><button class="btn btn-red" style="padding:3px 8px;font-size:0.78rem" onclick="delGrifo(${i})">✕</button></td>
+    </tr>`).join('');
+}
+
+function addGrifoRow(){
+  grifosData.push({fecha:new Date().toISOString().slice(0,10),lugar:'',npuntos:'',obs:'',realizado:''});
+  renderGrifosTable();
+}
+function delGrifo(i){ grifosData.splice(i,1); renderGrifosTable(); }
+
+function guardarGrifos(){
+  const mes = document.getElementById('mesGrifos').value;
+  if(!mes){ showToast('⚠️ Selecciona un mes'); return; }
+  guardar('grifos', mes, {rows: grifosData});
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// INCIDENCIAS
+// ══════════════════════════════════════════════════════════════════════════════
+let incData = [];
+
+function renderIncidencias(){
+  const mes = document.getElementById('mesIncidencias').value;
+  if(!mes) return;
+  cargar('incidencias', mes, data=>{
+    incData = Array.isArray(data.rows) ? data.rows : [];
+    renderIncTable();
+  });
+}
+
+function renderIncTable(){
+  const tbody = document.getElementById('bodyIncidencias');
+  if(!incData.length){
+    tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--gray);padding:20px">Sin incidencias. Pulsa "+ Nueva incidencia"</td></tr>';
+    return;
+  }
+  const fields=['desc','dia','hora','lugar','acciones','cierre','operario','revision'];
+  tbody.innerHTML = incData.map((r,i)=>`
+    <tr>
+      ${fields.map(f=>`<td><${f==='desc'||f==='acciones'?'textarea rows="2"':'input type="text"'}
+        onchange="incData[${i}]['${f}']=this.value"
+        style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:var(--white);border-radius:5px;padding:4px;resize:vertical">${escH(r[f]||'')}</${f==='desc'||f==='acciones'?'textarea':'input'}></td>`).join('')}
+      <td><button class="btn btn-red" style="padding:3px 8px;font-size:0.78rem" onclick="delInc(${i})">✕</button></td>
+    </tr>`).join('');
+}
+
+function addIncidencia(){
+  incData.push({desc:'',dia:'',hora:'',lugar:'',acciones:'',cierre:'',operario:'',revision:''});
+  renderIncTable();
+}
+function delInc(i){ incData.splice(i,1); renderIncTable(); }
+
+function guardarIncidencias(){
+  const mes = document.getElementById('mesIncidencias').value;
+  if(!mes){ showToast('⚠️ Selecciona un mes'); return; }
+  guardar('incidencias', mes, {rows: incData});
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// EXPORTAR EXCEL (via Python en servidor local / descarga CSV como fallback)
+// ══════════════════════════════════════════════════════════════════════════════
+function exportarMes(tipo){
+  const mesEl = {
+    'depositos':'mesDepositos','afch-acs':'mesAfchAcs',
+    'termos':'mesTermos','grifos':'mesGrifos','incidencias':'mesIncidencias'
+  }[tipo];
+  const mes = document.getElementById(mesEl).value;
+  if(!mes){ showToast('⚠️ Selecciona un mes'); return; }
+
+  cargar(tipo==='afch-acs'?'afchacs':tipo, mes, data=>{
+    const url = `http://localhost:5000/legionela/export?tipo=${tipo}&mes=${mes}`;
+    // Intentar servidor local primero
+    fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)})
+      .then(r=>{ if(!r.ok) throw new Error(); return r.blob(); })
+      .then(blob=>{
+        const a=document.createElement('a');
+        a.href=URL.createObjectURL(blob);
+        a.download=`PANALCOR_LEGIONELA_${tipo}_${mes}.xlsx`;
+        a.click();
+        showToast('✅ Excel generado');
+      })
+      .catch(()=>{
+        // Fallback: exportar CSV básico
+        exportarCSV(tipo, mes, data);
+      });
+  });
+}
+
+function exportarCSV(tipo, mes, data){
+  let csv = '';
+  if(tipo==='depositos'){
+    csv = 'Día,D1 Tª,D1 Turb,D1 pH,D1 Cloro,D2 Tª,D2 Turb,D2 pH,D2 Cloro,D3 Tª,D3 Turb,D3 pH,D3 Cloro,DT Tª,DT Turb,DT pH,DT Cloro,Técnico,Obs\n';
+    const dias = diasDelMes(mes);
+    dias.forEach(({d,ds,blocked})=>{
+      if(blocked) return;
+      const r=data[ds]||{};
+      const vals = DEPOSITOS.map(dep=>DEP_FIELDS.map(f=>(r[dep]?.[f]||'')).join(',')).join(',');
+      csv += `${d},${vals},${r.tecnico||''},${r.obs||''}\n`;
+    });
+  } else if(tipo==='termos'){
+    csv = 'Día,'+TERMOS_LABELS.join(',')+',Técnico,Obs\n';
+    const dias = diasDelMes(mes);
+    dias.forEach(({d,ds,blocked})=>{
+      if(blocked) return;
+      const r=data[ds]||{};
+      csv += `${d},${TERMOS.map(k=>r[k]||'').join(',')},${r.tecnico||''},${r.obs||''}\n`;
+    });
+  } else if(tipo==='grifos'){
+    csv = 'Fecha,Lugar,Nº Puntos,Observaciones,Realizado por\n';
+    (data.rows||[]).forEach(r=>{ csv+=`${r.fecha||''},${r.lugar||''},${r.npuntos||''},${r.obs||''},${r.realizado||''}\n`; });
+  } else if(tipo==='incidencias'){
+    csv = 'Incidencia,Día,Hora,Lugar,Acciones,Cierre,Operario,Revisión RT\n';
+    (data.rows||[]).forEach(r=>{ csv+=`"${r.desc||''}","${r.dia||''}","${r.hora||''}","${r.lugar||''}","${r.acciones||''}","${r.cierre||''}","${r.operario||''}","${r.revision||''}"\n`; });
+  }
+  const blob = new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`PANALCOR_LEGIONELA_${tipo}_${mes}.csv`;
+  a.click();
+  showToast('📋 Exportado como CSV (servidor no disponible)');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+function initApp(){
+  const hoy = new Date().toISOString().slice(0,10);
+  const mes = mesActual();
+  document.getElementById('topFecha').textContent = new Date().toLocaleDateString('es-ES',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  ['mesDepositos','mesAfchAcs','mesTermos','mesGrifos','mesIncidencias'].forEach(id=>{
+    document.getElementById(id).value = mes;
+  });
+  checkBloqueadoHoy();
+  renderDepositos();
+  renderAfchAcs();
+  renderTermos();
+  renderGrifos();
+  renderIncidencias();
+}
+</script>
+</body>
+</html>
