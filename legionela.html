@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -368,8 +368,8 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
 
 <div id="toast"></div>
 
-<!-- SheetJS -->
-<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<!-- ExcelJS -->
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -995,199 +995,266 @@ function guardarIncidencias(){
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// EXPORTAR EXCEL (via Python en servidor local / descarga CSV como fallback)
+// EXPORTAR EXCEL — ExcelJS con formato fiel al original
 // ══════════════════════════════════════════════════════════════════════════════
-function exportarMes(tipo){
-  const mesEl = {
-    'depositos':'mesDepositos','afch-acs':'mesAfchAcs',
-    'termos':'mesTermos','grifos':'mesGrifos','incidencias':'mesIncidencias'
-  }[tipo];
-  const mes = document.getElementById(mesEl).value;
-  if(!mes){ showToast('⚠️ Selecciona un mes'); return; }
+function exportarMes(tipo){ exportarMesCompleto(); }
 
-  cargar(tipo==='afch-acs'?'afchacs':tipo, mes, data=>{
-    const url = `http://localhost:5000/legionela/export?tipo=${tipo}&mes=${mes}`;
-    // Intentar servidor local primero
-    fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)})
-      .then(r=>{ if(!r.ok) throw new Error(); return r.blob(); })
-      .then(blob=>{
-        const a=document.createElement('a');
-        a.href=URL.createObjectURL(blob);
-        a.download=`PANALCOR_LEGIONELA_${tipo}_${mes}.xlsx`;
-        a.click();
-        showToast('✅ Excel generado');
-      })
-      .catch(()=>{
-        // Fallback: exportar CSV básico
-        exportarCSV(tipo, mes, data);
-      });
-  });
-}
-
-function exportarCSV(tipo, mes, data){
-  let csv = '';
-  if(tipo==='depositos'){
-    csv = 'Día,D1 Tª,D1 Turb,D1 pH,D1 Cloro,D2 Tª,D2 Turb,D2 pH,D2 Cloro,D3 Tª,D3 Turb,D3 pH,D3 Cloro,DT Tª,DT Turb,DT pH,DT Cloro,Técnico,Obs\n';
-    const dias = diasDelMes(mes);
-    dias.forEach(({d,ds,blocked})=>{
-      if(blocked) return;
-      const r=data[ds]||{};
-      const vals = DEPOSITOS.map(dep=>DEP_FIELDS.map(f=>(r[dep]?.[f]||'')).join(',')).join(',');
-      csv += `${d},${vals},${r.tecnico||''},${r.obs||''}\n`;
-    });
-  } else if(tipo==='termos'){
-    csv = 'Día,'+TERMOS_LABELS.join(',')+',Técnico,Obs\n';
-    const dias = diasDelMes(mes);
-    dias.forEach(({d,ds,blocked})=>{
-      if(blocked) return;
-      const r=data[ds]||{};
-      csv += `${d},${TERMOS.map(k=>r[k]||'').join(',')},${r.tecnico||''},${r.obs||''}\n`;
-    });
-  } else if(tipo==='grifos'){
-    csv = 'Fecha,Lugar,Nº Puntos,Observaciones,Realizado por\n';
-    (data.rows||[]).forEach(r=>{ csv+=`${r.fecha||''},${r.lugar||''},${r.npuntos||''},${r.obs||''},${r.realizado||''}\n`; });
-  } else if(tipo==='incidencias'){
-    csv = 'Incidencia,Día,Hora,Lugar,Acciones,Cierre,Operario,Revisión RT\n';
-    (data.rows||[]).forEach(r=>{ csv+=`"${r.desc||''}","${r.dia||''}","${r.hora||''}","${r.lugar||''}","${r.acciones||''}","${r.cierre||''}","${r.operario||''}","${r.revision||''}"\n`; });
-  }
-  const blob = new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=`PANALCOR_LEGIONELA_${tipo}_${mes}.csv`;
-  a.click();
-  showToast('📋 Exportado como CSV (servidor no disponible)');
-}
-
-// ── Exportar mes completo (SheetJS) ──────────────────────────────────────────
-function exportarMesCompleto(){
+async function exportarMesCompleto(){
   const mes = document.getElementById('mesDepositos').value || mesActual();
   const [y,m] = mes.split('-').map(Number);
-  const mesNombre = new Date(y,m-1,1).toLocaleDateString('es-ES',{month:'long',year:'numeric'}).toUpperCase();
-  const dias = diasDelMes(mes);
-  const diasTrab = dias.filter(x=>!x.blocked);
-  const DIAS_SEMANA = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const MESES_ES=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+  const mesNombre = MESES_ES[m-1];
+  const diasTrab = diasDelMes(mes).filter(x=>!x.blocked);
 
   showToast('⏳ Generando Excel...');
 
-  // Cargar todos los datos en paralelo
-  const tipos = ['depositos','afchacs','termos','grifos','incidencias'];
-  Promise.all(tipos.map(t=>
-    new Promise(res=>cargar(t,mes,d=>res({t,d})))
-  )).then(results=>{
-    const datos={};
-    results.forEach(({t,d})=>datos[t]=d);
-    const wb = XLSX.utils.book_new();
+  const tipos=['depositos','afchacs','termos','grifos','incidencias'];
+  const results = await Promise.all(tipos.map(t=>new Promise(res=>cargar(t,mes,d=>res({t,d})))));
+  const datos={};
+  results.forEach(({t,d})=>datos[t]=d);
 
-    // ── Estilos comunes ──────────────────────────────────────────────────────
-    // SheetJS CE no soporta estilos nativos, usamos comentarios de celda para notas
-    // y valores bien organizados para que sea lo más fiel posible al Excel original
+  const wb = new ExcelJS.Workbook();
+  wb.creator='PANALCOR'; wb.created=new Date();
 
-    // ── HOJA 1: DEPÓSITOS AFCH ───────────────────────────────────────────────
-    {
-      const d = datos['depositos']||{};
-      const depNames = ['DEPÓSITO Nº1 V17','DEPÓSITO Nº2 V17','DEPÓSITO Nº3 V17','DEPÓSITO Nº4 V17','DEPÓSITO TRUENO'];
-      const rows = [];
-      rows.push([`MEDICIONES DE DEPÓSITOS AFCH — ${mesNombre}`,,,,,,,,,,,,,,,,,,,,,,,]);
-      rows.push(['','',
-        ...depNames.flatMap(n=>[n,'','','']),
-        'TÉCNICO','OBSERVACIONES'
-      ]);
-      rows.push(['DÍA','',
-        ...depNames.flatMap(()=>['Tª AFCH (<20°C)','TURBIDEZ (<4 UNF)','pH (6,5-9,5)','CLORO TOTAL (0,2-2 mg/l)']),
-        '',''
-      ]);
-      diasTrab.forEach(({d:dia,ds})=>{
-        const r = d[ds]||{};
-        const dow = DIAS_SEMANA[new Date(ds+'T12:00:00').getDay()];
-        const fest = FESTIVOS.has(ds) ? ' (Fest.)' : '';
-        rows.push([`${dia} ${dow}${fest}`, '',
-          ...(r.D1?[r.D1.temp||'',r.D1.turb||'',r.D1.ph||'',r.D1.cloro||'']:['','','','']),
-          ...(r.D2?[r.D2.temp||'',r.D2.turb||'',r.D2.ph||'',r.D2.cloro||'']:['','','','']),
-          ...(r.D3?[r.D3.temp||'',r.D3.turb||'',r.D3.ph||'',r.D3.cloro||'']:['','','','']),
-          ...(r.D4?[r.D4.temp||'',r.D4.turb||'',r.D4.ph||'',r.D4.cloro||'']:['','','','']),
-          ...(r.DT?[r.DT.temp||'',r.DT.turb||'',r.DT.ph||'',r.DT.cloro||'']:['','','','']),
-          r.tecnico||'', r.obs||''
-        ]);
+  const C_GREEN='FF00B050', C_AMBER='FFFFC000', C_WHITE='FFFFFFFF', C_RED='FFE74C3C';
+  const C_AMBER_LIGHT='FFFFF0C0', C_GRAY='FFF2F2F2';
+  const BORDER={top:{style:'thin',color:{argb:'FFCCCCCC'}},left:{style:'thin',color:{argb:'FFCCCCCC'}},bottom:{style:'thin',color:{argb:'FFCCCCCC'}},right:{style:'thin',color:{argb:'FFCCCCCC'}}};
+
+  function hdr(cell, bg, fg, sz, bold){
+    bg=bg||C_GREEN; fg=fg||C_WHITE; sz=sz||10; bold=(bold===undefined)?true:bold;
+    cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:bg}};
+    cell.font={bold,color:{argb:fg},name:'Calibri',size:sz};
+    cell.alignment={horizontal:'center',vertical:'middle',wrapText:true};
+    cell.border=BORDER;
+  }
+  function dat(cell, bg, left, bold, fg){
+    if(bg) cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:bg}};
+    cell.font={bold:bold||false,color:{argb:fg||'FF000000'},name:'Calibri',size:10};
+    cell.alignment={horizontal:(left?'left':'center'),vertical:'middle',wrapText:true};
+    cell.border=BORDER;
+  }
+  function leyenda(ws, filaL){
+    ws.mergeCells('B'+filaL+':B'+(filaL+2));
+    const lc=ws.getCell('B'+filaL);
+    lc.value='LEYENDA\nDE\nCOLORES';
+    lc.font={bold:true,name:'Calibri',size:9};
+    lc.alignment={horizontal:'center',vertical:'middle',wrapText:true};
+    lc.border=BORDER;
+    dat(ws.getCell('C'+filaL)); ws.getCell('C'+filaL).value='DIARIO';
+    dat(ws.getCell('C'+(filaL+1)),C_AMBER); ws.getCell('C'+(filaL+1)).value='SEMANAL';
+    dat(ws.getCell('C'+(filaL+2))); ws.getCell('C'+(filaL+2)).value='MENSUAL';
+  }
+
+  // === HOJA 1: INCIDENCIAS ===
+  {
+    const ws=wb.addWorksheet('REGISTRO N1');
+    ws.views=[{showGridLines:false}];
+    ws.getColumn('A').width=2; ws.getColumn('B').width=30; ws.getColumn('C').width=13;
+    ws.getColumn('D').width=10; ws.getColumn('E').width=26; ws.getColumn('F').width=40;
+    ws.getColumn('G').width=15; ws.getColumn('H').width=20; ws.getColumn('I').width=17;
+    [1,2].forEach(r=>ws.getRow(r).height=15);
+    ws.getRow(3).height=31.8; ws.getRow(4).height=31.8;
+    ws.mergeCells('B3:I3');
+    hdr(ws.getCell('B3'),C_GREEN,C_WHITE,11,true);
+    ws.getCell('B3').value='REGISTRO Nº1-INC.-REGISTRO DE INCIDENCIAS';
+    ['INCIDENCIA','DÍA','HORA','LUGAR','ACCIONES CORRECTORAS','CIERRE\n(DÍA Y HORA)','OPERARIO','REVISIÓN DEL RT\n(FECHA Y FIRMA)'].forEach((v,i)=>{
+      const c=ws.getCell(String.fromCharCode('B'.charCodeAt(0)+i)+'4');
+      hdr(c); c.value=v;
+    });
+    const rd=(datos['incidencias']?.rows)||[];
+    (rd.length?rd:Array(10).fill({})).forEach((r,i)=>{
+      const row=5+i; ws.getRow(row).height=22.8;
+      ['desc','dia','hora','lugar','acciones','cierre','operario','revision'].forEach((f,j)=>{
+        const c=ws.getCell(String.fromCharCode('B'.charCodeAt(0)+j)+row);
+        c.value=r[f]||''; dat(c,null,j===0||j===4);
       });
-      const ws = XLSX.utils.aoa_to_sheet(rows);
-      ws['!cols'] = [12,6,...Array(20).fill(14),16,22].map(w=>({wch:w}));
-      ws['!merges'] = [
-        {s:{r:0,c:0},e:{r:0,c:21}},
-        ...depNames.map((_,i)=>({s:{r:1,c:2+i*4},e:{r:1,c:5+i*4}}))
-      ];
-      XLSX.utils.book_append_sheet(wb, ws, 'DEPÓSITOS AFCH');
-    }
+    });
+  }
 
-    // ── HOJA 2: AFCH/ACS PUNTOS ──────────────────────────────────────────────
-    {
-      const d = datos['afchacs']||{};
-      const rows = [];
-      rows.push([`MEDICIONES AFCH Y ACS — ${mesNombre}`,,,,,,,,,,]);
-      rows.push(['DÍA','PUNTO DE MUESTREO','Tª AFCH (<20°C)','Tª ACS (>50°C)','pH (6,5-9,5)','CLORO TOTAL (0,2-2 mg/l)','TURBIDEZ (<4 UNF)','ESTADO GRIFO','TÉCNICO','OBSERVACIONES']);
-      diasTrab.forEach(({d:dia,ds})=>{
-        const r = d[ds]||{};
-        const dow = DIAS_SEMANA[new Date(ds+'T12:00:00').getDay()];
-        rows.push([`${dia} ${dow}`, r.punto||'', r.tafch||'', r.tacs||'', r.ph||'', r.cloro||'', r.turb||'', r.grifo||'', r.tecnico||'', r.obs||'']);
+  // === HOJA 2: AFCH Y ACS ===
+  {
+    const ws=wb.addWorksheet('MEDICIONES AFCH Y ACS');
+    ws.views=[{showGridLines:false}];
+    ws.getColumn('A').width=2; ws.getColumn('B').width=14; ws.getColumn('C').width=24;
+    ['D','E','F','G','H'].forEach(c=>ws.getColumn(c).width=11);
+    ws.getColumn('I').width=14; ws.getColumn('J').width=22;
+    [1,2,3,4].forEach(r=>ws.getRow(r).height=15);
+    ws.getRow(5).height=37; ws.getRow(6).height=25;
+    ws.getRow(7).height=18; ws.getRow(8).height=16; ws.getRow(9).height=18;
+    ws.getRow(10).height=43; ws.getRow(11).height=43; ws.getRow(12).height=29;
+    ws.mergeCells('B5:J5');
+    hdr(ws.getCell('B5'),C_GREEN,C_WHITE,11,true);
+    ws.getCell('B5').value='REGISTRO Nº3-PMYR-AS.-REGISTRO DE REVISIÓN DIARIA, SEMANAL Y MENSUAL DE AFCH Y ACS';
+    ws.mergeCells('B6:C6'); hdr(ws.getCell('B6')); ws.getCell('B6').value='PANALCOR';
+    ws.mergeCells('D6:G6'); hdr(ws.getCell('D6')); ws.getCell('D6').value='MES: '+mesNombre;
+    ws.mergeCells('H6:J6'); hdr(ws.getCell('H6')); ws.getCell('H6').value='AÑO: '+y;
+    leyenda(ws,7);
+    ws.mergeCells('B10:B12'); hdr(ws.getCell('B10')); ws.getCell('B10').value='DÍA';
+    ws.mergeCells('C10:H10'); hdr(ws.getCell('C10')); ws.getCell('C10').value='PUNTO DE MUESTREO';
+    ws.mergeCells('I10:I12'); hdr(ws.getCell('I10')); ws.getCell('I10').value='TÉCNICO';
+    ws.mergeCells('J10:J12'); hdr(ws.getCell('J10')); ws.getCell('J10').value='OBSERVACIONES';
+    ['Tª AFCH\n(<20°C)','Tª ACS\n(>50°C)','pH\n(6,5-9,5)','CLORO\nTOTAL\n(mg/l)','TURBIDEZ\n(<4 NTU)','ESTADO\nGRIFO'].forEach((v,i)=>{
+      hdr(ws.getCell(String.fromCharCode('C'.charCodeAt(0)+i)+'11')); ws.getCell(String.fromCharCode('C'.charCodeAt(0)+i)+'11').value=v;
+    });
+    ['<20°C','>50°C','6,5-9,5','0,2-2 mg/l','<4 NTU','CORRECTO'].forEach((v,i)=>{
+      hdr(ws.getCell(String.fromCharCode('C'.charCodeAt(0)+i)+'12'),C_GREEN,C_WHITE,9,false);
+      ws.getCell(String.fromCharCode('C'.charCodeAt(0)+i)+'12').value=v;
+    });
+    const d=datos['afchacs']||{};
+    diasTrab.forEach(({d:dia,ds},idx)=>{
+      const r=d[ds]||{};
+      const r1=13+idx*2, r2=r1+1;
+      ws.getRow(r1).height=14; ws.getRow(r2).height=24;
+      ws.mergeCells('B'+r1+':B'+r2); dat(ws.getCell('B'+r1),null,false,true); ws.getCell('B'+r1).value=dia;
+      ws.mergeCells('C'+r1+':H'+r1); dat(ws.getCell('C'+r1),null,true); ws.getCell('C'+r1).value=r.punto||'';
+      ws.mergeCells('I'+r1+':I'+r2); dat(ws.getCell('I'+r1)); ws.getCell('I'+r1).value=r.tecnico||'';
+      ws.mergeCells('J'+r1+':J'+r2); dat(ws.getCell('J'+r1),null,true); ws.getCell('J'+r1).value=r.obs||'';
+      [r.tafch||'',r.tacs||'',r.ph||'',r.cloro||'',r.turb||'',r.grifo||''].forEach((v,i)=>{
+        const c=ws.getCell(String.fromCharCode('C'.charCodeAt(0)+i)+r2);
+        dat(c); c.value=v;
       });
-      const ws = XLSX.utils.aoa_to_sheet(rows);
-      ws['!cols'] = [12,18,16,16,12,20,16,14,14,24].map(w=>({wch:w}));
-      ws['!merges'] = [{s:{r:0,c:0},e:{r:0,c:9}}];
-      XLSX.utils.book_append_sheet(wb, ws, 'AFCH-ACS PUNTOS');
-    }
+    });
+  }
 
-    // ── HOJA 3: TERMOS ───────────────────────────────────────────────────────
-    {
-      const d = datos['termos']||{};
-      const rows = [];
-      rows.push([`MEDICIONES DE TERMOS (>60°C) — ${mesNombre}`,,,,,,,,,,,,]);
-      rows.push(['DÍA',...TERMOS_LABELS,'TÉCNICO','OBSERVACIONES']);
-      diasTrab.forEach(({d:dia,ds})=>{
-        const r = d[ds]||{};
-        const dow = DIAS_SEMANA[new Date(ds+'T12:00:00').getDay()];
-        rows.push([`${dia} ${dow}`, ...TERMOS.map(k=>r[k]||''), r.tecnico||'', r.obs||'']);
+  // === HOJA 3: DEPOSITOS ===
+  {
+    const ws=wb.addWorksheet('MEDICIONES DE DEPOSITOS');
+    ws.views=[{showGridLines:false}];
+    ws.getColumn('A').width=2; ws.getColumn('B').width=14;
+    'CDEFGHIJKLMNOPQRSTUV'.split('').forEach(c=>ws.getColumn(c).width=9.2);
+    ws.getColumn('W').width=14; ws.getColumn('X').width=40;
+    [1,2,3,4,5,6,7].forEach(r=>ws.getRow(r).height=15);
+    ws.getRow(8).height=26; ws.getRow(9).height=26;
+    ws.getRow(10).height=14; ws.getRow(11).height=14; ws.getRow(12).height=14;
+    ws.getRow(13).height=25; ws.getRow(14).height=43; ws.getRow(15).height=29;
+    ws.mergeCells('B8:X8');
+    hdr(ws.getCell('B8'),C_GREEN,C_WHITE,11,true);
+    ws.getCell('B8').value='REGISTRO Nº3-PMYR-AS.-REGISTRO DE REVISIÓN DIARIA, SEMANAL Y MENSUAL DE DEPÓSITOS';
+    ws.mergeCells('B9:D9'); hdr(ws.getCell('B9')); ws.getCell('B9').value='PANALCOR';
+    ws.mergeCells('E9:L9'); hdr(ws.getCell('E9')); ws.getCell('E9').value='MES: '+mesNombre;
+    ws.mergeCells('M9:X9'); hdr(ws.getCell('M9')); ws.getCell('M9').value='AÑO: '+y;
+    leyenda(ws,10);
+    ws.mergeCells('B13:B15'); hdr(ws.getCell('B13')); ws.getCell('B13').value='DÍA';
+    ws.mergeCells('W13:W15'); hdr(ws.getCell('W13')); ws.getCell('W13').value='TÉCNICO';
+    ws.mergeCells('X13:X15'); hdr(ws.getCell('X13')); ws.getCell('X13').value='OBSERVACIONES';
+    const depCols=[['C','D','E','F'],['G','H','I','J'],['K','L','M','N'],['O','P','Q','R'],['S','T','U','V']];
+    const depNames2=['DEPÓSITO Nº1 V17','DEPÓSITO Nº2 V17','DEPÓSITO Nº3 V17','DEPÓSITO Nº4 V17','DEPÓSITO TRUENO'];
+    const depKeys=['D1','D2','D3','D4','DT'];
+    const subHdr=['Tª AFCH\n(°C)','TURBIDEZ\n(UNF)','pH','CLORO\nTOTAL\n(mg/l)'];
+    const subPar=['<20°C','<4 UNF','6,5 a 9,5','0,2-2 mg/l'];
+    depCols.forEach((cols,di)=>{
+      ws.mergeCells(cols[0]+'13:'+cols[3]+'13');
+      hdr(ws.getCell(cols[0]+'13')); ws.getCell(cols[0]+'13').value=depNames2[di];
+      cols.forEach((col,fi)=>{
+        const isSem=fi<2;
+        hdr(ws.getCell(col+'14'),isSem?C_AMBER:C_GREEN,isSem?'FF000000':C_WHITE,9,true);
+        ws.getCell(col+'14').value=subHdr[fi];
+        hdr(ws.getCell(col+'15'),C_GREEN,C_WHITE,9,false);
+        ws.getCell(col+'15').value=subPar[fi];
       });
-      const ws = XLSX.utils.aoa_to_sheet(rows);
-      ws['!cols'] = [12,...Array(10).fill(14),14,24].map(w=>({wch:w}));
-      ws['!merges'] = [{s:{r:0,c:0},e:{r:0,c:12}}];
-      XLSX.utils.book_append_sheet(wb, ws, 'TERMOS');
-    }
-
-    // ── HOJA 4: GRIFOS NO UTILIZADOS ─────────────────────────────────────────
-    {
-      const rows_data = (datos['grifos']?.rows)||[];
-      const rows = [];
-      rows.push([`APERTURA DE GRIFOS NO UTILIZADOS — ${mesNombre}`,,,,,]);
-      rows.push(['FECHA','IDENTIFICACIÓN (CUARTO HÚMEDO)','Nº PUNTOS EN CUARTO HÚMEDO','OBSERVACIONES','REALIZADO POR']);
-      rows_data.forEach(r=>{
-        rows.push([r.fecha||'', r.lugar||'', r.npuntos||'', r.obs||'', r.realizado||'']);
+    });
+    const d=datos['depositos']||{};
+    diasTrab.forEach(({d:dia,ds},idx)=>{
+      const r=d[ds]||{};
+      const row=16+idx; ws.getRow(row).height=31;
+      const esW=esPrimerDiaTrabajoDeSemana(ds);
+      dat(ws.getCell('B'+row),null,false,true); ws.getCell('B'+row).value=dia;
+      depCols.forEach((cols,di)=>{
+        const dep=r[depKeys[di]]||{};
+        const vals=[dep.temp||'',dep.turb||'',dep.ph||'',dep.cloro||''];
+        cols.forEach((col,fi)=>{
+          const c=ws.getCell(col+row);
+          c.value=(fi<2)?(esW?vals[fi]:'—'):vals[fi];
+          dat(c,(fi<2)?(esW?C_AMBER_LIGHT:C_GRAY):null);
+        });
       });
-      if(!rows_data.length) rows.push(['','','','','']);
-      const ws = XLSX.utils.aoa_to_sheet(rows);
-      ws['!cols'] = [14,28,20,28,18].map(w=>({wch:w}));
-      ws['!merges'] = [{s:{r:0,c:0},e:{r:0,c:4}}];
-      XLSX.utils.book_append_sheet(wb, ws, 'GRIFOS NO UTILIZADOS');
-    }
+      dat(ws.getCell('W'+row)); ws.getCell('W'+row).value=r.tecnico||'';
+      dat(ws.getCell('X'+row),null,true); ws.getCell('X'+row).value=r.obs||'';
+    });
+  }
 
-    // ── HOJA 5: INCIDENCIAS ──────────────────────────────────────────────────
-    {
-      const rows_data = (datos['incidencias']?.rows)||[];
-      const rows = [];
-      rows.push([`REGISTRO DE INCIDENCIAS — ${mesNombre}`,,,,,,,,]);
-      rows.push(['INCIDENCIA','DÍA','HORA','LUGAR','ACCIONES CORRECTORAS','CIERRE (DÍA Y HORA)','OPERARIO','REVISIÓN RT (FECHA Y FIRMA)']);
-      rows_data.forEach(r=>{
-        rows.push([r.desc||'', r.dia||'', r.hora||'', r.lugar||'', r.acciones||'', r.cierre||'', r.operario||'', r.revision||'']);
+  // === HOJA 4: TERMOS ===
+  {
+    const ws=wb.addWorksheet('MEDICIONES DE TERMOS');
+    ws.views=[{showGridLines:false}];
+    ws.getColumn('A').width=2; ws.getColumn('B').width=14;
+    'CDEFGHIJKL'.split('').forEach(c=>ws.getColumn(c).width=11.6);
+    ws.getColumn('M').width=15; ws.getColumn('N').width=40;
+    [1,2,3,4,5].forEach(r=>ws.getRow(r).height=15);
+    ws.getRow(6).height=26; ws.getRow(7).height=26;
+    ws.getRow(8).height=18; ws.getRow(9).height=16; ws.getRow(10).height=18;
+    ws.getRow(11).height=43; ws.getRow(12).height=43; ws.getRow(13).height=43;
+    ws.mergeCells('B6:N6');
+    hdr(ws.getCell('B6'),C_GREEN,C_WHITE,11,true);
+    ws.getCell('B6').value='REGISTRO Nº3-PMYR-AS.-REGISTRO DE REVISIÓN DIARIA DE TERMOS';
+    ws.mergeCells('B7:D7'); hdr(ws.getCell('B7')); ws.getCell('B7').value='PANALCOR';
+    ws.mergeCells('E7:I7'); hdr(ws.getCell('E7')); ws.getCell('E7').value='MES: '+mesNombre;
+    ws.mergeCells('J7:N7'); hdr(ws.getCell('J7')); ws.getCell('J7').value='AÑO: '+y;
+    leyenda(ws,8);
+    ws.mergeCells('B11:B13'); hdr(ws.getCell('B11')); ws.getCell('B11').value='DÍA';
+    ws.mergeCells('C11:L11'); hdr(ws.getCell('C11')); ws.getCell('C11').value='TEMPERATURA TERMOS';
+    ws.mergeCells('M11:M13'); hdr(ws.getCell('M11')); ws.getCell('M11').value='TÉCNICO';
+    ws.mergeCells('N11:N13'); hdr(ws.getCell('N11')); ws.getCell('N11').value='OBSERVACIONES';
+    const tCols='CDEFGHIJKL'.split('');
+    TERMOS_LABELS.forEach((label,i)=>{
+      hdr(ws.getCell(tCols[i]+'12'),C_GREEN,C_WHITE,9,true); ws.getCell(tCols[i]+'12').value=label;
+      hdr(ws.getCell(tCols[i]+'13'),C_GREEN,C_WHITE,9,false); ws.getCell(tCols[i]+'13').value='>60°C';
+    });
+    const d=datos['termos']||{};
+    diasTrab.forEach(({d:dia,ds},idx)=>{
+      const r=d[ds]||{};
+      const row=14+idx; ws.getRow(row).height=26;
+      dat(ws.getCell('B'+row),null,false,true); ws.getCell('B'+row).value=dia;
+      TERMOS.forEach((key,i)=>{
+        const val=r[key]||'';
+        const c=ws.getCell(tCols[i]+row);
+        c.value=val;
+        const bad=val&&parseFloat(val)<60;
+        dat(c,bad?C_RED:null,false,bad,bad?C_WHITE:'FF000000');
       });
-      if(!rows_data.length) rows.push(['','','','','','','','']);
-      const ws = XLSX.utils.aoa_to_sheet(rows);
-      ws['!cols'] = [28,12,10,16,28,18,14,22].map(w=>({wch:w}));
-      ws['!merges'] = [{s:{r:0,c:0},e:{r:0,c:7}}];
-      XLSX.utils.book_append_sheet(wb, ws, 'INCIDENCIAS');
-    }
+      dat(ws.getCell('M'+row)); ws.getCell('M'+row).value=r.tecnico||'';
+      dat(ws.getCell('N'+row),null,true); ws.getCell('N'+row).value=r.obs||'';
+    });
+  }
 
-    XLSX.writeFile(wb, `PANALCOR_LEGIONELA_${mes}.xlsx`);
-    showToast('✅ Excel generado: PANALCOR_LEGIONELA_'+mes+'.xlsx');
-  });
+  // === HOJA 5: GRIFOS ===
+  {
+    const ws=wb.addWorksheet('APERTURA DE GRIFOS');
+    ws.views=[{showGridLines:false}];
+    ws.getColumn('A').width=2; ws.getColumn('B').width=16; ws.getColumn('C').width=30;
+    ws.getColumn('D').width=16; ws.getColumn('E').width=30; ws.getColumn('F').width=18;
+    [1,2,3,4,5].forEach(r=>ws.getRow(r).height=15);
+    ws.getRow(6).height=26; ws.getRow(7).height=26; ws.getRow(8).height=54;
+    ws.mergeCells('B6:F6');
+    hdr(ws.getCell('B6'),C_GREEN,C_WHITE,11,true);
+    ws.getCell('B6').value='REGISTRO Nº6-PMYR-AS.-APERTURA DE GRIFOS NO UTILIZADOS';
+    ws.mergeCells('B7:C7'); hdr(ws.getCell('B7')); ws.getCell('B7').value='PANALCOR';
+    ws.mergeCells('D7:E7'); hdr(ws.getCell('D7')); ws.getCell('D7').value='MES: '+mesNombre;
+    hdr(ws.getCell('F7')); ws.getCell('F7').value='AÑO: '+y;
+    ['FECHA','IDENTIFICACIÓN\n(CUARTO HÚMEDO)','Nº PUNTOS EN\nCUARTO HÚMEDO','OBSERVACIONES','REALIZADO POR'].forEach((v,i)=>{
+      const c=ws.getCell(String.fromCharCode('B'.charCodeAt(0)+i)+'8');
+      hdr(c,C_GREEN,C_WHITE,10,true); c.value=v;
+    });
+    const rd=(datos['grifos']?.rows)||[];
+    (rd.length?rd:Array(10).fill({})).forEach((r,i)=>{
+      const row=9+i; ws.getRow(row).height=27.6;
+      [r.fecha||'',r.lugar||'',r.npuntos||'',r.obs||'',r.realizado||''].forEach((v,j)=>{
+        const c=ws.getCell(String.fromCharCode('B'.charCodeAt(0)+j)+row);
+        dat(c,null,j===3); c.value=v;
+      });
+    });
+  }
+
+  const buffer=await wb.xlsx.writeBuffer();
+  const blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='PANALCOR_LEGIONELA_'+mes+'.xlsx';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('✅ Excel generado: PANALCOR_LEGIONELA_'+mes+'.xlsx');
 }
+
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 function initApp(){
