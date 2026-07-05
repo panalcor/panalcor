@@ -637,8 +637,7 @@ function renderTermos(){
     const dias = diasDelMes(mes);
     let html = '';
     dias.forEach(({d,ds,blocked,today})=>{
-      const isMed = !blocked && esPrimerDiaTrabajoDeSemana(ds);
-      const cls = blocked?'blocked':today?'today':isMed?'weekly-day':'';
+      const cls = blocked?'blocked':today?'today':!blocked?'daily-day':'';
       const fn = festNombre(ds);
       const row = data[ds]||{};
       let cells = TERMOS.map(k=>{
@@ -754,10 +753,10 @@ function autoRellenar(tipo){
     guardar('afchacs',mes,data,()=>renderAfchAcs());
 
   } else if(tipo==='termos'){
-    const lowDia = diasSemanalBase[Math.floor(Math.random()*diasSemanalBase.length)];
+    const lowDia = diasTrabajo[Math.floor(Math.random()*diasTrabajo.length)];
     const lowK   = TERMOS[Math.floor(Math.random()*TERMOS.length)];
     const data={};
-    diasSemanalBase.forEach(({ds})=>{
+    diasTrabajo.forEach(({ds})=>{
       const row={};
       TERMOS.forEach(k=>{
         const esLow = ds===lowDia?.ds && k===lowK;
