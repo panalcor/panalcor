@@ -134,7 +134,6 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
   </div>
 
   <div class="content">
-    <div id="blockedMsg" class="blocked-msg">⛔ Hoy es sábado, domingo o festivo — no se puede registrar.</div>
 
     <!-- ═══════════════════════════════════════════════════════════════
          PANEL 1: DEPÓSITOS AFCH
@@ -537,10 +536,10 @@ function renderAfchAcs(){
         <td>${inp(row.ph||'',`${ds}_ph`,'text','52px')}</td>
         <td>${inp(row.cloro||'',`${ds}_cloro`,'text','62px')}</td>
         <td>${inp(row.turb||'',`${ds}_turb`,'text','62px')}</td>
-        <td><select name="${ds}_grifo" style="width:90px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:var(--white);border-radius:5px;padding:4px">
-          <option value="">—</option>
-          <option value="Correcto" ${row.grifo==='Correcto'?'selected':''}>Correcto</option>
-          <option value="Incorrecto" ${row.grifo==='Incorrecto'?'selected':''}>Incorrecto</option>
+        <td><select name="${ds}_grifo" style="width:90px;background:#1a2d40;border:1px solid rgba(255,255,255,0.12);color:var(--white);border-radius:5px;padding:4px">
+          <option value="" style="background:#1a2d40;color:#fff">—</option>
+          <option value="Correcto" style="background:#1a2d40;color:#2ecc71" ${row.grifo==='Correcto'?'selected':''}>Correcto</option>
+          <option value="Incorrecto" style="background:#1a2d40;color:#e74c3c" ${row.grifo==='Incorrecto'?'selected':''}>Incorrecto</option>
         </select></td>
         <td>${inp(row.tecnico||'',`${ds}_tec`)}</td>
         <td>${inp(row.obs||'',`${ds}_obs`)}</td>
@@ -772,7 +771,6 @@ function initApp(){
   ['mesDepositos','mesAfchAcs','mesTermos','mesGrifos','mesIncidencias'].forEach(id=>{
     document.getElementById(id).value = mes;
   });
-  checkBloqueadoHoy();
   renderDepositos();
   renderAfchAcs();
   renderTermos();
