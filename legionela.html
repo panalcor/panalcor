@@ -499,6 +499,15 @@ function esPrimerDiaTrabajoDeSemana(ds){
 const PUNTOS_MUESTREO = ['MUELLE','OBRADOR','TALLER','OFICINA','TRUENO',
   'VENTISCA 17','BAÑOS','RELÁMPAGO 14','CICLÓN 14','CICLÓN 20'];
 
+const TECNICOS = ['JAVI','ALBERTO'];
+function selTecnico(name, val){
+  const opts = TECNICOS.map(t=>
+    `<option value="${t}" style="background:#1a2d40;color:#fff" ${val===t?'selected':''}>${t}</option>`
+  ).join('');
+  return `<select name="${name}" style="width:80px;background:#1a2d40;border:1px solid rgba(255,255,255,0.12);color:var(--white);border-radius:5px;padding:4px;font-size:0.78rem">
+    <option value="" style="background:#1a2d40;color:#aaa">—</option>${opts}</select>`;
+}
+
 function selPunto(name, val){
   const opts = PUNTOS_MUESTREO.map(p=>
     `<option value="${p}" style="background:#1a2d40;color:#fff" ${val===p?'selected':''}>${p}</option>`
@@ -542,7 +551,7 @@ function renderDepositos(){
         <td class="day-lbl">${d}</td>
         <td class="festivo-lbl">${fn}</td>
         ${cells}
-        <td>${!blocked?inp(row.tecnico||'',`${ds}_tec`):''}  </td>
+        <td>${!blocked?selTecnico(`${ds}_tec`,row.tecnico||''):''}  </td>
         <td>${!blocked?inp(row.obs||'',`${ds}_obs`):''}  </td>
       </tr>`;
     });
@@ -602,7 +611,7 @@ function renderAfchAcs(){
           <option value="Correcto" style="background:#1a2d40;color:#2ecc71" ${row.grifo==='Correcto'?'selected':''}>Correcto</option>
           <option value="Incorrecto" style="background:#1a2d40;color:#e74c3c" ${row.grifo==='Incorrecto'?'selected':''}>Incorrecto</option>
         </select></td>
-        <td>${inp(row.tecnico||'',`${ds}_tec`)}</td>
+        <td>${selTecnico(`${ds}_tec`,row.tecnico||'')}</td>
         <td>${inp(row.obs||'',`${ds}_obs`)}</td>
       </tr>`;
     });
@@ -652,7 +661,7 @@ function renderTermos(){
         <td class="day-lbl">${d}</td>
         <td class="festivo-lbl">${fn}</td>
         ${cells}
-        <td>${inp(row.tecnico||'',`${ds}_tec`)}</td>
+        <td>${selTecnico(`${ds}_tec`,row.tecnico||'')}</td>
         <td>${inp(row.obs||'',`${ds}_obs`)}</td>
       </tr>`;
     });
@@ -756,17 +765,25 @@ function autoRellenar(tipo){
     guardar('afchacs',mes,data,()=>renderAfchAcs());
 
   } else if(tipo==='termos'){
-    const lowDia = diasTrabajo[Math.floor(Math.random()*diasTrabajo.length)];
-    const lowK   = TERMOS[Math.floor(Math.random()*TERMOS.length)];
+    // Entre 1 y 4 errores aleatorios (día + termo distintos)
+    const nLow = 1 + Math.floor(Math.random()*4);
+    const lowCombos = new Set();
+    while(lowCombos.size < nLow){
+      const d = diasTrabajo[Math.floor(Math.random()*diasTrabajo.length)].ds;
+      const k = TERMOS[Math.floor(Math.random()*TERMOS.length)];
+      lowCombos.add(d+'|'+k);
+    }
     const data={};
     diasTrabajo.forEach(({ds})=>{
       const row={};
+      let hayLow = false;
       TERMOS.forEach(k=>{
-        const esLow = ds===lowDia?.ds && k===lowK;
+        const esLow = lowCombos.has(ds+'|'+k);
+        if(esLow) hayLow = true;
         row[k] = esLow ? String(rand(55,59.5,1)) : String(rand(60,65,1));
       });
       row.tecnico='JAVI';
-      row.obs = ds===lowDia?.ds ? 'SE SUBE LA TEMPERATURA' : '';
+      row.obs = hayLow ? 'SE SUBE LA TEMPERATURA' : '';
       data[ds]=row;
     });
     cache['termos/'+mes]=data;
