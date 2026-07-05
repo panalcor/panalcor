@@ -691,7 +691,7 @@ function autoRellenar(tipo){
     const diasSemanal = diasTrabajo.filter(x=>esPrimerDiaTrabajoDeSemana(x.ds));
     // pH y Cloro: todos los días laborables
     diasTrabajo.forEach(({ds})=>{
-      const bPh=rand(7.9,8.4,2), bCloro=rand(0.18,0.35,2);
+      const bPh=rand(7.9,8.4,1), bCloro=rand(0.18,0.35,2);
       data[ds]={};
       DEPOSITOS.forEach(dep=>{
         data[ds][dep]={
@@ -719,7 +719,7 @@ function autoRellenar(tipo){
     const data={};
     diasTrabajo.forEach(({ds})=>{
       if(pi>=puntos.length){ puntos.sort(()=>Math.random()-.5); pi=0; }
-      const tafch=rand(3,6,1), ph=rand(7.9,8.4,2), cloro=rand(0.18,0.35,2), turb=rand(1.8,2.7,1);
+      const tafch=rand(3,6,1), ph=rand(7.9,8.4,1), cloro=rand(0.18,0.35,2), turb=rand(1.8,2.7,1);
       data[ds]={
         punto:puntos[pi++],
         tafch:String(tafch),
