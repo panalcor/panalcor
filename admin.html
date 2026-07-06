@@ -3309,7 +3309,7 @@ function _abrirInformeDiario(mes, mesLabel, turnos, tareasMap){
     +dayHeaders+'</tr>'
     +'<tr style="background:#0a1520">'+turnoColHeaders+'</tr>'
     +'</thead><tbody>'+sectionsHTML+'</tbody></table></div>'
-    +_buildAChtml(acData, mesLabel)
+    +(typeof acData !== 'undefined' ? _buildAChtml(acData, mesLabel) : '')
     +'<div style="margin-top:10px;border-top:1px solid #eee;padding-top:5px;font-size:9px;color:#aaa;display:flex;justify-content:space-between">'
     +'<span>PANALCOR S.L. — Sistema GESTION 3.0</span><span>'+mesLabel+' | '+pctGlobal+'% cumplimiento global</span></div>'
     +'</body></html>';
