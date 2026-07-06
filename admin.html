@@ -3223,52 +3223,68 @@ function _abrirInformeDiario(mes, mesLabel, turnos, tareasMap, acData){
   var pctGlobal = totalAll ? Math.round(totalDone/totalAll*100) : 0;
   var kpiColor = pctGlobal>=100?'#1e8449':pctGlobal>=60?'#b7770d':'#c0392b';
 
-  // Day headers (with day of week)
+  // ── Helper: construye tabla para un rango de días ─────────────
   var diasSem=['D','L','M','X','J','V','S'];
-  var dayHeaders='';
-  for(var dd=1; dd<=diasMes; dd++){
-    var dow = new Date(d.anio, d.mm-1, dd).getDay();
-    var isWe = dow===0||dow===6;
-    dayHeaders += '<th colspan="3" style="background:#1a2d42;color:'+(isWe?'#f39c12':'#c9a227')+';font-size:9px;padding:3px 1px;text-align:center;border:1px solid #2a3d52">'
-      + dd+'<br><span style="font-weight:400;opacity:.7">'+diasSem[dow]+'</span></th>';
-  }
-  var turnoHeaders='<th style="width:22px;background:#0f1e2e;color:#888;font-size:8px;padding:2px 1px;text-align:center;border:1px solid #2a3d52">N</th>'
-    +'<th style="width:22px;background:#0f1e2e;color:#888;font-size:8px;padding:2px 1px;text-align:center;border:1px solid #2a3d52">M</th>'
-    +'<th style="width:22px;background:#0f1e2e;color:#888;font-size:8px;padding:2px 1px;text-align:center;border:1px solid #2a3d52">T</th>';
-  var turnoColHeaders = '<th></th><th></th><th></th><th></th><th></th>'
-    + Array(diasMes).fill(turnoHeaders).join('');
 
-  // Build machine sections
-  var sectionsHTML = Object.keys(maqMap).sort().map(function(maq){
-    var taskRows = maqMap[maq].slice().sort(function(a,b){ return taskMeta[a].tarea.localeCompare(taskMeta[b].tarea); }).map(function(id){
-      var meta = taskMeta[id];
-      var done=0, total=0;
-      var cells='';
-      for(var dd=1; dd<=diasMes; dd++){
-        var fk = mes+'-'+dd.toString().padStart(2,'0');
-        var dayData = matrix[id] && matrix[id][fk] ? matrix[id][fk] : {};
-        TURNOS.forEach(function(turno){
-          var val = dayData[turno]||'';
-          if(val) done++;
-          total++;
-          cells += '<td style="text-align:center;font-size:8px;font-weight:700;padding:2px 1px;border:1px solid #e8e8e8;color:#1e6e3a;white-space:nowrap">'+val+'</td>';
-        });
-      }
-      var pct = total ? Math.round(done/total*100) : 0;
-      var bg = pct>=100?'#d4edda':pct>=60?'#fff3cd':'#f8d7da';
-      var pctColor = pct>=100?'#155724':pct>=60?'#856404':'#721c24';
-      return '<tr style="background:'+bg+'">'
-        +'<td style="padding:3px 6px;font-size:10px;color:#555;border:1px solid #ddd;white-space:nowrap">'+meta.area+'</td>'
-        +'<td style="padding:3px 8px;font-size:10px;font-weight:600;color:#1a1a2e;border:1px solid #ddd">'+meta.tarea+'</td>'
-        +'<td style="text-align:center;font-size:9px;color:#666;border:1px solid #ddd;white-space:nowrap">'+meta.turnoConfig+'</td>'
-        +'<td style="text-align:center;font-size:9px;color:#666;border:1px solid #ddd">'+meta.prioridad+'</td>'
-        +'<td style="text-align:center;font-size:9px;font-weight:700;color:'+pctColor+';border:1px solid #ddd;white-space:nowrap">'+pct+'%</td>'
-        +cells+'</tr>';
+  function buildTabla(desde, hasta) {
+    var numDias = hasta - desde + 1;
+    var dHeaders = '';
+    for(var dd=desde; dd<=hasta; dd++){
+      var dow = new Date(d.anio, d.mm-1, dd).getDay();
+      var isWe = dow===0||dow===6;
+      dHeaders += '<th colspan="3" style="background:#1a2d42;color:'+(isWe?'#f39c12':'#c9a227')+';font-size:9px;padding:3px 1px;text-align:center;border:1px solid #2a3d52">'
+        + dd+'<br><span style="font-weight:400;opacity:.7">'+diasSem[dow]+'</span></th>';
+    }
+    var tHdr='<th style="width:22px;background:#0f1e2e;color:#888;font-size:8px;padding:2px 1px;text-align:center;border:1px solid #2a3d52">N</th>'
+      +'<th style="width:22px;background:#0f1e2e;color:#888;font-size:8px;padding:2px 1px;text-align:center;border:1px solid #2a3d52">M</th>'
+      +'<th style="width:22px;background:#0f1e2e;color:#888;font-size:8px;padding:2px 1px;text-align:center;border:1px solid #2a3d52">T</th>';
+    var tColHdr = '<th></th><th></th><th></th><th></th><th></th>' + Array(numDias).fill(tHdr).join('');
+
+    var tbody = Object.keys(maqMap).sort().map(function(maq){
+      var taskRows = maqMap[maq].slice().sort(function(a,b){ return taskMeta[a].tarea.localeCompare(taskMeta[b].tarea); }).map(function(id){
+        var meta = taskMeta[id];
+        var done=0, total=0, cells='';
+        for(var dd=desde; dd<=hasta; dd++){
+          var fk = mes+'-'+dd.toString().padStart(2,'0');
+          var dayData = matrix[id] && matrix[id][fk] ? matrix[id][fk] : {};
+          TURNOS.forEach(function(turno){
+            var val = dayData[turno]||'';
+            if(val) done++;
+            total++;
+            cells += '<td style="text-align:center;font-size:8px;font-weight:700;padding:2px 1px;border:1px solid #e8e8e8;color:#1e6e3a;white-space:nowrap">'+val+'</td>';
+          });
+        }
+        var pct = total ? Math.round(done/total*100) : 0;
+        var bg = pct>=100?'#d4edda':pct>=60?'#fff3cd':'#f8d7da';
+        var pctColor = pct>=100?'#155724':pct>=60?'#856404':'#721c24';
+        return '<tr style="background:'+bg+'">'
+          +'<td style="padding:3px 6px;font-size:10px;color:#555;border:1px solid #ddd;white-space:nowrap">'+meta.area+'</td>'
+          +'<td style="padding:3px 8px;font-size:10px;font-weight:600;color:#1a1a2e;border:1px solid #ddd">'+meta.tarea+'</td>'
+          +'<td style="text-align:center;font-size:9px;color:#666;border:1px solid #ddd;white-space:nowrap">'+meta.turnoConfig+'</td>'
+          +'<td style="text-align:center;font-size:9px;color:#666;border:1px solid #ddd">'+meta.prioridad+'</td>'
+          +'<td style="text-align:center;font-size:9px;font-weight:700;color:'+pctColor+';border:1px solid #ddd;white-space:nowrap">'+pct+'%</td>'
+          +cells+'</tr>';
+      }).join('');
+      return '<tr><td colspan="'+(5+numDias*3)+'" style="background:#0d1b2a;color:#c9a227;font-weight:900;font-size:10px;letter-spacing:.1em;padding:5px 10px;border:1px solid #2a3d52">══ '+maq+' ══</td></tr>'
+        + taskRows;
     }).join('');
 
-    return '<tr><td colspan="'+(5+diasMes*3)+'" style="background:#0d1b2a;color:#c9a227;font-weight:900;font-size:10px;letter-spacing:.1em;padding:5px 10px;border:1px solid #2a3d52">══ '+maq+' ══</td></tr>'
-      + taskRows;
-  }).join('');
+    var thBase = 'padding:4px 6px;color:#c9a227;font-size:9px;border:1px solid #2a3d52;';
+    return '<div style="overflow-x:auto"><table>'
+      +'<thead>'
+      +'<tr style="background:#0d1b2a">'
+      +'<th style="'+thBase+'text-align:left;white-space:nowrap">ÁREA</th>'
+      +'<th style="'+thBase+'text-align:left;min-width:140px">TAREA</th>'
+      +'<th style="'+thBase+'text-align:center;white-space:nowrap">TURNO</th>'
+      +'<th style="'+thBase+'text-align:center">PRIO.</th>'
+      +'<th style="'+thBase+'text-align:center">%</th>'
+      +dHeaders+'</tr>'
+      +'<tr style="background:#0a1520">'+tColHdr+'</tr>'
+      +'</thead><tbody>'+tbody+'</tbody></table></div>';
+  }
+
+  var tabla1 = buildTabla(1, 15);
+  var tabla2 = buildTabla(16, diasMes);
 
   var fd = new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'});
   var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">'
@@ -3298,18 +3314,12 @@ function _abrirInformeDiario(mes, mesLabel, turnos, tareasMap, acData){
     +'<div style="font-size:9px;color:#555;margin-bottom:8px;padding:5px 8px;background:#f8f9fa;border-radius:4px;border:1px solid #eee">'
     +'<b style="color:#0d1b2a">MECÁNICOS:</b> '+legendHTML
     +'&nbsp;&nbsp;&nbsp;<b style="color:#155724">■</b> ≥100% &nbsp;<b style="color:#856404">■</b> ≥60% &nbsp;<b style="color:#721c24">■</b> &lt;60%</div>'
-    // Matrix table
-    +'<div style="overflow-x:auto"><table>'
-    +'<thead>'
-    +'<tr style="background:#0d1b2a">'
-    +'<th style="padding:4px 6px;color:#c9a227;font-size:9px;text-align:left;border:1px solid #2a3d52;white-space:nowrap">ÁREA</th>'
-    +'<th style="padding:4px 8px;color:#c9a227;font-size:9px;text-align:left;border:1px solid #2a3d52;min-width:140px">TAREA</th>'
-    +'<th style="padding:4px 6px;color:#c9a227;font-size:9px;text-align:center;border:1px solid #2a3d52;white-space:nowrap">TURNO</th>'
-    +'<th style="padding:4px 6px;color:#c9a227;font-size:9px;text-align:center;border:1px solid #2a3d52">PRIO.</th>'
-    +'<th style="padding:4px 6px;color:#c9a227;font-size:9px;text-align:center;border:1px solid #2a3d52">%</th>'
-    +dayHeaders+'</tr>'
-    +'<tr style="background:#0a1520">'+turnoColHeaders+'</tr>'
-    +'</thead><tbody>'+sectionsHTML+'</tbody></table></div>'
+    // Matrix — 1ª quincena (días 1-15)
+    +'<div style="font-size:10px;font-weight:700;color:#0d1b2a;background:#d4e6f5;padding:5px 10px;border-radius:4px 4px 0 0;border:1px solid #2a3d52;border-bottom:none;letter-spacing:.05em">📅 DÍAS 1 – 15</div>'
+    +tabla1
+    // Salto de página + 2ª quincena (días 16-fin)
+    +'<div style="page-break-before:always;margin-top:18px;font-size:10px;font-weight:700;color:#0d1b2a;background:#d4e6f5;padding:5px 10px;border-radius:4px 4px 0 0;border:1px solid #2a3d52;border-bottom:none;letter-spacing:.05em">📅 DÍAS 16 – '+diasMes+'</div>'
+    +tabla2
     +_buildAChtml(acData, mesLabel)
     +'<div style="margin-top:10px;border-top:1px solid #eee;padding-top:5px;font-size:9px;color:#aaa;display:flex;justify-content:space-between">'
     +'<span>PANALCOR S.L. — Sistema GESTION 3.0</span><span>'+mesLabel+' | '+pctGlobal+'% cumplimiento global</span></div>'
