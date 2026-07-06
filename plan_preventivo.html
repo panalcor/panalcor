@@ -461,8 +461,10 @@ function renderCatalogo(){
   var maq  = (document.getElementById('asigFiltMaq')||{}).value||'';
   var freq = (document.getElementById('asigFiltFreq')||{}).value||'';
   var q    = ((document.getElementById('asigSearch')||{}).value||'').toLowerCase().trim();
+  var MAQ_EXCL = ['REPARACION DE CARROS','CONDENSADORES ELECTRICOS','CUADROS GENERALES','OTROS','HORNOS CLIENTES'];
   var items = getCatalogo().filter(function(c){
-    return (!maq||c.maquina===maq)&&(!freq||c.frecuencia===freq)&&
+    return MAQ_EXCL.indexOf((c.maquina||'').toUpperCase()) === -1 &&
+      (!maq||c.maquina===maq)&&(!freq||c.frecuencia===freq)&&
       (!q||(c.tarea+' '+c.maquina+' '+(c.subtipo||'')).toLowerCase().indexOf(q)>=0);
   });
   var cnt = document.getElementById('asigCount');
@@ -1026,6 +1028,8 @@ function renderGestionCatalogo(){
   var search   = (document.getElementById('catSearch').value || '').toLowerCase();
 
   /* Actualizar datalist de máquinas */
+  var MAQ_EXCLUIDAS_PREV = ['REPARACION DE CARROS','CONDENSADORES ELECTRICOS','CUADROS GENERALES','OTROS','HORNOS CLIENTES'];
+  cat = cat.filter(function(t){ return MAQ_EXCLUIDAS_PREV.indexOf((t.maquina||'').toUpperCase()) === -1; });
   var maquinas = {};
   cat.forEach(function(t){ if(t.maquina) maquinas[t.maquina] = 1; });
   var dl = document.getElementById('catMaquinasList');
