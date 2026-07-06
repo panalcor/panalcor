@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arrancada / Cierre — PANALCOR</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Barlow:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --navy: #1e2b3a;
+  --navy-deep: #131d28;
+  --gold: #c9a227;
+  --cream: #f4efe6;
+  --orange: #e67e22;
+  --orange-light: #f0a052;
+  --red: #e74c3c;
+  --green: #27ae60;
+  --blue: #3a7abf;
+}
+html, body { min-height: 100%; font-family: 'Barlow', sans-serif; background: var(--navy-deep); color: #fff; }
+body { padding-bottom: 40px; }
+
+/* ── Header ── */
+.header {
+  background: linear-gradient(135deg, #0d1b2a, #1a2d42);
+  border-bottom: 3px solid var(--orange);
+  padding: 14px 20px;
+  display: flex; align-items: center; gap: 14px;
+  position: sticky; top: 0; z-index: 100;
+}
+.header-back {
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.7); border-radius: 8px; padding: 7px 14px;
+  cursor: pointer; font-family: 'Barlow', sans-serif; font-size: 0.85rem;
+  text-decoration: none; transition: all .2s; white-space: nowrap;
+}
+.header-back:hover { background: rgba(255,255,255,0.14); color: #fff; }
+.header-title {
+  font-family: 'Oswald', sans-serif; font-size: 1.4rem; font-weight: 700;
+  color: var(--orange-light); letter-spacing: 0.06em;
+  flex: 1;
+}
+.header-date { font-size: 0.75rem; color: rgba(255,255,255,0.35); letter-spacing: 0.1em; text-transform: uppercase; }
+
+/* ── Selector de fecha ── */
+.fecha-bar {
+  max-width: 700px; margin: 18px auto 0; padding: 0 16px;
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+}
+.fecha-bar label { font-size: 0.78rem; color: rgba(255,255,255,0.45); letter-spacing: 0.1em; text-transform: uppercase; }
+.fecha-inp {
+  background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15);
+  color: #fff; border-radius: 8px; padding: 8px 14px; font-family: 'Barlow', sans-serif;
+  font-size: 0.95rem; outline: none; cursor: pointer;
+}
+.fecha-inp:focus { border-color: var(--orange); }
+
+/* ── Tabs ── */
+.tabs {
+  max-width: 700px; margin: 18px auto 0; padding: 0 16px;
+  display: flex; gap: 10px;
+}
+.tab-btn {
+  flex: 1; padding: 12px; border-radius: 10px; border: 2px solid;
+  cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 1rem;
+  font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  transition: all .2s; background: rgba(255,255,255,0.04);
+}
+.tab-arr { border-color: rgba(39,174,96,0.3); color: #5dde95; }
+.tab-arr.active { background: rgba(39,174,96,0.15); border-color: #27ae60; box-shadow: 0 4px 20px rgba(39,174,96,0.2); }
+.tab-cie { border-color: rgba(231,76,60,0.3); color: #ff8a80; }
+.tab-cie.active { background: rgba(231,76,60,0.15); border-color: #e74c3c; box-shadow: 0 4px 20px rgba(231,76,60,0.2); }
+
+/* ── Panel ── */
+.panel { max-width: 700px; margin: 16px auto 0; padding: 0 16px; display: none; }
+.panel.active { display: block; }
+
+.panel-header {
+  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 12px 12px 0 0;
+  padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;
+}
+.panel-title { font-family: 'Oswald', sans-serif; font-size: 1.1rem; font-weight: 700; letter-spacing: 0.08em; }
+.panel-count { font-size: 0.78rem; color: rgba(255,255,255,0.35); }
+
+/* ── Items checklist ── */
+.checklist { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-top: none; border-radius: 0 0 12px 12px; overflow: hidden; }
+.item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: background .15s;
+}
+.item:last-child { border-bottom: none; }
+.item.done { background: rgba(39,174,96,0.06); }
+
+.item-check-col {
+  padding: 14px 14px 14px 16px;
+  display: flex; align-items: flex-start; padding-top: 16px;
+}
+.item-check {
+  width: 26px; height: 26px; border-radius: 6px; border: 2px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.04); cursor: pointer; display: flex; align-items: center;
+  justify-content: center; transition: all .15s; flex-shrink: 0;
+}
+.item-check:hover { border-color: rgba(255,255,255,0.5); }
+.item-check.checked { background: var(--green); border-color: var(--green); }
+.item-check svg { width: 16px; height: 16px; stroke: #fff; stroke-width: 3; fill: none; display: none; }
+.item-check.checked svg { display: block; }
+
+.item-body { padding: 12px 16px 12px 0; }
+.item-num { font-size: 0.65rem; color: rgba(255,255,255,0.25); letter-spacing: 0.12em; margin-bottom: 2px; }
+.item-label { font-size: 0.93rem; font-weight: 600; color: rgba(255,255,255,0.88); line-height: 1.3; margin-bottom: 8px; }
+.item.done .item-label { color: rgba(255,255,255,0.45); text-decoration: line-through; }
+
+.item-fields { display: flex; gap: 8px; flex-wrap: wrap; }
+.field-inp {
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+  color: #fff; border-radius: 6px; padding: 6px 10px;
+  font-family: 'Barlow', sans-serif; font-size: 0.82rem; outline: none;
+  transition: border-color .15s;
+}
+.field-inp:focus { border-color: rgba(201,162,39,0.6); }
+.field-inp.mec-inp { width: 150px; }
+.field-inp.obs-inp { flex: 1; min-width: 120px; }
+.field-hora { font-size: 0.72rem; color: rgba(255,255,255,0.3); padding: 6px 0; align-self: center; white-space: nowrap; }
+
+/* ── Botón guardar ── */
+.save-bar { max-width: 700px; margin: 16px auto 0; padding: 0 16px; }
+.btn-save {
+  width: 100%; padding: 14px; border-radius: 10px; border: 2px solid;
+  cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 1.05rem;
+  font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  transition: all .2s;
+}
+.btn-save-arr { border-color: rgba(39,174,96,0.5); color: #5dde95; background: rgba(39,174,96,0.1); }
+.btn-save-arr:hover { background: rgba(39,174,96,0.2); box-shadow: 0 4px 20px rgba(39,174,96,0.2); }
+.btn-save-cie { border-color: rgba(231,76,60,0.5); color: #ff8a80; background: rgba(231,76,60,0.1); }
+.btn-save-cie:hover { background: rgba(231,76,60,0.2); box-shadow: 0 4px 20px rgba(231,76,60,0.2); }
+
+/* ── Historial del día ── */
+.hist-wrap { max-width: 700px; margin: 24px auto 0; padding: 0 16px; }
+.hist-title { font-size: 0.72rem; color: rgba(255,255,255,0.3); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 10px; }
+.hist-card {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px; padding: 12px 16px; margin-bottom: 10px;
+}
+.hist-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.hist-badge { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; padding: 3px 10px; border-radius: 20px; }
+.hist-badge.arr { background: rgba(39,174,96,0.15); color: #5dde95; }
+.hist-badge.cie { background: rgba(231,76,60,0.15); color: #ff8a80; }
+.hist-ts { font-size: 0.72rem; color: rgba(255,255,255,0.3); }
+.hist-item { font-size: 0.82rem; color: rgba(255,255,255,0.55); padding: 3px 0; display: flex; gap: 8px; }
+.hist-item .check-icon { color: #27ae60; }
+.hist-item .mec-tag { color: var(--gold); font-weight: 600; }
+
+/* ── Toast ── */
+#toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: #1e3a2a; border: 1px solid #27ae60; color: #5dde95;
+  padding: 12px 24px; border-radius: 10px; font-size: 0.9rem; font-weight: 600;
+  z-index: 500; transition: transform .3s ease; white-space: nowrap;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+#toast.err { background: #3a1e1e; border-color: #e74c3c; color: #ff8a80; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a class="header-back" href="panalcor_inicio.html">← Inicio</a>
+  <div class="header-title">🔧 Arrancada / Cierre</div>
+  <div class="header-date" id="hdrDate"></div>
+</div>
+
+<!-- Selector fecha y hora -->
+<div class="fecha-bar">
+  <label>Fecha:</label>
+  <input type="date" id="fechaSel" class="fecha-inp">
+  <label>Hora:</label>
+  <input type="time" id="horaSel" class="fecha-inp" style="width:110px">
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <button class="tab-btn tab-arr active" onclick="showTab('arrancada')">▶ Arrancada</button>
+  <button class="tab-btn tab-cie" onclick="showTab('cierre')">■ Cierre</button>
+</div>
+
+<!-- PANEL ARRANCADA -->
+<div class="panel active" id="panel-arrancada">
+  <div class="panel-header">
+    <div class="panel-title" style="color:#5dde95">▶ ARRANCADA</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="panel-count" id="countArr">0 / 14</div>
+      <button onclick="abrirGestorItems('arrancada')" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:0.78rem;font-family:'Barlow',sans-serif" title="Gestionar ítems">⚙️ Ítems</button>
+    </div>
+  </div>
+  <div class="checklist" id="listArr"></div>
+</div>
+
+<div class="save-bar" id="saveBarArr">
+  <button class="btn-save btn-save-arr" onclick="guardar('arrancada')">✓ GUARDAR ARRANCADA</button>
+</div>
+
+<!-- PANEL CIERRE -->
+<div class="panel" id="panel-cierre">
+  <div class="panel-header">
+    <div class="panel-title" style="color:#ff8a80">■ CIERRE</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="panel-count" id="countCie">0 / 4</div>
+      <button onclick="abrirGestorItems('cierre')" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:0.78rem;font-family:'Barlow',sans-serif" title="Gestionar ítems">⚙️ Ítems</button>
+    </div>
+  </div>
+  <div class="checklist" id="listCie"></div>
+</div>
+
+<div class="save-bar" id="saveBarCie" style="display:none">
+  <button class="btn-save btn-save-cie" onclick="guardar('cierre')">✓ GUARDAR CIERRE</button>
+</div>
+
+<!-- Modal gestor de ítems -->
+<div id="gestorModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:800;overflow-y:auto;padding:16px">
+  <div style="max-width:520px;margin:auto;background:#1a2d42;border:1px solid rgba(230,126,34,0.4);border-radius:16px;overflow:hidden">
+    <div style="background:linear-gradient(135deg,#0a1520,#1a2d42);border-bottom:1px solid rgba(230,126,34,0.2);padding:16px 18px;display:flex;align-items:center;justify-content:space-between">
+      <div id="gestorTitle" style="font-size:1rem;font-weight:800;color:#f0a052">⚙️ Gestionar ítems</div>
+      <button onclick="cerrarGestorItems()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem">✕</button>
+    </div>
+    <div style="padding:18px">
+      <div id="gestorLista" style="margin-bottom:16px;max-height:380px;overflow-y:auto"></div>
+      <div style="display:flex;gap:8px">
+        <input id="gestorNuevo" type="text" placeholder="Nueva tarea (en mayúsculas)..."
+          oninput="this.value=this.value.toUpperCase()"
+          onkeydown="if(event.key==='Enter')agregarItem()"
+          style="flex:1;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:0.9rem;outline:none">
+        <button onclick="agregarItem()" style="background:rgba(230,126,34,0.2);border:2px solid rgba(230,126,34,0.5);color:#f0a052;border-radius:8px;padding:10px 16px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.9rem;font-weight:700;white-space:nowrap">+ Añadir</button>
+      </div>
+      <div style="margin-top:12px;font-size:0.75rem;color:rgba(255,255,255,0.3)">Los cambios afectan a futuros registros. Los guardados anteriormente no se modifican.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Historial del día -->
+<div class="hist-wrap">
+  <div class="hist-title">Registros guardados hoy</div>
+  <div id="historial"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+var FB_CFG = {
+  apiKey:"AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU",
+  authDomain:"panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:"https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"panalcor-mantenimiento",
+  storageBucket:"panalcor-mantenimiento.firebasestorage.app",
+  messagingSenderId:"67593058609",
+  appId:"1:67593058609:web:c33fa1fa4fce2932485810"
+};
+if (!firebase.apps.length) firebase.initializeApp(FB_CFG);
+var DB = firebase.database();
+
+var ITEMS_ARR_DEFAULT = [
+  'LIMPIEZA MÁQUINA DE CAJAS',
+  'HOLGURAS Y CORRECTO FUNCIONAMIENTO M. CAJAS',
+  'LIMPIEZA MÁQUINA DE BOLSAS',
+  'HOLGURAS Y CORRECTO FUNCIONAMIENTO M. BOLSAS',
+  'APRETAR ÁNGULOS CARGADOR 1',
+  'APRETAR ÁNGULOS DESCARGADOR 1',
+  'APRETAR ÁNGULOS CARGADOR 2',
+  'APRETAR ÁNGULOS DESCARGADOR 2',
+  'ENGRASE CADENAS DESMOLDEOS',
+  'ENGRASE GUÍAS NORIAS',
+  'LIMPIEZA CADENAS CONTADORAS (SOPLAR)',
+  'REVISAR SEGURIDADES',
+  'REVISIÓN VISUAL ENFARDADORA',
+  'REVISIÓN VISUAL ROBOT'
+];
+
+var ITEMS_CIE_DEFAULT = [
+  'ENGRASE CADENAS TALLADORA',
+  'APRETAR ÁNGULOS CARGADOR/DESCARGADOR TALLADORAS',
+  'SOPLAR DRIVERS INFRANOR (SEGUIR PROCEDIMIENTO)',
+  'REVISAR SEGURIDADES'
+];
+
+function loadItems(tipo) {
+  try {
+    var saved = JSON.parse(localStorage.getItem('ac_items_' + tipo) || 'null');
+    if (Array.isArray(saved) && saved.length) return saved;
+  } catch(e) {}
+  return tipo === 'arrancada' ? ITEMS_ARR_DEFAULT.slice() : ITEMS_CIE_DEFAULT.slice();
+}
+
+function saveItems(tipo, items) {
+  localStorage.setItem('ac_items_' + tipo, JSON.stringify(items));
+}
+
+var ITEMS_ARR = loadItems('arrancada');
+var ITEMS_CIE = loadItems('cierre');
+
+// Estado de los checks
+var stateArr = ITEMS_ARR.map(function(){ return {done:false, mecanico:'', obs:'', hora:''}; });
+var stateCie = ITEMS_CIE.map(function(){ return {done:false, mecanico:'', obs:'', hora:''}; });
+
+// ── Gestor de ítems ───────────────────────────────────────────
+var _gestorTipo = '';
+
+function abrirGestorItems(tipo) {
+  _gestorTipo = tipo;
+  document.getElementById('gestorTitle').textContent = '⚙️ Ítems — ' + (tipo === 'arrancada' ? '▶ ARRANCADA' : '■ CIERRE');
+  renderGestorLista();
+  document.getElementById('gestorModal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function cerrarGestorItems() {
+  document.getElementById('gestorModal').style.display = 'none';
+  document.body.style.overflow = '';
+  document.getElementById('gestorNuevo').value = '';
+}
+
+function renderGestorLista() {
+  var items = _gestorTipo === 'arrancada' ? ITEMS_ARR : ITEMS_CIE;
+  var el = document.getElementById('gestorLista');
+  if (!items.length) {
+    el.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.25);padding:20px">Sin ítems. Añade uno abajo.</div>';
+    return;
+  }
+  el.innerHTML = items.map(function(label, i) {
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;margin-bottom:6px">'
+      + '<span style="font-size:0.72rem;color:rgba(255,255,255,0.3);min-width:24px;text-align:right">' + (i+1) + '</span>'
+      + '<span style="flex:1;font-size:0.88rem;font-weight:600;color:rgba(255,255,255,0.85)">' + esc(label) + '</span>'
+      + '<button onclick="moverItem(' + i + ',-1)" title="Subir" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);border-radius:5px;width:28px;height:28px;cursor:pointer;font-size:0.9rem"' + (i===0?' disabled':'') + '>↑</button>'
+      + '<button onclick="moverItem(' + i + ',1)" title="Bajar" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);border-radius:5px;width:28px;height:28px;cursor:pointer;font-size:0.9rem"' + (i===items.length-1?' disabled':'') + '>↓</button>'
+      + '<button onclick="eliminarItem(' + i + ')" title="Eliminar" style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);color:#ff8a80;border-radius:5px;width:28px;height:28px;cursor:pointer;font-size:0.9rem">✕</button>'
+      + '</div>';
+  }).join('');
+}
+
+function agregarItem() {
+  var inp = document.getElementById('gestorNuevo');
+  var val = (inp.value || '').trim().toUpperCase();
+  if (!val) return;
+  var items = _gestorTipo === 'arrancada' ? ITEMS_ARR : ITEMS_CIE;
+  if (items.indexOf(val) !== -1) { mostrarToast('⚠️ Ese ítem ya existe', true); return; }
+  items.push(val);
+  saveItems(_gestorTipo, items);
+  inp.value = '';
+  renderGestorLista();
+  recargarChecklist(_gestorTipo);
+}
+
+function eliminarItem(i) {
+  var items = _gestorTipo === 'arrancada' ? ITEMS_ARR : ITEMS_CIE;
+  if (!confirm('¿Eliminar "' + items[i] + '"?')) return;
+  items.splice(i, 1);
+  saveItems(_gestorTipo, items);
+  renderGestorLista();
+  recargarChecklist(_gestorTipo);
+}
+
+function moverItem(i, dir) {
+  var items = _gestorTipo === 'arrancada' ? ITEMS_ARR : ITEMS_CIE;
+  var j = i + dir;
+  if (j < 0 || j >= items.length) return;
+  var tmp = items[i]; items[i] = items[j]; items[j] = tmp;
+  saveItems(_gestorTipo, items);
+  renderGestorLista();
+  recargarChecklist(_gestorTipo);
+}
+
+function recargarChecklist(tipo) {
+  if (tipo === 'arrancada') {
+    stateArr = ITEMS_ARR.map(function(){ return {done:false, mecanico:'', obs:'', hora:''}; });
+    renderLista(ITEMS_ARR, stateArr, 'listArr', 'countArr', 'arrancada');
+  } else {
+    stateCie = ITEMS_CIE.map(function(){ return {done:false, mecanico:'', obs:'', hora:''}; });
+    renderLista(ITEMS_CIE, stateCie, 'listCie', 'countCie', 'cierre');
+  }
+}
+
+var sesionNombre = '';
+try {
+  var _s = JSON.parse(localStorage.getItem('panalcor_session') || 'null');
+  if (_s && _s.nombre) sesionNombre = _s.nombre;
+  if (!sesionNombre) {
+    var _m = JSON.parse(localStorage.getItem('mecSesion') || 'null');
+    if (_m && _m.nombre) sesionNombre = _m.nombre;
+  }
+} catch(e){}
+
+// ── Fecha ──────────────────────────────────────────────────────
+function hoy() {
+  var d = new Date();
+  return d.toISOString().slice(0, 10);
+}
+
+var fechaActual = hoy();
+document.getElementById('fechaSel').value = fechaActual;
+var _ahora = new Date();
+document.getElementById('horaSel').value = _ahora.toTimeString().slice(0,5);
+document.getElementById('hdrDate').textContent = _ahora.toLocaleDateString('es-ES', {weekday:'long', day:'numeric', month:'long', year:'numeric'}).toUpperCase();
+
+document.getElementById('fechaSel').addEventListener('change', function() {
+  fechaActual = this.value;
+  cargarHistorial();
+});
+
+// ── Tabs ──────────────────────────────────────────────────────
+function showTab(tab) {
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('panel-' + tab).classList.add('active');
+  document.getElementById('saveBarArr').style.display = (tab === 'arrancada') ? 'block' : 'none';
+  document.getElementById('saveBarCie').style.display = (tab === 'cierre')    ? 'block' : 'none';
+  if (tab === 'arrancada') document.querySelector('.tab-arr').classList.add('active');
+  else document.querySelector('.tab-cie').classList.add('active');
+}
+
+// ── Render ────────────────────────────────────────────────────
+function renderLista(items, state, containerId, countId, tipo) {
+  var el = document.getElementById(containerId);
+  el.innerHTML = items.map(function(label, i) {
+    var s = state[i];
+    return '<div class="item' + (s.done ? ' done' : '') + '" id="item-' + tipo + '-' + i + '">'
+      + '<div class="item-check-col">'
+      + '<div class="item-check' + (s.done ? ' checked' : '') + '" onclick="toggleCheck(\'' + tipo + '\',' + i + ')">'
+      + '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>'
+      + '</div></div>'
+      + '<div class="item-body">'
+      + '<div class="item-num">ÍTEM ' + (i+1) + '</div>'
+      + '<div class="item-label">' + esc(label) + '</div>'
+      + '<div class="item-fields">'
+      + '<input class="field-inp mec-inp" type="text" placeholder="Mecánico" value="' + esc(s.mecanico) + '" '
+      + 'oninput="updateField(\'' + tipo + '\',' + i + ',\'mecanico\',this.value)">'
+      + '<input class="field-inp obs-inp" type="text" placeholder="Observaciones (opcional)" value="' + esc(s.obs) + '" '
+      + 'oninput="updateField(\'' + tipo + '\',' + i + ',\'obs\',this.value)">'
+      + (s.hora ? '<span class="field-hora">🕐 ' + s.hora + '</span>' : '')
+      + '</div></div></div>';
+  }).join('');
+  actualizarCount(state, countId, items.length);
+}
+
+function actualizarCount(state, countId, total) {
+  var done = state.filter(function(s){ return s.done; }).length;
+  document.getElementById(countId).textContent = done + ' / ' + total;
+}
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── Interacción ───────────────────────────────────────────────
+function toggleCheck(tipo, i) {
+  var state = (tipo === 'arrancada') ? stateArr : stateCie;
+  state[i].done = !state[i].done;
+  if (state[i].done) {
+    if (!state[i].mecanico && sesionNombre) state[i].mecanico = sesionNombre;
+    state[i].hora = new Date().toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'});
+  } else {
+    state[i].hora = '';
+  }
+  var items = (tipo === 'arrancada') ? ITEMS_ARR : ITEMS_CIE;
+  renderLista(items, state, 'list' + (tipo==='arrancada'?'Arr':'Cie'), 'count' + (tipo==='arrancada'?'Arr':'Cie'), tipo);
+}
+
+function updateField(tipo, i, field, val) {
+  var state = (tipo === 'arrancada') ? stateArr : stateCie;
+  state[i][field] = val;
+}
+
+// ── Guardar ───────────────────────────────────────────────────
+function guardar(tipo) {
+  var state = (tipo === 'arrancada') ? stateArr : stateCie;
+  var items = (tipo === 'arrancada') ? ITEMS_ARR : ITEMS_CIE;
+  var horaReg = document.getElementById('horaSel').value || new Date().toTimeString().slice(0,5);
+  var registro = {
+    tipo: tipo,
+    fecha: fechaActual,
+    hora: horaReg,
+    ts: Date.now(),
+    guardadoPor: sesionNombre || 'desconocido',
+    items: items.map(function(label, i) {
+      return {
+        label: label,
+        done: state[i].done,
+        mecanico: state[i].mecanico || '',
+        obs: state[i].obs || '',
+        hora: state[i].hora || ''
+      };
+    })
+  };
+  DB.ref('arrancada_cierre/' + fechaActual + '/' + tipo).push(registro)
+    .then(function() {
+      mostrarToast('✅ ' + (tipo === 'arrancada' ? 'Arrancada' : 'Cierre') + ' guardado correctamente', false);
+      resetState(tipo);
+      cargarHistorial();
+    })
+    .catch(function(e) {
+      mostrarToast('❌ Error al guardar: ' + (e && e.message ? e.message : 'sin conexión'), true);
+    });
+}
+
+function resetState(tipo) {
+  if (tipo === 'arrancada') {
+    stateArr = ITEMS_ARR.map(function(){ return {done:false, mecanico:'', obs:'', hora:''}; });
+    renderLista(ITEMS_ARR, stateArr, 'listArr', 'countArr', 'arrancada');
+  } else {
+    stateCie = ITEMS_CIE.map(function(){ return {done:false, mecanico:'', obs:'', hora:''}; });
+    renderLista(ITEMS_CIE, stateCie, 'listCie', 'countCie', 'cierre');
+  }
+}
+
+// ── Historial ─────────────────────────────────────────────────
+function cargarHistorial() {
+  var el = document.getElementById('historial');
+  el.innerHTML = '<div style="font-size:0.82rem;color:rgba(255,255,255,0.25);padding:8px 0">Cargando...</div>';
+  DB.ref('arrancada_cierre/' + fechaActual).once('value').then(function(snap) {
+    var data = snap.val();
+    if (!data) { el.innerHTML = '<div style="font-size:0.82rem;color:rgba(255,255,255,0.2);padding:8px 0">Sin registros para este día</div>'; return; }
+    var registros = [];
+    ['arrancada','cierre'].forEach(function(tipo) {
+      if (data[tipo]) {
+        Object.values(data[tipo]).forEach(function(r) { registros.push(r); });
+      }
+    });
+    registros.sort(function(a,b){ return (a.ts||0) - (b.ts||0); });
+    el.innerHTML = registros.map(function(r) {
+      var esArr = r.tipo === 'arrancada';
+      var hora = r.ts ? new Date(r.ts).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}) : '';
+      var itemsDone = (r.items||[]).filter(function(it){ return it.done; });
+      return '<div class="hist-card">'
+        + '<div class="hist-card-header">'
+        + '<span class="hist-badge ' + (esArr?'arr':'cie') + '">' + (esArr?'▶ ARRANCADA':'■ CIERRE') + '</span>'
+        + (hora ? '<span class="hist-ts">Guardado ' + hora + '</span>' : '')
+        + (r.guardadoPor ? '<span class="hist-ts">— ' + esc(r.guardadoPor) + '</span>' : '')
+        + '</div>'
+        + (itemsDone.length === 0 ? '<div style="font-size:0.82rem;color:rgba(255,255,255,0.25)">Sin ítems marcados</div>' :
+          itemsDone.map(function(it) {
+            return '<div class="hist-item">'
+              + '<span class="check-icon">✓</span>'
+              + '<span>' + esc(it.label) + '</span>'
+              + (it.mecanico ? '<span class="mec-tag">' + esc(it.mecanico) + '</span>' : '')
+              + (it.hora ? '<span style="color:rgba(255,255,255,0.25);font-size:0.75rem">' + it.hora + '</span>' : '')
+              + (it.obs ? '<span style="color:rgba(255,255,255,0.4);font-style:italic">' + esc(it.obs) + '</span>' : '')
+              + '</div>';
+          }).join(''))
+        + '</div>';
+    }).join('');
+  }).catch(function() {
+    el.innerHTML = '<div style="font-size:0.82rem;color:rgba(255,255,255,0.2)">Error al cargar historial</div>';
+  });
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+function mostrarToast(msg, esError) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show' + (esError ? ' err' : '');
+  setTimeout(function(){ t.className = esError ? 'err' : ''; }, 3500);
+}
+
+// ── Init ──────────────────────────────────────────────────────
+renderLista(ITEMS_ARR, stateArr, 'listArr', 'countArr', 'arrancada');
+renderLista(ITEMS_CIE, stateCie, 'listCie', 'countCie', 'cierre');
+cargarHistorial();
+</script>
+</body>
+</html>

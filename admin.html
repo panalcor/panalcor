@@ -2901,17 +2901,18 @@ function exportarInformeMensual(){
   // Load from Firebase (all devices) + localStorage (this device) merged
   Promise.all([
     DB.ref('registros_turno').once('value'),
-    DB.ref('tareas_diarias').once('value')
+    DB.ref('tareas_diarias').once('value'),
+    DB.ref('arrancada_cierre').orderByKey().startAt(mes+'-01').endAt(mes+'-31').once('value')
   ]).then(function(snaps){
     var fbTurnos = snaps[0].val() || {};
     var tareasMap = {};
     Object.values(snaps[1].val() || {}).forEach(function(t){ tareasMap[t.id] = t; });
+    var acData = snaps[2].val() || {};
 
     // Collect Firebase records for this month
     var seenKeys = {};
     var allTurnos = Object.values(fbTurnos).filter(function(r){
       if(!r.fecha || !r.fecha.startsWith(mes)) return false;
-      // Deduplicate by fecha+turno+mecanico (keep latest)
       var k = r.fecha+'|'+(r.turno||'')+'|'+(r.mecanico||'');
       if(seenKeys[k] && seenKeys[k].ts >= (r.ts||0)) return false;
       seenKeys[k] = r;
@@ -2929,7 +2930,7 @@ function exportarInformeMensual(){
       showToast('Sin registros de mantenimiento para ese mes');
       return;
     }
-    _generarExcelMensual(mes, mesLabel, allTurnos, tareasMap);
+    _generarExcelMensual(mes, mesLabel, allTurnos, tareasMap, acData);
     if(info) info.textContent = allTurnos.length + ' turnos encontrados en ' + mesLabel;
   }).catch(function(){
     // Full fallback: localStorage only
@@ -2939,7 +2940,7 @@ function exportarInformeMensual(){
       showToast('Sin registros de mantenimiento para ese mes');
       return;
     }
-    _generarExcelMensual(mes, mesLabel, allTurnos, {});
+    _generarExcelMensual(mes, mesLabel, allTurnos, {}, {});
     if(info) info.textContent = allTurnos.length + ' turnos (solo dispositivo local)';
   });
 }
@@ -2995,7 +2996,63 @@ function _buildMatrixData(mes, turnos, tareasMap){
   return { taskMeta:taskMeta, matrix:matrix, maqMap:maqMap, diasMes:diasMes, TURNOS:TURNOS, activeDaysList:activeDaysList, mes:mes, anio:anio, mm:mm };
 }
 
-function _generarExcelMensual(mes, mesLabel, turnos, tareasMap){
+function _buildAChtml(acData, mesLabel){
+  // Flatten arrancada_cierre data into sorted list
+  var registros = [];
+  Object.keys(acData||{}).sort().forEach(function(fecha){
+    var dia = acData[fecha] || {};
+    ['arrancada','cierre'].forEach(function(tipo){
+      if(!dia[tipo]) return;
+      Object.values(dia[tipo]).forEach(function(r){
+        registros.push(Object.assign({}, r, {fecha: fecha, tipo: tipo}));
+      });
+    });
+  });
+  if(!registros.length) return '';
+
+  registros.sort(function(a,b){ return (a.fecha+a.hora||'') < (b.fecha+b.hora||'') ? -1 : 1; });
+
+  var rows = registros.map(function(r){
+    var items = r.items || [];
+    var done = items.filter(function(it){ return it.done; }).length;
+    var total = items.length || 1;
+    var pct = Math.round(done/total*100);
+    var pctColor = pct>=100?'#155724':pct>=60?'#856404':'#721c24';
+    var pctBg    = pct>=100?'#d4edda':pct>=60?'#fff3cd':'#f8d7da';
+    var mecanicos = items.filter(function(it){ return it.done && it.mecanico; })
+                         .map(function(it){ return it.mecanico; });
+    var mecsUniq = mecanicos.filter(function(m,i){ return mecanicos.indexOf(m)===i; });
+    var esArr = r.tipo === 'arrancada';
+    var tipoLabel = esArr ? '▶ ARRANCADA' : '■ CIERRE';
+    var tipoBg    = esArr ? '#d4edda' : '#f8d7da';
+    var tipoColor = esArr ? '#155724' : '#721c24';
+    var fechaFmt  = r.fecha ? r.fecha.split('-').reverse().join('/') : '—';
+    return '<tr>'
+      +'<td style="padding:5px 8px;border:1px solid #ddd;white-space:nowrap">'+fechaFmt+'</td>'
+      +'<td style="padding:5px 8px;border:1px solid #ddd;white-space:nowrap">'+(r.hora||'—')+'</td>'
+      +'<td style="padding:5px 8px;border:1px solid #ddd;background:'+tipoBg+';color:'+tipoColor+';font-weight:700;font-size:10px;white-space:nowrap">'+tipoLabel+'</td>'
+      +'<td style="padding:5px 8px;border:1px solid #ddd;text-align:center;background:'+pctBg+';color:'+pctColor+';font-weight:700">'+pct+'%</td>'
+      +'<td style="padding:5px 8px;border:1px solid #ddd;text-align:center">'+done+' / '+total+'</td>'
+      +'<td style="padding:5px 8px;border:1px solid #ddd;font-size:10px;color:#1a1a2e">'+(mecsUniq.join(', ')||'—')+'</td>'
+      +'<td style="padding:5px 8px;border:1px solid #ddd;font-size:9px;color:#555">'+(r.guardadoPor||'—')+'</td>'
+      +'</tr>';
+  }).join('');
+
+  return '<div style="margin-top:18px;page-break-before:auto">'
+    +'<div style="background:#0d1b2a;color:#e67e22;font-weight:900;font-size:12px;letter-spacing:.08em;padding:8px 12px;border-radius:5px 5px 0 0">🔧 ARRANCADA / CIERRE — '+mesLabel.toUpperCase()+'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:10px">'
+    +'<thead><tr style="background:#1a2d42;color:#fff">'
+    +'<th style="padding:5px 8px;border:1px solid #2a3d52;text-align:left">FECHA</th>'
+    +'<th style="padding:5px 8px;border:1px solid #2a3d52;text-align:left">HORA</th>'
+    +'<th style="padding:5px 8px;border:1px solid #2a3d52;text-align:left">TIPO</th>'
+    +'<th style="padding:5px 8px;border:1px solid #2a3d52;text-align:center">CUMPL.</th>'
+    +'<th style="padding:5px 8px;border:1px solid #2a3d52;text-align:center">ÍTEMS</th>'
+    +'<th style="padding:5px 8px;border:1px solid #2a3d52;text-align:left">MECÁNICOS</th>'
+    +'<th style="padding:5px 8px;border:1px solid #2a3d52;text-align:left">GUARDADO POR</th>'
+    +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+
+function _generarExcelMensual(mes, mesLabel, turnos, tareasMap, acData){
   var wb = XLSX.utils.book_new();
   var d = _buildMatrixData(mes, turnos, tareasMap);
   var diasMes = d.diasMes, TURNOS = d.TURNOS, matrix = d.matrix, taskMeta = d.taskMeta, maqMap = d.maqMap;
@@ -3252,6 +3309,7 @@ function _abrirInformeDiario(mes, mesLabel, turnos, tareasMap){
     +dayHeaders+'</tr>'
     +'<tr style="background:#0a1520">'+turnoColHeaders+'</tr>'
     +'</thead><tbody>'+sectionsHTML+'</tbody></table></div>'
+    +_buildAChtml(acData, mesLabel)
     +'<div style="margin-top:10px;border-top:1px solid #eee;padding-top:5px;font-size:9px;color:#aaa;display:flex;justify-content:space-between">'
     +'<span>PANALCOR S.L. — Sistema GESTION 3.0</span><span>'+mesLabel+' | '+pctGlobal+'% cumplimiento global</span></div>'
     +'</body></html>';
