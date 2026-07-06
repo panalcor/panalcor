@@ -3002,10 +3002,8 @@ function _buildAChtml(acData, mesLabel){
   Object.keys(acData||{}).sort().forEach(function(fecha){
     var dia = acData[fecha] || {};
     ['arrancada','cierre'].forEach(function(tipo){
-      if(!dia[tipo]) return;
-      Object.values(dia[tipo]).forEach(function(r){
-        registros.push(Object.assign({}, r, {fecha: fecha, tipo: tipo}));
-      });
+      if(!dia[tipo] || !dia[tipo].items) return;
+      registros.push(Object.assign({}, dia[tipo], {fecha: fecha, tipo: tipo}));
     });
   });
   registros.sort(function(a,b){ return (a.fecha+(a.hora||'')) < (b.fecha+(b.hora||'')) ? -1 : 1; });

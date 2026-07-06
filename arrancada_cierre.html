@@ -397,14 +397,16 @@ function recargarChecklist(tipo) {
 }
 
 var sesionNombre = '';
+var sesionRol = '';
 try {
   var _s = JSON.parse(localStorage.getItem('panalcor_session') || 'null');
-  if (_s && _s.nombre) sesionNombre = _s.nombre;
+  if (_s && _s.nombre) { sesionNombre = _s.nombre; sesionRol = _s.rol || ''; }
   if (!sesionNombre) {
     var _m = JSON.parse(localStorage.getItem('mecSesion') || 'null');
-    if (_m && _m.nombre) sesionNombre = _m.nombre;
+    if (_m && _m.nombre) { sesionNombre = _m.nombre; sesionRol = 'mecanico'; }
   }
 } catch(e){}
+var esAdmin = (sesionRol === 'admin');
 
 // ── Fecha ──────────────────────────────────────────────────────
 function hoy() {
@@ -420,7 +422,7 @@ document.getElementById('hdrDate').textContent = _ahora.toLocaleDateString('es-E
 
 document.getElementById('fechaSel').addEventListener('change', function() {
   fechaActual = this.value;
-  cargarHistorial();
+  cargarRegistrosDelDia();
 });
 
 // ── Tabs ──────────────────────────────────────────────────────
@@ -495,6 +497,75 @@ function updateField(tipo, i, field, val) {
   state[i][field] = val;
 }
 
+// ── Cargar registros del día (form + historial) ────────────────
+function cargarRegistrosDelDia() {
+  DB.ref('arrancada_cierre/' + fechaActual).once('value').then(function(snap) {
+    var data = snap.val() || {};
+    cargarEnForm('arrancada', data.arrancada || null);
+    cargarEnForm('cierre',    data.cierre    || null);
+    renderHistorialDesdeData(data);
+  }).catch(function() {
+    cargarEnForm('arrancada', null);
+    cargarEnForm('cierre',    null);
+    document.getElementById('historial').innerHTML = '<div style="font-size:0.82rem;color:rgba(255,255,255,0.2)">Error al cargar</div>';
+  });
+}
+
+function cargarEnForm(tipo, registro) {
+  var items  = tipo === 'arrancada' ? ITEMS_ARR : ITEMS_CIE;
+  var state  = tipo === 'arrancada' ? stateArr  : stateCie;
+  var listId = tipo === 'arrancada' ? 'listArr'  : 'listCie';
+  var cntId  = tipo === 'arrancada' ? 'countArr' : 'countCie';
+  var barId  = tipo === 'arrancada' ? 'saveBarArr' : 'saveBarCie';
+
+  if (registro) {
+    // Poblar state con los datos guardados
+    var savedItems = registro.items || [];
+    savedItems.forEach(function(it, i) {
+      if (state[i]) {
+        state[i].done     = !!it.done;
+        state[i].mecanico = it.mecanico || '';
+        state[i].obs      = it.obs      || '';
+        state[i].hora     = it.hora     || '';
+      }
+    });
+    renderLista(items, state, listId, cntId, tipo);
+    // Bloquear si no es admin
+    var bar = document.getElementById(barId);
+    if (!esAdmin) {
+      setFormReadOnly(listId, true);
+      bar.innerHTML = '<div style="background:rgba(231,76,60,0.1);border:2px solid rgba(231,76,60,0.3);border-radius:10px;padding:12px;text-align:center;font-size:0.88rem;color:#ff8a80">🔒 Ya registrado el ' + fechaActual.split('-').reverse().join('/') + ' — Solo el admin puede modificarlo</div>';
+    } else {
+      setFormReadOnly(listId, false);
+      var label = tipo === 'arrancada' ? 'ARRANCADA' : 'CIERRE';
+      var cls   = tipo === 'arrancada' ? 'btn-save-arr' : 'btn-save-cie';
+      bar.innerHTML = '<button class="btn-save ' + cls + '" onclick="guardar(\'' + tipo + '\')">✏️ MODIFICAR ' + label + ' (ADMIN)</button>';
+    }
+  } else {
+    // Sin registro: form en blanco, botón normal
+    if (tipo === 'arrancada') stateArr = ITEMS_ARR.map(function(){ return {done:false,mecanico:'',obs:'',hora:''}; });
+    else                      stateCie = ITEMS_CIE.map(function(){ return {done:false,mecanico:'',obs:'',hora:''}; });
+    renderLista(items, tipo === 'arrancada' ? stateArr : stateCie, listId, cntId, tipo);
+    setFormReadOnly(listId, false);
+    var label2 = tipo === 'arrancada' ? 'ARRANCADA' : 'CIERRE';
+    var cls2   = tipo === 'arrancada' ? 'btn-save-arr' : 'btn-save-cie';
+    document.getElementById(barId).innerHTML = '<button class="btn-save ' + cls2 + '" onclick="guardar(\'' + tipo + '\')">✓ GUARDAR ' + label2 + '</button>';
+  }
+}
+
+function setFormReadOnly(listId, readonly) {
+  var el = document.getElementById(listId);
+  if (!el) return;
+  el.querySelectorAll('input, select').forEach(function(inp) {
+    inp.disabled = readonly;
+    inp.style.opacity = readonly ? '0.5' : '1';
+  });
+  el.querySelectorAll('.item-check').forEach(function(ch) {
+    ch.style.pointerEvents = readonly ? 'none' : '';
+    ch.style.opacity = readonly ? '0.5' : '1';
+  });
+}
+
 // ── Guardar ───────────────────────────────────────────────────
 function guardar(tipo) {
   var state = (tipo === 'arrancada') ? stateArr : stateCie;
@@ -516,66 +587,52 @@ function guardar(tipo) {
       };
     })
   };
-  DB.ref('arrancada_cierre/' + fechaActual + '/' + tipo).push(registro)
+  DB.ref('arrancada_cierre/' + fechaActual + '/' + tipo).set(registro)
     .then(function() {
       mostrarToast('✅ ' + (tipo === 'arrancada' ? 'Arrancada' : 'Cierre') + ' guardado correctamente', false);
-      resetState(tipo);
-      cargarHistorial();
+      cargarRegistrosDelDia();
     })
     .catch(function(e) {
       mostrarToast('❌ Error al guardar: ' + (e && e.message ? e.message : 'sin conexión'), true);
     });
 }
 
-function resetState(tipo) {
-  if (tipo === 'arrancada') {
-    stateArr = ITEMS_ARR.map(function(){ return {done:false, mecanico:'', obs:'', hora:''}; });
-    renderLista(ITEMS_ARR, stateArr, 'listArr', 'countArr', 'arrancada');
-  } else {
-    stateCie = ITEMS_CIE.map(function(){ return {done:false, mecanico:'', obs:'', hora:''}; });
-    renderLista(ITEMS_CIE, stateCie, 'listCie', 'countCie', 'cierre');
-  }
-}
-
 // ── Historial ─────────────────────────────────────────────────
-function cargarHistorial() {
+function renderHistorialDesdeData(data) {
   var el = document.getElementById('historial');
-  el.innerHTML = '<div style="font-size:0.82rem;color:rgba(255,255,255,0.25);padding:8px 0">Cargando...</div>';
-  DB.ref('arrancada_cierre/' + fechaActual).once('value').then(function(snap) {
-    var data = snap.val();
-    if (!data) { el.innerHTML = '<div style="font-size:0.82rem;color:rgba(255,255,255,0.2);padding:8px 0">Sin registros para este día</div>'; return; }
-    var registros = [];
-    ['arrancada','cierre'].forEach(function(tipo) {
-      if (data[tipo]) {
-        Object.values(data[tipo]).forEach(function(r) { registros.push(r); });
-      }
-    });
-    registros.sort(function(a,b){ return (a.ts||0) - (b.ts||0); });
-    el.innerHTML = registros.map(function(r) {
-      var esArr = r.tipo === 'arrancada';
-      var hora = r.ts ? new Date(r.ts).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}) : '';
-      var itemsDone = (r.items||[]).filter(function(it){ return it.done; });
-      return '<div class="hist-card">'
-        + '<div class="hist-card-header">'
-        + '<span class="hist-badge ' + (esArr?'arr':'cie') + '">' + (esArr?'▶ ARRANCADA':'■ CIERRE') + '</span>'
-        + (hora ? '<span class="hist-ts">Guardado ' + hora + '</span>' : '')
-        + (r.guardadoPor ? '<span class="hist-ts">— ' + esc(r.guardadoPor) + '</span>' : '')
-        + '</div>'
-        + (itemsDone.length === 0 ? '<div style="font-size:0.82rem;color:rgba(255,255,255,0.25)">Sin ítems marcados</div>' :
-          itemsDone.map(function(it) {
-            return '<div class="hist-item">'
-              + '<span class="check-icon">✓</span>'
-              + '<span>' + esc(it.label) + '</span>'
-              + (it.mecanico ? '<span class="mec-tag">' + esc(it.mecanico) + '</span>' : '')
-              + (it.hora ? '<span style="color:rgba(255,255,255,0.25);font-size:0.75rem">' + it.hora + '</span>' : '')
-              + (it.obs ? '<span style="color:rgba(255,255,255,0.4);font-style:italic">' + esc(it.obs) + '</span>' : '')
-              + '</div>';
-          }).join(''))
-        + '</div>';
-    }).join('');
-  }).catch(function() {
-    el.innerHTML = '<div style="font-size:0.82rem;color:rgba(255,255,255,0.2)">Error al cargar historial</div>';
+  var registros = [];
+  ['arrancada','cierre'].forEach(function(tipo) {
+    if (data[tipo] && data[tipo].items) registros.push(data[tipo]);
   });
+  if (!registros.length) {
+    el.innerHTML = '<div style="font-size:0.82rem;color:rgba(255,255,255,0.2);padding:8px 0">Sin registros para este día</div>';
+    return;
+  }
+  el.innerHTML = registros.map(function(r) {
+    var esArr = r.tipo === 'arrancada';
+    var hora = r.ts ? new Date(r.ts).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}) : (r.hora || '');
+    var itemsDone = (r.items||[]).filter(function(it){ return it.done; });
+    var total = (r.items||[]).length;
+    var pct = total ? Math.round(itemsDone.length/total*100) : 0;
+    return '<div class="hist-card">'
+      + '<div class="hist-card-header">'
+      + '<span class="hist-badge ' + (esArr?'arr':'cie') + '">' + (esArr?'▶ ARRANCADA':'■ CIERRE') + '</span>'
+      + '<span class="hist-ts">' + itemsDone.length + '/' + total + ' (' + pct + '%)</span>'
+      + (hora ? '<span class="hist-ts">· ' + hora + '</span>' : '')
+      + (r.guardadoPor ? '<span class="hist-ts">· ' + esc(r.guardadoPor) + '</span>' : '')
+      + '</div>'
+      + (itemsDone.length === 0 ? '<div style="font-size:0.82rem;color:rgba(255,255,255,0.25)">Sin ítems marcados</div>' :
+        itemsDone.map(function(it) {
+          return '<div class="hist-item">'
+            + '<span class="check-icon">✓</span>'
+            + '<span>' + esc(it.label) + '</span>'
+            + (it.mecanico ? '<span class="mec-tag">' + esc(it.mecanico) + '</span>' : '')
+            + (it.hora ? '<span style="color:rgba(255,255,255,0.25);font-size:0.75rem">' + it.hora + '</span>' : '')
+            + (it.obs ? '<span style="color:rgba(255,255,255,0.4);font-style:italic">' + esc(it.obs) + '</span>' : '')
+            + '</div>';
+        }).join(''))
+      + '</div>';
+  }).join('');
 }
 
 // ── Toast ─────────────────────────────────────────────────────
@@ -589,7 +646,7 @@ function mostrarToast(msg, esError) {
 // ── Init ──────────────────────────────────────────────────────
 renderLista(ITEMS_ARR, stateArr, 'listArr', 'countArr', 'arrancada');
 renderLista(ITEMS_CIE, stateCie, 'listCie', 'countCie', 'cierre');
-cargarHistorial();
+cargarRegistrosDelDia();
 </script>
 </body>
 </html>
