@@ -2986,7 +2986,7 @@ function _buildMatrixData(mes, turnos, tareasMap){
   var activeDaysList = Object.keys(activeDays).sort();
 
   // Group by machine
-  var MAQUINAS_SIN_PREV = ['CONDENSADORES ELECTRICOS','CUADROS GENERALES','REFINADORA','OTROS','HORNOS CLIENTES'];
+  var MAQUINAS_SIN_PREV = ['CONDENSADORES ELECTRICOS','CUADROS GENERALES','REFINADORA','OTROS','HORNOS CLIENTES','MAQ-144','MAQ-145','MAQ-150','MAQ-160','MAQ-161'];
   var maqMap = {};
   Object.keys(taskMeta).forEach(function(id){
     var maq = taskMeta[id].maquina;
