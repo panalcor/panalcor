@@ -2986,9 +2986,11 @@ function _buildMatrixData(mes, turnos, tareasMap){
   var activeDaysList = Object.keys(activeDays).sort();
 
   // Group by machine
+  var MAQUINAS_SIN_PREV = ['CONDENSADORES ELECTRICOS','CUADROS GENERALES','REFINADORA','OTROS','HORNOS CLIENTES'];
   var maqMap = {};
   Object.keys(taskMeta).forEach(function(id){
     var maq = taskMeta[id].maquina;
+    if(MAQUINAS_SIN_PREV.indexOf(maq) !== -1) return;
     if(!maqMap[maq]) maqMap[maq] = [];
     maqMap[maq].push(id);
   });
