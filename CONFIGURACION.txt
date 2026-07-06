@@ -1,0 +1,60 @@
+═══════════════════════════════════════════════════════════
+  PANALCOR S.L. — GESTION 3.0 — CONFIGURACIÓN DEL SISTEMA
+  Copia de seguridad: 2026-07-07
+═══════════════════════════════════════════════════════════
+
+── GITHUB ─────────────────────────────────────────────────
+  Repositorio : https://github.com/panalcor/panalcor.git
+  GitHub Pages: https://panalcor.github.io/panalcor
+  Usuario     : panalcor
+  Rama        : main
+
+── FIREBASE ───────────────────────────────────────────────
+  Proyecto    : panalcor-mantenimiento
+  Consola     : https://console.firebase.google.com/project/panalcor-mantenimiento
+
+  Configuración (firebaseConfig):
+    apiKey            : AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU
+    authDomain        : panalcor-mantenimiento.firebaseapp.com
+    databaseURL       : https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app
+    projectId         : panalcor-mantenimiento
+    storageBucket     : panalcor-mantenimiento.firebasestorage.app
+    messagingSenderId : 67593058609
+    appId             : 1:67593058609:web:c33fa1fa4fce2932485810
+
+  Base de datos: Realtime Database (RTDB) — región Europe West 1
+
+  Nodos principales en Firebase:
+    /preventivos          → Registros diarios de preventivos por turno
+    /asignaciones         → Tareas asignadas por mes
+    /catalogo             → Catálogo de tareas preventivas
+    /averias              → Registro de averías
+    /arrancada_cierre     → Checklists diarios de arrancada y cierre
+    /config/mecanicos_pwd → Lista de mecánicos y contraseñas
+    /maquinas_extra       → Máquinas añadidas dinámicamente
+    /repuestos            → Base de datos de repuestos
+
+── SERVIDOR LOCAL ─────────────────────────────────────────
+  Tecnología  : Python (servidor HTTP simple)
+  Puerto      : 8080
+  Directorio  : C:\Users\fjha_\Downloads\GESTION 3.0
+
+── ARCHIVOS PRINCIPALES ───────────────────────────────────
+  panalcor_inicio.html   → Pantalla de inicio / selector de rol
+  admin.html             → Panel de administración completo
+  averias.html           → Registro y gestión de averías
+  plan_preventivo.html   → Plan de mantenimiento preventivo
+  encargados.html        → Vista para encargados de planta
+  maquinas_admin.html    → Fichas de máquinas
+  arrancada_cierre.html  → Checklist diario arrancada/cierre
+  mecanicos.html         → Vista para mecánicos
+  qr_maquinas.html       → Generador de QR por máquina
+  legionela.html         → Control de legionela
+
+── NOTAS ──────────────────────────────────────────────────
+  - El sistema funciona tanto en servidor local como en GitHub Pages
+  - Las contraseñas de mecánicos están en Firebase /config/mecanicos_pwd
+  - El admin accede con la contraseña maestra definida en admin.html
+  - Los QR enlazan a la URL base configurada en qr_maquinas.html
+
+═══════════════════════════════════════════════════════════

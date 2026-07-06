@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preventivos Externos — PANALCOR</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Barlow:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --navy: #1e2b3a;
+  --navy-deep: #131d28;
+  --navy-mid: #1a2d42;
+  --gold: #c9a227;
+  --red: #e74c3c;
+  --orange: #e67e22;
+  --green: #27ae60;
+  --blue: #3a7abf;
+}
+html, body { min-height: 100%; font-family: 'Barlow', sans-serif; background: var(--navy-deep); color: #fff; }
+body { padding-bottom: 60px; }
+
+.header {
+  background: linear-gradient(135deg, #0d1b2a, #1a2d42);
+  border-bottom: 3px solid var(--gold);
+  padding: 14px 20px;
+  display: flex; align-items: center; gap: 14px;
+  position: sticky; top: 0; z-index: 100;
+}
+.header-back {
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.7); border-radius: 8px; padding: 7px 14px;
+  cursor: pointer; font-family: 'Barlow', sans-serif; font-size: 0.85rem;
+  text-decoration: none; transition: all .2s; white-space: nowrap;
+}
+.header-back:hover { background: rgba(255,255,255,0.14); color: #fff; }
+.header-title { flex: 1; }
+.header-title h1 { font-family: 'Oswald', sans-serif; font-size: 1.3rem; color: var(--gold); letter-spacing: .05em; }
+.header-title p { font-size: 0.78rem; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+.container { max-width: 1100px; margin: 0 auto; padding: 20px 16px; }
+
+/* KPIs */
+.kpis { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+.kpi { flex: 1; min-width: 130px; background: var(--navy-mid); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px; padding: 14px 16px; text-align: center; }
+.kpi-num { font-family: 'Oswald', sans-serif; font-size: 2rem; font-weight: 700; line-height: 1; }
+.kpi-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .08em; color: rgba(255,255,255,0.5); margin-top: 4px; }
+.kpi.red .kpi-num { color: var(--red); }
+.kpi.orange .kpi-num { color: var(--orange); }
+.kpi.green .kpi-num { color: var(--green); }
+
+/* Alertas */
+#alertasBanner { margin-bottom: 16px; }
+.alerta-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+  border-radius: 8px; margin-bottom: 8px; font-size: 0.88rem; }
+.alerta-item.vencido { background: rgba(231,76,60,0.15); border: 1px solid rgba(231,76,60,0.4); }
+.alerta-item.proximo { background: rgba(230,126,34,0.15); border: 1px solid rgba(230,126,34,0.4); }
+.alerta-icon { font-size: 1.2rem; }
+
+/* Toolbar */
+.toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.btn-add { background: var(--gold); color: #0d1b2a; border: none; border-radius: 8px;
+  padding: 9px 18px; font-family: 'Barlow', sans-serif; font-weight: 700; font-size: 0.9rem;
+  cursor: pointer; transition: opacity .2s; }
+.btn-add:hover { opacity: 0.85; }
+.search-box { flex: 1; min-width: 180px; background: var(--navy-mid); border: 1px solid rgba(255,255,255,0.15);
+  color: #fff; border-radius: 8px; padding: 8px 12px; font-family: 'Barlow', sans-serif; font-size: 0.9rem; }
+.search-box::placeholder { color: rgba(255,255,255,0.35); }
+.filter-sel { background: var(--navy-mid); border: 1px solid rgba(255,255,255,0.15);
+  color: #fff; border-radius: 8px; padding: 8px 10px; font-family: 'Barlow', sans-serif; font-size: 0.85rem; cursor: pointer; }
+
+/* Tabla */
+.table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); }
+table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+thead { background: #0d1b2a; }
+th { padding: 10px 12px; text-align: left; color: var(--gold); font-size: 0.72rem;
+  text-transform: uppercase; letter-spacing: .08em; white-space: nowrap; border-bottom: 2px solid rgba(201,162,39,0.3); }
+tbody tr { border-bottom: 1px solid rgba(255,255,255,0.06); transition: background .15s; }
+tbody tr:hover { background: rgba(255,255,255,0.04); }
+td { padding: 10px 12px; vertical-align: middle; }
+
+.badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px;
+  border-radius: 20px; font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
+.badge.verde { background: rgba(39,174,96,0.2); color: #2ecc71; border: 1px solid rgba(39,174,96,0.4); }
+.badge.naranja { background: rgba(230,126,34,0.2); color: #f39c12; border: 1px solid rgba(230,126,34,0.4); }
+.badge.rojo { background: rgba(231,76,60,0.2); color: #e74c3c; border: 1px solid rgba(231,76,60,0.4); }
+
+.btn-edit { background: rgba(58,122,191,0.2); border: 1px solid rgba(58,122,191,0.4);
+  color: #5b9bd5; border-radius: 6px; padding: 4px 10px; cursor: pointer;
+  font-family: 'Barlow', sans-serif; font-size: 0.78rem; transition: all .2s; }
+.btn-edit:hover { background: rgba(58,122,191,0.35); }
+.btn-del { background: rgba(231,76,60,0.15); border: 1px solid rgba(231,76,60,0.3);
+  color: #e74c3c; border-radius: 6px; padding: 4px 10px; cursor: pointer;
+  font-family: 'Barlow', sans-serif; font-size: 0.78rem; transition: all .2s; margin-left: 4px; }
+.btn-del:hover { background: rgba(231,76,60,0.3); }
+
+.empty { text-align: center; padding: 40px; color: rgba(255,255,255,0.3); font-size: 0.9rem; }
+
+/* Modal */
+.modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+  z-index: 200; align-items: center; justify-content: center; padding: 16px; }
+.modal-bg.open { display: flex; }
+.modal { background: linear-gradient(160deg, #111f30, #0d1b2a);
+  border: 1px solid rgba(201,162,39,0.3); border-radius: 14px;
+  padding: 24px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; }
+.modal h2 { font-family: 'Oswald', sans-serif; color: var(--gold); font-size: 1.2rem; margin-bottom: 18px; }
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 0.78rem; text-transform: uppercase;
+  letter-spacing: .06em; color: rgba(255,255,255,0.5); margin-bottom: 5px; }
+.field input, .field select, .field textarea {
+  width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15);
+  color: #fff; border-radius: 8px; padding: 9px 12px;
+  font-family: 'Barlow', sans-serif; font-size: 0.9rem; }
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none; border-color: var(--gold); }
+.field select option { background: #1a2d42; }
+.field-row { display: flex; gap: 10px; }
+.field-row .field { flex: 1; }
+.modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+.btn-cancel { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.7); border-radius: 8px; padding: 9px 18px;
+  cursor: pointer; font-family: 'Barlow', sans-serif; font-size: 0.9rem; }
+.btn-save { background: var(--gold); color: #0d1b2a; border: none; border-radius: 8px;
+  padding: 9px 22px; font-family: 'Barlow', sans-serif; font-weight: 700; font-size: 0.9rem; cursor: pointer; }
+.btn-save:hover { opacity: 0.85; }
+
+/* Registrar visita */
+.btn-visita { background: rgba(39,174,96,0.2); border: 1px solid rgba(39,174,96,0.4);
+  color: #2ecc71; border-radius: 6px; padding: 4px 10px; cursor: pointer;
+  font-family: 'Barlow', sans-serif; font-size: 0.78rem; margin-left: 4px; transition: all .2s; }
+.btn-visita:hover { background: rgba(39,174,96,0.35); }
+
+@media(max-width:600px){
+  th:nth-child(4), td:nth-child(4),
+  th:nth-child(5), td:nth-child(5) { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a class="header-back" href="panalcor_inicio.html">← Inicio</a>
+  <div class="header-title">
+    <h1>🏭 Preventivos Externos</h1>
+    <p>Contratos y revisiones periódicas con empresas externas</p>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- KPIs -->
+  <div class="kpis">
+    <div class="kpi red"><div class="kpi-num" id="kpiVencidos">0</div><div class="kpi-label">Vencidos</div></div>
+    <div class="kpi orange"><div class="kpi-num" id="kpiProximos">0</div><div class="kpi-label">Próximos</div></div>
+    <div class="kpi green"><div class="kpi-num" id="kpiOk">0</div><div class="kpi-label">Al día</div></div>
+    <div class="kpi" style="border-color:rgba(201,162,39,0.3)"><div class="kpi-num" style="color:var(--gold)" id="kpiTotal">0</div><div class="kpi-label">Total servicios</div></div>
+  </div>
+
+  <!-- Alertas -->
+  <div id="alertasBanner"></div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <button class="btn-add" id="btnAdd" style="display:none" onclick="abrirModal()">+ Añadir servicio</button>
+    <input class="search-box" type="text" id="searchBox" placeholder="Buscar servicio, empresa..." oninput="renderTabla()">
+    <select class="filter-sel" id="filtroEstado" onchange="renderTabla()">
+      <option value="">Todos los estados</option>
+      <option value="vencido">🔴 Vencidos</option>
+      <option value="proximo">🟡 Próximos</option>
+      <option value="ok">🟢 Al día</option>
+    </select>
+  </div>
+
+  <!-- Tabla -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Estado</th>
+          <th>Servicio</th>
+          <th>Empresa</th>
+          <th>Periodicidad</th>
+          <th>Última revisión</th>
+          <th>Próxima revisión</th>
+          <th>Días restantes</th>
+          <th id="colAcciones" style="display:none">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tablaBody">
+        <tr><td colspan="8" class="empty">Cargando...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal añadir/editar -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h2 id="modalTitulo">Nuevo servicio externo</h2>
+    <input type="hidden" id="editId">
+
+    <div class="field">
+      <label>Nombre del servicio *</label>
+      <input type="text" id="fNombre" placeholder="Ej: Extintores, Ascensor, Legionela...">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Periodicidad *</label>
+        <input type="number" id="fPeriodo" min="1" placeholder="Ej: 6">
+      </div>
+      <div class="field">
+        <label>Unidad</label>
+        <select id="fUnidad">
+          <option value="meses">Meses</option>
+          <option value="años">Años</option>
+          <option value="semanas">Semanas</option>
+          <option value="dias">Días</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Empresa que realiza el servicio</label>
+      <input type="text" id="fEmpresa" placeholder="Nombre de la empresa">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Teléfono empresa</label>
+        <input type="tel" id="fTelefono" placeholder="Teléfono">
+      </div>
+      <div class="field">
+        <label>Avisar con (días antes)</label>
+        <input type="number" id="fDiasAviso" min="1" value="30" placeholder="30">
+      </div>
+    </div>
+    <div class="field">
+      <label>Fecha última revisión *</label>
+      <input type="date" id="fUltimaFecha">
+    </div>
+    <div class="field">
+      <label>Notas</label>
+      <textarea id="fNotas" rows="2" placeholder="Observaciones, nº contrato, referencia..."></textarea>
+    </div>
+
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-save" onclick="guardar()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal registrar visita -->
+<div class="modal-bg" id="modalVisitaBg">
+  <div class="modal" style="max-width:400px">
+    <h2>✅ Registrar revisión</h2>
+    <input type="hidden" id="visitaId">
+    <div class="field">
+      <label>Servicio</label>
+      <input type="text" id="visitaNombre" readonly style="opacity:.6">
+    </div>
+    <div class="field">
+      <label>Fecha de la revisión *</label>
+      <input type="date" id="visitaFecha">
+    </div>
+    <div class="field">
+      <label>Empresa que realizó la visita</label>
+      <input type="text" id="visitaEmpresa" placeholder="Empresa">
+    </div>
+    <div class="field">
+      <label>Notas / Observaciones</label>
+      <textarea id="visitaNotas" rows="2" placeholder="Todo correcto, incidencias..."></textarea>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="cerrarVisita()">Cancelar</button>
+      <button class="btn-save" onclick="guardarVisita()">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Firebase ──
+var firebaseConfig = {
+  apiKey:            "AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU",
+  authDomain:        "panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:       "https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:         "panalcor-mantenimiento",
+  storageBucket:     "panalcor-mantenimiento.firebasestorage.app",
+  messagingSenderId: "67593058609",
+  appId:             "1:67593058609:web:c33fa1fa4fce2932485810"
+};
+firebase.initializeApp(firebaseConfig);
+var DB = firebase.database();
+
+// ── Sesión ──
+var esAdmin = false;
+try {
+  var _s = JSON.parse(localStorage.getItem('panalcor_session') || 'null');
+  if (_s && _s.rol === 'admin') esAdmin = true;
+} catch(e){}
+
+if (esAdmin) {
+  document.getElementById('btnAdd').style.display = '';
+  document.getElementById('colAcciones').style.display = '';
+}
+
+// ── Datos ──
+var SERVICIOS = {};
+
+DB.ref('preventivos_externos').on('value', function(snap) {
+  SERVICIOS = snap.val() || {};
+  renderTabla();
+  renderAlertas();
+});
+
+// ── Calcular próxima fecha ──
+function proximaFecha(ultimaFecha, periodo, unidad) {
+  if (!ultimaFecha) return null;
+  var d = new Date(ultimaFecha);
+  switch(unidad) {
+    case 'dias':    d.setDate(d.getDate() + parseInt(periodo)); break;
+    case 'semanas': d.setDate(d.getDate() + parseInt(periodo) * 7); break;
+    case 'meses':   d.setMonth(d.getMonth() + parseInt(periodo)); break;
+    case 'años':    d.setFullYear(d.getFullYear() + parseInt(periodo)); break;
+  }
+  return d;
+}
+
+function diasRestantes(proximaD) {
+  if (!proximaD) return null;
+  var hoy = new Date(); hoy.setHours(0,0,0,0);
+  var diff = Math.round((proximaD - hoy) / 86400000);
+  return diff;
+}
+
+function estadoServicio(item) {
+  var prox = proximaFecha(item.ultima_fecha, item.periodo, item.unidad);
+  var dias = diasRestantes(prox);
+  if (dias === null) return 'sin-fecha';
+  if (dias < 0) return 'vencido';
+  if (dias <= (parseInt(item.dias_aviso) || 30)) return 'proximo';
+  return 'ok';
+}
+
+function fmtFecha(str) {
+  if (!str) return '—';
+  var p = str.split('-');
+  return p[2] + '/' + p[1] + '/' + p[0];
+}
+
+function fmtProxima(item) {
+  var prox = proximaFecha(item.ultima_fecha, item.periodo, item.unidad);
+  if (!prox) return '—';
+  var y = prox.getFullYear(), m = String(prox.getMonth()+1).padStart(2,'0'), d = String(prox.getDate()).padStart(2,'0');
+  return d + '/' + m + '/' + y;
+}
+
+// ── Render tabla ──
+function renderTabla() {
+  var q = (document.getElementById('searchBox').value || '').toLowerCase();
+  var filtroE = document.getElementById('filtroEstado').value;
+  var tbody = document.getElementById('tablaBody');
+
+  var items = Object.entries(SERVICIOS).map(function(e) { return Object.assign({_id: e[0]}, e[1]); });
+  items.sort(function(a,b) {
+    var ea = estadoServicio(a), eb = estadoServicio(b);
+    var ord = {vencido:0, proximo:1, ok:2, 'sin-fecha':3};
+    return (ord[ea]||3) - (ord[eb]||3);
+  });
+
+  // KPIs
+  var v=0, p=0, ok=0;
+  items.forEach(function(it) {
+    var e = estadoServicio(it);
+    if(e==='vencido') v++;
+    else if(e==='proximo') p++;
+    else if(e==='ok') ok++;
+  });
+  document.getElementById('kpiVencidos').textContent = v;
+  document.getElementById('kpiProximos').textContent = p;
+  document.getElementById('kpiOk').textContent = ok;
+  document.getElementById('kpiTotal').textContent = items.length;
+
+  // Filtros
+  if (q) items = items.filter(function(it) {
+    return (it.nombre||'').toLowerCase().includes(q) || (it.empresa||'').toLowerCase().includes(q);
+  });
+  if (filtroE) items = items.filter(function(it) { return estadoServicio(it) === filtroE; });
+
+  if (!items.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">Sin resultados</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = items.map(function(it) {
+    var est = estadoServicio(it);
+    var dias = diasRestantes(proximaFecha(it.ultima_fecha, it.periodo, it.unidad));
+    var badge, diasTxt;
+    if (est === 'vencido') {
+      badge = '<span class="badge rojo">🔴 VENCIDO</span>';
+      diasTxt = '<span style="color:#e74c3c;font-weight:700">' + Math.abs(dias) + ' días venció</span>';
+    } else if (est === 'proximo') {
+      badge = '<span class="badge naranja">🟡 PRÓXIMO</span>';
+      diasTxt = '<span style="color:#f39c12;font-weight:700">' + dias + ' días</span>';
+    } else if (est === 'ok') {
+      badge = '<span class="badge verde">🟢 OK</span>';
+      diasTxt = '<span style="color:#2ecc71">' + dias + ' días</span>';
+    } else {
+      badge = '<span class="badge" style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.4)">Sin fecha</span>';
+      diasTxt = '—';
+    }
+    var acciones = esAdmin
+      ? '<button class="btn-visita" onclick="abrirVisita(\''+it._id+'\')">✅ Registrar</button>'
+        + '<button class="btn-edit" onclick="abrirEditar(\''+it._id+'\')">✏️ Editar</button>'
+        + '<button class="btn-del" onclick="eliminar(\''+it._id+'\',\''+escH(it.nombre||'')+'\')">🗑️</button>'
+      : '';
+    return '<tr>'
+      + '<td>' + badge + '</td>'
+      + '<td><div style="font-weight:600">' + escH(it.nombre||'') + '</div>'
+        + (it.notas ? '<div style="font-size:0.75rem;color:rgba(255,255,255,0.4);margin-top:2px">' + escH(it.notas) + '</div>' : '') + '</td>'
+      + '<td>' + (it.empresa ? '<div>' + escH(it.empresa) + '</div>' + (it.telefono ? '<div style="font-size:0.75rem;color:rgba(255,255,255,0.4)">' + escH(it.telefono) + '</div>' : '') : '—') + '</td>'
+      + '<td>Cada ' + (it.periodo||'?') + ' ' + (it.unidad||'') + '</td>'
+      + '<td>' + fmtFecha(it.ultima_fecha) + '</td>'
+      + '<td>' + fmtProxima(it) + '</td>'
+      + '<td>' + diasTxt + '</td>'
+      + '<td>' + acciones + '</td>'
+      + '</tr>';
+  }).join('');
+}
+
+// ── Alertas banner ──
+function renderAlertas() {
+  var items = Object.entries(SERVICIOS).map(function(e){ return Object.assign({_id:e[0]},e[1]); });
+  var alertas = items.filter(function(it){ var e=estadoServicio(it); return e==='vencido'||e==='proximo'; });
+  var banner = document.getElementById('alertasBanner');
+  if (!alertas.length) { banner.innerHTML=''; return; }
+  banner.innerHTML = alertas.map(function(it){
+    var est = estadoServicio(it);
+    var dias = diasRestantes(proximaFecha(it.ultima_fecha, it.periodo, it.unidad));
+    var cls = est === 'vencido' ? 'vencido' : 'proximo';
+    var ico = est === 'vencido' ? '🚨' : '⚠️';
+    var msg = est === 'vencido'
+      ? '<b>' + escH(it.nombre||'') + '</b> — VENCIDO hace ' + Math.abs(dias) + ' días' + (it.empresa ? ' · ' + escH(it.empresa) : '')
+      : '<b>' + escH(it.nombre||'') + '</b> — vence en ' + dias + ' días' + (it.empresa ? ' · ' + escH(it.empresa) : '');
+    return '<div class="alerta-item ' + cls + '"><span class="alerta-icon">' + ico + '</span><span>' + msg + '</span></div>';
+  }).join('');
+}
+
+function escH(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── Modal añadir/editar ──
+function abrirModal(id) {
+  document.getElementById('editId').value = id || '';
+  document.getElementById('modalTitulo').textContent = id ? 'Editar servicio' : 'Nuevo servicio externo';
+  if (id && SERVICIOS[id]) {
+    var it = SERVICIOS[id];
+    document.getElementById('fNombre').value = it.nombre || '';
+    document.getElementById('fPeriodo').value = it.periodo || '';
+    document.getElementById('fUnidad').value = it.unidad || 'meses';
+    document.getElementById('fEmpresa').value = it.empresa || '';
+    document.getElementById('fTelefono').value = it.telefono || '';
+    document.getElementById('fDiasAviso').value = it.dias_aviso || 30;
+    document.getElementById('fUltimaFecha').value = it.ultima_fecha || '';
+    document.getElementById('fNotas').value = it.notas || '';
+  } else {
+    document.getElementById('fNombre').value = '';
+    document.getElementById('fPeriodo').value = '';
+    document.getElementById('fUnidad').value = 'meses';
+    document.getElementById('fEmpresa').value = '';
+    document.getElementById('fTelefono').value = '';
+    document.getElementById('fDiasAviso').value = 30;
+    document.getElementById('fUltimaFecha').value = '';
+    document.getElementById('fNotas').value = '';
+  }
+  document.getElementById('modalBg').classList.add('open');
+}
+
+function abrirEditar(id) { abrirModal(id); }
+
+function cerrarModal() { document.getElementById('modalBg').classList.remove('open'); }
+
+function guardar() {
+  var nombre = document.getElementById('fNombre').value.trim();
+  var periodo = document.getElementById('fPeriodo').value.trim();
+  var fecha = document.getElementById('fUltimaFecha').value;
+  if (!nombre || !periodo || !fecha) { alert('Rellena los campos obligatorios (*)'); return; }
+
+  var obj = {
+    nombre: nombre,
+    periodo: parseInt(periodo),
+    unidad: document.getElementById('fUnidad').value,
+    empresa: document.getElementById('fEmpresa').value.trim(),
+    telefono: document.getElementById('fTelefono').value.trim(),
+    dias_aviso: parseInt(document.getElementById('fDiasAviso').value) || 30,
+    ultima_fecha: fecha,
+    notas: document.getElementById('fNotas').value.trim(),
+    actualizado: new Date().toISOString()
+  };
+
+  var id = document.getElementById('editId').value;
+  var ref = id ? DB.ref('preventivos_externos/' + id) : DB.ref('preventivos_externos').push();
+  ref.set(obj).then(function() { cerrarModal(); }).catch(function(e){ alert('Error al guardar: ' + e.message); });
+}
+
+function eliminar(id, nombre) {
+  if (!confirm('¿Eliminar "' + nombre + '"?')) return;
+  DB.ref('preventivos_externos/' + id).remove();
+}
+
+// ── Modal registrar visita ──
+function abrirVisita(id) {
+  var it = SERVICIOS[id] || {};
+  document.getElementById('visitaId').value = id;
+  document.getElementById('visitaNombre').value = it.nombre || '';
+  document.getElementById('visitaFecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('visitaEmpresa').value = it.empresa || '';
+  document.getElementById('visitaNotas').value = '';
+  document.getElementById('modalVisitaBg').classList.add('open');
+}
+
+function cerrarVisita() { document.getElementById('modalVisitaBg').classList.remove('open'); }
+
+function guardarVisita() {
+  var id = document.getElementById('visitaId').value;
+  var fecha = document.getElementById('visitaFecha').value;
+  if (!fecha) { alert('Indica la fecha de la revisión'); return; }
+
+  // Actualizar última fecha y guardar historial
+  var empresa = document.getElementById('visitaEmpresa').value.trim();
+  var notas = document.getElementById('visitaNotas').value.trim();
+
+  var updates = {};
+  updates['preventivos_externos/' + id + '/ultima_fecha'] = fecha;
+  updates['preventivos_externos/' + id + '/actualizado'] = new Date().toISOString();
+  if (empresa) updates['preventivos_externos/' + id + '/empresa'] = empresa;
+
+  // Historial de visitas
+  var hKey = DB.ref('preventivos_externos/' + id + '/historial').push().key;
+  updates['preventivos_externos/' + id + '/historial/' + hKey] = {
+    fecha: fecha, empresa: empresa, notas: notas
+  };
+
+  DB.ref().update(updates).then(function(){ cerrarVisita(); }).catch(function(e){ alert('Error: ' + e.message); });
+}
+
+// Cerrar modales al hacer clic fuera
+document.getElementById('modalBg').addEventListener('click', function(e){ if(e.target===this) cerrarModal(); });
+document.getElementById('modalVisitaBg').addEventListener('click', function(e){ if(e.target===this) cerrarVisita(); });
+</script>
+</body>
+</html>
