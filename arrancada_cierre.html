@@ -125,7 +125,8 @@ body { padding-bottom: 40px; }
   transition: border-color .15s;
 }
 .field-inp:focus { border-color: rgba(201,162,39,0.6); }
-.field-inp.mec-inp { width: 150px; }
+.field-inp.mec-inp { width: 160px; }
+.field-inp option { background: #1a2d42; color: #fff; }
 .field-inp.obs-inp { flex: 1; min-width: 120px; }
 .field-hora { font-size: 0.72rem; color: rgba(255,255,255,0.3); padding: 6px 0; align-self: center; white-space: nowrap; }
 
@@ -264,6 +265,16 @@ var FB_CFG = {
 };
 if (!firebase.apps.length) firebase.initializeApp(FB_CFG);
 var DB = firebase.database();
+
+// ── Mecánicos ─────────────────────────────────────────────────
+var MECANICOS = [];
+DB.ref('config/mecanicos_pwd').once('value').then(function(snap) {
+  var data = snap.val() || {};
+  MECANICOS = Object.keys(data).sort();
+  // Re-render para que los selects tengan las opciones
+  renderLista(ITEMS_ARR, stateArr, 'listArr', 'countArr', 'arrancada');
+  renderLista(ITEMS_CIE, stateCie, 'listCie', 'countCie', 'cierre');
+}).catch(function(){});
 
 var ITEMS_ARR_DEFAULT = [
   'LIMPIEZA MÁQUINA DE CAJAS',
@@ -423,6 +434,18 @@ function showTab(tab) {
   else document.querySelector('.tab-cie').classList.add('active');
 }
 
+// ── Desplegable mecánicos ─────────────────────────────────────
+function selMecanico(tipo, i, val) {
+  var opts = '<option value="">— Mecánico —</option>'
+    + MECANICOS.map(function(m) {
+        return '<option value="' + esc(m) + '"' + (m === val ? ' selected' : '') + '>' + esc(m) + '</option>';
+      }).join('');
+  if (val && MECANICOS.indexOf(val) === -1) {
+    opts += '<option value="' + esc(val) + '" selected>' + esc(val) + '</option>';
+  }
+  return '<select class="field-inp mec-inp" onchange="updateField(\'' + tipo + '\',' + i + ',\'mecanico\',this.value)" style="cursor:pointer">' + opts + '</select>';
+}
+
 // ── Render ────────────────────────────────────────────────────
 function renderLista(items, state, containerId, countId, tipo) {
   var el = document.getElementById(containerId);
@@ -437,8 +460,7 @@ function renderLista(items, state, containerId, countId, tipo) {
       + '<div class="item-num">ÍTEM ' + (i+1) + '</div>'
       + '<div class="item-label">' + esc(label) + '</div>'
       + '<div class="item-fields">'
-      + '<input class="field-inp mec-inp" type="text" placeholder="Mecánico" value="' + esc(s.mecanico) + '" '
-      + 'oninput="updateField(\'' + tipo + '\',' + i + ',\'mecanico\',this.value)">'
+      + selMecanico(tipo, i, s.mecanico)
       + '<input class="field-inp obs-inp" type="text" placeholder="Observaciones (opcional)" value="' + esc(s.obs) + '" '
       + 'oninput="updateField(\'' + tipo + '\',' + i + ',\'obs\',this.value)">'
       + (s.hora ? '<span class="field-hora">🕐 ' + s.hora + '</span>' : '')
