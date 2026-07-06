@@ -3008,9 +3008,7 @@ function _buildAChtml(acData, mesLabel){
       });
     });
   });
-  if(!registros.length) return '';
-
-  registros.sort(function(a,b){ return (a.fecha+a.hora||'') < (b.fecha+b.hora||'') ? -1 : 1; });
+  registros.sort(function(a,b){ return (a.fecha+(a.hora||'')) < (b.fecha+(b.hora||'')) ? -1 : 1; });
 
   var rows = registros.map(function(r){
     var items = r.items || [];
@@ -3038,6 +3036,9 @@ function _buildAChtml(acData, mesLabel){
       +'</tr>';
   }).join('');
 
+  var tbody = registros.length ? rows
+    : '<tr><td colspan="7" style="padding:10px;text-align:center;color:#aaa;font-style:italic">Sin registros de arrancada/cierre para este mes</td></tr>';
+
   return '<div style="margin-top:18px;page-break-before:auto">'
     +'<div style="background:#0d1b2a;color:#e67e22;font-weight:900;font-size:12px;letter-spacing:.08em;padding:8px 12px;border-radius:5px 5px 0 0">🔧 ARRANCADA / CIERRE — '+mesLabel.toUpperCase()+'</div>'
     +'<table style="width:100%;border-collapse:collapse;font-size:10px">'
@@ -3049,7 +3050,7 @@ function _buildAChtml(acData, mesLabel){
     +'<th style="padding:5px 8px;border:1px solid #2a3d52;text-align:center">ÍTEMS</th>'
     +'<th style="padding:5px 8px;border:1px solid #2a3d52;text-align:left">MECÁNICOS</th>'
     +'<th style="padding:5px 8px;border:1px solid #2a3d52;text-align:left">GUARDADO POR</th>'
-    +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
+    +'</tr></thead><tbody>'+tbody+'</tbody></table></div>';
 }
 
 function _generarExcelMensual(mes, mesLabel, turnos, tareasMap, acData){
@@ -3177,11 +3178,13 @@ function verInformeDiarioMensual(){
   if(info) info.textContent = 'Cargando...';
   Promise.all([
     DB.ref('registros_turno').once('value'),
-    DB.ref('tareas_diarias').once('value')
+    DB.ref('tareas_diarias').once('value'),
+    DB.ref('arrancada_cierre').orderByKey().startAt(mes+'-01').endAt(mes+'-31').once('value').catch(function(){ return {val:function(){return {};}}; })
   ]).then(function(snaps){
     var fbTurnos = snaps[0].val() || {};
     var tareasMap = {};
     Object.values(snaps[1].val() || {}).forEach(function(t){ tareasMap[t.id] = t; });
+    var acData = (snaps[2] && typeof snaps[2].val === 'function') ? (snaps[2].val() || {}) : {};
     var seenKeys = {};
     var allTurnos = Object.values(fbTurnos).filter(function(r){
       if(!r.fecha || !r.fecha.startsWith(mes)) return false;
@@ -3195,15 +3198,15 @@ function verInformeDiarioMensual(){
     });
     if(!allTurnos.length){ if(info) info.textContent='Sin registros'; showToast('Sin datos para ese mes'); return; }
     if(info) info.textContent = allTurnos.length+' turnos';
-    _abrirInformeDiario(mes, mesLabel, allTurnos, tareasMap);
+    _abrirInformeDiario(mes, mesLabel, allTurnos, tareasMap, acData);
   }).catch(function(){
     var allTurnos = getTurnos().filter(function(r){ return r.fecha && r.fecha.startsWith(mes); });
     if(!allTurnos.length){ showToast('Sin datos'); return; }
-    _abrirInformeDiario(mes, mesLabel, allTurnos, {});
+    _abrirInformeDiario(mes, mesLabel, allTurnos, {}, {});
   });
 }
 
-function _abrirInformeDiario(mes, mesLabel, turnos, tareasMap){
+function _abrirInformeDiario(mes, mesLabel, turnos, tareasMap, acData){
   var d = _buildMatrixData(mes, turnos, tareasMap);
   var diasMes=d.diasMes, TURNOS=d.TURNOS, matrix=d.matrix, taskMeta=d.taskMeta, maqMap=d.maqMap;
   var SIGLAS=['N','M','T'];
@@ -3309,7 +3312,7 @@ function _abrirInformeDiario(mes, mesLabel, turnos, tareasMap){
     +dayHeaders+'</tr>'
     +'<tr style="background:#0a1520">'+turnoColHeaders+'</tr>'
     +'</thead><tbody>'+sectionsHTML+'</tbody></table></div>'
-    +(typeof acData !== 'undefined' ? _buildAChtml(acData, mesLabel) : '')
+    +_buildAChtml(acData, mesLabel)
     +'<div style="margin-top:10px;border-top:1px solid #eee;padding-top:5px;font-size:9px;color:#aaa;display:flex;justify-content:space-between">'
     +'<span>PANALCOR S.L. — Sistema GESTION 3.0</span><span>'+mesLabel+' | '+pctGlobal+'% cumplimiento global</span></div>'
     +'</body></html>';
