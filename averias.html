@@ -168,6 +168,10 @@ a{color:inherit;text-decoration:none}
 .badge-resuel{background:rgba(46,204,113,0.2);color:var(--green);border:1px solid rgba(46,204,113,0.3)}
 .badge-curso{background:rgba(231,76,60,0.2);color:var(--red);border:1px solid rgba(231,76,60,0.3)}
 .badge-pend{background:rgba(243,156,18,0.2);color:var(--yellow);border:1px solid rgba(243,156,18,0.3)}
+.badge-funciona{background:rgba(230,126,34,0.2);color:#e67e22;border:1px solid rgba(230,126,34,0.3)}
+.badge-sinfallo{background:rgba(52,152,219,0.2);color:#3498db;border:1px solid rgba(52,152,219,0.3)}
+.dot-orange{background:#e67e22}
+.dot-blue{background:#3498db}
 .averia-body{display:none;padding:0 18px 16px;border-top:1px solid rgba(255,255,255,0.08)}
 .averia-body.open{display:block}
 .detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:12px}
@@ -545,6 +549,8 @@ if('serviceWorker' in navigator){
           <option value="RESUELTA">✅ Resuelta</option>
           <option value="EN CURSO">🔴 En curso (aún sin resolver)</option>
           <option value="PENDIENTE REPUESTO">🟡 Pendiente — Falta repuesto</option>
+          <option value="FUNCIONA SIN REPARAR">🟠 Funciona, pero sin reparar</option>
+          <option value="SIN FALLO DETECTADO">🔵 Inspeccionada — Sin fallo detectado</option>
         </select>
       </div>
     </div>
@@ -607,6 +613,8 @@ if('serviceWorker' in navigator){
       <option>RESUELTA</option>
       <option>EN CURSO</option>
       <option>PENDIENTE REPUESTO</option>
+      <option>FUNCIONA SIN REPARAR</option>
+      <option>SIN FALLO DETECTADO</option>
     </select>
     <select id="hTipo" onchange="renderHistorial()">
       <option value="">Todos los tipos</option>
@@ -1713,8 +1721,8 @@ function renderHistorial(){
   if(!data.length){el.innerHTML='<div class="no-data">No hay averías registradas con esos filtros</div>';return;}
 
   el.innerHTML = data.map((a,i)=>{
-    const badgeCls = a.estado==='RESUELTA'?'badge-resuel':a.estado==='EN CURSO'?'badge-curso':'badge-pend';
-    const dotCls = a.estado==='RESUELTA'?'dot-green':a.estado==='EN CURSO'?'dot-red':'dot-yellow';
+    const badgeCls = a.estado==='RESUELTA'?'badge-resuel':a.estado==='EN CURSO'?'badge-curso':a.estado==='FUNCIONA SIN REPARAR'?'badge-funciona':a.estado==='SIN FALLO DETECTADO'?'badge-sinfallo':'badge-pend';
+    const dotCls = a.estado==='RESUELTA'?'dot-green':a.estado==='EN CURSO'?'dot-red':a.estado==='FUNCIONA SIN REPARAR'?'dot-orange':a.estado==='SIN FALLO DETECTADO'?'dot-blue':'dot-yellow';
     const tStr = a.tiempoMin? Math.floor(a.tiempoMin/60)+'h '+((a.tiempoMin%60)+'').padStart(2,'0')+'min':'—';
     const crit = a.criticidad?`<span class="crit-badge crit-${a.criticidad}">★${a.criticidad}</span>`:'';
     const prioBadge = a.prioridad==='URGENTE'?'<span class="crit-badge" style="background:rgba(231,76,60,0.25);color:#ff6b6b">🔴 URGENTE</span>':a.prioridad==='PROGRAMABLE'?'<span class="crit-badge" style="background:rgba(46,204,113,0.2);color:#2ecc71">🟢 PROG.</span>':'';
@@ -2707,8 +2715,9 @@ function mostrarFichaMaquina(maqId){
 }
 
 function _fichaAveriaRow(a, destacado){
-  var colorBadge = a.estado === 'resuelta' ? 'badge-resuel' : (a.estado === 'en_curso' ? 'badge-curso' : 'badge-pend');
-  var textBadge  = a.estado === 'resuelta' ? 'Resuelta' : (a.estado === 'en_curso' ? 'En curso' : 'Pendiente');
+  var _est = (a.estado||'').toUpperCase();
+  var colorBadge = _est==='RESUELTA'?'badge-resuel':_est==='EN CURSO'?'badge-curso':_est==='FUNCIONA SIN REPARAR'?'badge-funciona':_est==='SIN FALLO DETECTADO'?'badge-sinfallo':'badge-pend';
+  var textBadge  = _est==='RESUELTA'?'Resuelta':_est==='EN CURSO'?'En curso':_est==='FUNCIONA SIN REPARAR'?'Funciona sin reparar':_est==='SIN FALLO DETECTADO'?'Sin fallo detectado':'Pendiente';
   var desc = a.descripcion || a.desc || '(sin descripción)';
   var solucion = a.accion || a.solucion || '';
   var mecanicos = a.mecanicos ? (Array.isArray(a.mecanicos) ? a.mecanicos.join(', ') : a.mecanicos) : '';
