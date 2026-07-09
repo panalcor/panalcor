@@ -295,6 +295,13 @@ if('serviceWorker' in navigator){
         <label>Notas técnicas</label>
         <textarea id="fNotas" placeholder="Observaciones, características especiales, etc."></textarea>
       </div>
+      <div class="form-row" style="background:rgba(201,162,39,0.08);border:1px solid rgba(201,162,39,0.25);border-radius:8px;padding:10px 12px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0">
+          <input type="checkbox" id="fAfectaProduccion" style="width:16px;height:16px;cursor:pointer">
+          <span>🏭 Afecta directamente a producción <span style="font-weight:400;opacity:.65">(líneas, silos, cámaras de bolas, etc.)</span></span>
+        </label>
+        <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:4px;margin-left:24px">Marca esta máquina para incluirla en el cálculo de disponibilidad/tiempo de parada real de producción (ver Averías → Estadísticas).</div>
+      </div>
       <div style="display:flex;align-items:center;margin-top:6px">
         <button class="save-btn" onclick="guardarInfo()">💾 Guardar</button>
         <span class="save-msg" id="saveMsg"></span>
@@ -712,8 +719,10 @@ function renderGrid(){
 
   grid.innerHTML = lista.map(function(m){
     var tiene = fichasData[m.id] && (fichasData[m.id].modelo || fichasData[m.id].fabricante || fichasData[m.id].serie);
+    var prod  = fichasData[m.id] && fichasData[m.id].afectaProduccion;
     return '<div class="maq-card ' + (tiene ? 'has-data' : 'no-data') + '" onclick="abrirFicha(\'' + m.id + '\')">' +
       '<div class="' + (tiene ? 'maq-dot' : 'maq-dot empty') + '" title="' + (tiene ? 'Con ficha' : 'Sin ficha') + '"></div>' +
+      (prod ? '<div title="Afecta a producción" style="position:absolute;top:10px;right:10px;font-size:0.95rem">🏭</div>' : '') +
       '<div class="maq-id">' + m.id + '</div>' +
       '<div class="maq-name">' + m.n + '</div>' +
       '<div class="maq-type">' + m.t + '</div>' +
@@ -785,6 +794,7 @@ function cargarInfo(){
   document.getElementById('fFechaInst').value  = d.fechaInst  || '';
   document.getElementById('fUbicacion').value  = d.ubicacion  || '';
   document.getElementById('fNotas').value      = d.notas      || '';
+  document.getElementById('fAfectaProduccion').checked = !!d.afectaProduccion;
   document.getElementById('saveMsg').className = 'save-msg';
   document.getElementById('saveMsg').textContent = '';
 }
@@ -798,6 +808,7 @@ function guardarInfo(){
     fechaInst : document.getElementById('fFechaInst').value,
     ubicacion : document.getElementById('fUbicacion').value.trim(),
     notas     : document.getElementById('fNotas').value.trim(),
+    afectaProduccion: document.getElementById('fAfectaProduccion').checked,
     updatedAt : new Date().toISOString()
   };
 

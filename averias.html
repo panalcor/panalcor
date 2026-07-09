@@ -669,6 +669,37 @@ if('serviceWorker' in navigator){
         </table>
       </div>
     </div>
+
+    <div class="chart-wrap" style="margin-top:0">
+      <div class="chart-title">🏭 Disponibilidad de producción — solo máquinas marcadas como críticas para producción</div>
+      <div class="row3" style="margin-bottom:14px">
+        <div class="field">
+          <label>Desde</label>
+          <input type="date" id="dpDesde" onchange="renderDisponibilidad()">
+        </div>
+        <div class="field">
+          <label>Hasta</label>
+          <input type="date" id="dpHasta" onchange="renderDisponibilidad()">
+        </div>
+        <div class="field">
+          <label>Turnos/semana (8h c/u)</label>
+          <input type="number" id="dpTurnosSemana" min="1" max="21" value="15" onchange="renderDisponibilidad()">
+        </div>
+      </div>
+      <div id="dpResumen" class="kpi-row" style="margin-bottom:14px"></div>
+      <div style="overflow-x:auto">
+        <table class="mtbf-table" id="dpTable">
+          <thead><tr>
+            <th>Máquina</th><th>Horas teóricas</th><th>Horas paradas</th>
+            <th>Nº Averías</th><th>Disponibilidad</th>
+          </tr></thead>
+          <tbody id="dpBody"></tbody>
+        </table>
+      </div>
+      <div id="dpVacio" class="no-data" style="display:none">
+        Ninguna máquina está marcada como "Afecta a producción". Márcalas desde <b>Fichas de Máquinas</b> → pestaña Info de cada máquina.
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1132,6 +1163,7 @@ function fbCargarAverias(callback) {
 /* ══════════════════════════════════════════════════════════════ */
 
 let averias = JSON.parse(localStorage.getItem('averias_v1') || '[]');
+let maquinasFichas = {}; // {maqId: {..., afectaProduccion:true}} — cargado desde Firebase 'maquinas'
 let repuestosData = [];
 let materialesForm = [];
 let _editandoId       = null;  // null = nueva avería | string = retomando existente
@@ -1150,7 +1182,11 @@ DB.ref('config/mecanicos').once('value').then(snap=>{
   DB.ref('maquinas_extra').once('value').then(snap=>{
     const val = snap.val();
     if(val){ Object.values(val).forEach(m=>{ if(!MAQUINAS.find(x=>x.id===m.id)) MAQUINAS.push(m); }); }
-  }).catch(()=>{}).finally(()=>{ init(); });
+  }).catch(()=>{}).finally(()=>{
+    DB.ref('maquinas').once('value').then(snap=>{
+      maquinasFichas = snap.val() || {};
+    }).catch(()=>{}).finally(()=>{ init(); });
+  });
 });
 
 function init(){
@@ -1937,6 +1973,7 @@ function renderStats(){
   if(!averias.length){
     document.getElementById('recList').innerHTML='<div class="no-data">Sin datos aún</div>';
     document.getElementById('mtbfBody').innerHTML='<tr><td colspan="6" class="no-data">Sin datos aún</td></tr>';
+    renderDisponibilidad();
     return;
   }
 
@@ -2022,6 +2059,71 @@ function renderStats(){
     const crit = s.crit?`<span class="crit-badge crit-${s.crit}">★${s.crit}</span>`:'—';
     return `<tr><td><b>${s.nom}</b></td><td>${s.cnt}</td><td>${mtbf}</td><td>${mttr}</td><td>${tTotal}</td><td>${crit}</td></tr>`;
   }).join('') : '<tr><td colspan="6" class="no-data">Necesitas al menos 2 averías por máquina</td></tr>';
+
+  renderDisponibilidad();
+}
+
+// ══════════════════════════════════════════════
+// DISPONIBILIDAD DE PRODUCCIÓN
+// Compara horas teóricas de trabajo (turnos/semana × 8h) contra el
+// tiempo de parada real (suma de averías) de las máquinas marcadas
+// como "afecta a producción" en Fichas de Máquinas.
+// ══════════════════════════════════════════════
+function renderDisponibilidad(){
+  const elDesde = document.getElementById('dpDesde');
+  const elHasta = document.getElementById('dpHasta');
+  if(!elDesde || !elHasta) return;
+
+  if(!elDesde.value || !elHasta.value){
+    const hoy = new Date();
+    elHasta.value = elHasta.value || hoy.toISOString().slice(0,10);
+    elDesde.value = elDesde.value || `${hoy.getFullYear()}-01-01`;
+  }
+
+  const desde = new Date(elDesde.value + 'T00:00:00');
+  const hasta = new Date(elHasta.value + 'T23:59:59');
+  const turnosSemana = parseFloat(document.getElementById('dpTurnosSemana').value) || 0;
+  const semanas = Math.max((hasta - desde) / (1000*3600*24*7), 0);
+  const horasTeoricasPorMaquina = turnosSemana * 8 * semanas;
+
+  const maqsProduccion = MAQUINAS.filter(m => maquinasFichas[m.id] && maquinasFichas[m.id].afectaProduccion);
+
+  const tbody = document.getElementById('dpBody');
+  const vacio = document.getElementById('dpVacio');
+  const tabla = document.getElementById('dpTable');
+
+  if(!maqsProduccion.length){
+    tabla.style.display = 'none';
+    vacio.style.display = 'block';
+    document.getElementById('dpResumen').innerHTML = '';
+    return;
+  }
+  tabla.style.display = '';
+  vacio.style.display = 'none';
+
+  const filas = maqsProduccion.map(m=>{
+    const averiasM = averias.filter(a => a.maqId === m.id && a.fecha && new Date(a.fecha) >= desde && new Date(a.fecha) <= hasta);
+    const minParado = averiasM.reduce((s,a)=>s+(a.tiempoMin||0), 0);
+    const horasParado = minParado / 60;
+    const disp = horasTeoricasPorMaquina > 0 ? Math.max(0, 100 - (horasParado / horasTeoricasPorMaquina * 100)) : 100;
+    return { nom: m.n, horasTeoricas: horasTeoricasPorMaquina, horasParado, cnt: averiasM.length, disp };
+  }).sort((a,b) => a.disp - b.disp);
+
+  const totalTeorico = filas.reduce((s,f)=>s+f.horasTeoricas, 0);
+  const totalParado = filas.reduce((s,f)=>s+f.horasParado, 0);
+  const dispGlobal = totalTeorico > 0 ? Math.max(0, 100 - (totalParado / totalTeorico * 100)) : 100;
+
+  document.getElementById('dpResumen').innerHTML = `
+    <div class="kpi"><div class="kpi-num">${maqsProduccion.length}</div><div class="kpi-label">Máquinas críticas</div></div>
+    <div class="kpi"><div class="kpi-num">${Math.round(totalTeorico)}h</div><div class="kpi-label">Horas teóricas totales</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:var(--red)">${Math.round(totalParado)}h</div><div class="kpi-label">Horas paradas reales</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:${dispGlobal>=95?'var(--green)':dispGlobal>=85?'var(--yellow)':'var(--red)'}">${dispGlobal.toFixed(1)}%</div><div class="kpi-label">Disponibilidad global</div></div>
+  `;
+
+  tbody.innerHTML = filas.map(f=>{
+    const color = f.disp>=95?'var(--green)':f.disp>=85?'var(--yellow)':'var(--red)';
+    return `<tr><td><b>${f.nom}</b></td><td>${Math.round(f.horasTeoricas)}h</td><td>${f.horasParado.toFixed(1)}h</td><td>${f.cnt}</td><td style="color:${color};font-weight:700">${f.disp.toFixed(1)}%</td></tr>`;
+  }).join('');
 }
 
 function destroyChart(id){
