@@ -125,6 +125,7 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
     <div class="topbar-right">
       <a href="panalcor_inicio.html"><button class="btn btn-back">← Inicio</button></a>
       <button class="btn btn-gold" onclick="exportarMesCompleto()" style="font-size:0.8rem">📥 EXPORTAR MES</button>
+      <button class="btn btn-outline" onclick="exportarPDFCompleto()" style="font-size:0.8rem">📄 EXPORTAR PDF</button>
       <button class="btn btn-outline" onclick="logout()">Salir</button>
     </div>
   </div>
@@ -150,6 +151,7 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
         <button class="btn btn-gold" onclick="guardarDepositos()">💾 GUARDAR</button>
         <button class="btn btn-outline" onclick="borrarMes('depositos')" style="border-color:rgba(231,76,60,0.4);color:#e74c3c">🗑️ BORRAR</button>
         <button class="btn btn-outline" onclick="exportarMes('depositos')">📥 EXPORTAR EXCEL</button>
+        <button class="btn btn-outline" onclick="exportarPDF('depositos')">📄 EXPORTAR PDF</button>
       </div>
       <div style="overflow-x:auto">
         <table class="reg-table" id="tblDepositos">
@@ -195,6 +197,7 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
         <button class="btn btn-gold" onclick="guardarAfchAcs()">💾 GUARDAR</button>
         <button class="btn btn-outline" onclick="borrarMes('afchacs')" style="border-color:rgba(231,76,60,0.4);color:#e74c3c">🗑️ BORRAR</button>
         <button class="btn btn-outline" onclick="exportarMes('afch-acs')">📥 EXPORTAR EXCEL</button>
+        <button class="btn btn-outline" onclick="exportarPDF('afch-acs')">📄 EXPORTAR PDF</button>
       </div>
       <div style="overflow-x:auto">
         <table class="reg-table" id="tblAfchAcs">
@@ -236,6 +239,7 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
         <button class="btn btn-gold" onclick="guardarTermos()">💾 GUARDAR</button>
         <button class="btn btn-outline" onclick="borrarMes('termos')" style="border-color:rgba(231,76,60,0.4);color:#e74c3c">🗑️ BORRAR</button>
         <button class="btn btn-outline" onclick="exportarMes('termos')">📥 EXPORTAR EXCEL</button>
+        <button class="btn btn-outline" onclick="exportarPDF('termos')">📄 EXPORTAR PDF</button>
       </div>
       <div style="overflow-x:auto">
         <table class="reg-table" id="tblTermos">
@@ -282,6 +286,7 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
         <button class="btn btn-outline" onclick="addGrifoRow()">+ AÑADIR ENTRADA</button>
         <button class="btn btn-outline" onclick="gestionarCuartos()" style="border-color:rgba(201,162,39,0.4);color:#c9a227">⚙ CUARTOS HÚMEDOS</button>
         <button class="btn btn-outline" onclick="exportarMes('grifos')">📥 EXPORTAR EXCEL</button>
+        <button class="btn btn-outline" onclick="exportarPDF('grifos')">📄 EXPORTAR PDF</button>
       </div>
       <div style="overflow-x:auto">
         <table class="reg-table" id="tblGrifos">
@@ -311,6 +316,7 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
         <button class="btn btn-gold" onclick="guardarIncidencias()">💾 GUARDAR</button>
         <button class="btn btn-outline" onclick="addIncidencia()">+ NUEVA INCIDENCIA</button>
         <button class="btn btn-outline" onclick="exportarMes('incidencias')">📥 EXPORTAR EXCEL</button>
+        <button class="btn btn-outline" onclick="exportarPDF('incidencias')">📄 EXPORTAR PDF</button>
       </div>
       <table class="inc-table" id="tblIncidencias">
         <thead>
@@ -370,6 +376,9 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
 
 <!-- ExcelJS -->
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<!-- jsPDF + autoTable -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -1356,6 +1365,157 @@ async function exportarMesCompleto(){
   a.click();
   URL.revokeObjectURL(a.href);
   showToast('✅ Excel generado: PANALCOR_LEGIONELA_'+mes+'.xlsx');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// EXPORTAR PDF — jsPDF + autoTable, mismos datos que el Excel
+// ══════════════════════════════════════════════════════════════════════════════
+function exportarPDF(tipo){ exportarPDFCompleto(); }
+
+async function exportarPDFCompleto(){
+  const mes = document.getElementById('mesDepositos').value || mesActual();
+  const [y,m] = mes.split('-').map(Number);
+  const MESES_ES=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+  const mesNombre = MESES_ES[m-1];
+  const diasTrab = diasDelMes(mes).filter(x=>!x.blocked);
+
+  showToast('⏳ Generando PDF...');
+
+  const tipos=['depositos','afchacs','termos','grifos','incidencias'];
+  const results = await Promise.all(tipos.map(t=>new Promise(res=>cargar(t,mes,d=>res({t,d})))));
+  const datos={};
+  results.forEach(({t,d})=>datos[t]=d);
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
+
+  const GREEN=[0,176,80], AMBER=[255,192,0], RED=[231,76,60], WHITE=[255,255,255];
+
+  function encabezado(titulo, sub){
+    doc.setFontSize(12); doc.setTextColor(0,0,0); doc.setFont(undefined,'bold');
+    doc.text(titulo, 10, 10);
+    doc.setFontSize(9); doc.setFont(undefined,'normal');
+    doc.text('PANALCOR — Mes: '+mesNombre+' '+y, 10, 15);
+    if(sub){ doc.setFontSize(8); doc.setTextColor(90,90,90); doc.text(sub, 10, 19.5); doc.setTextColor(0,0,0); }
+  }
+
+  // ── 1. INCIDENCIAS ──
+  encabezado('REGISTRO Nº1-INC. — REGISTRO DE INCIDENCIAS');
+  const incRows=(datos['incidencias']?.rows)||[];
+  doc.autoTable({
+    startY:23,
+    head:[['Incidencia','Día','Hora','Lugar','Acciones correctoras','Cierre (día/hora)','Operario','Revisión RT']],
+    body: incRows.length ? incRows.map(r=>[r.desc||'',r.dia||'',r.hora||'',r.lugar||'',r.acciones||'',r.cierre||'',r.operario||'',r.revision||'']) : [['','','','','','','','']],
+    headStyles:{fillColor:GREEN,textColor:WHITE,fontStyle:'bold',halign:'center',fontSize:8},
+    styles:{fontSize:7.5,halign:'center',cellPadding:1.3,overflow:'linebreak'},
+    margin:{left:10,right:10}
+  });
+
+  // ── 2. AFCH / ACS ──
+  doc.addPage();
+  encabezado('REGISTRO Nº3-PMYR-AS. — REVISIÓN DIARIA/SEMANAL/MENSUAL DE AFCH Y ACS','Ámbar = parámetro de control semanal (Turbidez)');
+  const dAfch=datos['afchacs']||{};
+  const bodyAfch = diasTrab.map(({d:dia,ds})=>{
+    const r=dAfch[ds]||{};
+    return [dia, r.punto||'', r.tafch||'', r.tacs||'', r.ph||'', r.cloro||'', r.turb||'', r.grifo||'', r.tecnico||'', r.obs||''];
+  });
+  doc.autoTable({
+    startY:23,
+    head:[['Día','Punto de muestreo','Tª AFCH °C\n(<20)','Tª ACS °C\n(>50)','PH\n(6,5-9,5)','Cloro mg/l\n(0,2-2)','Turbidez NTU\n(<4)','Estado grifo','Técnico','Observaciones']],
+    body: bodyAfch,
+    headStyles:{fillColor:GREEN,textColor:WHITE,fontStyle:'bold',halign:'center',fontSize:7},
+    styles:{fontSize:7,halign:'center',cellPadding:1,overflow:'linebreak'},
+    margin:{left:8,right:8},
+    didParseCell(data){
+      if(data.section==='head' && data.column.index===6){ data.cell.styles.fillColor=AMBER; data.cell.styles.textColor=[0,0,0]; }
+    }
+  });
+
+  // ── 3. DEPÓSITOS AFCH ──
+  doc.addPage();
+  encabezado('REGISTRO Nº3-PMYR-AS. — REVISIÓN DIARIA/SEMANAL/MENSUAL DE DEPÓSITOS','Ámbar = control semanal (Temperatura/Turbidez) · Verde = control diario (PH/Cloro)');
+  const dDep=datos['depositos']||{};
+  const depNms=['DEP. Nº1 V17','DEP. Nº2 V17','DEP. Nº3 V17','DEP. Nº4 V17','DEP. TRUENO'];
+  const depKeys=['D1','D2','D3','D4','DT'];
+  const depSub=['Temp','Turb','PH','Cloro'];
+  const depHead1=[{content:'Día',rowSpan:2}];
+  depNms.forEach(n=>depHead1.push({content:n,colSpan:4}));
+  depHead1.push({content:'Técnico',rowSpan:2},{content:'Obs.',rowSpan:2});
+  const depHead2=[]; depNms.forEach(()=>depSub.forEach(s=>depHead2.push(s)));
+  const amberCols = [1,2,5,6,9,10,13,14,17,18]; // Temp/Turb de cada depósito (2 cols cada uno, offset 1 por 'Día')
+  const bodyDep = diasTrab.map(({d:dia,ds})=>{
+    const r=dDep[ds]||{}; const esW=esPrimerDiaTrabajoDeSemana(ds);
+    const fila=[dia];
+    depKeys.forEach(k=>{
+      const dep=r[k]||{};
+      fila.push(esW?(dep.temp||''):'—', esW?(dep.turb||''):'—', dep.ph||'', dep.cloro||'');
+    });
+    fila.push(r.tecnico||'', r.obs||'');
+    return fila;
+  });
+  doc.autoTable({
+    startY:23,
+    head:[depHead1, depHead2],
+    body: bodyDep,
+    headStyles:{fillColor:GREEN,textColor:WHITE,fontStyle:'bold',halign:'center',fontSize:6.5},
+    styles:{fontSize:6.5,halign:'center',cellPadding:0.8,overflow:'linebreak'},
+    margin:{left:6,right:6},
+    didParseCell(data){
+      if(data.section==='head' && data.row.index===1 && amberCols.includes(data.column.index)){
+        data.cell.styles.fillColor=AMBER; data.cell.styles.textColor=[0,0,0];
+      }
+    }
+  });
+
+  // ── 4. TERMOS ──
+  doc.addPage();
+  encabezado('REGISTRO Nº3-PMYR-AS. — REVISIÓN DIARIA DE TERMOS','Valor parametrico: >60ºC · En rojo, lecturas por debajo del mínimo');
+  const dTer=datos['termos']||{};
+  const bodyTer = diasTrab.map(({d:dia,ds})=>{
+    const r=dTer[ds]||{};
+    const fila=[dia];
+    TERMOS.forEach(k=>fila.push(r[k]||''));
+    fila.push(r.tecnico||'', r.obs||'');
+    return fila;
+  });
+  doc.autoTable({
+    startY:23,
+    head:[['Día', ...TERMOS_LABELS, 'Técnico','Observaciones']],
+    body: bodyTer,
+    headStyles:{fillColor:GREEN,textColor:WHITE,fontStyle:'bold',halign:'center',fontSize:6.5},
+    styles:{fontSize:6.5,halign:'center',cellPadding:0.8,overflow:'linebreak'},
+    margin:{left:6,right:6},
+    didParseCell(data){
+      if(data.section==='body' && data.column.index>=1 && data.column.index<=TERMOS.length){
+        const val=parseFloat(data.cell.raw);
+        if(!isNaN(val) && val<60){ data.cell.styles.fillColor=RED; data.cell.styles.textColor=WHITE; data.cell.styles.fontStyle='bold'; }
+      }
+    }
+  });
+
+  // ── 5. GRIFOS NO UTILIZADOS ──
+  doc.addPage();
+  encabezado('REGISTRO Nº6-PMYR-AS. — APERTURA DE GRIFOS NO UTILIZADOS');
+  const rdGrifos=(datos['grifos']?.rows)||[];
+  doc.autoTable({
+    startY:23,
+    head:[['Fecha','Identificación (cuarto húmedo)','Nº puntos en cuarto húmedo','Observaciones','Realizado por']],
+    body: rdGrifos.length ? rdGrifos.map(r=>[r.fecha||'',r.lugar||'',r.npuntos||'',r.obs||'',r.realizado||'']) : [['','','','','']],
+    headStyles:{fillColor:GREEN,textColor:WHITE,fontStyle:'bold',halign:'center',fontSize:8},
+    styles:{fontSize:7.5,halign:'center',cellPadding:1.3,overflow:'linebreak'},
+    margin:{left:10,right:10}
+  });
+
+  // Numeración de página
+  const total = doc.internal.getNumberOfPages();
+  for(let p=1;p<=total;p++){
+    doc.setPage(p);
+    doc.setFontSize(7.5); doc.setTextColor(120,120,120);
+    doc.text('Página '+p+' / '+total, doc.internal.pageSize.getWidth()-25, doc.internal.pageSize.getHeight()-6);
+  }
+
+  doc.save('PANALCOR_LEGIONELA_'+mes+'.pdf');
+  showToast('✅ PDF generado: PANALCOR_LEGIONELA_'+mes+'.pdf');
 }
 
 
