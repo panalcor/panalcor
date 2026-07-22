@@ -12,6 +12,8 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>PANALCOR S.L. — Mantenimiento Preventivo</title>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -783,6 +785,9 @@ if('serviceWorker' in navigator){
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
           Exportar Plan
         </button>
+        <button type="button" class="export-btn" onclick="abrirAutoAsignar()" style="padding:9px 16px;background:rgba(39,174,96,0.15);border-color:rgba(39,174,96,0.4);color:#2ecc71">
+          🤖 Auto-asignar mes
+        </button>
       </div>
     </div>
     <div class="plan-wrap" id="planWrap"></div>
@@ -1552,6 +1557,16 @@ const MESES_L  = ['enero','febrero','marzo','abril','mayo','junio','julio','agos
 let curMonday = null; // la semana que se está viendo ahora
 
 /* ── Storage helpers ── */
+/* ── Firebase (para leer turnos) ── */
+const _FB_CFG = {
+  apiKey:"AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU",
+  authDomain:"panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:"https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"panalcor-mantenimiento"
+};
+if(!firebase.apps.length) firebase.initializeApp(_FB_CFG);
+const _DB = firebase.database();
+
 const ST = {
   pwd:  () => localStorage.getItem('preventivoPwd')    || 'admin',
   ref:  () => localStorage.getItem('preventivoRef')    || '2026-06-01',
@@ -1861,6 +1876,185 @@ function iniciarCatalogo(){
   renderStats(TAREAS);
   renderTabla(TAREAS);
 }
+
+/* ════════════════════════════════════════════
+   AUTO-ASIGNACIÓN MENSUAL POR TURNO
+   ════════════════════════════════════════════ */
+function abrirAutoAsignar(){
+  // Mes por defecto: mes actual
+  const hoy = new Date();
+  document.getElementById('autoMes').value =
+    hoy.getFullYear() + '-' + String(hoy.getMonth()+1).padStart(2,'0');
+  document.getElementById('autoAsigModal').style.display = 'flex';
+  document.getElementById('autoAsigPreview').innerHTML =
+    '<div style="color:rgba(255,255,255,0.35);text-align:center;padding:20px">Selecciona el mes y pulsa Calcular</div>';
+}
+
+function cerrarAutoAsignar(){
+  document.getElementById('autoAsigModal').style.display = 'none';
+}
+
+async function calcularAutoAsig(){
+  const mesVal = document.getElementById('autoMes').value;
+  if(!mesVal){ alert('Selecciona un mes'); return; }
+  const [anio, mes] = mesVal.split('-').map(Number);
+
+  const preview = document.getElementById('autoAsigPreview');
+  preview.innerHTML = '<div style="color:rgba(255,255,255,0.35);text-align:center;padding:20px">⏳ Leyendo turnos de Firebase...</div>';
+
+  // Cargar datos de turnos desde Firebase
+  let dias = {}, mecanicos = {}, ausencias = {};
+  try {
+    const snap = await _DB.ref('turnos').once('value');
+    const d = snap.val() || {};
+    dias      = d.dias      || {};
+    mecanicos = d.mecanicos || {};
+    ausencias = d.ausencias || {};
+  } catch(e) {
+    preview.innerHTML = '<div style="color:#e74c3c;padding:20px">⚠️ Error al conectar con Firebase. Comprueba la conexión.</div>';
+    return;
+  }
+
+  // Días laborables del mes (L-V)
+  const primerDia = new Date(anio, mes-1, 1);
+  const ultimoDia = new Date(anio, mes, 0);
+  const diasMes = [];
+  for(let d = new Date(primerDia); d <= ultimoDia; d.setDate(d.getDate()+1)){
+    const dw = d.getDay();
+    if(dw !== 0 && dw !== 6){
+      const ds = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      diasMes.push(ds);
+    }
+  }
+
+  // Mecánicos disponibles (los 5 principales)
+  const mecIds = ['1','2','3','4','5'];
+  const AUSENTES = ['vacaciones','baja','sancion'];
+
+  // Contar días disponibles por mecánico
+  const disponibles = {};
+  mecIds.forEach(k => {
+    const nombre = mecanicos[k]?.nombre || 'Mecánico '+k;
+    let count = 0;
+    diasMes.forEach(ds => {
+      const estado = dias[ds]?.[k]?.estado || 'normal';
+      if(!AUSENTES.includes(estado)) count++;
+    });
+    disponibles[k] = { nombre, dias: count };
+  });
+
+  // Solo mecánicos con al menos 1 día disponible
+  const mecActivos = mecIds.filter(k => disponibles[k].dias > 0)
+    .sort((a,b) => disponibles[b].dias - disponibles[a].dias);
+
+  // Repartir máquinas proporcionalmente a días disponibles
+  const totalDias = mecActivos.reduce((s,k) => s+disponibles[k].dias, 0);
+  const maquinas = [...MAQUINAS];
+  const totalMaq = maquinas.length;
+
+  // Calcular cuántas máquinas corresponden a cada mecánico
+  let reparto = {};
+  let resto = totalMaq;
+  mecActivos.forEach((k, i) => {
+    const prop = i < mecActivos.length-1
+      ? Math.round((disponibles[k].dias / totalDias) * totalMaq)
+      : resto;
+    reparto[k] = Math.max(1, prop);
+    resto -= reparto[k];
+  });
+
+  // Asignar máquinas en orden
+  const asigNueva = {};
+  let idx = 0;
+  mecActivos.forEach(k => {
+    for(let i=0; i<reparto[k] && idx<maquinas.length; i++, idx++){
+      asigNueva[maquinas[idx]] = disponibles[k].nombre;
+    }
+  });
+
+  // Guardar propuesta para confirmar
+  window._autoAsigPropuesta = asigNueva;
+
+  // Construir preview HTML
+  const mesesES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  let html = `<div style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-bottom:12px">
+    ${mesesES[mes]} ${anio} — ${diasMes.length} días laborables · ${totalMaq} grupos de máquinas</div>`;
+
+  // Tabla de disponibilidad
+  html += `<table style="width:100%;border-collapse:collapse;font-size:0.82rem;margin-bottom:16px">
+    <thead><tr style="background:rgba(255,255,255,0.05)">
+      <th style="padding:7px 10px;text-align:left;color:rgba(255,255,255,0.5)">Mecánico</th>
+      <th style="padding:7px 10px;text-align:center;color:rgba(255,255,255,0.5)">Días disp.</th>
+      <th style="padding:7px 10px;text-align:center;color:rgba(255,255,255,0.5)">Grupos asignados</th>
+    </tr></thead><tbody>`;
+  mecActivos.forEach(k => {
+    html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">
+      <td style="padding:7px 10px;font-weight:600;color:#e8c14e">${disponibles[k].nombre}</td>
+      <td style="padding:7px 10px;text-align:center">${disponibles[k].dias}</td>
+      <td style="padding:7px 10px;text-align:center;color:#2ecc71;font-weight:700">${reparto[k]}</td>
+    </tr>`;
+  });
+  // Mecánicos ausentes todo el mes
+  mecIds.filter(k=>disponibles[k].dias===0).forEach(k=>{
+    html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.06);opacity:0.4">
+      <td style="padding:7px 10px">${disponibles[k].nombre}</td>
+      <td style="padding:7px 10px;text-align:center;color:#e74c3c">0 (ausente)</td>
+      <td style="padding:7px 10px;text-align:center">—</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+
+  // Detalle de asignación por mecánico
+  mecActivos.forEach(k => {
+    const nombre = disponibles[k].nombre;
+    const maqsMec = Object.entries(asigNueva).filter(([,v])=>v===nombre).map(([m])=>m);
+    html += `<div style="margin-bottom:10px">
+      <div style="font-size:0.75rem;font-weight:700;color:#e8c14e;letter-spacing:0.08em;margin-bottom:5px">${nombre}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">
+        ${maqsMec.map(m=>`<span style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:4px;padding:2px 8px;font-size:0.72rem">${m}</span>`).join('')}
+      </div>
+    </div>`;
+  });
+
+  preview.innerHTML = html;
+  document.getElementById('btnConfirmarAsig').style.display = 'block';
+}
+
+function confirmarAutoAsig(){
+  const asig = window._autoAsigPropuesta;
+  if(!asig){ alert('Primero pulsa Calcular'); return; }
+  ST.setAsig(asig);
+  renderAsigGrid();
+  poblarPlanMecanicos();
+  renderPlan();
+  cerrarAutoAsignar();
+  alert('✅ Asignación guardada. Ya puedes ver el plan por mecánico.');
+}
 </script>
+
+<!-- Modal auto-asignación -->
+<div id="autoAsigModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#1a2d42;border:1px solid rgba(255,255,255,0.12);border-radius:14px;width:100%;max-width:560px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden">
+    <div style="padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:1.05rem;font-weight:700;color:#e8c14e">🤖 Auto-asignar por turno</div>
+        <div style="font-size:0.75rem;color:rgba(255,255,255,0.4);margin-top:3px">Reparte las máquinas entre los mecánicos disponibles ese mes</div>
+      </div>
+      <button onclick="cerrarAutoAsignar()" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.4rem;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:16px 20px;display:flex;gap:10px;align-items:flex-end;border-bottom:1px solid rgba(255,255,255,0.06)">
+      <div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-bottom:5px;letter-spacing:0.08em">MES A ASIGNAR</div>
+        <input type="month" id="autoMes" style="background:#0d1b2a;color:#f0f4f8;border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:7px 12px;font-family:Barlow,sans-serif;font-size:0.88rem">
+      </div>
+      <button onclick="calcularAutoAsig()" style="background:rgba(39,174,96,0.15);border:1px solid rgba(39,174,96,0.4);color:#2ecc71;border-radius:7px;padding:8px 18px;font-family:Barlow,sans-serif;font-size:0.88rem;font-weight:600;cursor:pointer">⚙️ Calcular reparto</button>
+    </div>
+    <div id="autoAsigPreview" style="padding:16px 20px;overflow-y:auto;flex:1"></div>
+    <div style="padding:14px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;gap:10px;justify-content:flex-end">
+      <button onclick="cerrarAutoAsignar()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);border-radius:7px;padding:8px 18px;font-family:Barlow,sans-serif;font-size:0.88rem;cursor:pointer">Cancelar</button>
+      <button id="btnConfirmarAsig" onclick="confirmarAutoAsig()" style="display:none;background:rgba(39,174,96,0.2);border:1px solid rgba(39,174,96,0.5);color:#2ecc71;border-radius:7px;padding:8px 22px;font-family:Barlow,sans-serif;font-size:0.88rem;font-weight:700;cursor:pointer">✅ Confirmar asignación</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
