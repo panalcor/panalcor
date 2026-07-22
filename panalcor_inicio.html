@@ -21,8 +21,8 @@
     --blue-accent: #3a7abf;
   }
 
-  html, body {
-    height: 100%;
+  html {
+    min-height: 100%;
     font-family: 'Barlow', sans-serif;
   }
 
@@ -34,7 +34,9 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
+    padding-top: max(32px, env(safe-area-inset-top));
+    padding-bottom: 32px;
     overflow-x: hidden;
     overflow-y: auto;
     position: relative;
