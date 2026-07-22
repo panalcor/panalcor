@@ -1568,14 +1568,16 @@ if(!firebase.apps.length) firebase.initializeApp(_FB_CFG);
 const _DB = firebase.database();
 
 const ST = {
-  pwd:  () => localStorage.getItem('preventivoPwd')    || 'admin',
-  ref:  () => localStorage.getItem('preventivoRef')    || '2026-06-01',
-  meqs: () => { try{ return JSON.parse(localStorage.getItem('preventivoMecanicos'))||MEQ_DEFAULT; }catch(e){return MEQ_DEFAULT;} },
-  asig: () => { try{ return JSON.parse(localStorage.getItem('preventivoAsig'))||{}; }catch(e){return {};} },
-  setRef:  v => localStorage.setItem('preventivoRef', v),
-  setMeqs: v => localStorage.setItem('preventivoMecanicos', JSON.stringify(v)),
-  setAsig: v => localStorage.setItem('preventivoAsig', JSON.stringify(v)),
-  setPwd:  v => localStorage.setItem('preventivoPwd', v),
+  pwd:   () => localStorage.getItem('preventivoPwd')    || 'admin',
+  ref:   () => localStorage.getItem('preventivoRef')    || '2026-06-01',
+  meqs:  () => { try{ return JSON.parse(localStorage.getItem('preventivoMecanicos'))||MEQ_DEFAULT; }catch(e){return MEQ_DEFAULT;} },
+  asig:  () => { try{ return JSON.parse(localStorage.getItem('preventivoAsig'))||{}; }catch(e){return {};} },
+  fechas:() => { try{ return JSON.parse(localStorage.getItem('preventivoFechas'))||{}; }catch(e){return {};} },
+  setRef:   v => localStorage.setItem('preventivoRef', v),
+  setMeqs:  v => localStorage.setItem('preventivoMecanicos', JSON.stringify(v)),
+  setAsig:  v => localStorage.setItem('preventivoAsig', JSON.stringify(v)),
+  setPwd:   v => localStorage.setItem('preventivoPwd', v),
+  setFechas:v => localStorage.setItem('preventivoFechas', JSON.stringify(v)),
 };
 
 /* ── Date utils ── */
@@ -1699,9 +1701,23 @@ function renderPlan() {
     return;
   }
 
+  // Días laborables de la semana actual (Lun-Vie)
+  const diasSemana = [];
+  const DIAS_CORTO = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  for(let i=0; i<5; i++){
+    const d = new Date(curMonday); d.setDate(curMonday.getDate()+i);
+    const ds = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    diasSemana.push({ ds, lbl: DIAS_CORTO[d.getDay()]+' '+d.getDate() });
+  }
+  const weekKey = diasSemana[0].ds; // lunes como clave de semana
+  const fechas = ST.fechas();
+  const fechasSemana = fechas[weekKey] || {};
+
   let n = 0;
-  let html = '';
-  // Mantener orden original de máquinas
+  let html = `<div style="font-size:0.72rem;color:rgba(255,255,255,0.3);margin-bottom:12px;padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:6px;border:1px solid rgba(255,255,255,0.07)">
+    📅 Las tareas se realizan de <b style="color:rgba(255,255,255,0.55)">lunes a viernes</b>. Asigna el día concreto a cada tarea con el selector. Los sábados se programan aparte.
+  </div>`;
+
   MAQUINAS.filter(m => grupos[m]).forEach(maq => {
     const tareas = grupos[maq];
     const mecAsig = asig[maq] || '';
@@ -1714,16 +1730,32 @@ function renderPlan() {
     tareas.forEach(t => {
       n++;
       const cfg = FREQ_CFG[t.frecuencia] || {color:'#fff',bg:'rgba(255,255,255,0.05)',border:'rgba(255,255,255,0.2)'};
-      html += `<div class="plan-task-row">
+      const fechaAsig = fechasSemana[t.id] || '';
+      const diaOpts = `<option value="">— Día —</option>` +
+        diasSemana.map(d=>`<option value="${d.ds}" ${fechaAsig===d.ds?'selected':''}>${d.lbl}</option>`).join('');
+      html += `<div class="plan-task-row" style="flex-wrap:wrap;gap:6px">
         <span class="plan-task-num">${n}</span>
-        <span class="plan-task-text">${escHtml(t.tarea)}</span>
-        <span class="freq-badge freq-${t.frecuencia}" style="color:${cfg.color};background:${cfg.bg};border-color:${cfg.border}">${t.frecuencia}</span>
-        ${cfg.nota ? `<div style="font-size:0.65rem;color:rgba(255,255,255,0.35);margin-top:2px;line-height:1.3">${cfg.nota}</div>` : ''}
+        <span class="plan-task-text" style="flex:1;min-width:160px">${escHtml(t.tarea)}</span>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <select onchange="guardarFechaTarea(${t.id},'${weekKey}',this.value)"
+            style="background:#0d1b2a;color:${fechaAsig?'#e8c14e':'rgba(255,255,255,0.4)'};border:1px solid ${fechaAsig?'rgba(232,193,78,0.5)':'rgba(255,255,255,0.15)'};border-radius:5px;padding:3px 7px;font-size:0.75rem;font-family:Barlow,sans-serif;cursor:pointer">
+            ${diaOpts}
+          </select>
+          <span class="freq-badge freq-${t.frecuencia}" style="color:${cfg.color};background:${cfg.bg};border-color:${cfg.border}">${t.frecuencia}</span>
+        </div>
       </div>`;
     });
     html += `</div>`;
   });
   document.getElementById('planWrap').innerHTML = html;
+}
+
+function guardarFechaTarea(taskId, weekKey, fecha){
+  const fechas = ST.fechas();
+  if(!fechas[weekKey]) fechas[weekKey] = {};
+  if(fecha) fechas[weekKey][taskId] = fecha;
+  else delete fechas[weekKey][taskId];
+  ST.setFechas(fechas);
 }
 
 /* ── Export plan to Excel ── */
@@ -1740,28 +1772,36 @@ function exportPlan() {
 
   if(!tareasFilt.length){ alert('No hay tareas que exportar esta semana.'); return; }
 
+  // Fechas asignadas por tarea
+  const weekKey = curMonday.getFullYear()+'-'+String(curMonday.getMonth()+1).padStart(2,'0')+'-'+String(curMonday.getDate()).padStart(2,'0');
+  const fechasSemana = (ST.fechas()[weekKey]) || {};
+  const DIAS_CORTO = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  function fmtDiaAsig(ds){
+    if(!ds) return 'Lun–Vie';
+    const d = new Date(ds+'T12:00:00');
+    return DIAS_CORTO[d.getDay()]+' '+fmtDateShort(d);
+  }
+
   // Construir filas
   const rows = [];
   rows.push(['MANTENIMIENTO PREVENTIVO — PANALCOR S.L.']);
-  rows.push([`Semana ${wn+1}  ·  Lunes ${fmtDateShort(curMonday)} — Domingo ${fmtDateShort(sun)}`]);
+  rows.push([`Semana ${wn+1}  ·  Lunes ${fmtDateShort(curMonday)} — Viernes ${fmtDateShort(new Date(curMonday.getTime()+4*86400000))}`]);
   rows.push([`Mecánico: ${meq || 'Todos los mecánicos'}`]);
   rows.push([]);
-  rows.push(['Nº','MÁQUINA','MECÁNICO ASIGNADO','TAREA','FRECUENCIA','✓ REALIZADO']);
+  rows.push(['Nº','MÁQUINA','MECÁNICO','TAREA','FRECUENCIA','DÍA PREVISTO','✓ REALIZADO']);
 
   let n = 0;
-  let lastMaq = null;
   tareasFilt.forEach(t => {
     n++;
     const mecAsig = asig[t.maquina] || '—';
-    rows.push([n, t.maquina, mecAsig, t.tarea, t.frecuencia, '']);
-    lastMaq = t.maquina;
+    const diaAsig = fmtDiaAsig(fechasSemana[t.id]);
+    rows.push([n, t.maquina, mecAsig, t.tarea, t.frecuencia, diaAsig, '']);
   });
 
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols'] = [{wch:4},{wch:26},{wch:16},{wch:60},{wch:13},{wch:12}];
-  // Merge title rows
-  ws['!merges'] = [{s:{r:0,c:0},e:{r:0,c:5}},{s:{r:1,c:0},e:{r:1,c:5}},{s:{r:2,c:0},e:{r:2,c:5}}];
+  ws['!cols'] = [{wch:4},{wch:26},{wch:16},{wch:60},{wch:13},{wch:14},{wch:13}];
+  ws['!merges'] = [{s:{r:0,c:0},e:{r:0,c:6}},{s:{r:1,c:0},e:{r:1,c:6}},{s:{r:2,c:0},e:{r:2,c:6}}];
   XLSX.utils.book_append_sheet(wb, ws, 'Plan Semana');
 
   const meqFile = meq ? '_'+meq.replace(/\s+/g,'_') : '';
