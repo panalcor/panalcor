@@ -1586,6 +1586,8 @@ const ST = {
   setAsig:  v => localStorage.setItem('preventivoAsig', JSON.stringify(v)),
   setPwd:   v => localStorage.setItem('preventivoPwd', v),
   setFechasMes:v => localStorage.setItem('preventivoFechasMes', JSON.stringify(v)),
+  rotOffset:() => parseInt(localStorage.getItem('preventivoRotOffset')||'0', 10),
+  incRotOffset:() => localStorage.setItem('preventivoRotOffset', (parseInt(localStorage.getItem('preventivoRotOffset')||'0',10)+1)),
 };
 
 /* ── Date utils ── */
@@ -2185,22 +2187,39 @@ async function calcularAutoAsig(){
     resto -= reparto[k];
   });
 
-  // Asignar máquinas en orden
+  // Asignar máquinas en orden con rotación mensual
+  // El offset desplaza qué mecánico empieza el reparto, rotando mes a mes
+  const rot = ST.rotOffset() % mecActivos.length;
+  const mecRotados = [...mecActivos.slice(rot), ...mecActivos.slice(0, rot)];
+  const repartoRot = {};
+  let restoRot = totalMaq;
+  mecRotados.forEach((k, i) => {
+    const prop = i < mecRotados.length-1
+      ? Math.round((disponibles[k].dias / totalDias) * totalMaq)
+      : restoRot;
+    repartoRot[k] = Math.max(1, prop);
+    restoRot -= repartoRot[k];
+  });
+
   const asigNueva = {};
   let idx = 0;
-  mecActivos.forEach(k => {
-    for(let i=0; i<reparto[k] && idx<maquinas.length; i++, idx++){
+  mecRotados.forEach(k => {
+    for(let i=0; i<repartoRot[k] && idx<maquinas.length; i++, idx++){
       asigNueva[maquinas[idx]] = disponibles[k].nombre;
     }
   });
 
-  // Guardar propuesta para confirmar
+  // Guardar propuesta para confirmar (incluye qué mecánico inicia la rotación)
   window._autoAsigPropuesta = asigNueva;
+  window._autoAsigRotInfo = { offset: rot, iniciaCon: disponibles[mecRotados[0]]?.nombre };
 
   // Construir preview HTML
   const mesesES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  let html = `<div style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-bottom:12px">
-    ${mesesES[mes]} ${anio} — ${diasMes.length} días laborables · ${totalMaq} grupos de máquinas</div>`;
+  let html = `<div style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-bottom:8px">
+    ${mesesES[mes]} ${anio} — ${diasMes.length} días laborables · ${totalMaq} grupos de máquinas</div>
+  <div style="font-size:0.75rem;color:rgba(116,185,255,0.8);background:rgba(116,185,255,0.08);border:1px solid rgba(116,185,255,0.2);border-radius:6px;padding:5px 10px;margin-bottom:12px">
+    🔄 Rotación nº ${rot+1} — inicia el bloque: <b>${disponibles[mecRotados[0]]?.nombre}</b>. El próximo mes rotará al siguiente mecánico.
+  </div>`;
 
   // Tabla de disponibilidad
   html += `<table style="width:100%;border-collapse:collapse;font-size:0.82rem;margin-bottom:16px">
@@ -2209,11 +2228,11 @@ async function calcularAutoAsig(){
       <th style="padding:7px 10px;text-align:center;color:rgba(255,255,255,0.5)">Días disp.</th>
       <th style="padding:7px 10px;text-align:center;color:rgba(255,255,255,0.5)">Grupos asignados</th>
     </tr></thead><tbody>`;
-  mecActivos.forEach(k => {
+  mecRotados.forEach(k => {
     html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">
       <td style="padding:7px 10px;font-weight:600;color:#e8c14e">${disponibles[k].nombre}</td>
       <td style="padding:7px 10px;text-align:center">${disponibles[k].dias}</td>
-      <td style="padding:7px 10px;text-align:center;color:#2ecc71;font-weight:700">${reparto[k]}</td>
+      <td style="padding:7px 10px;text-align:center;color:#2ecc71;font-weight:700">${repartoRot[k]}</td>
     </tr>`;
   });
   // Mecánicos ausentes todo el mes
@@ -2226,8 +2245,8 @@ async function calcularAutoAsig(){
   });
   html += '</tbody></table>';
 
-  // Detalle de asignación por mecánico
-  mecActivos.forEach(k => {
+  // Detalle de asignación por mecánico (en orden rotado)
+  mecRotados.forEach(k => {
     const nombre = disponibles[k].nombre;
     const maqsMec = Object.entries(asigNueva).filter(([,v])=>v===nombre).map(([m])=>m);
     html += `<div style="margin-bottom:10px">
@@ -2246,11 +2265,13 @@ function confirmarAutoAsig(){
   const asig = window._autoAsigPropuesta;
   if(!asig){ alert('Primero pulsa Calcular'); return; }
   ST.setAsig(asig);
+  ST.incRotOffset(); // avanzar rotación para el próximo mes
   renderAsigGrid();
   poblarPlanMecanicos();
   renderPlan();
   cerrarAutoAsignar();
-  alert('✅ Asignación guardada. Ya puedes ver el plan por mecánico.');
+  const rot = window._autoAsigRotInfo;
+  alert(`✅ Asignación guardada. El próximo mes rotará al siguiente mecánico.`);
 }
 </script>
 
