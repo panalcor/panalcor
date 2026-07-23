@@ -324,20 +324,37 @@ function tarjetaCard(t, mk, isAC){
         else if(wi==='0') slotLabel = '1ª mitad';
         else slotLabel = '2ª mitad';
       }
-      html += `<div class="slot-row">
+      const inputId = `fi_${t.id}_${wi}`;
+      const fechaInput = comp ? comp.fechaReal : fechaPlan;
+      const hecha = comp && !comp.autoRelleno;
+      const autoRell = comp && comp.autoRelleno;
+
+      html += `<div class="slot-row" style="flex-wrap:wrap;gap:6px;align-items:center">
         ${slotLabel ? `<span class="slot-label">${slotLabel}</span>` : ''}
-        <span class="fecha-pill fecha-plan">📅 ${fmtDs(fechaPlan)}</span>`;
-      if(comp){
-        if(comp.autoRelleno){
-          const etiqueta = comp.retraso
-            ? `<span style="background:#e17055;color:#fff;border-radius:4px;font-size:.7rem;padding:1px 6px;margin-right:4px;font-weight:700">RETRASO</span>`
-            : `<span style="background:#00b894;color:#fff;border-radius:4px;font-size:.7rem;padding:1px 6px;margin-right:4px;font-weight:700">EN FECHA</span>`;
-          html += `<span class="fecha-pill fecha-auto" style="font-size:.8rem;padding:4px 10px">${etiqueta}⚙️ ${fmtDs(comp.fechaReal)}</span>`;
-        } else {
-          html += `<span class="fecha-pill fecha-real" style="font-size:.82rem;padding:5px 12px;font-weight:700">✅ Realizada el ${fmtDs(comp.fechaReal)}${isAC?' · '+escH(comp.mecanico):''}</span>`;
-        }
+        <span class="fecha-pill fecha-plan" style="font-size:.75rem">📅 Plan: ${fmtDs(fechaPlan)}</span>
+        <input type="date" id="${inputId}" value="${fechaInput}"
+          style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);border-radius:8px;color:#fff;padding:5px 10px;font-size:.82rem;outline:none"
+          ${hecha?'':''}/>`;
+
+      if(hecha){
+        html += `<span style="color:#00b894;font-size:.8rem;font-weight:700">✅ Hecha</span>
+          <button onclick="marcarHecha(${t.id},'${wi}','${mk}',this,document.getElementById('${inputId}').value)"
+            style="background:rgba(0,184,148,.15);border:1px solid rgba(0,184,148,.4);color:#00b894;border-radius:8px;padding:4px 10px;font-size:.75rem;cursor:pointer">
+            ✏️ Corregir fecha
+          </button>`;
+      } else if(autoRell){
+        const etq = comp.retraso
+          ? `<span style="background:#e17055;color:#fff;border-radius:4px;font-size:.7rem;padding:1px 6px;font-weight:700">RETRASO</span>`
+          : `<span style="background:#00b894;color:#fff;border-radius:4px;font-size:.7rem;padding:1px 6px;font-weight:700">EN FECHA</span>`;
+        html += `${etq}<button onclick="marcarHecha(${t.id},'${wi}','${mk}',this,document.getElementById('${inputId}').value)"
+            style="background:rgba(116,185,255,.12);border:1px solid rgba(116,185,255,.35);color:#74b9ff;border-radius:8px;padding:4px 10px;font-size:.75rem;cursor:pointer">
+            ✓ Confirmar / Corregir
+          </button>`;
       } else {
-        html += `<button class="btn-hecho" onclick="marcarHecha(${t.id},'${wi}','${mk}',this)">${isAC?'✓ La hice yo':'✓ Hecha hoy'}</button>`;
+        html += `<button onclick="marcarHecha(${t.id},'${wi}','${mk}',this,document.getElementById('${inputId}').value)"
+            style="background:rgba(0,184,148,.12);border:1px solid rgba(0,184,148,.4);color:#00b894;border-radius:8px;padding:5px 14px;font-size:.82rem;font-weight:600;cursor:pointer">
+            ${isAC?'✓ La hice yo':'✓ Marcar hecha'}
+          </button>`;
       }
       html += `</div>`;
     });
@@ -347,18 +364,19 @@ function tarjetaCard(t, mk, isAC){
   return html;
 }
 
-async function marcarHecha(taskId, wi, mk, btn){
+async function marcarHecha(taskId, wi, mk, btn, fechaElegida){
   btn.disabled=true; btn.textContent='⏳';
   const hoy = new Date();
   const hoyDs = hoy.getFullYear()+'-'+String(hoy.getMonth()+1).padStart(2,'0')+'-'+String(hoy.getDate()).padStart(2,'0');
+  const fechaReal = fechaElegida || hoyDs;
   try {
     await _DB.ref(`preventivo_completado/${mk}/${taskId}_${wi}`).set({
-      hecho:true, fechaReal:hoyDs, fechaPlan:'', mecanico:mecNombre, autoRelleno:false, ts:Date.now()
+      hecho:true, fechaReal, fechaPlan:'', mecanico:mecNombre, autoRelleno:false, ts:Date.now()
     });
-    _comp[`${taskId}_${wi}`] = {hecho:true,fechaReal:hoyDs,mecanico:mecNombre,autoRelleno:false};
+    _comp[`${taskId}_${wi}`] = {hecho:true, fechaReal, mecanico:mecNombre, autoRelleno:false};
     renderMisTareas(mk);
   } catch(e){
-    btn.disabled=false; btn.textContent='✓ Hecha hoy';
+    btn.disabled=false; btn.textContent='✓ Marcar hecha';
     alert('⚠️ Error: '+e.message);
   }
 }
