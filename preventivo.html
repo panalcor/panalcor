@@ -1911,6 +1911,18 @@ function showOk(id) {
   setTimeout(() => el.style.display='none', 2500);
 }
 
+/* ── Auto-login si hay sesión admin activa de panalcor_inicio ── */
+(function(){
+  try {
+    const s = JSON.parse(localStorage.getItem('panalcor_session') || 'null');
+    if(s && s.rol === 'admin' && (!s.expires || Date.now() < s.expires)){
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('appScreen').style.display = 'block';
+      iniciarApp();
+    }
+  } catch(e){}
+})();
+
 /* ── Update iniciarApp to launch plan by default ── */
 function iniciarCatalogo(){
   renderStats(TAREAS);
