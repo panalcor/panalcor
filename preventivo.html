@@ -759,20 +759,20 @@ if('serviceWorker' in navigator){
 
   <!-- ══ TAB NAV ══ -->
   <div class="tab-nav">
-    <button type="button" class="tab-btn active" id="tbtn-plan"     onclick="switchTab('plan')">📅 Plan Semanal</button>
+    <button type="button" class="tab-btn active" id="tbtn-plan"     onclick="switchTab('plan')">📅 Plan Mensual</button>
     <button type="button" class="tab-btn"        id="tbtn-catalogo" onclick="switchTab('catalogo')">📋 Catálogo</button>
     <button type="button" class="tab-btn"        id="tbtn-ajustes"  onclick="switchTab('ajustes')">⚙️ Ajustes</button>
   </div>
 
-  <!-- ══ PLAN SEMANAL ══ -->
+  <!-- ══ PLAN MENSUAL ══ -->
   <div id="tab-plan">
     <div class="week-nav">
-      <button type="button" class="week-nav-btn" onclick="navWeek(-1)">← Anterior</button>
+      <button type="button" class="week-nav-btn" onclick="navMes(-1)">← Anterior</button>
       <div class="week-info">
-        <div class="week-title" id="weekTitle">—</div>
-        <div class="week-sub"   id="weekSub">—</div>
+        <div class="week-title" id="monthTitle">—</div>
+        <div class="week-sub"   id="monthSub">—</div>
       </div>
-      <button type="button" class="week-nav-btn" onclick="navWeek(1)">Siguiente →</button>
+      <button type="button" class="week-nav-btn" onclick="navMes(1)">Siguiente →</button>
     </div>
     <div class="plan-controls">
       <div class="plan-stat-chips" id="planStats"></div>
@@ -788,8 +788,16 @@ if('serviceWorker' in navigator){
         <button type="button" class="export-btn" onclick="abrirAutoAsignar()" style="padding:9px 16px;background:rgba(39,174,96,0.15);border-color:rgba(39,174,96,0.4);color:#2ecc71">
           🤖 Auto-asignar mes
         </button>
+        <button type="button" class="export-btn" onclick="autoRellenarFechas(false)" style="padding:9px 16px;background:rgba(116,185,255,0.12);border-color:rgba(116,185,255,0.4);color:#74b9ff">
+          🎲 Auto-rellenar fechas
+        </button>
+        <button type="button" class="export-btn" onclick="autoRellenarFechas(true)" style="padding:9px 16px;background:rgba(253,203,110,0.12);border-color:rgba(253,203,110,0.4);color:#fdcb6e">
+          📅 Rellenar mes vencido
+        </button>
       </div>
     </div>
+    <!-- ARRANQUE / CIERRE — tareas compartidas -->
+    <div id="planAC" style="margin-bottom:12px"></div>
     <div class="plan-wrap" id="planWrap"></div>
   </div>
 
@@ -1548,13 +1556,13 @@ function exportarExcel(){
 const MAQUINAS = [...new Set(TAREAS.map(t => t.maquina))];
 const MEQ_DEFAULT = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE'];
 
-// Intervalos en semanas para cada frecuencia
-const FREQ_INT = {DIARIO:1, ARRANQUE:1, CIERRE:1, SEMANAL:1, QUINCENAL:2, MENSUAL:4, TRIMESTRAL:13, SEMESTRAL:26, ANUAL:52};
 const DIAS_ES  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const MESES_ES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 const MESES_L  = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+// Frecuencias que aparecen en el plan automático (el resto las asigna el admin manualmente)
+const FREQS_AUTO = ['DIARIO','SEMANAL','QUINCENAL','MENSUAL'];
 
-let curMonday = null; // la semana que se está viendo ahora
+let curMes = { year: new Date().getFullYear(), month: new Date().getMonth() };
 
 /* ── Storage helpers ── */
 /* ── Firebase (para leer turnos) ── */
@@ -1572,37 +1580,39 @@ const ST = {
   ref:   () => localStorage.getItem('preventivoRef')    || '2026-06-01',
   meqs:  () => { try{ return JSON.parse(localStorage.getItem('preventivoMecanicos'))||MEQ_DEFAULT; }catch(e){return MEQ_DEFAULT;} },
   asig:  () => { try{ return JSON.parse(localStorage.getItem('preventivoAsig'))||{}; }catch(e){return {};} },
-  fechas:() => { try{ return JSON.parse(localStorage.getItem('preventivoFechas'))||{}; }catch(e){return {};} },
+  fechasMes:() => { try{ return JSON.parse(localStorage.getItem('preventivoFechasMes'))||{}; }catch(e){return {};} },
   setRef:   v => localStorage.setItem('preventivoRef', v),
   setMeqs:  v => localStorage.setItem('preventivoMecanicos', JSON.stringify(v)),
   setAsig:  v => localStorage.setItem('preventivoAsig', JSON.stringify(v)),
   setPwd:   v => localStorage.setItem('preventivoPwd', v),
-  setFechas:v => localStorage.setItem('preventivoFechas', JSON.stringify(v)),
+  setFechasMes:v => localStorage.setItem('preventivoFechasMes', JSON.stringify(v)),
 };
 
 /* ── Date utils ── */
-function getMondayOf(d) {
-  const dt = new Date(d); dt.setHours(0,0,0,0);
-  const day = dt.getDay();
-  dt.setDate(dt.getDate() - (day === 0 ? 6 : day - 1));
-  return dt;
-}
-function getRefMonday() {
-  return getMondayOf(new Date(ST.ref() + 'T12:00:00'));
-}
-function weekNumOf(monday) {
-  return Math.round((monday - getRefMonday()) / (7*24*3600*1000));
-}
-function fmtDate(d, long) {
-  if(long) return `${d.getDate()} de ${MESES_L[d.getMonth()]} de ${d.getFullYear()}`;
-  return `${d.getDate()} ${MESES_ES[d.getMonth()]}`;
-}
 function fmtDateShort(d) {
   return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
 }
-function isDue(freq, wn) {
-  if(wn < 0) return false;
-  return wn % (FREQ_INT[freq] || 1) === 0;
+function toDS(d) {
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function mesKey(year, month) { // 'YYYY-MM'
+  return year+'-'+String(month+1).padStart(2,'0');
+}
+
+// Returns [{monStr, days:[dsStr]}] — one entry per week with Mon-Fri days in the month
+function getWeeksOfMonth(year, month) {
+  const lastDay = new Date(year, month+1, 0).getDate();
+  const weekMap = {}, weekOrder = [];
+  for(let day = 1; day <= lastDay; day++) {
+    const d = new Date(year, month, day);
+    const dow = d.getDay();
+    if(dow < 1 || dow > 5) continue;
+    const mon = new Date(d); mon.setDate(d.getDate() - (dow - 1));
+    const monStr = toDS(mon);
+    if(!weekMap[monStr]) { weekMap[monStr] = []; weekOrder.push(monStr); }
+    weekMap[monStr].push(toDS(d));
+  }
+  return weekOrder.map(monStr => ({ monStr, days: weekMap[monStr] }));
 }
 
 /* ════ TABS ════ */
@@ -1615,19 +1625,19 @@ function switchTab(tab) {
   if(tab==='catalogo'){ iniciarCatalogo(); }
 }
 
-/* ════ PLAN SEMANAL ════ */
+/* ════ PLAN MENSUAL ════ */
 function iniciarPlan() {
-  // Calcular el lunes de la semana actual (o el de referencia si aún no ha llegado)
-  const hoyLun = getMondayOf(new Date());
-  const refLun  = getRefMonday();
-  curMonday = hoyLun >= refLun ? hoyLun : refLun;
+  curMes = { year: new Date().getFullYear(), month: new Date().getMonth() };
   poblarPlanMecanicos();
   renderPlan();
 }
 
-function navWeek(delta) {
-  curMonday = new Date(curMonday);
-  curMonday.setDate(curMonday.getDate() + delta*7);
+function navMes(delta) {
+  let { year, month } = curMes;
+  month += delta;
+  if(month < 0)  { year--; month = 11; }
+  if(month > 11) { year++; month = 0;  }
+  curMes = { year, month };
   renderPlan();
 }
 
@@ -1639,43 +1649,78 @@ function poblarPlanMecanicos() {
   });
 }
 
+/* ─ Selector de día L-V dentro de un rango de días ─ */
+function _buildDaySelect(days, savedFecha, taskId, wi, mk, isAC) {
+  const fn = isAC ? 'guardarFechaAC' : 'guardarFechaMes';
+  const hasVal = !!savedFecha;
+  const opts = `<option value="">— Día —</option>` +
+    days.map(ds => {
+      const d = new Date(ds+'T12:00:00');
+      return `<option value="${ds}" ${savedFecha===ds?'selected':''}>${DIAS_ES[d.getDay()]} ${d.getDate()}</option>`;
+    }).join('');
+  return `<select onchange="${fn}(${taskId},${wi},this.value,'${mk}')"
+    style="background:#0d1b2a;color:${hasVal?'#e8c14e':'rgba(255,255,255,0.4)'};border:1px solid ${hasVal?'rgba(232,193,78,0.5)':'rgba(255,255,255,0.15)'};border-radius:5px;padding:3px 6px;font-size:0.73rem;font-family:Barlow,sans-serif;cursor:pointer">${opts}</select>`;
+}
+
 function renderPlan() {
-  const wn    = weekNumOf(curMonday);
-  const sun   = new Date(curMonday); sun.setDate(sun.getDate()+6);
-  const meq   = document.getElementById('planMecanico').value;
-  const asig  = ST.asig();
+  const { year, month } = curMes;
+  const mk = mesKey(year, month);
+  const meq  = document.getElementById('planMecanico').value;
+  const asig = ST.asig();
+  const fechasMes = ST.fechasMes();
+  const mkData = fechasMes[mk] || {};
 
   // Header
-  const semLabel = wn >= 0 ? `Semana ${wn+1}` : '⚠️ Antes del inicio';
-  document.getElementById('weekTitle').textContent =
-    `${semLabel}  ·  Lun ${fmtDate(curMonday)} — Dom ${fmtDate(sun)} ${curMonday.getFullYear()}`;
-  document.getElementById('weekSub').textContent =
-    `Referencia: ${fmtDate(getRefMonday(), true)}`;
+  document.getElementById('monthTitle').textContent =
+    `${MESES_L[month].charAt(0).toUpperCase()+MESES_L[month].slice(1)} ${year}`;
+  document.getElementById('monthSub').textContent =
+    `Plan mensual de mantenimiento preventivo`;
 
-  // Si la semana es anterior a la referencia
-  if(wn < 0) {
-    document.getElementById('planStats').innerHTML = '';
-    document.getElementById('planWrap').innerHTML = `
-      <div class="pre-ref-msg" style="margin:2rem auto">
-        <h3>⚠️ SEMANA ANTERIOR AL INICIO DEL PLAN</h3>
-        <p>El plan comienza el <b>lunes ${fmtDate(getRefMonday(),true)}</b>.<br>Navega hacia adelante para ver las tareas.</p>
-        <button type="button" onclick="curMonday=getRefMonday();renderPlan()">Ir a la semana de inicio →</button>
-      </div>`;
-    return;
+  const weeks = getWeeksOfMonth(year, month);
+
+  // ── ARRANQUE y CIERRE (sección compartida, independiente del filtro de mecánico) ──
+  const tareasAC = TAREAS.filter(t => t.frecuencia === 'ARRANQUE' || t.frecuencia === 'CIERRE');
+  let acHtml = '';
+  if(tareasAC.length) {
+    acHtml = `<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px 16px;margin-bottom:14px">
+      <div style="font-size:0.7rem;letter-spacing:0.12em;color:rgba(255,255,255,0.35);margin-bottom:10px;text-transform:uppercase">🔄 Arranque y Cierre — tareas compartidas (visibles a todos)</div>`;
+    tareasAC.forEach(t => {
+      const cfg = FREQ_CFG[t.frecuencia] || {};
+      acHtml += `<div class="plan-task-row" style="flex-wrap:wrap;gap:6px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.05)">
+        <span class="freq-badge freq-${t.frecuencia}" style="color:${cfg.color};background:${cfg.bg};border-color:${cfg.border}">${t.frecuencia}</span>
+        <span style="flex:1;font-size:0.83rem;color:var(--cream)">${escHtml(t.tarea)}</span>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">`;
+      weeks.forEach((wk, wi) => {
+        const stKey = `ac_${t.id}_${wi}`;
+        const done = mkData[stKey+'_done'];
+        const fecha = mkData[stKey+'_fecha'] || '';
+        if(done) {
+          acHtml += `<span style="font-size:0.72rem;color:#00b894;background:rgba(0,184,148,0.1);border:1px solid rgba(0,184,148,0.3);border-radius:5px;padding:2px 8px">✓ S${wi+1} ${fecha.slice(8)>0?fecha.slice(8)+'/'+(fecha.slice(5,7)):''}</span>`;
+        } else {
+          acHtml += `<div style="display:flex;gap:3px;align-items:center">
+            ${_buildDaySelect(wk.days, fecha, t.id, wi, mk, true)}
+            <button onclick="marcarACHecho(${t.id},${wi},'${mk}')" title="Marcar semana ${wi+1} como hecha"
+              style="background:rgba(0,184,148,0.15);border:1px solid rgba(0,184,148,0.35);color:#00b894;border-radius:4px;padding:2px 7px;font-size:0.7rem;cursor:pointer">✓ S${wi+1}</button>
+          </div>`;
+        }
+      });
+      acHtml += `</div></div>`;
+    });
+    acHtml += `</div>`;
   }
+  document.getElementById('planAC').innerHTML = acHtml;
 
-  // Tareas que tocan esta semana, filtradas por mecánico
-  const tareasDueSemana = TAREAS.filter(t => isDue(t.frecuencia, wn));
-  const tareasFiltradas = meq
-    ? tareasDueSemana.filter(t => asig[t.maquina] === meq)
-    : tareasDueSemana;
+  // ── Tareas AUTO (DIARIO/SEMANAL/QUINCENAL/MENSUAL), filtradas por mecánico ──
+  const tareasAuto = TAREAS.filter(t => FREQS_AUTO.includes(t.frecuencia));
+  const tareasFilt = meq
+    ? tareasAuto.filter(t => asig[t.maquina] === meq)
+    : tareasAuto;
 
   // Stats chips
   const counts = {};
-  tareasFiltradas.forEach(t => { counts[t.frecuencia] = (counts[t.frecuencia]||0)+1; });
-  const orden = ['DIARIO','SEMANAL','QUINCENAL','MENSUAL','TRIMESTRAL','SEMESTRAL','ANUAL'];
-  let statsHtml = '';
-  let total = 0;
+  tareasFilt.forEach(t => { counts[t.frecuencia] = (counts[t.frecuencia]||0)+1; });
+  const orden = ['DIARIO','SEMANAL','QUINCENAL','MENSUAL'];
+  let statsHtml = ''; let total = 0;
   orden.forEach(f => {
     const n = counts[f]||0; if(!n) return;
     total += n;
@@ -1684,38 +1729,26 @@ function renderPlan() {
       <span style="font-family:Oswald,sans-serif;font-size:0.95rem;font-weight:700">${n}</span>&nbsp;${f}
     </span>`;
   });
-  statsHtml += `<span style="font-size:0.8rem;color:var(--text-dim);align-self:center;margin-left:4px">Total: <b style="color:var(--gold)">${total}</b> tareas</span>`;
+  if(total) statsHtml += `<span style="font-size:0.8rem;color:var(--text-dim);align-self:center;margin-left:4px">Total: <b style="color:var(--gold)">${total}</b> tareas</span>`;
   document.getElementById('planStats').innerHTML = statsHtml;
+
+  if(!tareasFilt.length) {
+    document.getElementById('planWrap').innerHTML = `
+      <div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <p>${meq ? `No hay tareas auto-plan asignadas a <b>${meq}</b> este mes.` : 'No hay tareas en el catálogo para el plan automático.'}</p></div>`;
+    return;
+  }
 
   // Agrupar por máquina
   const grupos = {};
-  tareasFiltradas.forEach(t => {
+  tareasFilt.forEach(t => {
     if(!grupos[t.maquina]) grupos[t.maquina] = [];
     grupos[t.maquina].push(t);
   });
 
-  if(!Object.keys(grupos).length) {
-    document.getElementById('planWrap').innerHTML = `
-      <div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <p>No hay tareas asignadas a <b>${meq}</b> esta semana.</p></div>`;
-    return;
-  }
-
-  // Días laborables de la semana actual (Lun-Vie)
-  const diasSemana = [];
-  const DIAS_CORTO = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-  for(let i=0; i<5; i++){
-    const d = new Date(curMonday); d.setDate(curMonday.getDate()+i);
-    const ds = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    diasSemana.push({ ds, lbl: DIAS_CORTO[d.getDay()]+' '+d.getDate() });
-  }
-  const weekKey = diasSemana[0].ds; // lunes como clave de semana
-  const fechas = ST.fechas();
-  const fechasSemana = fechas[weekKey] || {};
-
   let n = 0;
   let html = `<div style="font-size:0.72rem;color:rgba(255,255,255,0.3);margin-bottom:12px;padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:6px;border:1px solid rgba(255,255,255,0.07)">
-    📅 Las tareas se realizan de <b style="color:rgba(255,255,255,0.55)">lunes a viernes</b>. Asigna el día concreto a cada tarea con el selector. Los sábados se programan aparte.
+    📅 Las tareas se realizan de <b style="color:rgba(255,255,255,0.55)">lunes a viernes</b>. Asigna el día concreto a cada tarea. Los sábados se programan aparte.
   </div>`;
 
   MAQUINAS.filter(m => grupos[m]).forEach(maq => {
@@ -1727,85 +1760,231 @@ function renderPlan() {
         ${mecAsig ? `<span class="plan-mec-badge">👷 ${escHtml(mecAsig)}</span>` : ''}
         <span class="plan-count-badge">${tareas.length} tarea${tareas.length!==1?'s':''}</span>
       </div>`;
+
     tareas.forEach(t => {
       n++;
       const cfg = FREQ_CFG[t.frecuencia] || {color:'#fff',bg:'rgba(255,255,255,0.05)',border:'rgba(255,255,255,0.2)'};
-      const fechaAsig = fechasSemana[t.id] || '';
-      const diaOpts = `<option value="">— Día —</option>` +
-        diasSemana.map(d=>`<option value="${d.ds}" ${fechaAsig===d.ds?'selected':''}>${d.lbl}</option>`).join('');
       html += `<div class="plan-task-row" style="flex-wrap:wrap;gap:6px">
         <span class="plan-task-num">${n}</span>
-        <span class="plan-task-text" style="flex:1;min-width:160px">${escHtml(t.tarea)}</span>
-        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-          <select onchange="guardarFechaTarea(${t.id},'${weekKey}',this.value)"
-            style="background:#0d1b2a;color:${fechaAsig?'#e8c14e':'rgba(255,255,255,0.4)'};border:1px solid ${fechaAsig?'rgba(232,193,78,0.5)':'rgba(255,255,255,0.15)'};border-radius:5px;padding:3px 7px;font-size:0.75rem;font-family:Barlow,sans-serif;cursor:pointer">
-            ${diaOpts}
-          </select>
-          <span class="freq-badge freq-${t.frecuencia}" style="color:${cfg.color};background:${cfg.bg};border-color:${cfg.border}">${t.frecuencia}</span>
-        </div>
-      </div>`;
+        <span class="plan-task-text" style="flex:1;min-width:140px">${escHtml(t.tarea)}</span>
+        <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:wrap">`;
+
+      if(t.frecuencia === 'DIARIO') {
+        html += `<span style="font-size:0.72rem;color:rgba(255,255,255,0.4);font-style:italic">Cada día L-V</span>`;
+      } else if(t.frecuencia === 'SEMANAL') {
+        weeks.forEach((wk, wi) => {
+          const savedFecha = mkData[`${t.id}_${wi}`] || '';
+          html += `<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+            <span style="font-size:0.62rem;color:rgba(255,255,255,0.3)">S${wi+1}</span>
+            ${_buildDaySelect(wk.days, savedFecha, t.id, wi, mk)}
+          </div>`;
+        });
+      } else if(t.frecuencia === 'QUINCENAL') {
+        // Primera quincena: weeks 0 y 1 combinados; segunda: weeks 2 y 3+
+        const half1 = weeks.slice(0, Math.ceil(weeks.length/2)).flatMap(w=>w.days);
+        const half2 = weeks.slice(Math.ceil(weeks.length/2)).flatMap(w=>w.days);
+        const s1 = mkData[`${t.id}_0`] || '';
+        const s2 = mkData[`${t.id}_1`] || '';
+        html += `<div style="display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-size:0.62rem;color:rgba(255,255,255,0.3)">1ª mitad</span>${_buildDaySelect(half1, s1, t.id, 0, mk)}</div>`;
+        html += `<div style="display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-size:0.62rem;color:rgba(255,255,255,0.3)">2ª mitad</span>${_buildDaySelect(half2, s2, t.id, 1, mk)}</div>`;
+      } else if(t.frecuencia === 'MENSUAL') {
+        const allDays = weeks.flatMap(w=>w.days);
+        const saved = mkData[`${t.id}_0`] || '';
+        html += `<div style="display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-size:0.62rem;color:rgba(255,255,255,0.3)">Mes</span>${_buildDaySelect(allDays, saved, t.id, 0, mk)}</div>`;
+      }
+
+      html += `<span class="freq-badge freq-${t.frecuencia}" style="color:${cfg.color};background:${cfg.bg};border-color:${cfg.border}">${t.frecuencia}</span>
+        </div></div>`;
     });
     html += `</div>`;
   });
   document.getElementById('planWrap').innerHTML = html;
 }
 
-function guardarFechaTarea(taskId, weekKey, fecha){
-  const fechas = ST.fechas();
-  if(!fechas[weekKey]) fechas[weekKey] = {};
-  if(fecha) fechas[weekKey][taskId] = fecha;
-  else delete fechas[weekKey][taskId];
-  ST.setFechas(fechas);
+function guardarFechaMes(taskId, wi, fecha, mk) {
+  const all = ST.fechasMes();
+  if(!all[mk]) all[mk] = {};
+  const key = `${taskId}_${wi}`;
+  if(fecha) all[mk][key] = fecha;
+  else delete all[mk][key];
+  ST.setFechasMes(all);
+  // Re-color the select in place
+  renderPlan();
 }
 
-/* ── Export plan to Excel ── */
-function exportPlan() {
-  const wn   = weekNumOf(curMonday);
-  if(wn < 0){ alert('Navega a una semana dentro del plan para exportar.'); return; }
+// Guardar fecha de AC (ARRANQUE/CIERRE) — también guarda en Firebase
+function guardarFechaAC(taskId, wi, fecha, mk) {
+  const all = ST.fechasMes();
+  if(!all[mk]) all[mk] = {};
+  const key = `ac_${taskId}_${wi}_fecha`;
+  if(fecha) all[mk][key] = fecha;
+  else delete all[mk][key];
+  ST.setFechasMes(all);
+}
 
-  const sun  = new Date(curMonday); sun.setDate(sun.getDate()+6);
+function marcarACHecho(taskId, wi, mk) {
+  const all = ST.fechasMes();
+  if(!all[mk]) all[mk] = {};
+  all[mk][`ac_${taskId}_${wi}_done`] = true;
+  const fechaInput = all[mk][`ac_${taskId}_${wi}_fecha`] || '';
+  // Guardar en Firebase también para persistencia compartida
+  _DB.ref(`preventivo_ac/${mk}/${taskId}_${wi}`).set({ hecho:true, fecha:fechaInput, ts:Date.now() }).catch(()=>{});
+  ST.setFechasMes(all);
+  renderPlan();
+}
+
+/* ── Export plan to Excel (monthly) ── */
+function exportPlan() {
+  const { year, month } = curMes;
+  const mk   = mesKey(year, month);
   const meq  = document.getElementById('planMecanico').value;
   const asig = ST.asig();
+  const mkData = (ST.fechasMes()[mk]) || {};
+  const weeks  = getWeeksOfMonth(year, month);
 
-  const tareasSemana = TAREAS.filter(t => isDue(t.frecuencia, wn));
-  const tareasFilt   = meq ? tareasSemana.filter(t => asig[t.maquina]===meq) : tareasSemana;
+  const tareasAuto = TAREAS.filter(t => FREQS_AUTO.includes(t.frecuencia));
+  const tareasFilt = meq ? tareasAuto.filter(t => asig[t.maquina]===meq) : tareasAuto;
 
-  if(!tareasFilt.length){ alert('No hay tareas que exportar esta semana.'); return; }
+  if(!tareasFilt.length){ alert('No hay tareas que exportar este mes.'); return; }
 
-  // Fechas asignadas por tarea
-  const weekKey = curMonday.getFullYear()+'-'+String(curMonday.getMonth()+1).padStart(2,'0')+'-'+String(curMonday.getDate()).padStart(2,'0');
-  const fechasSemana = (ST.fechas()[weekKey]) || {};
-  const DIAS_CORTO = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-  function fmtDiaAsig(ds){
-    if(!ds) return 'Lun–Vie';
+  function fmtDia(ds) {
+    if(!ds) return '';
     const d = new Date(ds+'T12:00:00');
-    return DIAS_CORTO[d.getDay()]+' '+fmtDateShort(d);
+    return DIAS_ES[d.getDay()]+' '+fmtDateShort(d);
   }
 
-  // Construir filas
+  const mesesES2 = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const rows = [];
-  rows.push(['MANTENIMIENTO PREVENTIVO — PANALCOR S.L.']);
-  rows.push([`Semana ${wn+1}  ·  Lunes ${fmtDateShort(curMonday)} — Viernes ${fmtDateShort(new Date(curMonday.getTime()+4*86400000))}`]);
+  rows.push([`MANTENIMIENTO PREVENTIVO — PANALCOR S.L. — ${mesesES2[month]} ${year}`]);
   rows.push([`Mecánico: ${meq || 'Todos los mecánicos'}`]);
   rows.push([]);
-  rows.push(['Nº','MÁQUINA','MECÁNICO','TAREA','FRECUENCIA','DÍA PREVISTO','✓ REALIZADO']);
+  rows.push(['Nº','MÁQUINA','MECÁNICO','TAREA','FRECUENCIA','FECHAS PREVISTAS','✓ REALIZADO']);
 
   let n = 0;
   tareasFilt.forEach(t => {
     n++;
     const mecAsig = asig[t.maquina] || '—';
-    const diaAsig = fmtDiaAsig(fechasSemana[t.id]);
-    rows.push([n, t.maquina, mecAsig, t.tarea, t.frecuencia, diaAsig, '']);
+    let fechasStr = '';
+    if(t.frecuencia === 'DIARIO') {
+      fechasStr = 'Cada día L-V';
+    } else if(t.frecuencia === 'SEMANAL') {
+      fechasStr = weeks.map((_,wi) => fmtDia(mkData[`${t.id}_${wi}`])).filter(Boolean).join(' / ') || '—';
+    } else if(t.frecuencia === 'QUINCENAL') {
+      fechasStr = [fmtDia(mkData[`${t.id}_0`]), fmtDia(mkData[`${t.id}_1`])].filter(Boolean).join(' / ') || '—';
+    } else if(t.frecuencia === 'MENSUAL') {
+      fechasStr = fmtDia(mkData[`${t.id}_0`]) || '—';
+    }
+    rows.push([n, t.maquina, mecAsig, t.tarea, t.frecuencia, fechasStr, '']);
   });
 
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols'] = [{wch:4},{wch:26},{wch:16},{wch:60},{wch:13},{wch:14},{wch:13}];
-  ws['!merges'] = [{s:{r:0,c:0},e:{r:0,c:6}},{s:{r:1,c:0},e:{r:1,c:6}},{s:{r:2,c:0},e:{r:2,c:6}}];
-  XLSX.utils.book_append_sheet(wb, ws, 'Plan Semana');
+  ws['!cols'] = [{wch:4},{wch:26},{wch:16},{wch:60},{wch:13},{wch:30},{wch:13}];
+  ws['!merges'] = [{s:{r:0,c:0},e:{r:0,c:6}},{s:{r:1,c:0},e:{r:1,c:6}}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Plan Mensual');
 
   const meqFile = meq ? '_'+meq.replace(/\s+/g,'_') : '';
-  XLSX.writeFile(wb, `Plan_Preventivo_Semana${wn+1}_${fmtDateShort(curMonday).replace(/\//g,'-')}${meqFile}.xlsx`);
+  XLSX.writeFile(wb, `Plan_Preventivo_${mesesES2[month]}_${year}${meqFile}.xlsx`);
+}
+
+/* ════ AUTO-RELLENAR FECHAS ════ */
+// mesVencido=true → rellena el mes ANTERIOR solo donde no haya fecha
+// mesVencido=false → rellena el mes ACTUAL solo donde no haya fecha
+async function autoRellenarFechas(mesVencido) {
+  let { year, month } = curMes;
+  if(mesVencido) {
+    month--;
+    if(month < 0) { year--; month = 11; }
+  }
+  const mk = mesKey(year, month);
+  const mesesNom = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const confirm = window.confirm(`¿Auto-rellenar fechas de ${mesesNom[month]} ${year}?\n\nSolo se rellenarán los huecos vacíos. Las fechas ya guardadas no se tocan.`);
+  if(!confirm) return;
+
+  // Cargar ausencias/dias de Firebase para saber libranzas
+  let diasFB = {}, ausenciasFB = {};
+  try {
+    const snap = await _DB.ref('turnos').once('value');
+    const d = snap.val() || {};
+    diasFB     = d.dias      || {};
+    ausenciasFB = d.ausencias || {};
+  } catch(e) {}
+
+  // Mecánicos con sus IDs Firebase (los 5 principales)
+  const MEC_IDS = ['1','2','3','4','5'];
+  // Leer nombres desde Firebase (ya cargados en calcularAutoAsig) — aquí recargamos
+  let mecNombres = {};
+  try {
+    const snap2 = await _DB.ref('turnos/mecanicos').once('value');
+    const d2 = snap2.val() || {};
+    MEC_IDS.forEach(k => { mecNombres[d2[k]?.nombre || k] = k; });
+  } catch(e) {}
+
+  const asig = ST.asig();
+  const weeks = getWeeksOfMonth(year, month);
+  const all = ST.fechasMes();
+  if(!all[mk]) all[mk] = {};
+  const mkData = all[mk];
+
+  const AUSENTES_ESTADO = ['vacaciones','baja','sancion','asunto','guardia'];
+
+  function mecIsOffOn(mecId, ds) {
+    // Check manual override in dias
+    const dayEntry = diasFB[ds]?.[mecId];
+    if(dayEntry) {
+      if(AUSENTES_ESTADO.includes(dayEntry.estado)) return true;
+      if(dayEntry.turno === 'st') return true; // sin turno
+    }
+    // Check ausencias ranges
+    for(const aus of Object.values(ausenciasFB)) {
+      if(String(aus.mecId) !== String(mecId)) continue;
+      if(ds >= aus.desde && ds <= aus.hasta) return true;
+    }
+    return false;
+  }
+
+  function pickRandom(days, mecId) {
+    const available = days.filter(ds => !mecIsOffOn(mecId, ds));
+    if(!available.length) return days[Math.floor(Math.random()*days.length)]; // fallback: any day
+    return available[Math.floor(Math.random()*available.length)];
+  }
+
+  // Reverse map: mechanic name → Firebase ID
+  function mecIdForName(nombre) {
+    return mecNombres[nombre] || null;
+  }
+
+  let filled = 0;
+
+  TAREAS.filter(t => FREQS_AUTO.includes(t.frecuencia) && t.frecuencia !== 'DIARIO').forEach(t => {
+    const mecNombre = asig[t.maquina] || '';
+    const mecId = mecIdForName(mecNombre);
+
+    if(t.frecuencia === 'SEMANAL') {
+      weeks.forEach((wk, wi) => {
+        const key = `${t.id}_${wi}`;
+        if(!mkData[key]) { // only fill empty slots
+          mkData[key] = pickRandom(wk.days, mecId);
+          filled++;
+        }
+      });
+    } else if(t.frecuencia === 'QUINCENAL') {
+      const half1 = weeks.slice(0, Math.ceil(weeks.length/2)).flatMap(w=>w.days);
+      const half2 = weeks.slice(Math.ceil(weeks.length/2)).flatMap(w=>w.days);
+      if(!mkData[`${t.id}_0`]) { mkData[`${t.id}_0`] = pickRandom(half1, mecId); filled++; }
+      if(!mkData[`${t.id}_1`]) { mkData[`${t.id}_1`] = pickRandom(half2, mecId); filled++; }
+    } else if(t.frecuencia === 'MENSUAL') {
+      if(!mkData[`${t.id}_0`]) {
+        const allDays = weeks.flatMap(w=>w.days);
+        mkData[`${t.id}_0`] = pickRandom(allDays, mecId);
+        filled++;
+      }
+    }
+  });
+
+  ST.setFechasMes(all);
+  renderPlan();
+  alert(`✅ Auto-relleno completado: ${filled} fecha${filled!==1?'s':''} asignada${filled!==1?'s':''} en ${mesesNom[month]} ${year}.`);
 }
 
 /* ════ AJUSTES ════ */
@@ -1818,15 +1997,8 @@ function renderAjustes() {
 function guardarRefDate() {
   const v = document.getElementById('ajRefDate').value;
   if(!v){ alert('Introduce una fecha válida.'); return; }
-  // Asegurarse de que sea lunes
-  const d = new Date(v+'T12:00:00');
-  const lun = getMondayOf(d);
-  const iso = lun.toISOString().slice(0,10);
-  ST.setRef(iso);
-  document.getElementById('ajRefDate').value = iso;
+  ST.setRef(v);
   showOk('okRef');
-  // Reiniciar plan con nueva referencia
-  curMonday = getMondayOf(new Date()) >= getRefMonday() ? getMondayOf(new Date()) : getRefMonday();
 }
 
 function renderMecList() {
@@ -1933,10 +2105,8 @@ function iniciarCatalogo(){
    AUTO-ASIGNACIÓN MENSUAL POR TURNO
    ════════════════════════════════════════════ */
 function abrirAutoAsignar(){
-  // Mes por defecto: mes actual
-  const hoy = new Date();
-  document.getElementById('autoMes').value =
-    hoy.getFullYear() + '-' + String(hoy.getMonth()+1).padStart(2,'0');
+  // Mes por defecto: mes que se está viendo
+  document.getElementById('autoMes').value = mesKey(curMes.year, curMes.month);
   document.getElementById('autoAsigModal').style.display = 'flex';
   document.getElementById('autoAsigPreview').innerHTML =
     '<div style="color:rgba(255,255,255,0.35);text-align:center;padding:20px">Selecciona el mes y pulsa Calcular</div>';
