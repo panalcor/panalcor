@@ -791,7 +791,10 @@ if('serviceWorker' in navigator){
         <button type="button" class="export-btn" onclick="autoRellenarFechas(false)" style="padding:9px 16px;background:rgba(116,185,255,0.12);border-color:rgba(116,185,255,0.4);color:#74b9ff">
           🎲 Auto-rellenar fechas
         </button>
-        <button type="button" class="export-btn" onclick="autoRellenarFechas(true)" style="padding:9px 16px;background:rgba(253,203,110,0.12);border-color:rgba(253,203,110,0.4);color:#fdcb6e">
+        <button type="button" class="export-btn" onclick="publicarPlan()" style="padding:9px 16px;background:rgba(253,203,110,0.12);border-color:rgba(253,203,110,0.4);color:#fdcb6e" id="btnPublicar">
+          📤 Publicar a mecánicos
+        </button>
+        <button type="button" class="export-btn" onclick="rellenarMesVencido()" style="padding:9px 16px;background:rgba(162,155,254,0.12);border-color:rgba(162,155,254,0.4);color:#a29bfe">
           📅 Rellenar mes vencido
         </button>
       </div>
@@ -1579,11 +1582,25 @@ const ST = {
   pwd:   () => localStorage.getItem('preventivoPwd')    || 'admin',
   ref:   () => localStorage.getItem('preventivoRef')    || '2026-06-01',
   meqs:  () => { try{ return JSON.parse(localStorage.getItem('preventivoMecanicos'))||MEQ_DEFAULT; }catch(e){return MEQ_DEFAULT;} },
-  asig:  () => { try{ return JSON.parse(localStorage.getItem('preventivoAsig'))||{}; }catch(e){return {};} },
+  // asig ahora es mensual: asigMes()[mk] devuelve el reparto de ese mes
+  asigMes:()=>{ try{ return JSON.parse(localStorage.getItem('preventivoAsigMes'))||{}; }catch(e){return {};} },
+  asig: ()=>{ // compatibilidad: devuelve asig del mes visible o global
+    const mk = mesKey(curMes.year, curMes.month);
+    const mes = (()=>{ try{ return JSON.parse(localStorage.getItem('preventivoAsigMes'))||{}; }catch(e){return {};} })();
+    return mes[mk] || (()=>{ try{ return JSON.parse(localStorage.getItem('preventivoAsig'))||{}; }catch(e){return {};} })();
+  },
   fechasMes:() => { try{ return JSON.parse(localStorage.getItem('preventivoFechasMes'))||{}; }catch(e){return {};} },
   setRef:   v => localStorage.setItem('preventivoRef', v),
   setMeqs:  v => localStorage.setItem('preventivoMecanicos', JSON.stringify(v)),
-  setAsig:  v => localStorage.setItem('preventivoAsig', JSON.stringify(v)),
+  setAsig:  (v, mk) => {
+    // Guarda en el mes correspondiente Y en global (fallback)
+    localStorage.setItem('preventivoAsig', JSON.stringify(v));
+    if(mk) {
+      const all = (()=>{ try{ return JSON.parse(localStorage.getItem('preventivoAsigMes'))||{}; }catch(e){return {};} })();
+      all[mk] = v;
+      localStorage.setItem('preventivoAsigMes', JSON.stringify(all));
+    }
+  },
   setPwd:   v => localStorage.setItem('preventivoPwd', v),
   setFechasMes:v => localStorage.setItem('preventivoFechasMes', JSON.stringify(v)),
   rotOffset:() => parseInt(localStorage.getItem('preventivoRotOffset')||'0', 10),
@@ -1889,6 +1906,110 @@ function exportPlan() {
   XLSX.writeFile(wb, `Plan_Preventivo_${mesesES2[month]}_${year}${meqFile}.xlsx`);
 }
 
+/* ════ PUBLICAR PLAN A MECÁNICOS (Firebase) ════ */
+async function publicarPlan() {
+  const { year, month } = curMes;
+  const mk      = mesKey(year, month);
+  const asig    = ST.asig();
+  const mkData  = (ST.fechasMes()[mk]) || {};
+  const weeks   = getWeeksOfMonth(year, month);
+  const mesesN  = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  // Construir lista de tareas con fechas para Firebase
+  const tareasPlan = [];
+  TAREAS.filter(t => FREQS_AUTO.includes(t.frecuencia)).forEach(t => {
+    const mecanico = asig[t.maquina] || '';
+    const fechas = {};
+    if(t.frecuencia === 'DIARIO') {
+      fechas.tipo = 'diario';
+    } else if(t.frecuencia === 'SEMANAL') {
+      weeks.forEach((_, wi) => { if(mkData[`${t.id}_${wi}`]) fechas[wi] = mkData[`${t.id}_${wi}`]; });
+    } else if(t.frecuencia === 'QUINCENAL') {
+      if(mkData[`${t.id}_0`]) fechas[0] = mkData[`${t.id}_0`];
+      if(mkData[`${t.id}_1`]) fechas[1] = mkData[`${t.id}_1`];
+    } else if(t.frecuencia === 'MENSUAL') {
+      if(mkData[`${t.id}_0`]) fechas[0] = mkData[`${t.id}_0`];
+    }
+    tareasPlan.push({ id: t.id, maquina: t.maquina, tarea: t.tarea, frecuencia: t.frecuencia, mecanico, fechas });
+  });
+
+  const btn = document.getElementById('btnPublicar');
+  btn.disabled = true; btn.textContent = '⏳ Publicando...';
+  try {
+    await _DB.ref(`preventivo_plan/${mk}`).set({
+      tareas: tareasPlan,
+      asig,
+      publicado: true,
+      mes: mk,
+      publicadoEn: Date.now()
+    });
+    btn.textContent = '✅ Publicado';
+    setTimeout(() => { btn.disabled = false; btn.textContent = '📤 Publicar a mecánicos'; }, 3000);
+    alert(`✅ Plan de ${mesesN[month]} ${year} publicado. Los mecánicos ya pueden ver sus tareas en "Mis Tareas".`);
+  } catch(e) {
+    btn.disabled = false; btn.textContent = '📤 Publicar a mecánicos';
+    alert('⚠️ Error al publicar: ' + e.message);
+  }
+}
+
+/* ════ RELLENAR MES VENCIDO (usa fechas planificadas de Firebase) ════ */
+async function rellenarMesVencido() {
+  let { year, month } = curMes;
+  month--; if(month < 0) { year--; month = 11; }
+  const mk = mesKey(year, month);
+  const mesesN = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  if(!confirm(`¿Rellenar mes vencido ${mesesN[month]} ${year}?\n\nLas tareas sin marcar por el mecánico se completarán automáticamente con su fecha planificada.`)) return;
+
+  let planData, completados;
+  try {
+    const [snapPlan, snapComp] = await Promise.all([
+      _DB.ref(`preventivo_plan/${mk}`).once('value'),
+      _DB.ref(`preventivo_completado/${mk}`).once('value')
+    ]);
+    planData    = snapPlan.val();
+    completados = snapComp.val() || {};
+  } catch(e) {
+    alert('⚠️ Error al leer Firebase: ' + e.message); return;
+  }
+
+  if(!planData || !planData.tareas) {
+    alert(`⚠️ No hay plan publicado para ${mesesN[month]} ${year}.\nPublica primero el plan desde el mes correspondiente.`); return;
+  }
+
+  const updates = {};
+  let rellenas = 0;
+
+  planData.tareas.forEach(t => {
+    if(t.frecuencia === 'DIARIO') return; // diario no tiene fechas concretas
+    Object.entries(t.fechas || {}).forEach(([wi, fechaPlan]) => {
+      if(typeof fechaPlan !== 'string') return;
+      const clave = `${t.id}_${wi}`;
+      if(completados[clave]) return; // ya marcado por el mecánico
+      updates[clave] = {
+        hecho: true,
+        fechaReal: fechaPlan,
+        fechaPlan,
+        mecanico: t.mecanico || '—',
+        autoRelleno: true,
+        ts: Date.now()
+      };
+      rellenas++;
+    });
+  });
+
+  if(!rellenas) {
+    alert(`✅ Todas las tareas de ${mesesN[month]} ${year} ya estaban completadas. Nada que rellenar.`); return;
+  }
+
+  try {
+    await _DB.ref(`preventivo_completado/${mk}`).update(updates);
+    alert(`✅ ${rellenas} tarea${rellenas!==1?'s':''} auto-rellenada${rellenas!==1?'s':''} con su fecha planificada en ${mesesN[month]} ${year}.`);
+  } catch(e) {
+    alert('⚠️ Error al guardar en Firebase: ' + e.message);
+  }
+}
+
 /* ════ AUTO-RELLENAR FECHAS ════ */
 // mesVencido=true → rellena el mes ANTERIOR solo donde no haya fecha
 // mesVencido=false → rellena el mes ACTUAL solo donde no haya fecha
@@ -2035,7 +2156,7 @@ function delMecanico(i) {
   // Limpiar asignaciones de ese mecánico
   const asig = ST.asig();
   Object.keys(asig).forEach(k => { if(asig[k]===nombre) delete asig[k]; });
-  ST.setAsig(asig);
+  ST.setAsig(asig, mesKey(curMes.year, curMes.month));
   renderMecList();
   renderAsigGrid();
   poblarPlanMecanicos();
@@ -2060,7 +2181,7 @@ function guardarAsig() {
   document.querySelectorAll('.asig-mec').forEach(sel => {
     if(sel.value) asig[sel.dataset.maq] = sel.value;
   });
-  ST.setAsig(asig);
+  ST.setAsig(asig, mesKey(curMes.year, curMes.month));
   showOk('okAsig');
   renderPlan();
 }
@@ -2209,8 +2330,9 @@ async function calcularAutoAsig(){
     }
   });
 
-  // Guardar propuesta para confirmar (incluye qué mecánico inicia la rotación)
+  // Guardar propuesta para confirmar (incluye qué mecánico inicia la rotación y el mes)
   window._autoAsigPropuesta = asigNueva;
+  window._autoAsigMk = mesVal; // 'YYYY-MM'
   window._autoAsigRotInfo = { offset: rot, iniciaCon: disponibles[mecRotados[0]]?.nombre };
 
   // Construir preview HTML
@@ -2264,7 +2386,7 @@ async function calcularAutoAsig(){
 function confirmarAutoAsig(){
   const asig = window._autoAsigPropuesta;
   if(!asig){ alert('Primero pulsa Calcular'); return; }
-  ST.setAsig(asig);
+  ST.setAsig(asig, window._autoAsigMk); // guarda por mes
   ST.incRotOffset(); // avanzar rotación para el próximo mes
   renderAsigGrid();
   poblarPlanMecanicos();

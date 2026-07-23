@@ -2,2394 +2,353 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#c9a227">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="PANALCOR">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Mis Tareas — PANALCOR</title>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{
-  --navy:#0d1b2a; --navy-mid:#1a2d42; --navy-light:#243d56;
-  --gold:#c9a227; --gold-light:#f0c040;
-  --white:#f0f4f8; --green:#2ecc71; --red:#e74c3c; --yellow:#f39c12;
+:root {
+  --bg:#0a1628; --surface:#0f2035; --surface2:#142840;
+  --gold:#e8c14e; --cream:#f0f4f8; --text-dim:rgba(255,255,255,0.4);
+  --green:#00b894; --red:#e74c3c; --blue:#74b9ff; --purple:#a29bfe;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;min-height:100vh;padding-bottom:80px}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:var(--bg); color:var(--cream); font-family:Barlow,sans-serif; min-height:100vh; }
 
-/* ── LOGIN ── */
-.login{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px}
-.login-box{background:var(--navy-mid);border:1px solid rgba(201,162,39,0.3);border-radius:18px;padding:36px 24px;width:100%;max-width:340px;text-align:center}
-.login-box .ico{font-size:3rem;margin-bottom:10px}
-.login-box h2{font-size:1.4rem;font-weight:900;color:var(--gold-light);margin-bottom:4px}
-.login-box .sub{font-size:0.75rem;color:rgba(255,255,255,0.35);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:26px}
-.login-box input{width:100%;background:var(--navy);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:9px;padding:14px;font-family:'Barlow',sans-serif;font-size:1.1rem;text-align:center;letter-spacing:0.2em;margin-bottom:12px}
-.login-box input:focus{outline:none;border-color:var(--gold)}
-.login-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a;border:none;border-radius:9px;font-family:'Barlow',sans-serif;font-size:1rem;font-weight:900;letter-spacing:0.1em;cursor:pointer}
-.login-err{color:var(--red);font-size:0.85rem;margin-top:8px;min-height:18px}
+header {
+  background:linear-gradient(135deg,#0d2137 0%,#162d45 100%);
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  padding:14px 20px;
+  display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+}
+.header-logo { font-family:Oswald,sans-serif; font-size:1.1rem; font-weight:700; color:var(--gold); letter-spacing:0.05em; }
+.header-sub  { font-size:0.72rem; color:var(--text-dim); margin-top:1px; }
+.header-mec  { font-size:0.88rem; font-weight:600; color:var(--blue); }
 
-/* ── SELECTOR MECÁNICO ── */
-.mec-selector{position:fixed;inset:0;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:998;padding:24px;gap:14px}
-.mec-selector h2{font-size:1.2rem;font-weight:900;color:var(--gold-light);letter-spacing:0.06em;margin-bottom:8px;text-align:center}
-.mec-btn{width:100%;max-width:320px;padding:18px;background:var(--navy-mid);border:2px solid rgba(255,255,255,0.12);border-radius:12px;color:var(--white);font-family:'Barlow',sans-serif;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all .2s;text-align:left;display:flex;align-items:center;gap:12px}
-.mec-btn:hover,.mec-btn:active{background:rgba(201,162,39,0.15);border-color:var(--gold)}
+.mes-nav {
+  display:flex; align-items:center; gap:10px;
+  background:var(--surface2); border:1px solid rgba(255,255,255,0.08);
+  border-radius:10px; padding:10px 16px; margin:14px 14px 6px; flex-wrap:wrap;
+}
+.mes-nav button {
+  background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15);
+  color:var(--cream); border-radius:6px; padding:6px 14px;
+  font-family:Barlow,sans-serif; font-size:0.85rem; cursor:pointer;
+}
+.mes-nav button:hover { background:rgba(255,255,255,0.1); }
+.mes-title { font-family:Oswald,sans-serif; font-size:1.05rem; font-weight:600; color:var(--gold); flex:1; text-align:center; }
 
-/* ── HEADER ── */
-.header{background:linear-gradient(135deg,#0a1520,var(--navy-mid));border-bottom:2px solid var(--gold);padding:14px 16px;position:sticky;top:0;z-index:50}
-.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.header-name{font-size:1.1rem;font-weight:900;color:var(--gold-light)}
-.header-period{font-size:0.75rem;color:rgba(255,255,255,0.45);letter-spacing:0.08em}
-.header-back{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);padding:7px 12px;border-radius:7px;font-family:'Barlow',sans-serif;font-size:0.8rem;cursor:pointer}
+.content { padding:0 14px 40px; }
 
-/* ── MES SELECTOR ── */
-.mes-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.mes-row label{font-size:0.78rem;color:rgba(255,255,255,0.45);letter-spacing:0.06em;flex-shrink:0}
-#mesSelect{background:var(--navy-light);color:var(--white);border:1px solid rgba(201,162,39,0.35);border-radius:7px;padding:5px 10px;font-family:'Barlow',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;flex:1;max-width:200px}
-#mesSelect:focus{outline:none;border-color:var(--gold)}
+.section-label {
+  font-size:0.65rem; letter-spacing:0.14em; color:var(--text-dim);
+  text-transform:uppercase; margin:14px 0 7px; font-weight:600;
+}
 
-/* ── PROGRESS BAR ── */
-.progress-wrap{background:rgba(255,255,255,0.07);border-radius:8px;height:10px;overflow:hidden}
-.progress-bar{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--gold),var(--gold-light));transition:width .5s}
-.progress-label{display:flex;justify-content:space-between;font-size:0.78rem;color:rgba(255,255,255,0.5);margin-top:5px}
-.progress-label b{color:var(--gold-light)}
+.task-card {
+  background:var(--surface); border:1px solid rgba(255,255,255,0.08);
+  border-radius:10px; padding:13px 15px; margin-bottom:8px; transition:opacity .2s;
+}
+.task-card.done  { opacity:.6; border-color:rgba(0,184,148,.25); background:rgba(0,184,148,.04); }
+.task-card.auto  { opacity:.55; border-color:rgba(162,155,254,.2); background:rgba(162,155,254,.04); }
 
-/* ── CONTENIDO ── */
-.content{padding:14px 14px 20px}
+.task-maq  { font-size:.67rem; font-weight:700; letter-spacing:.1em; color:var(--gold); text-transform:uppercase; margin-bottom:3px; }
+.task-name { font-size:.87rem; color:var(--cream); line-height:1.35; }
+.task-head { display:flex; align-items:flex-start; gap:8px; margin-bottom:8px; }
+.freq-pill {
+  font-size:.67rem; font-weight:700; border:1px solid; border-radius:4px;
+  padding:2px 7px; white-space:nowrap; flex-shrink:0; margin-top:1px;
+}
 
-/* ── MÁQUINA CARD ── */
-.maq-card{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:12px;margin-bottom:12px;overflow:hidden;transition:all .2s}
-.maq-card.done{border-color:rgba(46,204,113,0.3)}
-.maq-header{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
-.maq-header:active{background:rgba(255,255,255,0.04)}
-.maq-name{font-size:1rem;font-weight:700;letter-spacing:0.03em}
-.maq-count{font-size:0.78rem;padding:4px 10px;border-radius:20px;font-weight:700}
-.maq-count.all-done{background:rgba(46,204,113,0.2);color:var(--green);border:1px solid rgba(46,204,113,0.3)}
-.maq-count.pending{background:rgba(243,156,18,0.2);color:var(--yellow);border:1px solid rgba(243,156,18,0.3)}
-.maq-count.empty{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.4)}
-.maq-arrow{font-size:0.8rem;color:rgba(255,255,255,0.3);transition:transform .2s;margin-left:8px}
-.maq-card.open .maq-arrow{transform:rotate(180deg)}
+.slot-row { display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-top:5px; }
+.slot-label { font-size:.7rem; color:var(--text-dim); min-width:50px; }
+.fecha-pill {
+  font-size:.77rem; border:1px solid; border-radius:5px; padding:3px 9px;
+}
+.fecha-plan { color:var(--blue); background:rgba(116,185,255,.08); border-color:rgba(116,185,255,.25); }
+.fecha-real { color:var(--green); background:rgba(0,184,148,.08); border-color:rgba(0,184,148,.25); }
+.fecha-auto { color:var(--purple); background:rgba(162,155,254,.08); border-color:rgba(162,155,254,.2); }
 
-/* ── TAREAS ── */
-.tareas-list{border-top:1px solid rgba(255,255,255,0.07);display:none}
-.maq-card.open .tareas-list{display:block}
-.tarea-item{display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;transition:background .15s;-webkit-tap-highlight-color:transparent}
-.tarea-item:last-child{border-bottom:none}
-.tarea-item:active{background:rgba(255,255,255,0.04)}
-.tarea-check{width:26px;height:26px;flex-shrink:0;border:2px solid rgba(255,255,255,0.25);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all .2s;margin-top:1px}
-.tarea-item.done .tarea-check{background:rgba(46,204,113,0.25);border-color:var(--green);color:var(--green)}
-.tarea-item.done .tarea-desc{text-decoration:line-through;color:rgba(255,255,255,0.35)}
-.tarea-body{flex:1}
-.tarea-desc{font-size:0.95rem;line-height:1.4;font-weight:500}
-.tarea-meta{font-size:0.72rem;color:rgba(255,255,255,0.35);margin-top:3px}
-.tarea-done-info{font-size:0.7rem;color:var(--green);margin-top:3px}
+.btn-hecho {
+  background:rgba(0,184,148,.15); border:1px solid rgba(0,184,148,.4);
+  color:var(--green); border-radius:7px; padding:5px 13px;
+  font-family:Barlow,sans-serif; font-size:.8rem; font-weight:600; cursor:pointer;
+}
+.btn-hecho:hover  { background:rgba(0,184,148,.25); }
+.btn-hecho:disabled { opacity:.45; cursor:default; }
 
-/* ── MODAL CHECK-OFF ── */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:900;padding:20px}
-.modal-box{background:var(--navy-mid);border:1px solid rgba(201,162,39,0.35);border-radius:16px;padding:24px;width:100%;max-width:360px}
-.modal-box h3{font-size:1.1rem;font-weight:900;color:var(--gold-light);margin-bottom:6px}
-.modal-tarea-desc{font-size:0.88rem;color:rgba(255,255,255,0.6);margin-bottom:18px;line-height:1.4;padding:10px;background:rgba(255,255,255,0.05);border-radius:8px;border-left:3px solid var(--gold)}
-.modal-label{font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px}
-.turno-btns{display:flex;gap:8px;margin-bottom:18px}
-.turno-btn{flex:1;padding:10px 4px;background:var(--navy-light);border:2px solid rgba(255,255,255,0.1);border-radius:9px;color:var(--white);font-family:'Barlow',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;text-align:center;transition:all .2s}
-.turno-btn:hover{border-color:var(--gold);background:rgba(201,162,39,0.15)}
-.turno-btn.sel{background:rgba(201,162,39,0.25);border-color:var(--gold);color:var(--gold-light)}
-#checkNotas{width:100%;background:var(--navy);color:var(--white);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px;font-family:'Barlow',sans-serif;font-size:0.9rem;resize:none;height:80px;margin-bottom:18px}
-#checkNotas:focus{outline:none;border-color:var(--gold)}
-.modal-btns{display:flex;gap:10px}
-.btn-cancel{flex:1;padding:12px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);border-radius:8px;font-family:'Barlow',sans-serif;font-size:0.9rem;font-weight:700;cursor:pointer}
-.btn-confirm{flex:2;padding:12px;background:linear-gradient(135deg,var(--gold),#a07d1a);border:none;color:#0d1b2a;border-radius:8px;font-family:'Barlow',sans-serif;font-size:0.9rem;font-weight:900;cursor:pointer}
-.btn-uncheck{width:100%;padding:10px;background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.35);color:var(--red);border-radius:8px;font-family:'Barlow',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;margin-top:10px}
+.diario-note { font-size:.75rem; color:rgba(255,255,255,.3); font-style:italic; }
+.no-fecha    { font-size:.75rem; color:rgba(255,255,255,.25); }
 
-/* ── ESTADO VACÍO ── */
-.empty-state{text-align:center;padding:60px 20px;color:rgba(255,255,255,0.3)}
-.empty-state .ico{font-size:3rem;margin-bottom:16px}
-.empty-state p{font-size:1rem;line-height:1.6}
+.stats-row {
+  display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;
+}
+.stat-chip {
+  font-size:.74rem; border:1px solid; border-radius:5px; padding:3px 10px;
+}
 
-/* ── TOAST ── */
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--navy-mid);border:1px solid rgba(201,162,39,0.4);border-radius:10px;padding:12px 22px;font-size:0.9rem;font-weight:600;z-index:9999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.empty-state { text-align:center; padding:50px 20px; color:var(--text-dim); }
+.empty-state svg { width:46px; height:46px; margin-bottom:14px; opacity:.25; display:block; margin-left:auto; margin-right:auto; }
+.loading { text-align:center; padding:50px 20px; color:var(--text-dim); font-size:.9rem; }
 
-/* ── BANNER COMPLETADO ── */
-.banner-done{background:linear-gradient(135deg,rgba(46,204,113,0.2),rgba(39,174,96,0.1));border:1px solid rgba(46,204,113,0.4);border-radius:12px;padding:20px;text-align:center;margin-bottom:14px;display:none}
-.banner-done h3{font-size:1.1rem;font-weight:900;color:var(--green);margin-bottom:4px}
-.banner-done p{font-size:0.85rem;color:rgba(255,255,255,0.5)}
-
-/* ── VISTA TOGGLE ── */
-.vista-tabs{display:flex;gap:6px;margin-bottom:10px}
-.vtab{flex:1;padding:9px 4px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:9px;color:rgba(255,255,255,0.55);font-family:'Barlow',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;text-align:center;transition:all .2s;letter-spacing:0.03em}
-.vtab.active{background:rgba(201,162,39,0.18);border-color:rgba(201,162,39,0.5);color:var(--gold-light)}
-
-/* ── AVERÍAS LIST ── */
-.av-filtro{display:flex;gap:8px;margin-bottom:12px;align-items:center}
-.av-filtro select{flex:1;background:var(--navy-light);color:var(--white);border:1px solid rgba(201,162,39,0.3);border-radius:7px;padding:8px 10px;font-family:'Barlow',sans-serif;font-size:0.85rem;font-weight:600}
-.av-filtro select:focus{outline:none;border-color:var(--gold)}
-#otrosModalBg select,#otrosCerrarBg select{appearance:none;-webkit-appearance:none;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 10px;font-family:Barlow,sans-serif;font-size:0.88rem;width:100%;box-sizing:border-box;cursor:pointer}
-#otrosModalBg select:focus,#otrosCerrarBg select:focus{outline:none;border-color:var(--gold)}
-.av-count{font-size:0.72rem;color:rgba(255,255,255,0.35);white-space:nowrap}
-.av-item{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.08);border-radius:11px;margin-bottom:10px;overflow:hidden;transition:border-color .2s}
-.av-item.resuelta{border-left:3px solid var(--green)}
-.av-item.en-curso{border-left:3px solid var(--red)}
-.av-item.pendiente{border-left:3px solid var(--yellow)}
-.av-head{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.av-head:active{background:rgba(255,255,255,0.03)}
-.av-badge{font-size:0.65rem;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0}
-.av-badge.b-res{background:rgba(46,204,113,0.2);color:var(--green);border:1px solid rgba(46,204,113,0.3)}
-.av-badge.b-cur{background:rgba(231,76,60,0.2);color:var(--red);border:1px solid rgba(231,76,60,0.3)}
-.av-badge.b-pend{background:rgba(243,156,18,0.2);color:var(--yellow);border:1px solid rgba(243,156,18,0.3)}
-.av-info{flex:1;min-width:0}
-.av-maq{font-size:0.9rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.av-desc{font-size:0.75rem;color:rgba(255,255,255,0.42);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
-.av-meta{font-size:0.68rem;color:rgba(255,255,255,0.28);white-space:nowrap;flex-shrink:0;text-align:right}
-.av-detail{display:none;padding:0 14px 14px;border-top:1px solid rgba(255,255,255,0.06)}
-.av-detail.open{display:block}
-.av-dl{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;margin-top:12px}
-.av-dl-item .lbl{font-size:0.67rem;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:.08em}
-.av-dl-item .val{font-size:0.85rem;color:var(--white);margin-top:1px}
-.av-accion-btn{display:inline-block;margin-top:12px;padding:8px 16px;border-radius:8px;font-family:'Barlow',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;border:none;transition:all .2s}
-.av-accion-btn.retomar{background:rgba(201,162,39,0.18);border:1px solid rgba(201,162,39,0.4);color:var(--gold-light)}
-.av-accion-btn.editar{background:rgba(46,204,113,0.15);border:1px solid rgba(46,204,113,0.4);color:var(--green)}
-
-/* ── TABLET SELECTOR ── */
-.tablet-screen{position:fixed;inset:0;background:var(--navy);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:998;padding:24px;gap:0}
-.tablet-header{text-align:center;margin-bottom:28px}
-.tablet-header h1{font-size:1.8rem;font-weight:900;color:var(--gold-light);letter-spacing:0.08em}
-.tablet-header p{font-size:0.8rem;color:rgba(255,255,255,0.4);margin-top:8px;letter-spacing:0.15em;text-transform:uppercase}
-.tablet-mec-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;width:100%;max-width:440px}
-.tablet-mec-btn{padding:22px 16px;background:var(--navy-mid);border:2px solid rgba(255,255,255,0.1);border-radius:14px;color:var(--white);font-family:'Barlow',sans-serif;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;-webkit-tap-highlight-color:transparent}
-.tablet-mec-btn:hover,.tablet-mec-btn:active{background:rgba(201,162,39,0.2);border-color:var(--gold);transform:scale(0.97)}
-.tablet-mec-btn .mec-ico{font-size:2rem}
-
-/* ── TABLET PIN ── */
-.tablet-pin-screen{position:fixed;inset:0;background:var(--navy);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:999;padding:24px;gap:14px}
-.tablet-pin-name{font-size:1.2rem;font-weight:900;color:var(--gold-light);letter-spacing:0.06em}
-.tablet-pin-dots{display:flex;gap:16px;margin:2px 0 4px}
-.tablet-pin-dot{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);background:transparent;transition:all .2s}
-.tablet-pin-dot.filled{background:var(--gold);border-color:var(--gold)}
-.tablet-pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:290px}
-.tablet-pin-key{padding:22px 10px;background:var(--navy-mid);border:2px solid rgba(255,255,255,0.1);border-radius:12px;color:var(--white);font-family:'Barlow',sans-serif;font-size:1.6rem;font-weight:700;cursor:pointer;transition:all .15s;text-align:center;-webkit-tap-highlight-color:transparent;user-select:none;line-height:1}
-.tablet-pin-key:active{background:rgba(201,162,39,0.3);border-color:var(--gold);transform:scale(0.93)}
-.tablet-pin-key.del{font-size:1.2rem;color:rgba(255,255,255,0.55)}
-.tablet-pin-key.ph{background:transparent;border-color:transparent;pointer-events:none}
-.tablet-pin-err{color:var(--red);font-size:0.9rem;min-height:22px;text-align:center;font-weight:700}
-.tablet-pin-back{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);padding:11px 24px;border-radius:9px;font-family:'Barlow',sans-serif;font-size:0.9rem;font-weight:700;cursor:pointer;margin-top:2px}
-
-/* ── BANNER MOTIVACIONAL ── */
-.banner-motiv{position:fixed;inset:0;background:rgba(10,22,36,0.97);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1100;padding:32px;text-align:center;animation:bmFadeIn .4s ease}
-@keyframes bmFadeIn{from{opacity:0;transform:scale(1.03)}to{opacity:1;transform:scale(1)}}
-.banner-motiv-ico{font-size:3rem;margin-bottom:16px}
-.banner-motiv-nombre{font-size:0.85rem;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:rgba(201,162,39,0.7);margin-bottom:18px}
-.banner-motiv-frase{font-size:1.35rem;font-weight:700;color:var(--white);line-height:1.5;max-width:420px;margin-bottom:36px}
-.banner-motiv-btn{padding:16px 48px;background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a;border:none;border-radius:12px;font-family:'Barlow',sans-serif;font-size:1.1rem;font-weight:900;letter-spacing:0.08em;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent}
-.banner-motiv-btn:active{transform:scale(0.96)}
-
-/* ── OTROS TRABAJOS ── */
-.ot-lbl{font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:0.08em;text-transform:uppercase;display:block;margin-bottom:5px}
-.ot-card{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.08);border-radius:12px;margin-bottom:10px;overflow:hidden;transition:border-color .2s}
-.ot-card.abierto{border-left:3px solid var(--red)}
-.ot-card.cerrado{border-left:3px solid var(--green)}
-.ot-card.urgente{border-left:3px solid #ff4444}
-.ot-head{padding:12px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.ot-head:active{background:rgba(255,255,255,0.03)}
-.ot-titulo{font-size:0.95rem;font-weight:700;margin-bottom:4px;line-height:1.3}
-.ot-meta{font-size:0.72rem;color:rgba(255,255,255,0.38);display:flex;flex-wrap:wrap;gap:6px}
-.ot-badge{font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:20px}
-.ot-badge.ab{background:rgba(231,76,60,0.2);color:var(--red);border:1px solid rgba(231,76,60,0.3)}
-.ot-badge.ce{background:rgba(46,204,113,0.2);color:var(--green);border:1px solid rgba(46,204,113,0.3)}
-.ot-badge.urg{background:rgba(255,68,68,0.2);color:#ff6666;border:1px solid rgba(255,68,68,0.4)}
-.ot-body{display:none;padding:0 14px 14px;border-top:1px solid rgba(255,255,255,0.06)}
-.ot-body.open{display:block}
-.ot-dl{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;margin-top:12px}
-.ot-dl-item .lbl{font-size:0.67rem;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:.08em}
-.ot-dl-item .val{font-size:0.85rem;color:var(--white);margin-top:1px}
-.ot-dl-item.full{grid-column:1/-1}
-
-/* ── TABLET LOGOUT ── */
-.tablet-logout-btn{display:none;padding:10px 20px;background:rgba(231,76,60,0.15);border:2px solid rgba(231,76,60,0.5);color:#e74c3c;border-radius:9px;font-family:'Barlow',sans-serif;font-size:0.9rem;font-weight:900;cursor:pointer;letter-spacing:0.06em;transition:all .2s;-webkit-tap-highlight-color:transparent}
-.tablet-logout-btn:active{background:rgba(231,76,60,0.35)}
+/* Login */
+#loginOverlay {
+  position:fixed; inset:0; background:var(--bg); z-index:999;
+  display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.login-box {
+  background:var(--surface2); border:1px solid rgba(255,255,255,.12);
+  border-radius:14px; padding:28px 22px; width:100%; max-width:340px;
+}
+.login-box h2 { font-family:Oswald,sans-serif; color:var(--gold); font-size:1.2rem; margin-bottom:5px; }
+.login-box p  { font-size:.82rem; color:var(--text-dim); margin-bottom:18px; }
+.login-box label { font-size:.72rem; color:var(--text-dim); display:block; margin-bottom:5px; letter-spacing:.1em; text-transform:uppercase; }
+.login-box input {
+  width:100%; background:#0d1b2a; color:var(--cream);
+  border:1px solid rgba(255,255,255,.2); border-radius:8px;
+  padding:9px 12px; font-family:Barlow,sans-serif; font-size:.9rem; margin-bottom:14px;
+}
+.login-box button {
+  width:100%; background:rgba(232,193,78,.15); border:1px solid rgba(232,193,78,.4);
+  color:var(--gold); border-radius:8px; padding:10px;
+  font-family:Barlow,sans-serif; font-size:.95rem; font-weight:700; cursor:pointer;
+}
 </style>
-<script>
-if('serviceWorker' in navigator){
-  window.addEventListener('load',function(){
-    navigator.serviceWorker.register('sw.js').then(function(reg){
-      navigator.serviceWorker.addEventListener('message', function(e){
-        if(e.data && e.data.type === 'SW_UPDATED') window.location.reload();
-      });
-    }).catch(function(){});
-  });
-}
-</script>
 </head>
 <body>
 
-<!-- ══ LOGIN ══ -->
-<div class="login" id="loginScreen">
+<!-- Login -->
+<div id="loginOverlay">
   <div class="login-box">
-    <a href="panalcor_inicio.html" title="Inicio" style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;background:rgba(201,162,39,0.12);border:1.5px solid rgba(201,162,39,0.4);margin-bottom:10px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z" fill="rgba(201,162,39,0.25)" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 21V15H15V21" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/></svg></a>
-    <div class="ico">🔧</div>
-    <h2>PANALCOR S.L.</h2>
-    <div class="sub">Mantenimiento Preventivo</div>
-    <select id="mecLoginNombreSel" style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:9px;padding:13px 16px;font-family:'Barlow',sans-serif;font-size:1rem;margin-bottom:12px;display:block;box-sizing:border-box">
-      <option value="">— Selecciona tu nombre —</option>
-    </select>
-    <input type="password" id="pwInput" placeholder="Contraseña" autocomplete="off"
-           onkeydown="if(event.key==='Enter') doLogin()">
-    <label style="display:flex;align-items:center;gap:10px;margin:10px 0 14px;cursor:pointer;justify-content:center;font-size:0.85rem;color:rgba(255,255,255,0.6)">
-      <input type="checkbox" id="loginMiTel" style="width:18px;height:18px;cursor:pointer;accent-color:#c9a227;flex-shrink:0"> Es mi tel&eacute;fono (sesi&oacute;n indefinida)
-    </label>
-    <button class="login-btn" onclick="doLogin()">ENTRAR</button>
-    <div class="login-err" id="loginErr"></div>
+    <h2>🔧 Mis Tareas</h2>
+    <p>Introduce tu nombre para ver las tareas preventivas asignadas este mes.</p>
+    <label>Nombre</label>
+    <input id="loginNombre" type="text" placeholder="Ej: RAFA" autocomplete="off"
+      style="text-transform:uppercase" onkeydown="if(event.key==='Enter')loginMec()">
+    <button onclick="loginMec()">Entrar →</button>
   </div>
 </div>
 
-<!-- ══ SELECTOR MECÁNICO ══ -->
-<div class="mec-selector" id="mecSelector" style="display:none">
-  <a href="panalcor_inicio.html" title="Inicio" style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;background:rgba(201,162,39,0.12);border:1.5px solid rgba(201,162,39,0.4);margin-bottom:4px;align-self:flex-start"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z" fill="rgba(201,162,39,0.25)" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 21V15H15V21" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/></svg></a>
-  <h2>👷 ¿Quién eres?</h2>
-  <div id="mecBtnList"></div>
+<header>
+  <div>
+    <div class="header-logo">PANALCOR · Mis Tareas</div>
+    <div class="header-sub">Mantenimiento Preventivo</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span class="header-mec" id="headerMec"></span>
+    <a href="panalcor_inicio.html" style="font-size:.77rem;color:var(--text-dim);text-decoration:none">← Inicio</a>
+  </div>
+</header>
+
+<div class="mes-nav">
+  <button onclick="navMes(-1)">← Ant.</button>
+  <div class="mes-title" id="mesTitle">—</div>
+  <button onclick="navMes(1)">Sig. →</button>
 </div>
 
-<!-- ══ BANNER MOTIVACIONAL ══ -->
-<div class="banner-motiv" id="bannerMotiv" style="display:none">
-  <div class="banner-motiv-ico">💪</div>
-  <div class="banner-motiv-nombre" id="bannerNombre"></div>
-  <div class="banner-motiv-frase" id="bannerFrase"></div>
-  <button class="banner-motiv-btn" onclick="cerrarBanner()">¡Vamos!</button>
+<div class="content" id="content">
+  <div class="loading">Cargando...</div>
 </div>
 
-<!-- ══ TABLET SELECTOR ══ -->
-<div class="tablet-screen" id="tabletSelector">
-  <div class="tablet-header">
-    <h1>PANALCOR S.L.</h1>
-    <p>Selecciona tu nombre</p>
-  </div>
-  <div class="tablet-mec-grid" id="tabletMecGrid"></div>
-</div>
-
-<!-- ══ TABLET PIN ══ -->
-<div class="tablet-pin-screen" id="tabletPinScreen">
-  <div style="font-size:2.4rem">🔒</div>
-  <div class="tablet-pin-name" id="tabletPinName">—</div>
-  <div class="tablet-pin-dots">
-    <div class="tablet-pin-dot" id="tpd0"></div>
-    <div class="tablet-pin-dot" id="tpd1"></div>
-    <div class="tablet-pin-dot" id="tpd2"></div>
-    <div class="tablet-pin-dot" id="tpd3"></div>
-  </div>
-  <div class="tablet-pin-grid">
-    <button class="tablet-pin-key" onclick="tabletPinKey('1')">1</button>
-    <button class="tablet-pin-key" onclick="tabletPinKey('2')">2</button>
-    <button class="tablet-pin-key" onclick="tabletPinKey('3')">3</button>
-    <button class="tablet-pin-key" onclick="tabletPinKey('4')">4</button>
-    <button class="tablet-pin-key" onclick="tabletPinKey('5')">5</button>
-    <button class="tablet-pin-key" onclick="tabletPinKey('6')">6</button>
-    <button class="tablet-pin-key" onclick="tabletPinKey('7')">7</button>
-    <button class="tablet-pin-key" onclick="tabletPinKey('8')">8</button>
-    <button class="tablet-pin-key" onclick="tabletPinKey('9')">9</button>
-    <button class="tablet-pin-key ph"></button>
-    <button class="tablet-pin-key" onclick="tabletPinKey('0')">0</button>
-    <button class="tablet-pin-key del" onclick="tabletPinDel()">⌫</button>
-  </div>
-  <div class="tablet-pin-err" id="tabletPinErr"></div>
-  <button class="tablet-pin-back" onclick="volverTabletSelector()">← Cambiar</button>
-</div>
-
-<!-- ══ APP ══ -->
-<div id="app" style="display:none">
-
-  <div class="header">
-    <div class="header-top">
-      <div>
-        <div class="header-name" id="hdrName">👷 —</div>
-        <div class="header-period" id="hdrPeriod">—</div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <a href="panalcor_inicio.html" title="Inicio — PANALCOR S.L." style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;background:rgba(201,162,39,0.12);border:1px solid rgba(201,162,39,0.3);transition:all .2s" onmouseover="this.style.background='rgba(201,162,39,0.25)'" onmouseout="this.style.background='rgba(201,162,39,0.12)'"><svg viewBox="0 0 40 40" width="22" height="22" xmlns="http://www.w3.org/2000/svg">
-  <!-- Espiga superior -->
-  <line x1="20" y1="15" x2="20" y2="6" stroke="#c9a227" stroke-width="1.5" stroke-linecap="round"/>
-  <ellipse cx="20" cy="4"   rx="2" ry="4"   fill="#c9a227"/>
-  <ellipse cx="16.5" cy="6.5" rx="1.6" ry="3.2" fill="#c9a227" transform="rotate(-15 16.5 6.5)"/>
-  <ellipse cx="23.5" cy="6.5" rx="1.6" ry="3.2" fill="#c9a227" transform="rotate(15 23.5 6.5)"/>
-  <!-- Espiga izquierda -->
-  <line x1="13.5" cy="21" x1="13.5" y1="21" x2="6" y2="13" stroke="#c9a227" stroke-width="1.5" stroke-linecap="round"/>
-  <ellipse cx="4.5" cy="10.5" rx="2" ry="4" fill="#c9a227" transform="rotate(-30 4.5 10.5)"/>
-  <ellipse cx="8"   cy="8"   rx="1.6" ry="3.2" fill="#c9a227" transform="rotate(-20 8 8)"/>
-  <!-- Espiga derecha -->
-  <line x1="26.5" y1="21" x2="34" y2="13" stroke="#c9a227" stroke-width="1.5" stroke-linecap="round"/>
-  <ellipse cx="35.5" cy="10.5" rx="2" ry="4" fill="#c9a227" transform="rotate(30 35.5 10.5)"/>
-  <ellipse cx="32"  cy="8"   rx="1.6" ry="3.2" fill="#c9a227" transform="rotate(20 32 8)"/>
-  <!-- Dientes engranaje (8) -->
-  <rect x="18.5" y="13" width="3" height="4.5" rx="1" fill="#c9a227"/>
-  <rect x="18.5" y="13" width="3" height="4.5" rx="1" fill="#c9a227" transform="rotate(45  20 24)"/>
-  <rect x="18.5" y="13" width="3" height="4.5" rx="1" fill="#c9a227" transform="rotate(90  20 24)"/>
-  <rect x="18.5" y="13" width="3" height="4.5" rx="1" fill="#c9a227" transform="rotate(135 20 24)"/>
-  <rect x="18.5" y="13" width="3" height="4.5" rx="1" fill="#c9a227" transform="rotate(180 20 24)"/>
-  <rect x="18.5" y="13" width="3" height="4.5" rx="1" fill="#c9a227" transform="rotate(225 20 24)"/>
-  <rect x="18.5" y="13" width="3" height="4.5" rx="1" fill="#c9a227" transform="rotate(270 20 24)"/>
-  <rect x="18.5" y="13" width="3" height="4.5" rx="1" fill="#c9a227" transform="rotate(315 20 24)"/>
-  <!-- Cuerpo engranaje -->
-  <circle cx="20" cy="24" r="7.5" fill="#c9a227"/>
-  <circle cx="20" cy="24" r="3"   fill="#0d1b2a"/>
-</svg></a>
-        <a href="panalcor_inicio.html" title="Inicio" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:9px;flex-shrink:0;background:rgba(201,162,39,0.12);border:1.5px solid rgba(201,162,39,0.4);transition:all .2s" onmouseover="this.style.background='rgba(201,162,39,0.28)'" onmouseout="this.style.background='rgba(201,162,39,0.12)'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 9.5L12 3L21 9.5V20C21 20.55 20.55 21 20 21H15V15H9V21H4C3.45 21 3 20.55 3 20V9.5Z" fill="rgba(201,162,39,0.25)" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 21V15H15V21" stroke="#c9a227" stroke-width="1.5" stroke-linejoin="round"/></svg></a>
-        <button class="header-back" onclick="cambiarMecanico()" id="btnCambiarMec">Cambiar</button>
-        <button class="tablet-logout-btn" id="tabletLogoutBtn" onclick="cerrarSesionTablet()">CERRAR SESIÓN</button>
-      </div>
-    </div>
-    <div class="vista-tabs">
-      <button class="vtab active" id="vtab-tareas"    onclick="switchVista('tareas')">📋 Mis Tareas</button>
-      <button class="vtab"        id="vtab-historial"  onclick="switchVista('historial')">🔍 Averías</button>
-      <button class="vtab"        id="vtab-averias"   onclick="switchVista('averias')">🔧 Mis Averías</button>
-      <button class="vtab"        id="vtab-otros"     onclick="switchVista('otros')">🔩 Otros Trabajos</button>
-      <button class="vtab" onclick="abrirPedidoModal()" style="background:rgba(243,156,18,0.12);border-color:rgba(243,156,18,0.35);color:#f0c040">📦 Pedir</button>
-    </div>
-    <div id="mesWrap">
-      <div class="mes-row">
-        <label>MES</label>
-        <select id="mesSelect" onchange="cambiarMes()"></select>
-      </div>
-      <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
-      <div class="progress-label"><span id="progressTxt">0 de 0 tareas</span><b id="progressPct">0%</b></div>
-    </div>
-  </div>
-
-  <div class="content">
-
-    <!-- ── PANEL TAREAS ── -->
-    <div id="panelTareas">
-      <!-- Mantenimientos integrales próximos -->
-      <div id="integralesWrap"></div>
-      <!-- Recordatorios asignados al mecánico -->
-      <div id="recordatoriosWrap"></div>
-      <!-- Averías pendientes del mecánico -->
-      <div id="avPendWrap"></div>
-      <!-- Averías resueltas recientes editables (ventana 8h) -->
-      <div id="avResueltasWrap"></div>
-      <div class="banner-done" id="bannerDone">
-        <h3>🎉 ¡Todo completado!</h3>
-        <p>Has terminado todas tus tareas de este período.</p>
-      </div>
-      <div id="tareasWrap"></div>
-    </div>
-
-    <!-- ── PANEL BUSCAR AVERÍAS ── -->
-    <div id="panelHistorial" style="display:none;padding-bottom:40px">
-      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
-        <input type="search" id="hBusq" placeholder="🔍 Buscar por máquina, parte o descripción..." oninput="renderBuscadorAverias()"
-          style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#fff;font-size:0.95rem;box-sizing:border-box">
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <select id="hFiltMaq" onchange="renderBuscadorAverias()"
-            style="flex:1;min-width:130px;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#fff;font-size:0.85rem">
-            <option value="">Todas las máquinas</option>
-          </select>
-          <select id="hFiltTipo" onchange="renderBuscadorAverias()"
-            style="flex:1;min-width:130px;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#fff;font-size:0.85rem">
-            <option value="">Todos los tipos</option>
-            <option>MECÁNICA</option><option>ELÉCTRICA</option><option>NEUMÁTICA</option>
-            <option>ELECTRÓNICA</option><option>HIDRÁULICA</option><option>LUBRICACIÓN</option><option>OTROS</option>
-          </select>
-        </div>
-        <div id="hCount" style="font-size:0.78rem;color:rgba(255,255,255,0.35);padding-left:2px"></div>
-      </div>
-      <div id="hResultados">
-        <div class="empty-state"><div class="ico">🔍</div><p>Escribe para buscar</p></div>
-      </div>
-    </div>
-
-    <!-- ── PANEL MIS AVERÍAS ── -->
-    <div id="panelAverias" style="display:none">
-      <div class="av-filtro">
-        <select id="avFiltroEst" onchange="renderMisAverias()">
-          <option value="">Todos los estados</option>
-          <option value="EN CURSO">🔴 En curso</option>
-          <option value="PENDIENTE REPUESTO">🟡 Pendiente repuesto</option>
-          <option value="RESUELTA">🟢 Resuelta</option>
-        </select>
-        <span class="av-count" id="avCount">—</span>
-      </div>
-      <div id="misAvList">
-        <div class="empty-state"><div class="ico">⏳</div><p>Cargando...</p></div>
-      </div>
-    </div>
-
-    <!-- ── PANEL OTROS TRABAJOS ── -->
-    <div id="panelOtros" style="display:none;padding-bottom:40px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <div style="display:flex;gap:8px">
-          <button onclick="otrosFiltro('ABIERTO')" id="otrosBtn-ABIERTO"
-            style="padding:7px 14px;border-radius:8px;border:1px solid rgba(231,76,60,0.5);background:rgba(231,76,60,0.15);color:#e74c3c;font-family:Barlow,sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer">
-            🔴 Abiertos
-          </button>
-          <button onclick="otrosFiltro('CERRADO')" id="otrosBtn-CERRADO"
-            style="padding:7px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.55);font-family:Barlow,sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer">
-            ✅ Cerrados
-          </button>
-          <button onclick="otrosFiltro('')" id="otrosBtn-"
-            style="padding:7px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.35);font-family:Barlow,sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer">
-            Todos
-          </button>
-        </div>
-        <button onclick="abrirNuevoTrabajo()"
-          style="padding:8px 14px;background:linear-gradient(135deg,var(--gold),#a07d1a);border:none;color:#0d1b2a;border-radius:9px;font-family:Barlow,sans-serif;font-size:0.85rem;font-weight:900;cursor:pointer">
-          + Nuevo
-        </button>
-      </div>
-      <div id="otrosList">
-        <div class="empty-state"><div class="ico">⏳</div><p>Cargando...</p></div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- ══ MODAL SOLICITUD PEDIDO ══ -->
-<div id="pedidoModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:600;overflow-y:auto;padding:16px">
-  <div style="max-width:480px;margin:auto;background:#1a2d42;border:1px solid rgba(243,156,18,0.35);border-radius:16px;overflow:hidden">
-    <div style="background:linear-gradient(135deg,#0a1520,#1a2d42);border-bottom:1px solid rgba(243,156,18,0.2);padding:16px 18px;display:flex;align-items:center;justify-content:space-between">
-      <div style="font-size:1rem;font-weight:800;color:#f0c040">📦 Solicitar repuesto</div>
-      <button onclick="cerrarPedidoModal()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem">✕</button>
-    </div>
-    <div style="padding:18px">
-      <div style="margin-bottom:12px">
-        <label style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.05em;display:block;margin-bottom:5px">DESCRIPCIÓN DEL REPUESTO *</label>
-        <input id="pedDesc" type="text" placeholder="Ej: Rodamiento 6205, Correa B-65..." autocomplete="off"
-          style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 12px;font-family:Barlow,sans-serif;font-size:0.9rem">
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-        <div>
-          <label style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.05em;display:block;margin-bottom:5px">REFERENCIA</label>
-          <input id="pedRef" type="text" placeholder="Ref. del catálogo (opcional)"
-            style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 12px;font-family:Barlow,sans-serif;font-size:0.9rem">
-        </div>
-        <div>
-          <label style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.05em;display:block;margin-bottom:5px">CANTIDAD</label>
-          <input id="pedCant" type="number" min="1" value="1"
-            style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 12px;font-family:Barlow,sans-serif;font-size:0.9rem;text-align:center">
-        </div>
-      </div>
-      <div style="margin-bottom:16px">
-        <label style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.05em;display:block;margin-bottom:5px">MOTIVO / PARA QUÉ MÁQUINA</label>
-        <textarea id="pedMotivo" rows="2" placeholder="Ej: Para reparar la formadora 3, se rompen seguido..."
-          style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 12px;font-family:Barlow,sans-serif;font-size:0.9rem;resize:none"></textarea>
-      </div>
-      <button onclick="enviarPedido()" style="width:100%;padding:12px;background:linear-gradient(135deg,rgba(243,156,18,0.3),rgba(243,156,18,0.15));border:2px solid rgba(243,156,18,0.6);color:#f0c040;border-radius:10px;cursor:pointer;font-family:Barlow,sans-serif;font-size:0.95rem;font-weight:900">
-        📦 ENVIAR SOLICITUD
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ MODAL NUEVO TRABAJO ══ -->
-<div id="otrosModalBg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:700;overflow-y:auto;padding:16px 14px">
-  <div style="max-width:500px;margin:auto;background:#1a2d42;border:1px solid rgba(201,162,39,0.35);border-radius:16px;overflow:hidden">
-    <div style="background:linear-gradient(135deg,#0a1520,#1a2d42);border-bottom:1px solid rgba(201,162,39,0.2);padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
-      <div style="font-size:1rem;font-weight:800;color:var(--gold-light)" id="otrosModalTit">🔩 Nuevo trabajo</div>
-      <button onclick="cerrarOtrosModal()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem">✕</button>
-    </div>
-    <div style="padding:16px 18px;display:flex;flex-direction:column;gap:11px">
-      <!-- Tarea -->
-      <div>
-        <label class="ot-lbl">DESCRIPCIÓN DEL TRABAJO *</label>
-        <textarea id="otTarea" rows="2" placeholder="¿Qué hay que hacer?"
-          style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 12px;font-family:Barlow,sans-serif;font-size:0.9rem;resize:none;box-sizing:border-box"></textarea>
-      </div>
-      <!-- Tipo y Prioridad -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div>
-          <label class="ot-lbl">TIPO *</label>
-          <select id="otTipo" style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 10px;font-family:Barlow,sans-serif;font-size:0.88rem;box-sizing:border-box">
-            <option value="">— Selecciona —</option>
-            <option>REPARACIÓN</option>
-            <option>MEJORA</option>
-            <option>INSTALACIÓN NUEVA</option>
-            <option>MODIFICACIÓN</option>
-            <option>MANTENIMIENTO</option>
-            <option>LIMPIEZA TÉCNICA</option>
-            <option>REVISIÓN</option>
-            <option>OTROS</option>
-          </select>
-        </div>
-        <div>
-          <label class="ot-lbl">PRIORIDAD</label>
-          <select id="otPrioridad" style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 10px;font-family:Barlow,sans-serif;font-size:0.88rem;box-sizing:border-box">
-            <option value="NORMAL">Normal</option>
-            <option value="URGENTE">🔴 Urgente</option>
-            <option value="PUEDE ESPERAR">Puede esperar</option>
-          </select>
-        </div>
-      </div>
-      <!-- Zona -->
-      <div>
-        <label class="ot-lbl">ZONA DE TRABAJO *</label>
-        <select id="otZona" style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 10px;font-family:Barlow,sans-serif;font-size:0.88rem;box-sizing:border-box">
-          <option value="">— Selecciona zona —</option>
-          <option>OBRADOR</option>
-          <option>SILOS</option>
-          <option>HORNOS</option>
-          <option>ENVASADO</option>
-          <option>CÁMARAS</option>
-          <option>TÚNELES</option>
-          <option>FALSO TECHO</option>
-          <option>COMPRESORES</option>
-          <option>AGUA</option>
-          <option>TRUENO</option>
-          <option>OTROS</option>
-        </select>
-      </div>
-      <!-- Máquina afectada -->
-      <div>
-        <label class="ot-lbl">MÁQUINA AFECTADA (opcional)</label>
-        <input id="otMaquina" type="text" placeholder="Ej: FORMADORA 3, MAQ-012..."
-          style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 12px;font-family:Barlow,sans-serif;font-size:0.88rem;box-sizing:border-box">
-      </div>
-      <!-- Mecánicos que abren -->
-      <div>
-        <label class="ot-lbl">MECÁNICOS QUE ABREN *</label>
-        <div id="otMecsAbren" style="display:flex;flex-wrap:wrap;gap:8px;padding:8px;background:#0d1b2a;border:1px solid rgba(255,255,255,0.2);border-radius:8px"></div>
-      </div>
-      <!-- Hora inicio -->
-      <div>
-        <label class="ot-lbl">HORA INICIO</label>
-        <input id="otHoraInicio" type="time"
-          style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 12px;font-family:Barlow,sans-serif;font-size:0.95rem;box-sizing:border-box">
-      </div>
-      <!-- Observaciones -->
-      <div>
-        <label class="ot-lbl">OBSERVACIONES</label>
-        <textarea id="otObs" rows="2" placeholder="Cualquier detalle que ayude a entender el trabajo..."
-          style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 12px;font-family:Barlow,sans-serif;font-size:0.9rem;resize:none;box-sizing:border-box"></textarea>
-      </div>
-      <div id="otMsgAbrir" style="font-size:0.85rem;color:var(--red);min-height:18px"></div>
-      <button onclick="guardarNuevoTrabajo()"
-        style="width:100%;padding:13px;background:linear-gradient(135deg,var(--gold),#a07d1a);border:none;color:#0d1b2a;border-radius:9px;font-family:Barlow,sans-serif;font-size:0.95rem;font-weight:900;cursor:pointer">
-        🔩 ABRIR TRABAJO
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ MODAL CERRAR TRABAJO ══ -->
-<div id="otrosCerrarBg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:701;overflow-y:auto;padding:16px 14px">
-  <div style="max-width:500px;margin:auto;background:#1a2d42;border:1px solid rgba(46,204,113,0.35);border-radius:16px;overflow:hidden">
-    <div style="background:linear-gradient(135deg,#0a1520,#1a2d42);border-bottom:1px solid rgba(46,204,113,0.2);padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
-      <div style="font-size:1rem;font-weight:800;color:var(--green)">✅ Cerrar trabajo</div>
-      <button onclick="cerrarOtrosCerrarModal()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem">✕</button>
-    </div>
-    <div style="padding:16px 18px;display:flex;flex-direction:column;gap:11px">
-      <div id="otCerrarTareaDesc" style="padding:10px 12px;background:rgba(255,255,255,0.05);border-left:3px solid var(--green);border-radius:8px;font-size:0.9rem;color:rgba(255,255,255,0.75)"></div>
-      <!-- Mecánicos que cierran -->
-      <div>
-        <label class="ot-lbl">MECÁNICOS QUE CIERRAN *</label>
-        <div id="otMecsCierran" style="display:flex;flex-wrap:wrap;gap:8px;padding:8px;background:#0d1b2a;border:1px solid rgba(255,255,255,0.2);border-radius:8px"></div>
-      </div>
-      <!-- Hora fin -->
-      <div>
-        <label class="ot-lbl">HORA FIN</label>
-        <input id="otHoraFin" type="time"
-          style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 12px;font-family:Barlow,sans-serif;font-size:0.95rem;box-sizing:border-box">
-      </div>
-      <!-- Material -->
-      <div>
-        <label class="ot-lbl">MATERIAL USADO</label>
-        <textarea id="otMaterial" rows="2" placeholder="Repuestos, consumibles, materiales empleados..."
-          style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 12px;font-family:Barlow,sans-serif;font-size:0.9rem;resize:none;box-sizing:border-box"></textarea>
-      </div>
-      <!-- Observaciones cierre -->
-      <div>
-        <label class="ot-lbl">OBSERVACIONES DE CIERRE</label>
-        <textarea id="otObsCierre" rows="2" placeholder="Cómo se resolvió, qué se hizo exactamente..."
-          style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:9px 12px;font-family:Barlow,sans-serif;font-size:0.9rem;resize:none;box-sizing:border-box"></textarea>
-      </div>
-      <div id="otMsgCerrar" style="font-size:0.85rem;color:var(--red);min-height:18px"></div>
-      <button onclick="confirmarCerrarTrabajo()"
-        style="width:100%;padding:13px;background:linear-gradient(135deg,#27ae60,#1a7a43);border:none;color:#fff;border-radius:9px;font-family:Barlow,sans-serif;font-size:0.95rem;font-weight:900;cursor:pointer">
-        ✅ CERRAR TRABAJO
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ MODAL CHECK-OFF ══ -->
-<div class="modal-bg" id="checkModal" style="display:none">
-  <div class="modal-box">
-    <h3 id="checkModalTitle">✅ Marcar como hecha</h3>
-    <div class="modal-tarea-desc" id="checkTareaDesc">—</div>
-    <div class="modal-label">Turno</div>
-    <div class="turno-btns">
-      <button class="turno-btn" id="tb-MANANA" onclick="selTurno('MANANA')">🌅 Mañana</button>
-      <button class="turno-btn" id="tb-TARDE"  onclick="selTurno('TARDE')">🌇 Tarde</button>
-      <button class="turno-btn" id="tb-NOCHE"  onclick="selTurno('NOCHE')">🌙 Noche</button>
-    </div>
-    <div class="modal-label">Notas (opcional)</div>
-    <textarea id="checkNotas" placeholder="Observaciones, incidencias..."></textarea>
-    <div class="modal-btns">
-      <button class="btn-cancel" onclick="cerrarCheckModal()">Cancelar</button>
-      <button class="btn-confirm" id="btnConfirm" onclick="confirmarCheck()">✅ Guardar</button>
-    </div>
-    <button class="btn-uncheck" id="btnUncheck" onclick="desmarcarTarea()" style="display:none">↩️ Desmarcar tarea</button>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
-/* ══ FIREBASE ══ */
-var FB_CFG = {
+const _FB_CFG = {
   apiKey:"AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU",
   authDomain:"panalcor-mantenimiento.firebaseapp.com",
   databaseURL:"https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId:"panalcor-mantenimiento",
-  storageBucket:"panalcor-mantenimiento.firebasestorage.app",
-  messagingSenderId:"67593058609",
-  appId:"1:67593058609:web:c33fa1fa4fce2932485810"
+  projectId:"panalcor-mantenimiento"
 };
-if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
-var DB = firebase.database();
-
-/* ══ TABLET MODE ══ */
-(function(){
-  var p = new URLSearchParams(window.location.search);
-  if(p.has('tablet') && p.get('tablet') !== '0') localStorage.setItem('panalcor_tablet_mode','1');
-  else if(p.get('tablet') === '0') localStorage.removeItem('panalcor_tablet_mode');
-})();
-var _tabletMode = localStorage.getItem('panalcor_tablet_mode') === '1';
-
-/* ══ ESTADO ══ */
-var MEC_SESION_KEY = 'mecSesion';
-var mecActual      = null;
-var mesActual      = '';       // YYYY-MM
-var asigs          = {};       // { pushId: {tarea,mecanico,hecho,...} }
-var dbListener     = null;     // referencia para detach
-
-/* ══ SESION ══ */
-function _mecSesionValida(){
-  try {
-    var s = JSON.parse(localStorage.getItem(MEC_SESION_KEY) || 'null');
-    if(!s || !s.nombre) return false;
-    if(s.expires !== null && Date.now() > s.expires){ localStorage.removeItem(MEC_SESION_KEY); return false; }
-    return s.nombre;
-  } catch(e){ return false; }
-}
-
-/* ══ LOGIN ══ */
-(function cargarMecLoginMT(){
-  var sel = document.getElementById('mecLoginNombreSel');
-  if(!sel) return;
-  var fb = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE'];
-  function poblar(lista){ lista.forEach(function(n){ var o=document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o); }); }
-  DB.ref('config/mecanicos').once('value')
-    .then(function(s){ var v=s.val(); poblar(v&&v.length?v:fb); })
-    .catch(function(){ poblar(fb); });
-})();
-
-function doLogin(){
-  var nombre  = document.getElementById('mecLoginNombreSel').value;
-  var pw      = document.getElementById('pwInput').value;
-  var err     = document.getElementById('loginErr');
-  var esMiTel = document.getElementById('loginMiTel').checked;
-  err.textContent = '';
-  if(!nombre){ err.textContent = '⚠️ Selecciona tu nombre'; return; }
-  if(!pw)    { err.textContent = '⚠️ Introduce la contrasena'; return; }
-  DB.ref('config/mecanicos_pwd').once('value').then(function(snap){
-    var pwsObj = snap.val() || {};
-    var pwEsperada = pwsObj[nombre] || null;
-    if(!pwEsperada){ err.textContent = '❌ Sin contrasena asignada. Contacta con el responsable.'; return; }
-    if(pw !== pwEsperada){
-      err.textContent = '❌ Contrasena incorrecta';
-      document.getElementById('pwInput').value = '';
-      document.getElementById('pwInput').focus();
-      return;
-    }
-    DB.ref('config/mecSessionHoras').once('value').then(function(snap2){
-      var horas = snap2.val() || 8;
-      var expires = esMiTel ? null : (Date.now() + horas * 3600 * 1000);
-      localStorage.setItem(MEC_SESION_KEY, JSON.stringify({nombre:nombre, expires:expires}));
-      mecActual = nombre;
-      document.getElementById('loginScreen').style.display = 'none';
-      arrancarApp();
-    }).catch(function(){
-      var expires = esMiTel ? null : (Date.now() + 8 * 3600 * 1000);
-      localStorage.setItem(MEC_SESION_KEY, JSON.stringify({nombre:nombre, expires:expires}));
-      mecActual = nombre;
-      document.getElementById('loginScreen').style.display = 'none';
-      arrancarApp();
-    });
-  }).catch(function(){ err.textContent = '❌ Error de conexion. Intentalo de nuevo.'; });
-}
-
-/* ══ SELECTOR MECANICO (solo admin bypass) ══ */
-function getMecanicos(cb){
-  DB.ref('config/mecanicos').once('value')
-    .then(function(s){
-      var val = s.val();
-      cb(val && val.length ? val : ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE']);
-    })
-    .catch(function(){ cb(['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE']); });
-}
-
-function mostrarSelectorMecanico(){
-  getMecanicos(function(mecanicos){
-    var div = document.getElementById('mecBtnList');
-    div.innerHTML = mecanicos.map(function(m){
-      return '<button class="mec-btn" onclick="seleccionarMecanico(\''+m+'\')">'
-           + '<span style="font-size:1.4rem">👷</span><span>'+m+'</span></button>';
-    }).join('');
-    document.getElementById('mecSelector').style.display = 'flex';
-  });
-}
-
-function seleccionarMecanico(nombre){
-  mecActual = nombre;
-  document.getElementById('mecSelector').style.display = 'none';
-  arrancarApp();
-}
-
-function cambiarMecanico(){
-  localStorage.removeItem(MEC_SESION_KEY);
-  mecActual = null;
-  _misAverias = []; _misAvCargadas = false;
-  _vistaActual = 'tareas';
-  if(dbListener){ dbListener.off(); dbListener = null; }
-  document.getElementById('app').style.display = 'none';
-  if(_adminSessionValida()){
-    mostrarSelectorMecanico();
-  } else {
-    document.getElementById('loginErr').textContent = '';
-    document.getElementById('pwInput').value = '';
-    document.getElementById('loginScreen').style.display = 'flex';
-  }
-}
-
-/* ══ HELPERS MES ══ */
-// Fecha ajustada al turno: desde las 22h (21h domingo) ya es el día siguiente
-function getFechaTurno(){
-  var d = new Date();
-  var h = d.getHours();
-  var umbral = (d.getDay() === 0) ? 21 : 22;
-  if(h >= umbral) d.setDate(d.getDate() + 1);
-  return d;
-}
-function mesActualISO(){
-  var d = getFechaTurno();
-  var m = d.getMonth()+1;
-  return d.getFullYear() + '-' + (m<10?'0'+m:m);
-}
-
-function labelMes(ym){
-  var parts = ym.split('-');
-  var meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
-                'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  return meses[parseInt(parts[1])-1] + ' ' + parts[0];
-}
-
-/* Genera lista de meses: 6 hacia atrás + 6 hacia adelante desde hoy */
-function generarMeses(){
-  var meses = [];
-  var hoy = new Date();
-  for(var i=-6; i<=6; i++){
-    var d = new Date(hoy.getFullYear(), hoy.getMonth()+i, 1);
-    var m = d.getMonth()+1;
-    var ym = d.getFullYear()+'-'+(m<10?'0'+m:m);
-    meses.push(ym);
-  }
-  return meses;
-}
-
-/* ══ ARRANQUE ══ */
-function arrancarApp(){
-  // Registrar token FCM para notificaciones push (no crítico)
-  try { if (mecActual && typeof fcmRegistrar === 'function') fcmRegistrar(mecActual); } catch(e) {}
-  document.getElementById('app').style.display = 'block';
-  document.getElementById('hdrName').textContent = '👷 ' + mecActual;
-
-  mesActual = mesActualISO();
-
-  /* Poblar selector de meses */
-  var sel = document.getElementById('mesSelect');
-  var meses = generarMeses();
-  sel.innerHTML = '';
-  meses.forEach(function(ym){
-    var opt = document.createElement('option');
-    opt.value = ym;
-    opt.textContent = labelMes(ym);
-    if(ym === mesActual) opt.selected = true;
-    sel.appendChild(opt);
-  });
-
-  cargarMes(mesActual);
-  renderAvPendientes();
-  cargarAvRecientsDB();
-  cargarRecordatoriosMec();
-  cargarIntegralesMec();
-  mostrarBannerSiProcede(mecActual);
-}
-
-/* ══ AVERÍAS PENDIENTES del mecánico ══ */
-function renderAvPendientes(){
-  var wrap = document.getElementById('avPendWrap');
-  if(!wrap) return;
-  try {
-    var av = JSON.parse(localStorage.getItem('averias_v1') || '[]');
-    var mias = av.filter(function(a){
-      return (a.estado === 'EN CURSO' || a.estado === 'PENDIENTE REPUESTO')
-          && a.mecanicos && a.mecanicos.indexOf(mecActual) !== -1;
-    });
-    if(!mias.length){ wrap.innerHTML = ''; return; }
-
-    var hoy = Date.now();
-    var items = mias.map(function(a){
-      var dias      = Math.floor((hoy - (a.ts || hoy)) / 86400000);
-      var diasTxt   = dias === 0 ? 'hoy' : dias === 1 ? 'hace 1 día' : 'hace ' + dias + ' días';
-      var diasColor = dias >= 3 ? '#e74c3c' : dias >= 1 ? '#f39c12' : 'rgba(255,255,255,0.4)';
-      var dotColor  = a.estado === 'EN CURSO' ? '#e74c3c' : '#f39c12';
-      return '<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;'
-        + 'border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;transition:background .15s"'
-        + ' onclick="window.location=\'averias.html?retomar=' + a.id + '\'"'
-        + ' onmouseover="this.style.background=\'rgba(255,255,255,0.04)\'"'
-        + ' onmouseout="this.style.background=\'\'">'
-        + '<span style="width:9px;height:9px;border-radius:50%;background:' + dotColor + ';flex-shrink:0;display:inline-block"></span>'
-        + '<div style="flex:1;min-width:0">'
-          + '<div style="font-size:0.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'
-            + (a.maqNombre||'') + '</div>'
-          + '<div style="font-size:0.75rem;color:rgba(255,255,255,0.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'
-            + (a.descripcion||'').substring(0,60) + ' · ' + (a.estado||'')
-          + '</div>'
-        + '</div>'
-        + '<div style="text-align:right;flex-shrink:0">'
-          + '<div style="font-size:0.72rem;color:' + diasColor + ';font-weight:700">' + diasTxt + '</div>'
-          + '<div style="font-size:0.7rem;color:rgba(255,255,255,0.35);margin-top:2px">Retomar →</div>'
-        + '</div>'
-        + '</div>';
-    }).join('');
-
-    wrap.innerHTML = '<div style="background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.3);'
-      + 'border-radius:12px;margin-bottom:14px;overflow:hidden">'
-      + '<div style="padding:10px 14px;border-bottom:1px solid rgba(231,76,60,0.2);'
-        + 'font-size:0.7rem;letter-spacing:.12em;text-transform:uppercase;color:#e74c3c;font-weight:700">'
-        + '🚨 Averías pendientes (' + mias.length + ')'
-      + '</div>'
-      + items
-      + '</div>';
-  } catch(e){ wrap.innerHTML = ''; }
-}
-
-function cambiarMes(){
-  var sel = document.getElementById('mesSelect');
-  mesActual = sel.value;
-  cargarMes(mesActual);
-}
-
-/* ══ CARGAR MES DESDE FIREBASE ══ */
-function cargarMes(mes){
-  document.getElementById('hdrPeriod').textContent = labelMes(mes);
-  document.getElementById('tareasWrap').innerHTML =
-    '<div class="empty-state"><div class="ico">⏳</div><p>Cargando tareas...</p></div>';
-
-  /* Detach listener anterior si existe */
-  if(dbListener){ dbListener.off(); dbListener = null; }
-
-  var ref = DB.ref('asignaciones/' + mes);
-  dbListener = ref;
-
-  ref.on('value', function(snap){
-    var val = snap.val() || {};
-    /* Filtrar solo mis tareas */
-    asigs = {};
-    Object.keys(val).forEach(function(k){
-      if(val[k].mecanico === mecActual) asigs[k] = val[k];
-    });
-    renderTareas();
-  }, function(){
-    document.getElementById('tareasWrap').innerHTML =
-      '<div class="empty-state"><div class="ico">❌</div><p>Error de conexión.<br>Comprueba que tienes internet.</p></div>';
-  });
-}
-
-/* ══ RENDER TAREAS ══ */
-function renderTareas(){
-  var lista = Object.keys(asigs).map(function(k){ return Object.assign({_id:k}, asigs[k]); });
-
-  if(!lista.length){
-    document.getElementById('tareasWrap').innerHTML =
-      '<div class="empty-state"><div class="ico">📋</div><p>No tienes tareas asignadas para '+labelMes(mesActual)+'.</p></div>';
-    actualizarProgreso([]);
-    return;
-  }
-
-  /* Agrupar por instancia */
-  var porMaquina = {};
-  lista.forEach(function(t){
-    var k = t.instancia || t.maquina || 'General';
-    if(!porMaquina[k]) porMaquina[k] = { nombre:k, tareas:[] };
-    porMaquina[k].tareas.push(t);
-  });
-
-  actualizarProgreso(lista);
-
-  var wrap = document.getElementById('tareasWrap');
-  wrap.innerHTML = '';
-
-  /* Banner completado */
-  var allDone = lista.every(function(t){ return t.hecho; });
-  document.getElementById('bannerDone').style.display = allDone ? 'block' : 'none';
-
-  var freqRep = {DIARIO:'~20× mes',SEMANAL:'4× mes',QUINCENAL:'2× mes',
-                 MENSUAL:'1× mes',SEMESTRAL:'2/año',ANUAL:'1/año',TRIMESTRAL:'4/año'};
-
-  Object.keys(porMaquina).sort().forEach(function(k){
-    var maq = porMaquina[k];
-    var total  = maq.tareas.length;
-    var hechas = maq.tareas.filter(function(t){ return t.hecho; }).length;
-    var allMaqDone = hechas === total;
-
-    var card = document.createElement('div');
-    card.className = 'maq-card' + (allMaqDone ? ' done' : '');
-
-    var countClass = allMaqDone ? 'all-done' : hechas > 0 ? 'pending' : 'empty';
-    var countTxt   = allMaqDone ? '✅ Completada' : hechas+'/'+total;
-
-    var tareasHtml = maq.tareas.map(function(t){
-      var desc   = t.tarea || '—';
-      var freq   = t.frecuencia || '';
-      var rep    = freqRep[freq] || freq;
-      var turno  = t.turno ? ({MANANA:'🌅 Mañana',TARDE:'🌇 Tarde',NOCHE:'🌙 Noche'}[t.turno]||t.turno) : '';
-      var fechaStr = '';
-      if(t.hecho && t.hechoEn){
-        var d = new Date(t.hechoEn);
-        fechaStr = d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})
-                 + ' ' + d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
-      }
-      var notaStr = t.notas ? '<span style="opacity:.6"> · '+escHtml(t.notas)+'</span>' : '';
-      return '<div class="tarea-item'+(t.hecho?' done':'')+'" id="ti_'+t._id+'" onclick="abrirCheckModal(\''+t._id+'\')">'
-           + '<div class="tarea-check">'+(t.hecho?'✓':'')+'</div>'
-           + '<div class="tarea-body">'
-           + '<div class="tarea-desc">'+escHtml(desc)+'</div>'
-           + '<div class="tarea-meta">'
-           + (freq ? '<span style="background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.3);border-radius:10px;padding:1px 7px;font-size:0.7rem;color:#c9a227">'+freq+'</span>'
-                   + (rep ? ' <span style="opacity:.5">'+rep+'</span>' : '') : '')
-           + '</div>'
-           + (t.hecho ? '<div class="tarea-done-info">✅ '+fechaStr+(turno?' · '+turno:'')+''+notaStr+'</div>' : '')
-           + '</div></div>';
-    }).join('');
-
-    card.innerHTML =
-      '<div class="maq-header" onclick="toggleMaq(this.parentElement)">'
-      + '<div><div class="maq-name">'+escHtml(maq.nombre)+'</div></div>'
-      + '<div style="display:flex;align-items:center;gap:6px">'
-      + '<span class="maq-count '+countClass+'">'+countTxt+'</span>'
-      + '<span class="maq-arrow">▼</span>'
-      + '</div></div>'
-      + '<div class="tareas-list">'+tareasHtml+'</div>';
-
-    wrap.appendChild(card);
-
-    if(!allMaqDone) card.classList.add('open');
-  });
-}
-
-function escHtml(s){
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-function toggleMaq(card){ card.classList.toggle('open'); }
-
-/* ══ PROGRESO ══ */
-function actualizarProgreso(lista){
-  var total  = lista.length;
-  var hechas = lista.filter(function(t){ return t.hecho; }).length;
-  var pct    = total ? Math.round(hechas/total*100) : 0;
-  document.getElementById('progressBar').style.width  = pct+'%';
-  document.getElementById('progressTxt').textContent  = hechas+' de '+total+' tareas';
-  document.getElementById('progressPct').textContent  = pct+'%';
-}
-
-/* ══ MODAL CHECK-OFF ══ */
-var checkId     = null;
-var turnoSel    = null;
-
-function abrirCheckModal(id){
-  var t = asigs[id];
-  if(!t) return;
-  checkId  = id;
-  turnoSel = t.turno || null;
-
-  document.getElementById('checkTareaDesc').textContent = (t.instancia||t.maquina||'') + ' — ' + (t.tarea||'—');
-  document.getElementById('checkNotas').value = t.notas || '';
-
-  /* Botones turno */
-  ['MANANA','TARDE','NOCHE'].forEach(function(tr){
-    var btn = document.getElementById('tb-'+tr);
-    btn.classList.toggle('sel', tr === turnoSel);
-  });
-
-  var esDone = !!t.hecho;
-  document.getElementById('checkModalTitle').textContent = esDone ? '📋 Detalle de tarea' : '✅ Marcar como hecha';
-  document.getElementById('btnConfirm').style.display  = esDone ? 'none' : '';
-  document.getElementById('btnUncheck').style.display  = esDone ? '' : 'none';
-
-  document.getElementById('checkModal').style.display = 'flex';
-}
-
-function selTurno(tr){
-  turnoSel = (turnoSel === tr) ? null : tr;
-  ['MANANA','TARDE','NOCHE'].forEach(function(t){
-    document.getElementById('tb-'+t).classList.toggle('sel', t === turnoSel);
-  });
-}
-
-function cerrarCheckModal(){
-  document.getElementById('checkModal').style.display = 'none';
-  checkId = null;
-  turnoSel = null;
-}
-
-function confirmarCheck(){
-  if(!checkId) return;
-  var notas = document.getElementById('checkNotas').value.trim();
-
-  var updateData = {
-    hecho: true,
-    hechoEn: new Date().toISOString(),
-    turno: turnoSel || null,
-    notas: notas
-  };
-  DB.ref('asignaciones/'+mesActual+'/'+checkId).update(updateData)
-  .then(function(){
-    showToast('✅ Tarea completada');
-    cerrarCheckModal();
-  }).catch(function(){
-    // Sin conexión: guardar en cola offline
-    if (window.OfflinePANALCOR) {
-      OfflinePANALCOR.encolar('tarea_hecha', { mes: mesActual, id: checkId, hecho: true, hechoEn: updateData.hechoEn });
-    }
-    // Actualizar vista local igual
-    showToast('📵 Sin conexión — se sincronizará cuando vuelva la red');
-    cerrarCheckModal();
-  });
-}
-
-function desmarcarTarea(){
-  if(!checkId) return;
-  DB.ref('asignaciones/'+mesActual+'/'+checkId).update({
-    hecho: false,
-    hechoEn: null,
-    turno: null,
-    notas: ''
-  }).then(function(){
-    showToast('↩️ Tarea desmarcada');
-    cerrarCheckModal();
-  }).catch(function(){
-    showToast('❌ Error al guardar');
-  });
-}
-
-/* ══ TOAST ══ */
-var toastT;
-function showToast(msg){
-  var t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(toastT);
-  toastT = setTimeout(function(){ t.classList.remove('show'); }, 2500);
-}
-
-/* ══ ARRANQUE ══ */
-function _adminSessionValida(){
-  var t = parseInt(localStorage.getItem('adminSession') || 0);
-  return t > 0 && (Date.now() - t) < 8 * 3600 * 1000;
-}
-
-// ── SESION UNIFICADA ──────────────────────────────
-(function(){
-  if(_tabletMode){
-    // En modo tablet la sesión la gestiona el propio sistema de tablet
-    var s=null;
-    try{s=JSON.parse(localStorage.getItem(MEC_SESION_KEY)||'null');}catch(e){}
-    if(s&&s.nombre&&s.tablet&&(s.expires===null||Date.now()<s.expires)){
-      mecActual=s.nombre;
-    }
-    return; // nunca redirigir a panalcor_inicio
-  }
-  var ps=null;
-  try{ps=JSON.parse(localStorage.getItem('panalcor_session')||'null');}catch(e){}
-  if(ps&&(ps.rol==='mecanico'||ps.rol==='admin')&&Date.now()<ps.expires){
-    if(ps.rol==='mecanico'){
-      try{
-        var ms=JSON.parse(localStorage.getItem(MEC_SESION_KEY)||'null');
-        if(!ms||ms.nombre!==ps.nombre){
-          localStorage.setItem(MEC_SESION_KEY,JSON.stringify({nombre:ps.nombre,expires:null}));
-        }
-      }catch(e){ localStorage.setItem(MEC_SESION_KEY,JSON.stringify({nombre:ps.nombre,expires:null})); }
-    }
-  } else {
-    window.location.replace('panalcor_inicio.html?back='+encodeURIComponent(window.location.href));
-  }
-})();
-
-(function(){
-  if(_tabletMode){
-    document.getElementById('loginScreen').style.display='none';
-    if(mecActual){
-      arrancarApp();
-      _mostrarBtnLogoutTablet();
-      iniciarTabletLogout();
-    } else {
-      mostrarTabletSelector();
-    }
-    return;
-  }
-  var nombre = _mecSesionValida();
-  if(nombre){
-    mecActual = nombre;
-    document.getElementById('loginScreen').style.display = 'none';
-    arrancarApp();
-    return;
-  }
-  if(_adminSessionValida()){
-    document.getElementById('loginScreen').style.display = 'none';
-    mostrarSelectorMecanico();
-  }
-})();
-
-/* ══════════════════════════════════════════════════
-   TABLET MODE — funciones
-══════════════════════════════════════════════════ */
-var _tabletPinBuffer = '';
-var _tabletPinMec    = '';
-var _tabletLogoutTimer = null;
-var _TURNOS_MIN = [6*60, 14*60, 22*60]; // 6:00, 14:00, 22:00
-var _MEC_FALLBACK = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE'];
-
-function mostrarTabletSelector(){
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('mecSelector').style.display = 'none';
-  document.getElementById('tabletPinScreen').style.display = 'none';
-  document.getElementById('app').style.display = 'none';
-  var grid = document.getElementById('tabletMecGrid');
-  grid.innerHTML = '<div style="color:rgba(255,255,255,0.4);font-size:0.85rem;text-align:center;padding:20px">Cargando...</div>';
-  document.getElementById('tabletSelector').style.display = 'flex';
-  DB.ref('config/mecanicos').once('value')
-    .then(function(snap){ var v=snap.val(); _renderTabletGrid(v&&v.length?v:_MEC_FALLBACK); })
-    .catch(function(){ _renderTabletGrid(_MEC_FALLBACK); });
-}
-
-function _renderTabletGrid(mecs){
-  var grid = document.getElementById('tabletMecGrid');
-  grid.innerHTML = mecs.map(function(m){
-    return '<button class="tablet-mec-btn" onclick="seleccionarMecTablet(\''+m.replace(/'/g,"\\'")+'\')">'
-         + '<span class="mec-ico">👷</span><span>'+m+'</span></button>';
-  }).join('');
-}
-
-function seleccionarMecTablet(nombre){
-  _tabletPinMec    = nombre;
-  _tabletPinBuffer = '';
-  _actualizarPuntos();
-  document.getElementById('tabletPinName').textContent = nombre;
-  document.getElementById('tabletPinErr').textContent  = '';
-  document.getElementById('tabletSelector').style.display   = 'none';
-  document.getElementById('tabletPinScreen').style.display  = 'flex';
-}
-
-function tabletPinKey(d){
-  if(_tabletPinBuffer.length >= 4) return;
-  _tabletPinBuffer += d;
-  _actualizarPuntos();
-  if(_tabletPinBuffer.length === 4) setTimeout(_verificarTabletPin, 150);
-}
-
-function tabletPinDel(){
-  if(_tabletPinBuffer.length > 0){
-    _tabletPinBuffer = _tabletPinBuffer.slice(0,-1);
-    _actualizarPuntos();
-  }
-}
-
-function _actualizarPuntos(){
-  for(var i=0;i<4;i++){
-    var d = document.getElementById('tpd'+i);
-    if(d) d.classList.toggle('filled', i < _tabletPinBuffer.length);
-  }
-}
-
-function _verificarTabletPin(){
-  var pin = _tabletPinBuffer;
-  var nombre = _tabletPinMec;
-  DB.ref('config/mecanicos_pin').once('value').then(function(snap){
-    var pins = snap.val() || {};
-    if(pins[nombre] && String(pins[nombre]) === pin){
-      var sesion = {nombre:nombre, expires:null, sessionStart:Date.now(), tablet:true};
-      localStorage.setItem(MEC_SESION_KEY, JSON.stringify(sesion));
-      localStorage.setItem('panalcor_session', JSON.stringify(
-        {nombre:nombre, rol:'mecanico', expires:Date.now()+24*3600*1000, tablet:true}
-      ));
-      mecActual = nombre;
-      document.getElementById('tabletPinScreen').style.display = 'none';
-      _mostrarBtnLogoutTablet();
-      arrancarApp();
-      iniciarTabletLogout();
-    } else {
-      document.getElementById('tabletPinErr').textContent = '❌ PIN incorrecto';
-      _tabletPinBuffer = '';
-      _actualizarPuntos();
-      setTimeout(function(){ document.getElementById('tabletPinErr').textContent=''; }, 2200);
-    }
-  }).catch(function(){
-    document.getElementById('tabletPinErr').textContent = '❌ Error de conexión';
-    _tabletPinBuffer = '';
-    _actualizarPuntos();
-  });
-}
-
-function volverTabletSelector(){
-  _tabletPinBuffer = '';
-  document.getElementById('tabletPinScreen').style.display = 'none';
-  mostrarTabletSelector();
-}
-
-function _mostrarBtnLogoutTablet(){
-  var btn = document.getElementById('tabletLogoutBtn');
-  var btnCambiar = document.getElementById('btnCambiarMec');
-  if(btn){ btn.style.display = 'inline-flex'; btn.style.alignItems='center'; }
-  if(btnCambiar) btnCambiar.style.display = 'none';
-}
-
-function cerrarSesionTablet(){
-  if(_tabletLogoutTimer){ clearInterval(_tabletLogoutTimer); _tabletLogoutTimer=null; }
-  localStorage.removeItem(MEC_SESION_KEY);
-  localStorage.removeItem('panalcor_session');
-  mecActual = null;
-  if(dbListener){ try{ DB.ref('asignaciones').off('value',dbListener); }catch(e){} dbListener=null; }
-  var btn = document.getElementById('tabletLogoutBtn');
-  var btnCambiar = document.getElementById('btnCambiarMec');
-  if(btn) btn.style.display = 'none';
-  if(btnCambiar) btnCambiar.style.display = '';
-  mostrarTabletSelector();
-}
-
-/* ── AUTO-LOGOUT POR TURNO ── */
-function _ultimoCambioTurno(){
-  var now = new Date();
-  var hoy = new Date(now); hoy.setSeconds(0,0);
-  var candidatos = [];
-  _TURNOS_MIN.forEach(function(t){
-    var d = new Date(hoy);
-    d.setHours(Math.floor(t/60), t%60, 0, 0);
-    if(d.getTime() <= now.getTime()) candidatos.push(d.getTime());
-  });
-  // Último turno del día anterior (22:00)
-  var ayer22 = new Date(hoy);
-  ayer22.setDate(ayer22.getDate()-1);
-  ayer22.setHours(22,0,0,0);
-  candidatos.push(ayer22.getTime());
-  return Math.max.apply(null, candidatos);
-}
-
-function _checkShiftLogout(){
-  if(!mecActual || !_tabletMode) return;
-  var s=null;
-  try{ s=JSON.parse(localStorage.getItem(MEC_SESION_KEY)||'null'); }catch(e){}
-  if(!s||!s.tablet||!s.sessionStart) return;
-  var lastChange = _ultimoCambioTurno();
-  var GRACE = 10*60*1000; // 10 min
-  if(s.sessionStart < lastChange && (Date.now()-lastChange) >= GRACE){
-    showToast('Turno finalizado — sesión cerrada automáticamente');
-    setTimeout(cerrarSesionTablet, 1800);
-  }
-}
-
-/* ══════════════════════════════════════════════════
-   BANNER MOTIVACIONAL
-══════════════════════════════════════════════════ */
-var _FRASES_DEFAULT = [
-  "El trabajo bien hecho es la mejor firma que puedes dejar.",
-  "Cada máquina que mantienes en marcha es un logro tuyo.",
-  "La constancia hace la diferencia. ¡Buen turno!",
-  "Un equipo que cuida sus máquinas cuida su futuro.",
-  "Lo que hoy arreglas, mañana produce. ¡A por ello!",
-  "La seguridad empieza por ti. Cuídate y cuida a los demás.",
-  "Un gran técnico no es el que nunca falla, sino el que siempre aprende.",
-  "Tu trabajo mantiene la fábrica viva. Eso tiene valor.",
-  "Hoy es un buen día para hacer las cosas bien.",
-  "La atención al detalle es lo que separa lo bueno de lo excelente.",
-  "Cada avería resuelta es una victoria del equipo.",
-  "El mantenimiento no para problemas, los evita. Tú eres la diferencia.",
-  "Buen humor, buena energía, buen turno. ¡Adelante!",
-  "Los mejores días empiezan con la mejor actitud.",
-  "Quien cuida las herramientas cuida su trabajo.",
-  "Un equipo que trabaja unido no tiene rival.",
-  "El esfuerzo de hoy es el resultado de mañana.",
-  "Tu experiencia vale más de lo que crees. Úsala.",
-  "Pequeños pasos, grandes logros. ¡Buen turno!",
-  "La excelencia no es un accidente, es una decisión diaria.",
-  "Hoy tienes la oportunidad de hacer algo que marque la diferencia.",
-  "El que trabaja con orgullo trabaja mejor.",
-  "Un turno más, un aprendizaje más.",
-  "La puntualidad es respeto. Gracias por estar aquí.",
-  "Lo difícil se hace, lo imposible se intenta.",
-  "El buen trabajo siempre se nota, aunque nadie lo vea.",
-  "Cada avería es un reto, y los retos están para superarlos.",
-  "El equipo es tan fuerte como su mecánico más comprometido.",
-  "Hoy empieza contigo. ¡Que sea un gran turno!",
-  "La calidad no cuesta, la falta de calidad sí."
-];
-
-function _turnoId(){
-  var now = new Date();
-  var h = now.getHours();
-  var d = now.toISOString().slice(0,10);
-  var t = h >= 6 && h < 14 ? 'M' : h >= 14 && h < 22 ? 'T' : 'N';
-  return d + '-' + t;
-}
-
-function mostrarBannerSiProcede(nombre){
-  if(!nombre) return;
-  var turno = _turnoId();
-  var key = 'panalcor_banner_' + nombre;
-  var stored = null;
-  try{ stored = JSON.parse(localStorage.getItem(key)||'null'); }catch(e){}
-  if(stored && stored.turno === turno) return; // ya vio este turno
-
-  DB.ref('frases_motivadoras').once('value').then(function(snap){
-    var frases = snap.val();
-    if(!frases || !frases.length) frases = _FRASES_DEFAULT;
-    _mostrarBanner(nombre, frases, stored, key, turno);
-  }).catch(function(){
-    _mostrarBanner(nombre, _FRASES_DEFAULT, stored, key, turno);
-  });
-}
-
-function _mostrarBanner(nombre, frases, stored, key, turno){
-  var lastIdx = (stored && stored.lastIdx !== undefined) ? stored.lastIdx : -1;
-  var disponibles = [];
-  for(var i=0;i<frases.length;i++){ if(i!==lastIdx) disponibles.push(i); }
-  if(!disponibles.length) disponibles = [0];
-  var idx = disponibles[Math.floor(Math.random() * disponibles.length)];
-  localStorage.setItem(key, JSON.stringify({turno:turno, lastIdx:idx}));
-  document.getElementById('bannerNombre').textContent = 'Bienvenido, ' + nombre;
-  document.getElementById('bannerFrase').textContent  = '"' + frases[idx] + '"';
-  document.getElementById('bannerMotiv').style.display = 'flex';
-}
-
-function cerrarBanner(){
-  document.getElementById('bannerMotiv').style.display = 'none';
-}
-
-function iniciarTabletLogout(){
-  if(_tabletLogoutTimer) clearInterval(_tabletLogoutTimer);
-  _tabletLogoutTimer = setInterval(_checkShiftLogout, 30000);
-  _checkShiftLogout();
-}
-
-// ══════════════════════════════════════════════════════════════
-// INTEGRALES — zona informativa para mecánicos
-// ══════════════════════════════════════════════════════════════
-function cargarIntegralesMec() {
-  var wrap = document.getElementById('integralesWrap');
-  if (!wrap) return;
-  DB.ref('integrales').on('value', function(snap) {
-    var data = snap.val() || {};
-    var todos = Object.values(data).filter(function(it) {
-      return it.estado === 'programada' || it.estado === 'en_curso';
-    }).sort(function(a, b) {
-      return (a.mesPrevisto || '').localeCompare(b.mesPrevisto || '');
-    });
-    // Separar: asignados a mí vs el resto
-    var mios   = todos.filter(function(it){ return (it.mecanicos||[]).indexOf(mecActual) !== -1; });
-    var otros  = todos.filter(function(it){ return (it.mecanicos||[]).indexOf(mecActual) === -1; });
-    renderIntegralesMec(mios, otros);
-  });
-}
-
-function _intMesMec(ym) {
-  if (!ym) return '—';
-  var meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  var p = ym.split('-');
-  return meses[parseInt(p[1]||1)-1] + ' ' + p[0];
-}
-
-function renderIntegralesMec(mios, otros) {
-  var wrap = document.getElementById('integralesWrap');
-  if (!wrap) return;
-  if (!mios.length && !otros.length) { wrap.innerHTML = ''; return; }
-
-  var html = '<div style="margin-bottom:16px">';
-
-  // ── Mis integrales (asignados) ──
-  if (mios.length) {
-    html += '<div style="font-size:0.78rem;font-weight:700;letter-spacing:0.08em;color:#74b9ff;margin-bottom:10px;padding-left:2px">🔩 MIS MANTENIMIENTOS INTEGRALES</div>';
-    mios.forEach(function(it) {
-      var enCurso = it.estado === 'en_curso';
-      var bColor  = enCurso ? '#3498db' : '#f39c12';
-      var badge   = enCurso ? '🔵 En curso' : '🟡 Programado';
-      var nCk     = Object.keys(it.checklist || {}).length;
-      var ckOk    = Object.values(it.checklist || {}).filter(function(c){ return c.estado && c.estado !== 'pendiente'; }).length;
-      var ckPct   = nCk > 0 ? Math.round(ckOk/nCk*100) : 0;
-      var conf    = (it.confirmaciones || {})[mecActual ? mecActual.replace(/\s/g,'_') : ''];
-      var yoConfirme = conf && conf.confirmado;
-      var todos   = (it.mecanicos || []);
-      var nConf   = todos.filter(function(m){ var c=(it.confirmaciones||{})[m.replace(/\s/g,'_')]; return c&&c.confirmado; }).length;
-      html += '<div onclick="abrirIntMec(\''+it.id+'\')" style="background:var(--navy-mid);border:1px solid '
-            + (yoConfirme ? 'rgba(39,174,96,0.5)' : bColor+'60')+';border-left:4px solid '
-            + (yoConfirme ? '#27ae60' : bColor)+';border-radius:11px;padding:14px 16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent">'
-            + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'
-            + '<div style="font-size:0.93rem;font-weight:700;color:#fff">'+escHtmlMec(it.maqNombre)+'</div>'
-            + '<span style="font-size:0.68rem;font-weight:700;color:'+bColor+';background:'+bColor+'20;padding:3px 8px;border-radius:5px">'+badge+'</span>'
-            + '</div>'
-            + (it.descripcion ? '<div style="font-size:0.75rem;color:rgba(255,255,255,0.45);margin-bottom:6px">'+escHtmlMec(it.descripcion)+'</div>' : '')
-            + '<div style="display:flex;gap:12px;font-size:0.75rem;color:rgba(255,255,255,0.45);margin-bottom:8px">'
-            + '<span>📅 '+_intMesMec(it.mesPrevisto)+'</span>'
-            + (nCk > 0 ? '<span>✅ '+ckOk+'/'+nCk+' revisados</span>' : '')
-            + '<span>👷 '+nConf+'/'+todos.length+' confirmados</span>'
-            + '</div>'
-            + (nCk > 0 ? '<div style="background:rgba(255,255,255,0.08);border-radius:20px;height:5px;overflow:hidden">'
-              + '<div style="height:100%;width:'+ckPct+'%;background:'+(ckPct===100?'#27ae60':bColor)+';border-radius:20px"></div>'
-              + '</div>' : '')
-            + '<div style="margin-top:8px;font-size:0.75rem;font-weight:700;color:'+(yoConfirme?'#27ae60':bColor)+'">'
-            + (yoConfirme ? '✅ Ya has confirmado' : '▶ Abrir y rellenar') + '</div>'
-            + '</div>';
-    });
-  }
-
-  // ── Otros integrales (informativos, sin asignar al mecánico) ──
-  if (otros.length) {
-    html += '<div style="font-size:0.72rem;font-weight:700;letter-spacing:0.08em;color:#f39c12;margin-bottom:8px;margin-top:'+(mios.length?'14px':'0')+'">🔩 Otros integrales previstos</div>';
-    html += '<div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch">';
-    otros.forEach(function(it) {
-      var enCurso = it.estado === 'en_curso';
-      var bColor  = enCurso ? '#3498db' : '#f39c12';
-      var nComp   = Object.keys(it.componentes || {}).length;
-      html += '<div style="flex:0 0 auto;min-width:160px;max-width:200px;background:var(--navy-mid);'
-            + 'border:1px solid '+bColor+'30;border-left:3px solid '+bColor+'60;border-radius:10px;padding:11px 13px;opacity:0.7">'
-            + '<div style="font-size:0.68rem;font-weight:700;color:'+bColor+';margin-bottom:5px">'+(enCurso?'🔵 En curso':'🟡 Programado')+'</div>'
-            + '<div style="font-size:0.85rem;font-weight:700;color:#fff;line-height:1.3;margin-bottom:4px">'+escHtmlMec(it.maqNombre)+'</div>'
-            + '<div style="font-size:0.72rem;color:rgba(255,255,255,0.4)">📅 '+_intMesMec(it.mesPrevisto)+'</div>'
-            + '</div>';
-    });
-    html += '</div>';
-  }
-
-  html += '</div>';
-  wrap.innerHTML = html;
-}
-
-function escHtmlMec(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ══════════════════════════════════════════════════
-// RECORDATORIOS ASIGNADOS AL MECÁNICO
-// ══════════════════════════════════════════════════
-var _recDbListener = null;
-
-function cargarRecordatoriosMec() {
-  if (_recDbListener) { _recDbListener.off(); _recDbListener = null; }
-  var wrap = document.getElementById('recordatoriosWrap');
-  if (!wrap || !mecActual) return;
-
-  _recDbListener = DB.ref('recordatorios');
-  _recDbListener.on('value', function(snap) {
-    var data = snap.val() || {};
-    var mios = Object.keys(data)
-      .map(function(k){ return Object.assign({ _id: k }, data[k]); })
-      .filter(function(r){ return r.mecanico === mecActual && r.estado !== 'realizado'; });
-    renderRecordatoriosMec(mios);
-  });
-}
-
-function renderRecordatoriosMec(lista) {
-  var wrap = document.getElementById('recordatoriosWrap');
-  if (!wrap) return;
-  if (!lista.length) { wrap.innerHTML = ''; return; }
-
-  var items = lista.map(function(r) {
-    var prioColor = r.prioridad === 'alta' ? '#e74c3c' : r.prioridad === 'baja' ? '#2ecc71' : '#f39c12';
-    var fechaHora = [r.fecha, r.hora].filter(Boolean).join(' ');
-    return '<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;'
-         + 'border-bottom:1px solid rgba(255,255,255,0.06)">'
-         + '<span style="width:9px;height:9px;border-radius:50%;background:' + prioColor + ';flex-shrink:0;margin-top:5px;display:inline-block"></span>'
-         + '<div style="flex:1;min-width:0">'
-           + '<div style="font-size:.92rem;font-weight:700">' + escHtmlMec(r.titulo || '—') + '</div>'
-           + (r.descripcion ? '<div style="font-size:.78rem;color:rgba(255,255,255,.45);margin-top:2px">' + escHtmlMec(r.descripcion) + '</div>' : '')
-           + (fechaHora ? '<div style="font-size:.72rem;color:rgba(255,255,255,.3);margin-top:2px">📅 ' + escHtmlMec(fechaHora) + '</div>' : '')
-         + '</div>'
-         + '<button onclick="marcarRecordatorioHecho(\'' + r._id + '\')"'
-         + ' style="background:rgba(46,204,113,.2);border:1px solid rgba(46,204,113,.4);color:#2ecc71;'
-         + 'border-radius:8px;padding:7px 14px;font-family:\'Barlow\',sans-serif;font-size:.82rem;'
-         + 'font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">✅ Hecho</button>'
-         + '</div>';
-  }).join('');
-
-  wrap.innerHTML = '<div style="background:rgba(201,162,39,0.07);border:1px solid rgba(201,162,39,0.3);'
-    + 'border-radius:12px;margin-bottom:14px;overflow:hidden">'
-    + '<div style="padding:10px 14px;border-bottom:1px solid rgba(201,162,39,0.2);'
-      + 'font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:700">'
-      + '🔔 Recordatorios asignados (' + lista.length + ')'
-    + '</div>'
-    + items
-    + '</div>';
-}
-
-function marcarRecordatorioHecho(id) {
-  DB.ref('recordatorios/' + id).update({
-    estado      : 'realizado',
-    realizadoEn : new Date().toISOString(),
-    realizadoPor: mecActual
-  }).then(function() {
-    showToast('✅ Recordatorio marcado como realizado');
-  }).catch(function() {
-    showToast('❌ Error al actualizar');
-  });
-}
-
-// ══════════════════════════════════════════════════════
-// VISTA TOGGLE — Tareas / Mis Averías
-// ══════════════════════════════════════════════════════
-var _vistaActual = 'tareas';
-
-function switchVista(v){
-  _vistaActual = v;
-  ['tareas','averias','historial','otros'].forEach(function(id){
-    var btn = document.getElementById('vtab-'+id);
-    if(btn) btn.classList.toggle('active', v === id);
-  });
-  document.getElementById('panelTareas').style.display    = v === 'tareas'    ? '' : 'none';
-  document.getElementById('panelAverias').style.display   = v === 'averias'   ? '' : 'none';
-  document.getElementById('panelHistorial').style.display = v === 'historial' ? '' : 'none';
-  document.getElementById('panelOtros').style.display     = v === 'otros'     ? '' : 'none';
-  document.getElementById('mesWrap').style.display        = v === 'tareas'    ? '' : 'none';
-  if(v === 'averias')   cargarMisAverias();
-  if(v === 'historial') cargarBuscadorAverias();
-  if(v === 'otros')     cargarOtrosTrabajos();
-}
-
-// ══════════════════════════════════════════════════════
-// BUSCADOR GLOBAL DE AVERÍAS
-// ══════════════════════════════════════════════════════
-var _hAverias = null; // null = no cargado aún
-
-function cargarBuscadorAverias(){
-  if(_hAverias !== null){ _poblarFiltroMaq(); renderBuscadorAverias(); return; }
-  document.getElementById('hResultados').innerHTML =
-    '<div class="empty-state"><div class="ico">⏳</div><p>Cargando...</p></div>';
-  DB.ref('averias').orderByChild('estado').equalTo('RESUELTA').once('value').then(function(snap){
-    var data = snap.val() || {};
-    _hAverias = Object.values(data).filter(function(a){ return a && a.maqNombre && a.accion; });
-    _hAverias.sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
-    _poblarFiltroMaq();
-    renderBuscadorAverias();
-  }).catch(function(){
-    document.getElementById('hResultados').innerHTML =
-      '<div class="empty-state"><div class="ico">❌</div><p>Error de conexión</p></div>';
-  });
-}
-
-function _poblarFiltroMaq(){
-  var sel = document.getElementById('hFiltMaq');
-  var val = sel.value;
-  var maqSet = {};
-  (_hAverias||[]).forEach(function(a){ if(a.maqNombre) maqSet[a.maqNombre]=1; });
-  sel.innerHTML = '<option value="">Todas las máquinas</option>';
-  Object.keys(maqSet).sort().forEach(function(m){
-    sel.innerHTML += '<option'+(m===val?' selected':'')+' value="'+m+'">'+m+'</option>';
-  });
-}
-
-function renderBuscadorAverias(){
-  if(!_hAverias){ cargarBuscadorAverias(); return; }
-  var q    = (document.getElementById('hBusq').value||'').toLowerCase().trim();
-  var maq  = document.getElementById('hFiltMaq').value;
-  var tipo = document.getElementById('hFiltTipo').value;
-
-  var lista = _hAverias.filter(function(a){
-    if(maq  && a.maqNombre !== maq)  return false;
-    if(tipo && a.tipo      !== tipo) return false;
-    if(q){
-      var hay = ((a.maqNombre||'')+(a.parte||'')+(a.descripcion||'')+(a.accion||'')).toLowerCase();
-      if(hay.indexOf(q) < 0) return false;
-    }
-    return true;
-  });
-
-  document.getElementById('hCount').textContent = lista.length + ' avería' + (lista.length!==1?'s':'') + ' encontrada' + (lista.length!==1?'s':'');
-
-  if(!lista.length){
-    document.getElementById('hResultados').innerHTML =
-      '<div class="empty-state"><div class="ico">🔍</div><p>Sin resultados</p></div>';
-    return;
-  }
-
-  document.getElementById('hResultados').innerHTML = lista.slice(0,50).map(function(a){
-    var fecha = a.ts ? new Date(a.ts).toLocaleDateString('es-ES') : '—';
-    var mecsStr = (a.mecanicos||[]).join(', ') || '—';
-    var tiempoStr = a.tiempoMin ? (Math.floor(a.tiempoMin/60)+'h '+(a.tiempoMin%60)+'min') : '';
-    return '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:14px 16px;margin-bottom:10px">'
-      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px">'
-      +'<div>'
-      +'<div style="font-weight:700;font-size:0.95rem;color:var(--gold, #c9a227)">'+a.maqNombre+'</div>'
-      +'<div style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin-top:2px">'+(a.parte||'—')+(a.tipo?' · '+a.tipo:'')+'</div>'
-      +'</div>'
-      +'<div style="text-align:right;flex-shrink:0">'
-      +'<div style="font-size:0.75rem;color:rgba(255,255,255,0.35)">'+fecha+'</div>'
-      +(tiempoStr?'<div style="font-size:0.75rem;color:rgba(255,255,255,0.3)">⏱ '+tiempoStr+'</div>':'')
-      +'</div>'
-      +'</div>'
-      +'<div style="font-size:0.88rem;color:rgba(255,255,255,0.75);margin-bottom:8px"><b>Problema:</b> '+a.descripcion+'</div>'
-      +'<div style="font-size:0.88rem;color:rgba(46,204,113,0.9)"><b>✅ Solución:</b> '+a.accion+'</div>'
-      +'<div style="font-size:0.72rem;color:rgba(255,255,255,0.3);margin-top:8px">👷 '+mecsStr+'</div>'
-      +'</div>';
-  }).join('') + (lista.length>50?'<div style="text-align:center;font-size:0.8rem;color:rgba(255,255,255,0.3);padding:10px">Mostrando 50 de '+lista.length+' resultados — afina la búsqueda</div>':'');
-}
-
-// ══════════════════════════════════════════════════════
-// AVERÍAS RESUELTAS RECIENTES — ventana editable 8h
-// ══════════════════════════════════════════════════════
-var _avCache = [];
-
-function cargarAvRecientsDB(){
-  // Inmediato: desde localStorage (puede estar algo desactualizado)
-  try { _avCache = JSON.parse(localStorage.getItem('averias_v1') || '[]'); } catch(e){ _avCache = []; }
-  renderAvResueltasRecientes();
-
-  // Fondo: refrescar desde Firebase las cerradas en la última ventana + margen
-  var desde = Date.now() - 9 * 3600 * 1000;
-  DB.ref('averias').orderByChild('tsCierre').startAt(desde).once('value')
-    .then(function(snap){
-      var data = snap.val();
-      if(!data) return;
-      Object.values(data).forEach(function(av){
-        if(!av || !av.id) return;
-        var idx = -1;
-        for(var i=0; i<_avCache.length; i++){ if(_avCache[i].id===av.id){ idx=i; break; } }
-        if(idx!==-1) _avCache[idx]=av; else _avCache.push(av);
-      });
-      renderAvResueltasRecientes();
-    }).catch(function(){});
-}
-
-function renderAvResueltasRecientes(){
-  var wrap = document.getElementById('avResueltasWrap');
-  if(!wrap || !mecActual) return;
-
-  var ahora  = Date.now();
-  var ventana = 8 * 3600 * 1000;
-
-  var mias = _avCache.filter(function(a){
-    return a.estado === 'RESUELTA'
-        && a.tsCierre
-        && (ahora - a.tsCierre) < ventana
-        && a.mecanicos && a.mecanicos.indexOf(mecActual) !== -1;
-  });
-
-  if(!mias.length){ wrap.innerHTML = ''; return; }
-
-  mias.sort(function(a,b){ return (b.tsCierre||0) - (a.tsCierre||0); });
-
-  var items = mias.map(function(a){
-    var restMs  = ventana - (ahora - a.tsCierre);
-    var hRest   = Math.floor(restMs / 3600000);
-    var mRest   = Math.floor((restMs % 3600000) / 60000);
-    var restTxt = hRest > 0 ? (hRest + 'h ' + mRest + 'min') : (mRest + ' min');
-    return '<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;'
-         + 'border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;transition:background .15s"'
-         + ' onclick="window.location=\'averias.html?retomar=' + a.id + '\'"'
-         + ' onmouseover="this.style.background=\'rgba(255,255,255,0.04)\'"'
-         + ' onmouseout="this.style.background=\'\'">'
-         + '<span style="font-size:1.1rem">✅</span>'
-         + '<div style="flex:1;min-width:0">'
-           + '<div style="font-size:0.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'
-               + escHtmlMec(a.maqNombre||'') + '</div>'
-           + '<div style="font-size:0.75rem;color:rgba(255,255,255,0.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'
-               + escHtmlMec((a.descripcion||'').substring(0,60)) + '</div>'
-         + '</div>'
-         + '<div style="text-align:right;flex-shrink:0">'
-           + '<div style="font-size:0.72rem;color:#2ecc71;font-weight:700">✏️ Editable</div>'
-           + '<div style="font-size:0.65rem;color:rgba(255,255,255,0.3);margin-top:2px">⏱ ' + restTxt + '</div>'
-         + '</div>'
-         + '</div>';
-  }).join('');
-
-  wrap.innerHTML = '<div style="background:rgba(46,204,113,0.06);border:1px solid rgba(46,204,113,0.25);'
-    + 'border-radius:12px;margin-bottom:14px;overflow:hidden">'
-    + '<div style="padding:10px 14px;border-bottom:1px solid rgba(46,204,113,0.15);'
-      + 'font-size:0.7rem;letter-spacing:.12em;text-transform:uppercase;color:#2ecc71;font-weight:700">'
-      + '✏️ Cerradas recientemente (' + mias.length + ') — puedes añadir información'
-    + '</div>'
-    + items
-    + '</div>';
-}
-
-// ══════════════════════════════════════════════════════
-// MIS AVERÍAS — historial completo del mecánico
-// ══════════════════════════════════════════════════════
-var _misAverias    = [];
-var _misAvCargadas = false;
-
-function cargarMisAverias(){
-  if(_misAvCargadas) { renderMisAverias(); return; }
-  document.getElementById('misAvList').innerHTML =
-    '<div class="empty-state"><div class="ico">⏳</div><p>Cargando averías...</p></div>';
-  DB.ref('averias').once('value').then(function(snap){
-    var data = snap.val() || {};
-    _misAverias = Object.values(data).filter(function(a){
-      return a && a.id && a.mecanicos && a.mecanicos.indexOf(mecActual) !== -1;
-    });
-    _misAverias.sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
-    _misAvCargadas = true;
-    renderMisAverias();
-  }).catch(function(){
-    document.getElementById('misAvList').innerHTML =
-      '<div class="empty-state"><div class="ico">❌</div><p>Error de conexión.<br>Comprueba que tienes internet.</p></div>';
-  });
-}
-
-function renderMisAverias(){
-  var filtroEst = document.getElementById('avFiltroEst').value;
-  var ahora = Date.now();
-  var ventana = 8 * 3600 * 1000;
-
-  var lista = _misAverias.filter(function(a){
-    return !filtroEst || a.estado === filtroEst;
-  });
-
-  document.getElementById('avCount').textContent = lista.length + ' avería' + (lista.length !== 1 ? 's' : '');
-
-  if(!lista.length){
-    document.getElementById('misAvList').innerHTML =
-      '<div class="empty-state"><div class="ico">🔧</div><p>No hay averías' + (filtroEst ? ' con ese estado' : '') + '.</p></div>';
-    return;
-  }
-
-  var html = lista.map(function(a, i){
-    var est = a.estado || '—';
-    var badgeCls = est === 'RESUELTA' ? 'b-res' : est === 'EN CURSO' ? 'b-cur' : 'b-pend';
-    var itemCls  = est === 'RESUELTA' ? 'resuelta' : est === 'EN CURSO' ? 'en-curso' : 'pendiente';
-    var tStr = a.tiempoMin ? (Math.floor(a.tiempoMin/60) + 'h ' + ((a.tiempoMin%60)+'').padStart(2,'0') + 'min') : '—';
-    var fechaStr = a.fecha || '—';
-    if(a.horaInicio) fechaStr += ' ' + a.horaInicio;
-
-    // Botón de acción
-    var btnHtml = '';
-    if(est !== 'RESUELTA'){
-      btnHtml = '<button class="av-accion-btn retomar" onclick="window.location=\'averias.html?retomar='+a.id+'\'">🔄 Retomar avería</button>';
-    } else {
-      var dentroVentana = a.tsCierre && (ahora - a.tsCierre) < ventana;
-      if(dentroVentana){
-        var restMs  = ventana - (ahora - a.tsCierre);
-        var hR = Math.floor(restMs/3600000);
-        var mR = Math.floor((restMs%3600000)/60000);
-        var restTxt = hR > 0 ? (hR+'h '+mR+'min') : (mR+' min');
-        btnHtml = '<button class="av-accion-btn editar" onclick="window.location=\'averias.html?retomar='+a.id+'\'">✏️ Añadir información <span style="font-size:0.7rem;opacity:.7">('+restTxt+')</span></button>';
-      }
-    }
-
-    return '<div class="av-item ' + itemCls + '">'
-      + '<div class="av-head" onclick="toggleAvItem(\'avd'+i+'\')">'
-        + '<div class="av-info">'
-          + '<div class="av-maq">' + escHtmlMec(a.maqNombre||a.maqId||'—') + '</div>'
-          + '<div class="av-desc">' + escHtmlMec((a.parte?a.parte+' · ':'')+((a.descripcion||'').substring(0,55))) + '</div>'
-        + '</div>'
-        + '<div class="av-meta">'
-          + '<div><span class="av-badge ' + badgeCls + '">' + est + '</span></div>'
-          + '<div style="margin-top:4px">' + fechaStr + '</div>'
-        + '</div>'
-      + '</div>'
-      + '<div class="av-detail" id="avd'+i+'">'
-        + '<div class="av-dl">'
-          + '<div class="av-dl-item"><div class="lbl">Turno</div><div class="val">' + escHtmlMec(a.turno||'—') + '</div></div>'
-          + '<div class="av-dl-item"><div class="lbl">Tipo</div><div class="val">' + escHtmlMec(a.tipo||'—') + '</div></div>'
-          + '<div class="av-dl-item"><div class="lbl">Gravedad</div><div class="val">' + escHtmlMec(a.gravedad||'—') + '</div></div>'
-          + '<div class="av-dl-item"><div class="lbl">Tiempo</div><div class="val">' + tStr + '</div></div>'
-          + '<div class="av-dl-item"><div class="lbl">Causa</div><div class="val">' + escHtmlMec(a.causa||'—') + '</div></div>'
-          + '<div class="av-dl-item"><div class="lbl">ID</div><div class="val" style="font-size:0.72rem">' + escHtmlMec(a.id||'—') + '</div></div>'
-        + '</div>'
-        + (a.accion ? '<div style="margin-top:10px"><div class="av-dl-item"><div class="lbl">Acción correctiva</div><div class="val" style="font-size:0.85rem;margin-top:3px">'+escHtmlMec(a.accion)+'</div></div></div>' : '')
-        + (a.observaciones ? '<div style="margin-top:8px"><div class="av-dl-item"><div class="lbl">Observaciones</div><div class="val" style="font-size:0.85rem;margin-top:3px">'+escHtmlMec(a.observaciones)+'</div></div></div>' : '')
-        + (btnHtml ? '<div>' + btnHtml + '</div>' : '')
-      + '</div>'
-    + '</div>';
-  }).join('');
-
-  document.getElementById('misAvList').innerHTML = html;
-}
-
-function toggleAvItem(id){
-  var el = document.getElementById(id);
-  if(el) el.classList.toggle('open');
-}
-</script>
-<!-- ══ MODAL INTEGRAL MECÁNICO ══ -->
-<div id="intMecModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:500;overflow-y:auto;padding:16px">
-  <div style="max-width:600px;margin:auto;background:#1a2d42;border:1px solid rgba(201,162,39,0.3);border-radius:16px;overflow:hidden">
-    <div style="background:linear-gradient(135deg,#0a1520,#1a2d42);border-bottom:1px solid rgba(201,162,39,0.2);padding:16px 18px;display:flex;align-items:center;justify-content:space-between">
-      <div>
-        <div id="intMecTitle" style="font-size:1rem;font-weight:800;color:#f0c040"></div>
-        <div id="intMecSub"   style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:2px"></div>
-      </div>
-      <button onclick="cerrarIntMec()" style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem">✕</button>
-    </div>
-    <div id="intMecBody" style="padding:18px"></div>
-  </div>
-</div>
-
-<script>
-var CK_ESTADOS_MEC = {
-  pendiente: { label:'PENDIENTE', color:'#f39c12', bg:'rgba(243,156,18,0.18)', icon:'⏳' },
-  ok:        { label:'OK',        color:'#27ae60', bg:'rgba(39,174,96,0.2)',   icon:'✅' },
-  np:        { label:'N/P',       color:'#7f8c8d', bg:'rgba(127,140,141,0.2)', icon:'⚫' },
-  mal:       { label:'MAL',       color:'#e74c3c', bg:'rgba(231,76,60,0.2)',   icon:'❌' },
-  reparado:  { label:'REPARADO',  color:'#3498db', bg:'rgba(52,152,219,0.2)',  icon:'🔧' },
-  revisar:   { label:'REVISAR',   color:'#f1c40f', bg:'rgba(241,196,15,0.18)', icon:'⚠️' }
+if(!firebase.apps.length) firebase.initializeApp(_FB_CFG);
+const _DB = firebase.database();
+
+const MESES_L = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const DIAS_ES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const FREQ_CFG = {
+  DIARIO:    {color:'#fd79a8',bg:'rgba(253,121,168,.12)',border:'rgba(253,121,168,.3)'},
+  SEMANAL:   {color:'#00cec9',bg:'rgba(0,206,201,.12)', border:'rgba(0,206,201,.3)'},
+  QUINCENAL: {color:'#6c5ce7',bg:'rgba(108,92,231,.12)',border:'rgba(108,92,231,.3)'},
+  MENSUAL:   {color:'#e17055',bg:'rgba(225,112,85,.12)',border:'rgba(225,112,85,.3)'},
+  ARRANQUE:  {color:'#00cec9',bg:'rgba(0,206,201,.12)', border:'rgba(0,206,201,.3)'},
+  CIERRE:    {color:'#fd79a8',bg:'rgba(253,121,168,.12)',border:'rgba(253,121,168,.3)'},
 };
-var _intMecActual = null;
-var _intMecData   = {};
-var _intMecRepRes = [];
-var _intMecRepSel = null;
 
-function abrirIntMec(id) {
-  DB.ref('integrales/'+id).on('value', function(snap) {
-    var it = snap.val();
-    if (!it) return;
-    _intMecData[id] = it;
-    _intMecActual = id;
-    renderIntMec(id);
-    document.getElementById('intMecModal').style.display = 'block';
-    document.body.style.overflow = 'hidden';
-  });
+let curMes = { year: new Date().getFullYear(), month: new Date().getMonth() };
+let mecNombre = '';
+let _plan = null;
+let _comp = {};
+
+function mesKey(y,m){ return y+'-'+String(m+1).padStart(2,'0'); }
+function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtDs(ds){
+  if(!ds) return '—';
+  const d = new Date(ds+'T12:00:00');
+  return DIAS_ES[d.getDay()]+' '+d.getDate()+'/'+String(d.getMonth()+1).padStart(2,'0');
 }
 
-function cerrarIntMec() {
-  if (_intMecActual) DB.ref('integrales/'+_intMecActual).off();
-  document.getElementById('intMecModal').style.display = 'none';
-  document.body.style.overflow = '';
-  _intMecActual = null;
-  _intMecRepRes = [];
-  _intMecRepSel = null;
-}
-
-function renderIntMec(id) {
-  var it = _intMecData[id];
-  if (!it) return;
-  var meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  var mp = (it.mesPrevisto||'').split('-');
-  var mesLabel = meses[parseInt(mp[1]||1)-1] + ' ' + mp[0];
-  var enCurso = it.estado === 'en_curso';
-  var bColor  = enCurso ? '#3498db' : '#f39c12';
-
-  document.getElementById('intMecTitle').textContent = '🔩 ' + (it.maqNombre||'');
-  document.getElementById('intMecSub').textContent   = mesLabel + (it.descripcion ? ' · '+it.descripcion : '');
-
-  var ckItems = Object.values(it.checklist || {}).sort(function(a,b){ return (a.orden||0)-(b.orden||0); });
-  var ckTotal = ckItems.length;
-  var ckOk    = ckItems.filter(function(c){ return c.estado && c.estado !== 'pendiente'; }).length;
-  var ckPct   = ckTotal > 0 ? Math.round(ckOk/ckTotal*100) : 0;
-  var ckBarColor = ckPct===100 ? '#27ae60' : ckPct>50 ? '#3498db' : '#f39c12';
-
-  var html = '';
-
-  // ── Checklist ──
-  html += '<div style="margin-bottom:20px">';
-  html += '<div style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.06em;margin-bottom:10px">✅ CHECKLIST DE REVISIÓN'
-        + (ckTotal>0 ? ' <span style="font-weight:400;color:rgba(255,255,255,0.3)">'+ckOk+'/'+ckTotal+'</span>' : '') + '</div>';
-
-  if (ckTotal > 0) {
-    html += '<div style="background:rgba(255,255,255,0.07);border-radius:20px;height:6px;margin-bottom:12px;overflow:hidden">'
-          + '<div style="height:100%;width:'+ckPct+'%;background:'+ckBarColor+';border-radius:20px;transition:width .4s"></div>'
-          + '</div>';
-  }
-
-  if (!ckTotal) {
-    html += '<div style="color:rgba(255,255,255,0.25);font-size:0.82rem;padding:12px 0;text-align:center">Sin puntos de revisión definidos</div>';
-  } else {
-    ckItems.forEach(function(ck) {
-      var cfg = CK_ESTADOS_MEC[ck.estado||'pendiente'] || CK_ESTADOS_MEC.pendiente;
-      html += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:10px 12px;margin-bottom:8px">';
-      html += '<div style="font-size:0.88rem;font-weight:600;color:#fff;margin-bottom:8px">'+escHtmlMec(ck.desc)+'</div>';
-      // Botones estado
-      html += '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:7px">';
-      Object.keys(CK_ESTADOS_MEC).forEach(function(est) {
-        var c = CK_ESTADOS_MEC[est];
-        var activo = (ck.estado||'pendiente') === est;
-        html += '<button onclick="ckMecEstado(\''+id+'\',\''+ck._key+'\',\''+est+'\')" '
-              + 'style="border:1px solid '+(activo?c.color:'rgba(255,255,255,0.15)')+';background:'+(activo?c.bg:'transparent')+';'
-              + 'color:'+(activo?c.color:'rgba(255,255,255,0.3)')+';border-radius:5px;padding:4px 9px;cursor:pointer;'
-              + 'font-size:0.72rem;font-weight:700;font-family:Barlow,sans-serif;white-space:nowrap">'
-              + c.icon+' '+c.label+'</button>';
-      });
-      html += '</div>';
-      html += '<input type="text" placeholder="Nota (opcional)..." value="'+escHtmlMec(ck.notas||'')+'" '
-            + 'onblur="ckMecNota(\''+id+'\',\''+ck._key+'\',this.value)" '
-            + 'style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);'
-            + 'color:rgba(255,255,255,0.7);border-radius:6px;padding:5px 9px;font-family:Barlow,sans-serif;font-size:0.78rem">';
-      html += '</div>';
-    });
-  }
-  html += '</div>';
-
-  // ── Añadir componente ──
-  html += '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:13px;margin-bottom:18px">';
-  html += '<div style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.06em;margin-bottom:10px">🔩 AÑADIR COMPONENTE USADO</div>';
-  html += '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start">'
-        + '<div style="flex:1;min-width:180px;position:relative">'
-        + '<input type="text" id="intMecRepQ" placeholder="Buscar repuesto..." oninput="intMecBuscarRep()" autocomplete="off" '
-        + 'style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:9px 12px;font-family:Barlow,sans-serif;font-size:0.85rem">'
-        + '<div id="intMecRepDrop" style="display:none;position:absolute;top:100%;left:0;right:0;background:#0f2030;border:1px solid rgba(255,255,255,0.15);border-radius:0 0 8px 8px;z-index:20;max-height:180px;overflow-y:auto"></div>'
-        + '</div>'
-        + '<input type="number" id="intMecRepQty" min="1" value="1" '
-        + 'style="width:65px;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:9px 8px;font-family:Barlow,sans-serif;font-size:0.85rem;text-align:center">'
-        + '<button onclick="intMecAñadirComp(\''+id+'\')" '
-        + 'style="background:rgba(52,152,219,0.2);border:1px solid rgba(52,152,219,0.4);color:#74b9ff;border-radius:7px;padding:9px 14px;cursor:pointer;font-size:0.85rem;font-family:Barlow,sans-serif;font-weight:700">+ Añadir</button>'
-        + '</div>';
-  html += '<div id="intMecRepInfo" style="margin-top:6px;font-size:0.76rem;color:rgba(255,255,255,0.35)">Busca un repuesto para añadirlo</div>';
-
-  // Lista componentes existentes (solo lectura)
-  var comps = Object.values(it.componentes || {});
-  if (comps.length) {
-    html += '<div style="margin-top:12px;border-top:1px solid rgba(255,255,255,0.07);padding-top:10px">';
-    comps.forEach(function(c) {
-      var tipo      = c.tipo || 'obligatorio';
-      var esOblig   = tipo === 'obligatorio';
-      var tipoColor = esOblig ? '#e74c3c' : '#e67e22';
-      var tipoIcon  = esOblig ? '🔴' : '🟠';
-      var tipoLabel = esOblig ? 'Cambio obligatorio' : 'Revisar — puede necesitar cambio';
-      html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 4px;font-size:0.8rem;border-bottom:1px solid rgba(255,255,255,0.04);border-left:2px solid '+tipoColor+';padding-left:8px;margin-bottom:2px" title="'+tipoLabel+'">'
-            + '<span style="color:rgba(255,255,255,0.75)">'+tipoIcon+' '+escHtmlMec(c.desc)+'</span>'
-            + '<span style="color:var(--gold);font-weight:700;flex-shrink:0;margin-left:8px">×'+c.qty+'</span></div>';
-    });
-    html += '</div>';
-  }
-  html += '</div>';
-
-  // ── Observaciones ──
-  html += '<div>'
-        + '<div style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.06em;margin-bottom:8px">📝 OBSERVACIONES</div>'
-        + '<textarea id="intMecObs" rows="3" placeholder="Notas, incidencias, materiales extra..." '
-        + 'style="width:100%;background:#0d1b2a;color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 12px;'
-        + 'font-family:Barlow,sans-serif;font-size:0.88rem;resize:vertical">'+escHtmlMec(it.observaciones||'')+'</textarea>'
-        + '<button onclick="intMecGuardarObs(\''+id+'\')" '
-        + 'style="margin-top:6px;background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.4);color:#f0c040;'
-        + 'border-radius:7px;padding:8px 18px;cursor:pointer;font-size:0.82rem;font-family:Barlow,sans-serif;font-weight:700">💾 Guardar observaciones</button>'
-        + '</div>';
-
-  // ── Botón Finalizado ──
-  var mecs  = it.mecanicos || [];
-  var confs = it.confirmaciones || {};
-  var miKey = mecActual ? mecActual.replace(/\s/g,'_') : '';
-  var miConf = confs[miKey];
-  var yoConfirme = miConf && miConf.confirmado;
-  var nConf  = mecs.filter(function(m){ var c=confs[m.replace(/\s/g,'_')]; return c&&c.confirmado; }).length;
-  var todosConf = mecs.length > 0 && nConf === mecs.length;
-
-  html += '<div style="padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);margin-top:4px">';
-  // Estado de confirmaciones
-  if (mecs.length) {
-    html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">';
-    mecs.forEach(function(m) {
-      var c = confs[m.replace(/\s/g,'_')];
-      var ok = c && c.confirmado;
-      html += '<span style="font-size:0.75rem;padding:4px 10px;border-radius:20px;background:'
-            + (ok?'rgba(39,174,96,0.2)':'rgba(255,255,255,0.06)')+';color:'+(ok?'#2ecc71':'rgba(255,255,255,0.4)')
-            + ';border:1px solid '+(ok?'rgba(39,174,96,0.4)':'rgba(255,255,255,0.1)')+'">'+escHtmlMec(m)+(ok?' ✅':' ⏳')+'</span>';
-    });
-    html += '</div>';
-  }
-  if (yoConfirme) {
-    html += '<div style="background:rgba(39,174,96,0.12);border:1px solid rgba(39,174,96,0.35);border-radius:9px;padding:12px 16px;text-align:center;color:#2ecc71;font-weight:700;font-size:0.9rem">'
-          + '✅ Ya has confirmado este mantenimiento'
-          + (todosConf ? '<br><span style="font-size:0.78rem;opacity:0.8">Todos los mecánicos han confirmado — Integral completado</span>' : '')
-          + '</div>';
-  } else {
-    html += '<button onclick="intMecFinalizar(\''+id+'\')" '
-          + 'style="width:100%;padding:14px;background:linear-gradient(135deg,rgba(39,174,96,0.3),rgba(39,174,96,0.15));'
-          + 'border:2px solid rgba(39,174,96,0.6);color:#2ecc71;border-radius:10px;cursor:pointer;'
-          + 'font-family:Barlow,sans-serif;font-size:1rem;font-weight:900;letter-spacing:0.03em">'
-          + '✅ MARCAR COMO FINALIZADO</button>';
-  }
-  html += '</div>';
-
-  document.getElementById('intMecBody').innerHTML = html;
-  _intMecRepRes = [];
-  _intMecRepSel = null;
-}
-
-// ── Checklist mecánico ────────────────────────────────────────
-function ckMecEstado(intId, ckKey, estado) {
-  DB.ref('integrales/'+intId+'/checklist/'+ckKey+'/estado').set(estado)
-    .catch(function(){ showToastMec('❌ Error'); });
-}
-function ckMecNota(intId, ckKey, nota) {
-  DB.ref('integrales/'+intId+'/checklist/'+ckKey+'/notas').set(nota.trim())
-    .catch(function(){ showToastMec('❌ Error al guardar nota'); });
-}
-
-// ── Componentes mecánico ──────────────────────────────────────
-var _repCacheLocal = null;
-
-function _getRepCache(cb) {
-  if (_repCacheLocal) { cb(_repCacheLocal); return; }
+// ── Auto-login desde sesión activa ──
+(function(){
   try {
-    var ls = JSON.parse(localStorage.getItem('repuestosCache')||'[]');
-    if (ls.length) { _repCacheLocal = ls; cb(ls); return; }
+    const s = JSON.parse(localStorage.getItem('panalcor_session')||'null');
+    if(s && s.nombre && (!s.expires || Date.now() < s.expires)){
+      mecNombre = s.nombre.toUpperCase();
+      document.getElementById('loginOverlay').style.display = 'none';
+      document.getElementById('headerMec').textContent = '👷 '+mecNombre;
+      cargarMes();
+    }
   } catch(e){}
-  // Cargar desde Firebase si no hay cache local
-  DB.ref('repuestos_base').once('value').then(function(snap){
-    var data = snap.val() || {};
-    var lista = Object.values(data).filter(function(r){ return r && (r.desc||r.ref); });
-    _repCacheLocal = lista;
-    cb(lista);
-  }).catch(function(){ cb([]); });
+})();
+
+function loginMec(){
+  const n = document.getElementById('loginNombre').value.trim().toUpperCase();
+  if(!n){ alert('Introduce tu nombre'); return; }
+  mecNombre = n;
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('headerMec').textContent = '👷 '+n;
+  cargarMes();
 }
 
-function intMecBuscarRep() {
-  var q    = (document.getElementById('intMecRepQ').value||'').trim().toLowerCase();
-  var drop = document.getElementById('intMecRepDrop');
-  if (q.length < 2) { drop.style.display='none'; _intMecRepSel=null; return; }
-  _getRepCache(function(base) {
-  var res = base.filter(function(r){
-    return (r.desc||'').toLowerCase().includes(q) || String(r.ref||'').toLowerCase().includes(q);
-  }).slice(0,8);
-  _intMecRepRes = res;
-  if (!res.length) { drop.style.display='none'; return; }
-  drop.innerHTML = res.map(function(r,i){
-    return '<div onclick="intMecSelRep('+i+')" style="padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.07);font-size:0.82rem" '
-         + 'onmouseover="this.style.background=\'rgba(255,255,255,0.06)\'" onmouseout="this.style.background=\'\'">'
-         + '<span style="color:#fff;font-weight:500">'+escHtmlMec(r.desc)+'</span> '
-         + '<span style="color:var(--gold);font-size:0.75rem">#'+escHtmlMec(String(r.ref||''))+'</span>'
-         + '</div>';
-  }).join('');
-  drop.style.display = 'block';
-  }); // _getRepCache
-}
-function intMecSelRep(i) {
-  _intMecRepSel = _intMecRepRes[i];
-  document.getElementById('intMecRepQ').value = _intMecRepSel.desc;
-  document.getElementById('intMecRepDrop').style.display = 'none';
-  document.getElementById('intMecRepInfo').textContent = '✅ ' + _intMecRepSel.desc + ' — Ref. ' + (_intMecRepSel.ref||'—');
-}
-function intMecAñadirComp(intId) {
-  if (!_intMecRepSel) { showToastMec('⚠️ Selecciona un repuesto del buscador'); return; }
-  var qty = parseInt(document.getElementById('intMecRepQty').value)||1;
-  var it  = _intMecData[intId] || {};
-  var nComp = Object.keys(it.componentes||{}).length;
-  var key = 'c_'+Date.now();
-  var obj = { _ckey:key, desc:_intMecRepSel.desc, ref:String(_intMecRepSel.ref||''), qty:qty, orden:nComp };
-  DB.ref('integrales/'+intId+'/componentes/'+key).set(obj)
-    .then(function(){ showToastMec('✅ Componente añadido'); _intMecRepSel=null; document.getElementById('intMecRepQ').value=''; document.getElementById('intMecRepInfo').textContent='Busca un repuesto para añadirlo'; })
-    .catch(function(){ showToastMec('❌ Error'); });
+function navMes(delta){
+  let {year,month} = curMes;
+  month += delta;
+  if(month<0){year--;month=11;} if(month>11){year++;month=0;}
+  curMes = {year,month};
+  cargarMes();
 }
 
-// ── Finalizar integral ────────────────────────────────────────
-function intMecFinalizar(intId) {
-  if (!confirm('¿Confirmas que has completado tu parte de este mantenimiento integral?\n\nEsta acción no se puede deshacer.')) return;
-  var it    = _intMecData[intId];
-  if (!it || !mecActual) return;
-  var key   = mecActual.replace(/\s/g,'_');
-  var hoy   = new Date().toISOString().substring(0,10);
-  var updates = {};
-  updates['confirmaciones/'+key] = { nombre: mecActual, confirmado: true, fecha: hoy };
-  // Si todos los mecánicos confirman → marcar completada
-  var mecs  = it.mecanicos || [];
-  var confs = JSON.parse(JSON.stringify(it.confirmaciones || {}));
-  confs[key] = { nombre: mecActual, confirmado: true, fecha: hoy };
-  var todosOk = mecs.length > 0 && mecs.every(function(m){ var c=confs[m.replace(/\s/g,'_')]; return c&&c.confirmado; });
-  if (todosOk) {
-    updates['estado'] = 'completada';
-    updates['fechaCierre'] = hoy;
-  }
-  DB.ref('integrales/'+intId).update(updates)
-    .then(function(){
-      showToastMec(todosOk ? '🎉 ¡Integral completado! Todos han confirmado' : '✅ Tu confirmación guardada');
-    })
-    .catch(function(){ showToastMec('❌ Error al confirmar'); });
-}
-
-// ── Observaciones mecánico ────────────────────────────────────
-function intMecGuardarObs(intId) {
-  var obs = (document.getElementById('intMecObs').value||'').trim();
-  DB.ref('integrales/'+intId+'/observaciones').set(obs)
-    .then(function(){ showToastMec('✅ Observaciones guardadas'); })
-    .catch(function(){ showToastMec('❌ Error'); });
-}
-
-// ══ SOLICITUDES DE PEDIDO ══════════════════════════════════════
-function abrirPedidoModal() {
-  document.getElementById('pedidoModal').style.display = 'block';
-  document.body.style.overflow = 'hidden';
-  setTimeout(function(){ document.getElementById('pedDesc').focus(); }, 150);
-}
-function cerrarPedidoModal() {
-  document.getElementById('pedidoModal').style.display = 'none';
-  document.body.style.overflow = '';
-  document.getElementById('pedDesc').value = '';
-  document.getElementById('pedRef').value  = '';
-  document.getElementById('pedCant').value = '1';
-  document.getElementById('pedMotivo').value = '';
-}
-function enviarPedido() {
-  var desc   = (document.getElementById('pedDesc').value   || '').trim();
-  var ref    = (document.getElementById('pedRef').value    || '').trim();
-  var cant   = parseInt(document.getElementById('pedCant').value)  || 1;
-  var motivo = (document.getElementById('pedMotivo').value || '').trim();
-  if (!desc) { showToastMec('⚠️ Escribe el nombre del repuesto'); return; }
-  if (!mecActual) { showToastMec('⚠️ No se detecta el mecánico'); return; }
-  var datosPedido = { desc:desc, ref:ref, cantidad:cant, motivo:motivo, mecanico:mecActual, estado:'pendiente', ts:Date.now() };
-  DB.ref('pedidos').push(datosPedido)
-  .then(function() {
-    cerrarPedidoModal();
-    showToastMec('✅ Solicitud enviada al administrador');
-  }).catch(function() {
-    if (window.OfflinePANALCOR) {
-      OfflinePANALCOR.encolar('pedido', datosPedido);
-      cerrarPedidoModal();
-      showToastMec('📵 Sin conexión — la solicitud se enviará cuando vuelva la red');
-    } else {
-      showToastMec('❌ Error al enviar');
-    }
-  });
-}
-
-function showToastMec(msg) {
-  var t = document.getElementById('toast');
-  if (!t) return;
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(function(){ t.classList.remove('show'); }, 2500);
-}
-
-// ══════════════════════════════════════════════════════
-// OTROS TRABAJOS
-// ══════════════════════════════════════════════════════
-var _otrosCache   = null;
-var _otrosFiltro  = 'ABIERTO';
-var _otrosCerrarId = null;
-var _otrosMecs    = [];
-
-function cargarOtrosTrabajos(){
-  if(_otrosCache !== null){ renderOtros(); return; }
-  document.getElementById('otrosList').innerHTML =
-    '<div class="empty-state"><div class="ico">⏳</div><p>Cargando...</p></div>';
-  DB.ref('otros_trabajos').on('value', function(snap){
-    var data = snap.val() || {};
-    _otrosCache = Object.values(data).filter(function(t){ return t && t.id; });
-    _otrosCache.sort(function(a,b){ return (b.tsAbre||0)-(a.tsAbre||0); });
-    renderOtros();
-  });
-}
-
-function otrosFiltro(f){
-  _otrosFiltro = f;
-  ['ABIERTO','CERRADO',''].forEach(function(k){
-    var btn = document.getElementById('otrosBtn-'+k);
-    if(!btn) return;
-    var isActive = k === f;
-    btn.style.background   = isActive ? (k==='ABIERTO'?'rgba(231,76,60,0.3)':k==='CERRADO'?'rgba(46,204,113,0.2)':'rgba(255,255,255,0.12)') : 'transparent';
-    btn.style.borderColor  = isActive ? (k==='ABIERTO'?'rgba(231,76,60,0.7)':k==='CERRADO'?'rgba(46,204,113,0.5)':'rgba(255,255,255,0.3)') : 'rgba(255,255,255,0.1)';
-    btn.style.color        = isActive ? (k==='ABIERTO'?'#e74c3c':k==='CERRADO'?'#2ecc71':'rgba(255,255,255,0.8)') : 'rgba(255,255,255,0.35)';
-  });
-  renderOtros();
-}
-
-function renderOtros(){
-  var lista = (_otrosCache||[]).filter(function(t){
-    return !_otrosFiltro || t.estado === _otrosFiltro;
-  });
-  var el = document.getElementById('otrosList');
-  if(!lista.length){
-    el.innerHTML = '<div class="empty-state"><div class="ico">'
-      +(_otrosFiltro==='ABIERTO'?'🎉':'📋')+'</div><p>'
-      +(_otrosFiltro==='ABIERTO'?'No hay trabajos abiertos ahora mismo':'Sin registros')
-      +'</p></div>';
+async function cargarMes(){
+  const {year,month} = curMes;
+  const mk = mesKey(year,month);
+  const tit = MESES_L[month].charAt(0).toUpperCase()+MESES_L[month].slice(1)+' '+year;
+  document.getElementById('mesTitle').textContent = tit;
+  document.getElementById('content').innerHTML = `<div class="loading">⏳ Cargando ${tit}...</div>`;
+  try {
+    const [sp, sc] = await Promise.all([
+      _DB.ref(`preventivo_plan/${mk}`).once('value'),
+      _DB.ref(`preventivo_completado/${mk}`).once('value')
+    ]);
+    _plan = sp.val();
+    _comp = sc.val() || {};
+  } catch(e){
+    document.getElementById('content').innerHTML =
+      `<div class="empty-state"><p style="color:#e74c3c">⚠️ Sin conexión. Comprueba la red.</p></div>`;
     return;
   }
-  el.innerHTML = lista.map(function(t){
-    var esCerrado = t.estado === 'CERRADO';
-    var esUrgente = t.prioridad === 'URGENTE';
-    var fecha = t.tsAbre ? new Date(t.tsAbre).toLocaleDateString('es-ES') : '—';
-    var hora  = t.horaInicio || '—';
-    var mecsAb = (t.mecanicosAbren||[]).join(', ') || '—';
-    var mecsCi = (t.mecanicosCierran||[]).join(', ') || '';
-    return '<div class="ot-card '+(esCerrado?'cerrado':'abierto')+(esUrgente?' urgente':'')+'" id="otc-'+t.id+'">'
-      +'<div class="ot-head" onclick="toggleOtCard(\''+t.id+'\')">'
-      +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">'
-      +'<div class="ot-titulo">'+t.tarea+'</div>'
-      +'<span class="ot-badge '+(esCerrado?'ce':'ab')+'">'+t.estado+'</span>'
-      +'</div>'
-      +'<div class="ot-meta">'
-      +(esUrgente?'<span class="ot-badge urg">🔴 URGENTE</span>':'')
-      +'<span>📍 '+(t.zona||'—')+'</span>'
-      +'<span>🗓 '+fecha+' '+hora+'</span>'
-      +'<span>🔩 '+(t.tipo||'—')+'</span>'
-      +(t.maquina?'<span>⚙️ '+t.maquina+'</span>':'')
-      +'</div>'
-      +'</div>'
-      +'<div class="ot-body" id="otb-'+t.id+'">'
-      +'<div class="ot-dl">'
-      +'<div class="ot-dl-item full"><div class="lbl">Descripción</div><div class="val">'+t.tarea+'</div></div>'
-      +'<div class="ot-dl-item"><div class="lbl">Zona</div><div class="val">'+(t.zona||'—')+'</div></div>'
-      +'<div class="ot-dl-item"><div class="lbl">Tipo</div><div class="val">'+(t.tipo||'—')+'</div></div>'
-      +'<div class="ot-dl-item"><div class="lbl">Prioridad</div><div class="val">'+(t.prioridad||'NORMAL')+'</div></div>'
-      +(t.maquina?'<div class="ot-dl-item"><div class="lbl">Máquina</div><div class="val">'+t.maquina+'</div></div>':'')
-      +'<div class="ot-dl-item"><div class="lbl">Abre</div><div class="val">'+mecsAb+'</div></div>'
-      +'<div class="ot-dl-item"><div class="lbl">Hora inicio</div><div class="val">'+(t.horaInicio||'—')+'</div></div>'
-      +(t.observaciones?'<div class="ot-dl-item full"><div class="lbl">Observaciones</div><div class="val">'+t.observaciones+'</div></div>':'')
-      +(esCerrado?'<div class="ot-dl-item"><div class="lbl">Cierra</div><div class="val">'+mecsCi+'</div></div>':'')
-      +(esCerrado&&t.horaFin?'<div class="ot-dl-item"><div class="lbl">Hora fin</div><div class="val">'+t.horaFin+'</div></div>':'')
-      +(esCerrado&&t.material?'<div class="ot-dl-item full"><div class="lbl">Material</div><div class="val">'+t.material+'</div></div>':'')
-      +(esCerrado&&t.observacionesCierre?'<div class="ot-dl-item full"><div class="lbl">Obs. cierre</div><div class="val">'+t.observacionesCierre+'</div></div>':'')
-      +'</div>'
-      +(!esCerrado?'<button onclick="abrirCerrarTrabajo(\''+t.id+'\')" style="margin-top:12px;width:100%;padding:10px;background:linear-gradient(135deg,#27ae60,#1a7a43);border:none;color:#fff;border-radius:8px;font-family:Barlow,sans-serif;font-size:0.88rem;font-weight:900;cursor:pointer">✅ Cerrar este trabajo</button>':'')
-      +'</div>'
-      +'</div>';
-  }).join('');
-}
-
-function toggleOtCard(id){
-  var body = document.getElementById('otb-'+id);
-  if(body) body.classList.toggle('open');
-}
-
-function _cargarMecsEnOtros(containerEl, seleccionados){
-  var fb = ['ALEX','RAFA','GREGORIO','JAVIER E','JAVIER H','RUBIEL','ALBERTO','JOSE'];
-  function poblar(lista){
-    _otrosMecs = lista;
-    containerEl.innerHTML = lista.map(function(m){
-      var sel = seleccionados && seleccionados.indexOf(m) !== -1;
-      return '<label style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:7px;background:'+(sel?'rgba(201,162,39,0.15)':'rgba(255,255,255,0.04)')+';border:1px solid '+(sel?'rgba(201,162,39,0.4)':'rgba(255,255,255,0.1)')+';cursor:pointer;font-size:0.85rem;transition:all .15s" onclick="otToggleMec(this)">'
-        +'<input type="checkbox" value="'+m+'"'+(sel?' checked':'')
-        +' style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer"> '+m+'</label>';
-    }).join('');
+  if(!_plan||!_plan.tareas){
+    document.getElementById('content').innerHTML = `
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <p>No hay plan publicado para <b>${tit}</b>.<br><span style="font-size:.8rem;opacity:.5">El administrador aún no ha publicado el plan.</span></p>
+      </div>`;
+    return;
   }
-  DB.ref('config/mecanicos').once('value')
-    .then(function(s){ var v=s.val(); poblar(v&&v.length?v:fb); })
-    .catch(function(){ poblar(fb); });
+  renderMisTareas(mk);
 }
 
-function otToggleMec(label){
-  var chk = label.querySelector('input');
-  var sel = chk.checked;
-  label.style.background = sel ? 'rgba(201,162,39,0.15)' : 'rgba(255,255,255,0.04)';
-  label.style.borderColor = sel ? 'rgba(201,162,39,0.4)' : 'rgba(255,255,255,0.1)';
-}
+function renderMisTareas(mk){
+  const tareas = (_plan.tareas||[]).filter(t =>
+    t.mecanico.toUpperCase() === mecNombre ||
+    t.frecuencia === 'ARRANQUE' || t.frecuencia === 'CIERRE'
+  );
 
-function abrirNuevoTrabajo(){
-  document.getElementById('otTarea').value      = '';
-  document.getElementById('otTipo').value       = '';
-  document.getElementById('otPrioridad').value  = 'NORMAL';
-  document.getElementById('otZona').value       = '';
-  document.getElementById('otMaquina').value    = '';
-  document.getElementById('otObs').value        = '';
-  document.getElementById('otMsgAbrir').textContent = '';
-  var now = new Date();
-  document.getElementById('otHoraInicio').value = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-  var sel = mecActual ? [mecActual] : [];
-  _cargarMecsEnOtros(document.getElementById('otMecsAbren'), sel);
-  document.getElementById('otrosModalBg').style.display = 'block';
-  document.body.style.overflow = 'hidden';
-}
+  if(!tareas.length){
+    document.getElementById('content').innerHTML = `
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <p>No tienes tareas asignadas este mes.</p>
+      </div>`;
+    return;
+  }
 
-function cerrarOtrosModal(){
-  document.getElementById('otrosModalBg').style.display = 'none';
-  document.body.style.overflow = '';
-}
-
-function guardarNuevoTrabajo(){
-  var tarea     = document.getElementById('otTarea').value.trim();
-  var tipo      = document.getElementById('otTipo').value;
-  var prioridad = document.getElementById('otPrioridad').value;
-  var zona      = document.getElementById('otZona').value;
-  var maquina   = document.getElementById('otMaquina').value.trim();
-  var horaInicio= document.getElementById('otHoraInicio').value;
-  var obs       = document.getElementById('otObs').value.trim();
-  var msgEl     = document.getElementById('otMsgAbrir');
-
-  var mecsAbren = Array.from(document.querySelectorAll('#otMecsAbren input:checked')).map(function(c){ return c.value; });
-
-  if(!tarea)        { msgEl.textContent = '⚠️ Escribe la descripción del trabajo'; return; }
-  if(!tipo)         { msgEl.textContent = '⚠️ Selecciona el tipo'; return; }
-  if(!zona)         { msgEl.textContent = '⚠️ Selecciona la zona'; return; }
-  if(!mecsAbren.length){ msgEl.textContent = '⚠️ Selecciona al menos un mecánico'; return; }
-  msgEl.textContent = '';
-
-  var id  = 'OT-' + Date.now();
-  var obj = {
-    id: id,
-    tarea: tarea,
-    tipo: tipo,
-    prioridad: prioridad,
-    zona: zona,
-    maquina: maquina || null,
-    mecanicosAbren: mecsAbren,
-    horaInicio: horaInicio || null,
-    observaciones: obs || null,
-    estado: 'ABIERTO',
-    tsAbre: Date.now(),
-    fecha: new Date().toISOString().slice(0,10)
-  };
-
-  DB.ref('otros_trabajos/'+id).set(obj).then(function(){
-    cerrarOtrosModal();
-    showToast('✅ Trabajo abierto');
-  }).catch(function(e){ msgEl.textContent = '❌ Error: '+e.message; });
-}
-
-function abrirCerrarTrabajo(id){
-  var t = (_otrosCache||[]).find(function(x){ return x.id===id; });
-  if(!t) return;
-  _otrosCerrarId = id;
-  document.getElementById('otCerrarTareaDesc').textContent = t.tarea;
-  document.getElementById('otMaterial').value    = '';
-  document.getElementById('otObsCierre').value   = '';
-  document.getElementById('otMsgCerrar').textContent = '';
-  var now = new Date();
-  document.getElementById('otHoraFin').value = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-  var sel = mecActual ? [mecActual] : [];
-  _cargarMecsEnOtros(document.getElementById('otMecsCierran'), sel);
-  document.getElementById('otrosCerrarBg').style.display = 'block';
-  document.body.style.overflow = 'hidden';
-}
-
-function cerrarOtrosCerrarModal(){
-  document.getElementById('otrosCerrarBg').style.display = 'none';
-  document.body.style.overflow = '';
-  _otrosCerrarId = null;
-}
-
-function confirmarCerrarTrabajo(){
-  var msgEl = document.getElementById('otMsgCerrar');
-  var mecsCierran = Array.from(document.querySelectorAll('#otMecsCierran input:checked')).map(function(c){ return c.value; });
-  if(!mecsCierran.length){ msgEl.textContent = '⚠️ Selecciona quién lo cierra'; return; }
-  var horaFin  = document.getElementById('otHoraFin').value;
-  var material = document.getElementById('otMaterial').value.trim();
-  var obsCierre= document.getElementById('otObsCierre').value.trim();
-  msgEl.textContent = '';
-
-  var updates = {
-    estado: 'CERRADO',
-    mecanicosCierran: mecsCierran,
-    horaFin: horaFin || null,
-    material: material || null,
-    observacionesCierre: obsCierre || null,
-    tsCierre: Date.now()
-  };
-
-  DB.ref('otros_trabajos/'+_otrosCerrarId).update(updates).then(function(){
-    cerrarOtrosCerrarModal();
-    showToast('✅ Trabajo cerrado');
-  }).catch(function(e){ msgEl.textContent = '❌ Error: '+e.message; });
-}
-</script>
-<script src="fcm.js" defer></script>
-<script src="offline.js" defer></script>
-<script>
-  window.addEventListener('load', function() {
-    try { if (window.OfflinePANALCOR) OfflinePANALCOR.init(); } catch(e) {}
+  // Stats
+  let total=0, hechas=0;
+  tareas.forEach(t=>{
+    if(t.frecuencia==='DIARIO') return;
+    const slots = Object.entries(t.fechas||{}).filter(([,v])=>typeof v==='string');
+    slots.forEach(([wi])=>{ total++; if(_comp[`${t.id}_${wi}`]) hechas++; });
   });
+
+  const tareasAC  = tareas.filter(t=>t.frecuencia==='ARRANQUE'||t.frecuencia==='CIERRE');
+  const tareasReg = tareas.filter(t=>t.frecuencia!=='ARRANQUE'&&t.frecuencia!=='CIERRE');
+
+  let html = `<div class="stats-row" style="margin-top:6px">
+    <span class="stat-chip" style="color:#00b894;background:rgba(0,184,148,.1);border-color:rgba(0,184,148,.3)">✓ ${hechas} hechas</span>
+    <span class="stat-chip" style="color:#e8c14e;background:rgba(232,193,78,.1);border-color:rgba(232,193,78,.3)">${total-hechas} pendientes</span>
+  </div>`;
+
+  if(tareasAC.length){
+    html += `<div class="section-label">🔄 Arranque y Cierre — compartidas</div>`;
+    tareasAC.forEach(t => { html += tarjetaCard(t, mk, true); });
+  }
+  if(tareasReg.length){
+    html += `<div class="section-label">🔧 Mis tareas</div>`;
+    tareasReg.forEach(t => { html += tarjetaCard(t, mk, false); });
+  }
+
+  document.getElementById('content').innerHTML = html;
+}
+
+function tarjetaCard(t, mk, isAC){
+  const cfg = FREQ_CFG[t.frecuencia]||{color:'#fff',bg:'rgba(255,255,255,.05)',border:'rgba(255,255,255,.2)'};
+  const slots = Object.entries(t.fechas||{}).filter(([,v])=>typeof v==='string');
+
+  // Calcular estado general
+  const allDone = slots.length > 0 && slots.every(([wi])=>_comp[`${t.id}_${wi}`]);
+  const allAuto = slots.length > 0 && slots.every(([wi])=>_comp[`${t.id}_${wi}`]?.autoRelleno);
+  const cls = allAuto ? 'auto' : allDone ? 'done' : '';
+
+  let html = `<div class="task-card ${cls}" id="card_${t.id}">
+    <div class="task-head">
+      <div style="flex:1"><div class="task-maq">${escH(t.maquina||'GENERAL')}</div><div class="task-name">${escH(t.tarea)}</div></div>
+      <span class="freq-pill" style="color:${cfg.color};background:${cfg.bg};border-color:${cfg.border}">${t.frecuencia}</span>
+    </div>`;
+
+  if(t.frecuencia==='DIARIO'){
+    html += `<div class="slot-row"><span class="diario-note">Cada día de lunes a viernes</span></div>`;
+  } else if(!slots.length){
+    html += `<div class="slot-row"><span class="no-fecha">Sin fecha asignada aún</span></div>`;
+  } else {
+    slots.forEach(([wi, fechaPlan])=>{
+      const clave = `${t.id}_${wi}`;
+      const comp  = _comp[clave];
+      let slotLabel = '';
+      if(slots.length>1){
+        if(t.frecuencia==='SEMANAL') slotLabel = `Semana ${parseInt(wi)+1}`;
+        else if(wi==='0') slotLabel = '1ª mitad';
+        else slotLabel = '2ª mitad';
+      }
+      html += `<div class="slot-row">
+        ${slotLabel ? `<span class="slot-label">${slotLabel}</span>` : ''}
+        <span class="fecha-pill fecha-plan">📅 ${fmtDs(fechaPlan)}</span>`;
+      if(comp){
+        html += comp.autoRelleno
+          ? `<span class="fecha-pill fecha-auto">⚙️ Auto ${fmtDs(comp.fechaReal)}</span>`
+          : `<span class="fecha-pill fecha-real">✓ ${isAC?escH(comp.mecanico)+' — ':''}${fmtDs(comp.fechaReal)}</span>`;
+      } else {
+        html += `<button class="btn-hecho" onclick="marcarHecha(${t.id},'${wi}','${mk}',this)">${isAC?'✓ La hice yo':'✓ Hecha hoy'}</button>`;
+      }
+      html += `</div>`;
+    });
+  }
+
+  html += `</div>`;
+  return html;
+}
+
+async function marcarHecha(taskId, wi, mk, btn){
+  btn.disabled=true; btn.textContent='⏳';
+  const hoy = new Date();
+  const hoyDs = hoy.getFullYear()+'-'+String(hoy.getMonth()+1).padStart(2,'0')+'-'+String(hoy.getDate()).padStart(2,'0');
+  try {
+    await _DB.ref(`preventivo_completado/${mk}/${taskId}_${wi}`).set({
+      hecho:true, fechaReal:hoyDs, fechaPlan:'', mecanico:mecNombre, autoRelleno:false, ts:Date.now()
+    });
+    _comp[`${taskId}_${wi}`] = {hecho:true,fechaReal:hoyDs,mecanico:mecNombre,autoRelleno:false};
+    renderMisTareas(mk);
+  } catch(e){
+    btn.disabled=false; btn.textContent='✓ Hecha hoy';
+    alert('⚠️ Error: '+e.message);
+  }
+}
 </script>
 </body>
 </html>
