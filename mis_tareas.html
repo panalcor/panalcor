@@ -328,9 +328,14 @@ function tarjetaCard(t, mk, isAC){
         ${slotLabel ? `<span class="slot-label">${slotLabel}</span>` : ''}
         <span class="fecha-pill fecha-plan">📅 ${fmtDs(fechaPlan)}</span>`;
       if(comp){
-        html += comp.autoRelleno
-          ? `<span class="fecha-pill fecha-auto" style="font-size:.8rem;padding:4px 10px">⚙️ Auto-rellenada · ${fmtDs(comp.fechaReal)}</span>`
-          : `<span class="fecha-pill fecha-real" style="font-size:.82rem;padding:5px 12px;font-weight:700">✅ Realizada el ${fmtDs(comp.fechaReal)}${isAC?' · '+escH(comp.mecanico):''}</span>`;
+        if(comp.autoRelleno){
+          const etiqueta = comp.retraso
+            ? `<span style="background:#e17055;color:#fff;border-radius:4px;font-size:.7rem;padding:1px 6px;margin-right:4px;font-weight:700">RETRASO</span>`
+            : `<span style="background:#00b894;color:#fff;border-radius:4px;font-size:.7rem;padding:1px 6px;margin-right:4px;font-weight:700">EN FECHA</span>`;
+          html += `<span class="fecha-pill fecha-auto" style="font-size:.8rem;padding:4px 10px">${etiqueta}⚙️ ${fmtDs(comp.fechaReal)}</span>`;
+        } else {
+          html += `<span class="fecha-pill fecha-real" style="font-size:.82rem;padding:5px 12px;font-weight:700">✅ Realizada el ${fmtDs(comp.fechaReal)}${isAC?' · '+escH(comp.mecanico):''}</span>`;
+        }
       } else {
         html += `<button class="btn-hecho" onclick="marcarHecha(${t.id},'${wi}','${mk}',this)">${isAC?'✓ La hice yo':'✓ Hecha hoy'}</button>`;
       }

@@ -1984,11 +1984,35 @@ async function rellenarMesVencido() {
   const updates = {};
   let rellenas = 0;
 
-  // Fallback: si un slot no tiene fecha planificada, tomar un día aleatorio L-V del periodo
   function _fallbackDate(days) {
     const d = days[Math.floor(Math.random() * days.length)];
     return d || null;
   }
+
+  // Añade 1-4 días laborables (L-V) a una fecha 'YYYY-MM-DD'
+  function _addWorkDays(ds, n) {
+    const d = new Date(ds + 'T12:00:00');
+    let added = 0;
+    while(added < n) { d.setDate(d.getDate()+1); if(d.getDay()!==0 && d.getDay()!==6) added++; }
+    return d.toISOString().slice(0,10);
+  }
+
+  // Entre el 1% y el 5% de slots tendrán retraso aleatorio de 1-4 días
+  const pctRetraso = 0.01 + Math.random() * 0.04; // 1-5%
+  let slotCount = 0;
+  // Primer paso: contar slots totales para saber cuántos deben retrasarse
+  TAREAS.filter(t => FREQS_AUTO.includes(t.frecuencia) && t.frecuencia !== 'DIARIO').forEach(t => {
+    if(t.frecuencia==='SEMANAL') slotCount += weeks.length;
+    else if(t.frecuencia==='QUINCENAL') slotCount += 2;
+    else if(t.frecuencia==='MENSUAL') slotCount += 1;
+  });
+  const numRetrasos = Math.max(1, Math.round(slotCount * pctRetraso));
+  // Índices de slots (globales) que tendrán retraso
+  const retrasosSet = new Set();
+  while(retrasosSet.size < Math.min(numRetrasos, slotCount)) {
+    retrasosSet.add(Math.floor(Math.random() * slotCount));
+  }
+  let slotIdx = 0;
 
   TAREAS.filter(t => FREQS_AUTO.includes(t.frecuencia) && t.frecuencia !== 'DIARIO').forEach(t => {
     const mecanico = asigMes[t.maquina] || '—';
@@ -2010,8 +2034,11 @@ async function rellenarMesVencido() {
     slots.forEach(([wi, fechaPlan]) => {
       if(!fechaPlan) return;
       const clave = `${t.id}_${wi}`;
-      if(completados[clave]) return; // ya marcado por el mecánico
-      updates[clave] = { hecho:true, fechaReal:fechaPlan, fechaPlan, mecanico, autoRelleno:true, ts:Date.now() };
+      if(completados[clave]) return;
+      const esRetraso = retrasosSet.has(slotIdx++);
+      const diasExtra = esRetraso ? (1 + Math.floor(Math.random() * 4)) : 0;
+      const fechaReal = esRetraso ? _addWorkDays(fechaPlan, diasExtra) : fechaPlan;
+      updates[clave] = { hecho:true, fechaReal, fechaPlan, mecanico, autoRelleno:true, retraso:esRetraso, ts:Date.now() };
       rellenas++;
     });
   });
@@ -2022,7 +2049,8 @@ async function rellenarMesVencido() {
 
   try {
     await _DB.ref(`preventivo_completado/${mk}`).update(updates);
-    alert(`✅ ${rellenas} tarea${rellenas!==1?'s':''} auto-rellenada${rellenas!==1?'s':''} con su fecha planificada en ${mesesN[month]} ${year}.`);
+    const nRetr = Object.values(updates).filter(u=>u.retraso).length;
+    alert(`✅ ${rellenas} tarea${rellenas!==1?'s':''} auto-rellenada${rellenas!==1?'s':''} en ${mesesN[month]} ${year}.\n\n• EN FECHA: ${rellenas-nRetr}\n• RETRASO (1-4 días): ${nRetr}`);
   } catch(e) {
     alert('⚠️ Error al guardar en Firebase: ' + e.message);
   }
