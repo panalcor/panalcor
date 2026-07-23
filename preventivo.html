@@ -926,11 +926,14 @@ if('serviceWorker' in navigator){
       <!-- Asignación máquinas → mecánicos -->
       <div class="ajuste-section">
         <div class="ajuste-title">🔧 Asignación de máquinas a mecánicos</div>
-        <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:1rem">
-          Asigna cada grupo de máquinas a un mecánico. Esto permite filtrar el Plan Semanal por persona.
+        <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:0.5rem">
+          Asigna cada grupo de máquinas a un mecánico. Se guarda por mes.
         </p>
+        <div id="asigMesLabel" style="font-size:0.78rem;color:#74b9ff;background:rgba(116,185,255,0.08);border:1px solid rgba(116,185,255,0.2);border-radius:6px;padding:5px 12px;margin-bottom:0.8rem;display:inline-block">
+          📅 Viendo: —
+        </div>
         <div class="asig-grid" id="asigGrid"></div>
-        <button type="button" class="save-btn" style="margin-top:0.8rem" onclick="guardarAsig()">Guardar asignaciones</button>
+        <button type="button" class="save-btn" style="margin-top:0.8rem" onclick="guardarAsig()">Guardar asignaciones del mes</button>
         <span class="ok-msg" id="okAsig">✅ Guardado</span>
       </div>
 
@@ -1584,10 +1587,13 @@ const ST = {
   meqs:  () => { try{ return JSON.parse(localStorage.getItem('preventivoMecanicos'))||MEQ_DEFAULT; }catch(e){return MEQ_DEFAULT;} },
   // asig ahora es mensual: asigMes()[mk] devuelve el reparto de ese mes
   asigMes:()=>{ try{ return JSON.parse(localStorage.getItem('preventivoAsigMes'))||{}; }catch(e){return {};} },
-  asig: ()=>{ // compatibilidad: devuelve asig del mes visible o global
+  asig: ()=>{
     const mk = mesKey(curMes.year, curMes.month);
     const mes = (()=>{ try{ return JSON.parse(localStorage.getItem('preventivoAsigMes'))||{}; }catch(e){return {};} })();
-    return mes[mk] || (()=>{ try{ return JSON.parse(localStorage.getItem('preventivoAsig'))||{}; }catch(e){return {};} })();
+    const mesAsig = mes[mk];
+    // Solo usar la asig mensual si tiene datos (evitar {} vacío que es truthy)
+    if(mesAsig && Object.keys(mesAsig).length > 0) return mesAsig;
+    return (()=>{ try{ return JSON.parse(localStorage.getItem('preventivoAsig'))||{}; }catch(e){return {};} })();
   },
   fechasMes:() => { try{ return JSON.parse(localStorage.getItem('preventivoFechasMes'))||{}; }catch(e){return {};} },
   setRef:   v => localStorage.setItem('preventivoRef', v),
@@ -1978,18 +1984,31 @@ async function rellenarMesVencido() {
   const updates = {};
   let rellenas = 0;
 
+  // Fallback: si un slot no tiene fecha planificada, tomar un día aleatorio L-V del periodo
+  function _fallbackDate(days) {
+    const d = days[Math.floor(Math.random() * days.length)];
+    return d || null;
+  }
+
   TAREAS.filter(t => FREQS_AUTO.includes(t.frecuencia) && t.frecuencia !== 'DIARIO').forEach(t => {
     const mecanico = asigMes[t.maquina] || '—';
     const slots = [];
     if(t.frecuencia === 'SEMANAL') {
-      weeks.forEach((_, wi) => { if(mkData[`${t.id}_${wi}`]) slots.push([String(wi), mkData[`${t.id}_${wi}`]]); });
+      weeks.forEach((wk, wi) => {
+        const fecha = mkData[`${t.id}_${wi}`] || _fallbackDate(wk.days);
+        if(fecha) slots.push([String(wi), fecha]);
+      });
     } else if(t.frecuencia === 'QUINCENAL') {
-      if(mkData[`${t.id}_0`]) slots.push(['0', mkData[`${t.id}_0`]]);
-      if(mkData[`${t.id}_1`]) slots.push(['1', mkData[`${t.id}_1`]]);
+      const half1 = weeks.slice(0, Math.ceil(weeks.length/2)).flatMap(w=>w.days);
+      const half2 = weeks.slice(Math.ceil(weeks.length/2)).flatMap(w=>w.days);
+      slots.push(['0', mkData[`${t.id}_0`] || _fallbackDate(half1)]);
+      slots.push(['1', mkData[`${t.id}_1`] || _fallbackDate(half2)]);
     } else if(t.frecuencia === 'MENSUAL') {
-      if(mkData[`${t.id}_0`]) slots.push(['0', mkData[`${t.id}_0`]]);
+      const allDays = weeks.flatMap(w=>w.days);
+      slots.push(['0', mkData[`${t.id}_0`] || _fallbackDate(allDays)]);
     }
     slots.forEach(([wi, fechaPlan]) => {
+      if(!fechaPlan) return;
       const clave = `${t.id}_${wi}`;
       if(completados[clave]) return; // ya marcado por el mecánico
       updates[clave] = { hecho:true, fechaReal:fechaPlan, fechaPlan, mecanico, autoRelleno:true, ts:Date.now() };
@@ -2162,6 +2181,9 @@ function delMecanico(i) {
 }
 
 function renderAsigGrid() {
+  const mesesN = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const lbl = document.getElementById('asigMesLabel');
+  if(lbl) lbl.textContent = `📅 Viendo: ${mesesN[curMes.month]} ${curMes.year}`;
   const meqs = ['', ...ST.meqs()];
   const asig = ST.asig();
   let html = '';
