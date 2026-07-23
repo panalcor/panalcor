@@ -176,6 +176,7 @@ let curMes = { year: new Date().getFullYear(), month: new Date().getMonth() };
 let mecNombre = '';
 let _plan = null;
 let _comp = {};
+let _compListener = null; // listener activo de completados
 
 function mesKey(y,m){ return y+'-'+String(m+1).padStart(2,'0'); }
 function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -221,18 +222,19 @@ async function cargarMes(){
   const tit = MESES_L[month].charAt(0).toUpperCase()+MESES_L[month].slice(1)+' '+year;
   document.getElementById('mesTitle').textContent = tit;
   document.getElementById('content').innerHTML = `<div class="loading">⏳ Cargando ${tit}...</div>`;
+
+  // Desconectar listener anterior si existía
+  if(_compListener) { _compListener.off(); _compListener = null; }
+
   try {
-    const [sp, sc] = await Promise.all([
-      _DB.ref(`preventivo_plan/${mk}`).once('value'),
-      _DB.ref(`preventivo_completado/${mk}`).once('value')
-    ]);
+    const sp = await _DB.ref(`preventivo_plan/${mk}`).once('value');
     _plan = sp.val();
-    _comp = sc.val() || {};
   } catch(e){
     document.getElementById('content').innerHTML =
       `<div class="empty-state"><p style="color:#e74c3c">⚠️ Sin conexión. Comprueba la red.</p></div>`;
     return;
   }
+
   if(!_plan||!_plan.tareas){
     document.getElementById('content').innerHTML = `
       <div class="empty-state">
@@ -241,7 +243,13 @@ async function cargarMes(){
       </div>`;
     return;
   }
-  renderMisTareas(mk);
+
+  // Listener en tiempo real para completados — se actualiza solo cuando el admin rellena
+  _compListener = _DB.ref(`preventivo_completado/${mk}`);
+  _compListener.on('value', snap => {
+    _comp = snap.val() || {};
+    renderMisTareas(mk);
+  });
 }
 
 function renderMisTareas(mk){

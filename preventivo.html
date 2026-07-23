@@ -1961,39 +1961,38 @@ async function rellenarMesVencido() {
 
   if(!confirm(`¿Rellenar mes vencido ${mesesN[month]} ${year}?\n\nLas tareas sin marcar por el mecánico se completarán automáticamente con su fecha planificada.`)) return;
 
-  let planData, completados;
+  // Leer completados de Firebase; el plan se construye desde localStorage directamente
+  let completados = {};
   try {
-    const [snapPlan, snapComp] = await Promise.all([
-      _DB.ref(`preventivo_plan/${mk}`).once('value'),
-      _DB.ref(`preventivo_completado/${mk}`).once('value')
-    ]);
-    planData    = snapPlan.val();
+    const snapComp = await _DB.ref(`preventivo_completado/${mk}`).once('value');
     completados = snapComp.val() || {};
   } catch(e) {
     alert('⚠️ Error al leer Firebase: ' + e.message); return;
   }
 
-  if(!planData || !planData.tareas) {
-    alert(`⚠️ No hay plan publicado para ${mesesN[month]} ${year}.\nPublica primero el plan desde el mes correspondiente.`); return;
-  }
+  // Construir plan desde localStorage (no requiere haberlo publicado antes)
+  const mkData  = (ST.fechasMes()[mk]) || {};
+  const asigMes = (ST.asigMes()[mk]) || ST.asig();
+  const weeks   = getWeeksOfMonth(year, month);
 
   const updates = {};
   let rellenas = 0;
 
-  planData.tareas.forEach(t => {
-    if(t.frecuencia === 'DIARIO') return; // diario no tiene fechas concretas
-    Object.entries(t.fechas || {}).forEach(([wi, fechaPlan]) => {
-      if(typeof fechaPlan !== 'string') return;
+  TAREAS.filter(t => FREQS_AUTO.includes(t.frecuencia) && t.frecuencia !== 'DIARIO').forEach(t => {
+    const mecanico = asigMes[t.maquina] || '—';
+    const slots = [];
+    if(t.frecuencia === 'SEMANAL') {
+      weeks.forEach((_, wi) => { if(mkData[`${t.id}_${wi}`]) slots.push([String(wi), mkData[`${t.id}_${wi}`]]); });
+    } else if(t.frecuencia === 'QUINCENAL') {
+      if(mkData[`${t.id}_0`]) slots.push(['0', mkData[`${t.id}_0`]]);
+      if(mkData[`${t.id}_1`]) slots.push(['1', mkData[`${t.id}_1`]]);
+    } else if(t.frecuencia === 'MENSUAL') {
+      if(mkData[`${t.id}_0`]) slots.push(['0', mkData[`${t.id}_0`]]);
+    }
+    slots.forEach(([wi, fechaPlan]) => {
       const clave = `${t.id}_${wi}`;
       if(completados[clave]) return; // ya marcado por el mecánico
-      updates[clave] = {
-        hecho: true,
-        fechaReal: fechaPlan,
-        fechaPlan,
-        mecanico: t.mecanico || '—',
-        autoRelleno: true,
-        ts: Date.now()
-      };
+      updates[clave] = { hecho:true, fechaReal:fechaPlan, fechaPlan, mecanico, autoRelleno:true, ts:Date.now() };
       rellenas++;
     });
   });
