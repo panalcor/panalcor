@@ -900,18 +900,36 @@ if('serviceWorker' in navigator){
   <!-- ═══ INFORME PREVENTIVO IMPRIMIBLE ═══ -->
   <div class="card" style="margin-top:12px;border:1px solid rgba(46,204,113,0.3)">
     <div class="sec-title">🖨️ Informe Preventivo Imprimible / PDF</div>
-    <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+    <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:14px">
       <div>
         <label style="font-size:0.75rem;color:var(--gold);display:block;margin-bottom:4px;letter-spacing:0.1em">MES</label>
         <input type="month" id="infPrevMes" style="background:var(--navy-mid);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:8px 12px;font-family:'Barlow',sans-serif;font-size:0.95rem">
       </div>
       <button onclick="verInformePrev()" style="background:linear-gradient(135deg,#27ae60,#1a7a40);color:#fff;border:none;border-radius:8px;padding:9px 20px;font-family:'Barlow',sans-serif;font-size:0.9rem;font-weight:700;cursor:pointer;letter-spacing:0.04em">
-        🖨️ Ver Informe / Imprimir PDF
+        🖨️ Generar Informe
       </button>
       <span id="infPrevInfo" style="font-size:0.8rem;color:rgba(255,255,255,0.45);font-style:italic;align-self:center"></span>
     </div>
+    <div style="font-size:0.78rem;color:var(--gold);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">Secciones a incluir</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+      <label style="display:flex;align-items:center;gap:7px;font-size:0.85rem;cursor:pointer;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:7px;padding:7px 12px">
+        <input type="checkbox" id="ipResumen" checked style="accent-color:#27ae60;width:15px;height:15px"> 📊 Resumen general
+      </label>
+      <label style="display:flex;align-items:center;gap:7px;font-size:0.85rem;cursor:pointer;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:7px;padding:7px 12px">
+        <input type="checkbox" id="ipMecanico" checked style="accent-color:#27ae60;width:15px;height:15px"> 👷 Por mecánico
+      </label>
+      <label style="display:flex;align-items:center;gap:7px;font-size:0.85rem;cursor:pointer;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:7px;padding:7px 12px">
+        <input type="checkbox" id="ipMaquina" checked style="accent-color:#27ae60;width:15px;height:15px"> 🏭 Por máquina
+      </label>
+      <label style="display:flex;align-items:center;gap:7px;font-size:0.85rem;cursor:pointer;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:7px;padding:7px 12px">
+        <input type="checkbox" id="ipSemana" style="accent-color:#27ae60;width:15px;height:15px"> 📅 Por semana
+      </label>
+      <label style="display:flex;align-items:center;gap:7px;font-size:0.85rem;cursor:pointer;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:7px;padding:7px 12px">
+        <input type="checkbox" id="ipDia" style="accent-color:#27ae60;width:15px;height:15px"> 📆 Por día
+      </label>
+    </div>
     <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);line-height:1.7">
-      Genera un informe imprimible con resumen de cumplimiento, progreso por mecánico y tareas agrupadas por máquina con estado, fechas y notas. Datos desde el <b style="color:rgba(255,255,255,0.5)">Plan Preventivo</b> (asignaciones del mes).
+      Lee el plan publicado y los registros de realización desde Firebase. Muestra estado real de cada tarea, fechas planificadas vs reales, EN FECHA / RETRASO, y estadísticas por mecánico, máquina, semana y día.
     </div>
   </div>
 
@@ -3338,149 +3356,245 @@ function _abrirInformeDiario(mes, mesLabel, turnos, tareasMap, acData){
 function verInformePrev(){
   var mes = document.getElementById('infPrevMes').value;
   if(!mes){ showToast('⚠️ Selecciona un mes'); return; }
+  var secResumen  = document.getElementById('ipResumen').checked;
+  var secMecanico = document.getElementById('ipMecanico').checked;
+  var secMaquina  = document.getElementById('ipMaquina').checked;
+  var secSemana   = document.getElementById('ipSemana').checked;
+  var secDia      = document.getElementById('ipDia').checked;
+  if(!secResumen && !secMecanico && !secMaquina && !secSemana && !secDia){
+    showToast('⚠️ Selecciona al menos una sección'); return;
+  }
   var parts = mes.split('-');
-  var mesLabel = _MESES_ES[parseInt(parts[1])-1] + ' ' + parts[0];
+  var year  = parseInt(parts[0]), month = parseInt(parts[1]) - 1;
+  var mesLabel = _MESES_ES[month] + ' ' + year;
   var info = document.getElementById('infPrevInfo');
   if(info) info.textContent = 'Cargando datos...';
 
-  DB.ref('asignaciones/'+mes).once('value').then(function(snap){
-    var items = Object.values(snap.val() || {});
-    if(!items.length){
-      if(info) info.textContent = 'Sin asignaciones para ' + mesLabel;
-      showToast('Sin datos de preventivo para ' + mesLabel);
-      return;
+  Promise.all([
+    DB.ref('preventivo_plan/'+mes).once('value'),
+    DB.ref('preventivo_completado/'+mes).once('value')
+  ]).then(function(snaps){
+    var planData  = snaps[0].val() || {};
+    var compData  = snaps[1].val() || {};
+    var tareas    = planData.tareas || [];
+    if(!tareas.length){
+      if(info) info.textContent = 'Sin plan publicado para ' + mesLabel;
+      showToast('No hay plan publicado para ' + mesLabel); return;
     }
-    if(info) info.textContent = items.length + ' tareas cargadas';
-    _abrirInformePrev(mes, mesLabel, items);
-  }).catch(function(){
-    if(info) info.textContent = 'Error al cargar datos';
-    showToast('Error al conectar con Firebase');
+    if(info) info.textContent = tareas.length + ' tareas en el plan';
+    _abrirInformePrev(mes, mesLabel, year, month, tareas, compData,
+      {resumen:secResumen, mecanico:secMecanico, maquina:secMaquina, semana:secSemana, dia:secDia});
+  }).catch(function(e){
+    if(info) info.textContent = 'Error: ' + e.message;
+    showToast('⚠️ Error al cargar Firebase');
   });
 }
 
-function _abrirInformePrev(mes, mesLabel, items){
-  var total     = items.length;
-  var hechas    = items.filter(function(t){ return t.hecho; }).length;
-  var pct       = total ? Math.round(hechas / total * 100) : 0;
-  var pendientes= total - hechas;
+function _abrirInformePrev(mes, mesLabel, year, month, tareas, compData, secs){
 
-  var mecMap = {};
-  items.forEach(function(t){
-    var m = t.mecanico || 'SIN ASIGNAR';
-    if(!mecMap[m]) mecMap[m] = { done:0, total:0 };
-    mecMap[m].total++;
-    if(t.hecho) mecMap[m].done++;
-  });
+  // ── helpers ───────────────────────────────────────────────
+  function fmtD(ds){ if(!ds) return '—'; var p=ds.split('-'); return p[2]+'/'+p[1]; }
+  function pctColor(p){ return p>=90?'#1e8449':p>=70?'#b7770d':'#c0392b'; }
+  function pctBadge(done,total){
+    var p=total?Math.round(done/total*100):0;
+    return '<b style="color:'+pctColor(p)+'">'+done+'/'+total+' ('+p+'%)</b>';
+  }
+  function estadoBadge(comp){
+    if(!comp) return '<span style="color:#aaa">— PENDIENTE</span>';
+    if(comp.autoRelleno){
+      return comp.retraso
+        ? '<span style="color:#e67e22">⚠ AUTO·RETRASO '+fmtD(comp.fechaReal)+'</span>'
+        : '<span style="color:#27ae60">✓ AUTO·EN FECHA '+fmtD(comp.fechaReal)+'</span>';
+    }
+    return '<span style="color:#2980b9">✓ REALIZADA '+fmtD(comp.fechaReal)+'</span>';
+  }
 
-  var maqMap = {};
-  items.forEach(function(t){
-    var maq = (t.maquina || 'SIN MÁQUINA').toUpperCase();
-    if(!maqMap[maq]) maqMap[maq] = [];
-    maqMap[maq].push(t);
-  });
-
-  var FORD = {diario:0,semanal:1,quincenal:2,mensual:3,trimestral:4,semestral:5,anual:6};
-
-  var mecRows = Object.keys(mecMap).sort().map(function(m){
-    var d = mecMap[m];
-    var p = d.total ? Math.round(d.done/d.total*100) : 0;
-    var c = p>=90 ? '#1e8449' : p>=70 ? '#b7770d' : '#c0392b';
-    return '<tr><td>'+m+'</td><td class="tc">'+d.done+'</td><td class="tc">'+d.total+'</td>'
-      +'<td class="tc"><b style="color:'+c+'">'+p+'%</b></td></tr>';
-  }).join('');
-
-  var maqSections = Object.keys(maqMap).sort().map(function(maq){
-    var tareas = maqMap[maq].slice().sort(function(a,b){
-      var fa = FORD[a.frecuencia]!==undefined?FORD[a.frecuencia]:99;
-      var fb = FORD[b.frecuencia]!==undefined?FORD[b.frecuencia]:99;
-      return fa - fb || (a.tarea||'').localeCompare(b.tarea||'');
+  // ── construir slots planos ─────────────────────────────────
+  // cada slot = { tarea, maquina, frecuencia, mecanico, wi, fechaPlan, comp }
+  var slots = [];
+  tareas.forEach(function(t){
+    var fechas = t.fechas || {};
+    Object.keys(fechas).forEach(function(wi){
+      var fp = fechas[wi];
+      if(typeof fp !== 'string') return;
+      var clave = t.id+'_'+wi;
+      slots.push({
+        id: t.id, wi: wi, tarea: t.tarea||'', maquina: t.maquina||'SIN MÁQUINA',
+        frecuencia: (t.frecuencia||'').toUpperCase(), mecanico: t.mecanico||'SIN ASIGNAR',
+        fechaPlan: fp, comp: compData[clave]||null
+      });
     });
-    var mH = tareas.filter(function(t){return t.hecho;}).length;
-    var mP = tareas.length ? Math.round(mH/tareas.length*100) : 0;
-    var mC = mP>=90 ? '#2ecc71' : mP>=70 ? '#f39c12' : '#e74c3c';
+  });
 
-    var rows = tareas.map(function(t){
-      var fh = '';
-      if(t.hecho && t.hechoEn){
-        try{ fh = ' '+new Date(t.hechoEn).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'}); }catch(e){}
-      }
-      var st = t.hecho
-        ? '<td class="dc">✓ REALIZADA'+fh+'</td>'
-        : '<td class="pc">— PENDIENTE</td>';
-      return '<tr>'
-        +'<td>'+(t.tarea||'')+(t.subtipo?' <span class="st">['+t.subtipo+']</span>':'')+'</td>'
-        +'<td class="fc">'+((t.frecuencia||'').toUpperCase())+(t.instancia&&t.instancia>1?' #'+t.instancia:'')+'</td>'
-        +'<td>'+(t.mecanico||'—')+'</td>'
-        +'<td>'+(t.turno||'—')+'</td>'
-        +st
-        +'<td class="nc">'+(t.notas||'')+'</td>'
-        +'</tr>';
-    }).join('');
-
-    return '<div class="ms">'
-      +'<div class="mh"><span class="mn">'+maq+'</span>'
-      +'<span style="color:'+mC+';font-weight:700;font-size:11px">'+mH+'/'+tareas.length+' ('+mP+'%)</span></div>'
-      +'<table class="tt"><thead><tr><th>Tarea</th><th>Frecuencia</th><th>Mecánico</th><th>Turno</th><th>Estado</th><th>Notas</th></tr></thead>'
-      +'<tbody>'+rows+'</tbody></table></div>';
-  }).join('');
-
+  var totalSlots = slots.length;
+  var hechos     = slots.filter(function(s){ return s.comp; }).length;
+  var pendientes = totalSlots - hechos;
+  var retrasos   = slots.filter(function(s){ return s.comp && s.comp.retraso; }).length;
+  var pctGen     = totalSlots ? Math.round(hechos/totalSlots*100) : 0;
   var fd = new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'});
-  var kpiBg = pct>=90?'#1e8449':pct>=70?'#b7770d':'#c0392b';
+
+  // ── CSS base ──────────────────────────────────────────────
+  var CSS = '*{box-sizing:border-box;margin:0;padding:0}'
+    +'body{font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#1a1a2e;background:#fff;padding:10mm 12mm 14mm}'
+    +'@media print{.np{display:none!important} @page{margin:8mm;size:A4} body{padding:0}}'
+    +'.pbtn{position:fixed;top:12px;right:12px;background:#0d1b2a;color:#c9a227;border:2px solid #c9a227;padding:9px 18px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;z-index:99}'
+    +'.pbtn:hover{background:#c9a227;color:#0d1b2a}'
+    +'.hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #c9a227;padding-bottom:8px;margin-bottom:12px}'
+    +'.co{font-size:17px;font-weight:900;color:#0d1b2a;letter-spacing:.04em}'
+    +'.ct{font-size:11px;font-weight:700;color:#555;margin-top:2px}'
+    +'.dm{text-align:right;font-size:9px;color:#888;line-height:1.8}'
+    +'.kg{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px}'
+    +'.kb{border:1px solid #ddd;border-radius:6px;padding:8px;text-align:center}'
+    +'.kn{font-size:20px;font-weight:900;line-height:1}'
+    +'.kl{font-size:8px;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-top:2px}'
+    +'.sh{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#c9a227;border-bottom:1px solid #c9a22750;padding-bottom:3px;margin:12px 0 7px}'
+    +'table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10px}'
+    +'thead th{background:#0d1b2a;color:#c9a227;padding:5px 8px;text-align:left;font-size:9px;letter-spacing:.07em;text-transform:uppercase}'
+    +'td{padding:4px 8px;border-bottom:1px solid #eee;vertical-align:top}'
+    +'tr:nth-child(even) td{background:#f8f9fa}'
+    +'.tc{text-align:center} .fc{color:#777;font-size:9px;white-space:nowrap}'
+    +'.blk{background:#0d1b2a;color:#fff;padding:6px 10px;display:flex;justify-content:space-between;align-items:center;border-radius:4px 4px 0 0;margin-top:10px}'
+    +'.blk b{font-size:10px;letter-spacing:.06em}'
+    +'.ftr{margin-top:12px;border-top:1px solid #eee;padding-top:5px;font-size:9px;color:#aaa;display:flex;justify-content:space-between}';
+
+  // ── cabecera ──────────────────────────────────────────────
+  var body = '<button class="pbtn np" onclick="window.print()">🖨️ Imprimir / PDF</button>'
+    +'<div class="hdr"><div><div class="co">PANALCOR S.L.</div>'
+    +'<div class="ct">Informe de Mantenimiento Preventivo</div></div>'
+    +'<div class="dm">Mes: <b>'+mesLabel.toUpperCase()+'</b><br>Generado: '+fd+'<br>GESTION 3.0</div></div>';
+
+  // ── SECCIÓN: RESUMEN ──────────────────────────────────────
+  if(secs.resumen){
+    body += '<div class="kg">'
+      +'<div class="kb"><div class="kn" style="color:#2980b9">'+totalSlots+'</div><div class="kl">Total slots</div></div>'
+      +'<div class="kb"><div class="kn" style="color:#1e8449">'+hechos+'</div><div class="kl">Realizados</div></div>'
+      +'<div class="kb"><div class="kn" style="color:#c0392b">'+pendientes+'</div><div class="kl">Pendientes</div></div>'
+      +'<div class="kb"><div class="kn" style="color:#e67e22">'+retrasos+'</div><div class="kl">Con retraso</div></div>'
+      +'<div class="kb"><div class="kn" style="color:'+pctColor(pctGen)+'">'+pctGen+'%</div><div class="kl">Cumplimiento</div></div>'
+      +'</div>';
+  }
+
+  // ── SECCIÓN: POR MECÁNICO ─────────────────────────────────
+  if(secs.mecanico){
+    var mecMap = {};
+    slots.forEach(function(s){
+      var m = s.mecanico;
+      if(!mecMap[m]) mecMap[m] = {done:0,retr:0,total:0,slots:[]};
+      mecMap[m].total++;
+      if(s.comp){ mecMap[m].done++; if(s.comp.retraso) mecMap[m].retr++; }
+      mecMap[m].slots.push(s);
+    });
+    body += '<div class="sh">👷 Por mecánico</div>'
+      +'<table><thead><tr><th>Mecánico</th><th class="tc">Realizadas</th><th class="tc">Pendientes</th><th class="tc">Retrasos</th><th class="tc">% Cumplimiento</th></tr></thead><tbody>';
+    Object.keys(mecMap).sort().forEach(function(m){
+      var d=mecMap[m]; var p=d.total?Math.round(d.done/d.total*100):0;
+      body+='<tr><td><b>'+m+'</b></td><td class="tc">'+d.done+'</td><td class="tc">'+(d.total-d.done)+'</td><td class="tc">'+d.retr+'</td>'
+        +'<td class="tc"><b style="color:'+pctColor(p)+'">'+p+'%</b></td></tr>';
+    });
+    body += '</tbody></table>';
+    // Detalle de tareas por mecánico
+    Object.keys(mecMap).sort().forEach(function(m){
+      var d=mecMap[m];
+      body += '<div class="blk"><b>'+m+'</b>'+pctBadge(d.done,d.total)+'</div>'
+        +'<table><thead><tr><th>Máquina</th><th>Tarea</th><th class="fc">Frec.</th><th>Plan</th><th>Estado</th></tr></thead><tbody>';
+      d.slots.slice().sort(function(a,b){ return a.fechaPlan.localeCompare(b.fechaPlan)||(a.maquina.localeCompare(b.maquina)); }).forEach(function(s){
+        body+='<tr><td class="fc">'+s.maquina+'</td><td>'+s.tarea+'</td><td class="fc">'+s.frecuencia+'</td>'
+          +'<td class="fc">'+fmtD(s.fechaPlan)+'</td><td>'+estadoBadge(s.comp)+'</td></tr>';
+      });
+      body += '</tbody></table>';
+    });
+  }
+
+  // ── SECCIÓN: POR MÁQUINA ──────────────────────────────────
+  if(secs.maquina){
+    var maqMap = {};
+    slots.forEach(function(s){
+      if(!maqMap[s.maquina]) maqMap[s.maquina]={done:0,total:0,slots:[]};
+      maqMap[s.maquina].total++;
+      if(s.comp) maqMap[s.maquina].done++;
+      maqMap[s.maquina].slots.push(s);
+    });
+    body += '<div class="sh">🏭 Por máquina</div>';
+    Object.keys(maqMap).sort().forEach(function(maq){
+      var d=maqMap[maq];
+      body += '<div class="blk"><b>'+maq+'</b>'+pctBadge(d.done,d.total)+'</div>'
+        +'<table><thead><tr><th>Tarea</th><th class="fc">Frec.</th><th>Mecánico</th><th>Plan</th><th>Estado</th></tr></thead><tbody>';
+      d.slots.slice().sort(function(a,b){ return a.fechaPlan.localeCompare(b.fechaPlan); }).forEach(function(s){
+        body+='<tr><td>'+s.tarea+'</td><td class="fc">'+s.frecuencia+'</td><td>'+s.mecanico+'</td>'
+          +'<td class="fc">'+fmtD(s.fechaPlan)+'</td><td>'+estadoBadge(s.comp)+'</td></tr>';
+      });
+      body += '</tbody></table>';
+    });
+  }
+
+  // ── SECCIÓN: POR SEMANA ───────────────────────────────────
+  if(secs.semana){
+    // Agrupar slots por semana ISO del mes
+    function semanaDelMes(ds){
+      var d=new Date(ds+'T12:00:00');
+      // semana 1=días 1-7, 2=8-14, etc. simplificado
+      return Math.ceil(d.getDate()/7);
+    }
+    var semMap={};
+    slots.forEach(function(s){
+      var sw='Semana '+semanaDelMes(s.fechaPlan);
+      if(!semMap[sw]) semMap[sw]={done:0,retr:0,total:0,slots:[]};
+      semMap[sw].total++; if(s.comp){semMap[sw].done++;if(s.comp.retraso)semMap[sw].retr++;}
+      semMap[sw].slots.push(s);
+    });
+    body += '<div class="sh">📅 Por semana</div>'
+      +'<table><thead><tr><th>Semana</th><th class="tc">Realizadas</th><th class="tc">Pendientes</th><th class="tc">Retrasos</th><th class="tc">% Cumplimiento</th></tr></thead><tbody>';
+    Object.keys(semMap).sort().forEach(function(sw){
+      var d=semMap[sw]; var p=d.total?Math.round(d.done/d.total*100):0;
+      body+='<tr><td><b>'+sw+'</b></td><td class="tc">'+d.done+'</td><td class="tc">'+(d.total-d.done)+'</td>'
+        +'<td class="tc">'+d.retr+'</td><td class="tc"><b style="color:'+pctColor(p)+'">'+p+'%</b></td></tr>';
+    });
+    body += '</tbody></table>';
+    // Detalle por semana
+    Object.keys(semMap).sort().forEach(function(sw){
+      var d=semMap[sw];
+      body += '<div class="blk"><b>'+sw+'</b>'+pctBadge(d.done,d.total)+'</div>'
+        +'<table><thead><tr><th>Máquina</th><th>Tarea</th><th>Mecánico</th><th>Plan</th><th>Estado</th></tr></thead><tbody>';
+      d.slots.slice().sort(function(a,b){return a.fechaPlan.localeCompare(b.fechaPlan);}).forEach(function(s){
+        body+='<tr><td class="fc">'+s.maquina+'</td><td>'+s.tarea+'</td><td>'+s.mecanico+'</td>'
+          +'<td class="fc">'+fmtD(s.fechaPlan)+'</td><td>'+estadoBadge(s.comp)+'</td></tr>';
+      });
+      body += '</tbody></table>';
+    });
+  }
+
+  // ── SECCIÓN: POR DÍA ─────────────────────────────────────
+  if(secs.dia){
+    var diaMap={};
+    slots.forEach(function(s){
+      if(!diaMap[s.fechaPlan]) diaMap[s.fechaPlan]={done:0,total:0,slots:[]};
+      diaMap[s.fechaPlan].total++; if(s.comp) diaMap[s.fechaPlan].done++;
+      diaMap[s.fechaPlan].slots.push(s);
+    });
+    body += '<div class="sh">📆 Por día</div>';
+    Object.keys(diaMap).sort().forEach(function(fecha){
+      var d=diaMap[fecha];
+      var dow=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][new Date(fecha+'T12:00:00').getDay()];
+      body += '<div class="blk"><b>'+dow+' '+fmtD(fecha)+'</b>'+pctBadge(d.done,d.total)+'</div>'
+        +'<table><thead><tr><th>Máquina</th><th>Tarea</th><th>Mecánico</th><th>Estado</th></tr></thead><tbody>';
+      d.slots.forEach(function(s){
+        body+='<tr><td class="fc">'+s.maquina+'</td><td>'+s.tarea+'</td><td>'+s.mecanico+'</td>'
+          +'<td>'+estadoBadge(s.comp)+'</td></tr>';
+      });
+      body += '</tbody></table>';
+    });
+  }
+
+  body += '<div class="ftr"><span>PANALCOR S.L. — Sistema GESTION 3.0</span>'
+    +'<span>'+mesLabel+' · '+totalSlots+' slots · '+pctGen+'% cumplimiento</span></div>';
 
   var html='<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">'
     +'<title>Preventivo '+mesLabel+' — PANALCOR</title>'
-    +'<style>'
-    +'*{box-sizing:border-box;margin:0;padding:0}'
-    +'body{font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#1a1a2e;background:#fff;padding:12mm 12mm 16mm}'
-    +'@media print{.np{display:none!important} @page{margin:8mm;size:A4} body{padding:0}}'
-    +'.hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #c9a227;padding-bottom:10px;margin-bottom:14px}'
-    +'.co{font-size:18px;font-weight:900;color:#0d1b2a;letter-spacing:0.04em}'
-    +'.ct{font-size:12px;font-weight:700;color:#555;margin-top:2px}'
-    +'.dm{text-align:right;font-size:10px;color:#888;line-height:1.7}'
-    +'.kg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}'
-    +'.kb{border:1px solid #ddd;border-radius:6px;padding:10px;text-align:center}'
-    +'.kn{font-size:22px;font-weight:900;line-height:1}'
-    +'.kl{font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:#888;margin-top:3px}'
-    +'.st2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#c9a227;border-bottom:1px solid #c9a22740;padding-bottom:4px;margin:12px 0 8px}'
-    +'table.mt{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:10px}'
-    +'table.mt th{background:#0d1b2a;color:#c9a227;padding:5px 8px;text-align:left;font-size:9px;letter-spacing:0.08em;text-transform:uppercase}'
-    +'table.mt td{padding:5px 8px;border-bottom:1px solid #eee} .tc{text-align:center}'
-    +'table.mt tr:nth-child(even) td{background:#f7f8fa}'
-    +'.ms{margin-bottom:12px;border:1px solid #ddd;border-radius:6px;overflow:hidden;page-break-inside:avoid}'
-    +'.mh{background:#0d1b2a;color:#fff;padding:7px 12px;display:flex;justify-content:space-between;align-items:center}'
-    +'.mn{font-weight:900;font-size:11px;letter-spacing:0.06em}'
-    +'table.tt{width:100%;border-collapse:collapse;font-size:10px}'
-    +'table.tt th{background:#f0f0f0;color:#333;padding:5px 8px;text-align:left;font-size:9px;letter-spacing:0.06em;text-transform:uppercase;border-bottom:2px solid #ddd}'
-    +'table.tt td{padding:5px 8px;border-bottom:1px solid #f0f0f0;vertical-align:top}'
-    +'.dc{color:#1e8449;font-weight:700} .pc{color:#aaa}'
-    +'.fc{color:#666;font-size:9px;white-space:nowrap} .nc{color:#666;font-style:italic;max-width:120px}'
-    +'.st{color:#999;font-size:9px}'
-    +'.pbtn{position:fixed;top:12px;right:12px;background:#0d1b2a;color:#c9a227;border:2px solid #c9a227;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:Arial,sans-serif;z-index:99}'
-    +'.pbtn:hover{background:#c9a227;color:#0d1b2a}'
-    +'.ftr{margin-top:14px;border-top:1px solid #eee;padding-top:6px;font-size:9px;color:#aaa;display:flex;justify-content:space-between}'
-    +'</style></head><body>'
-    +'<button class="pbtn np" onclick="window.print()">🖨️ Imprimir / PDF</button>'
-    +'<div class="hdr"><div><div class="co">PANALCOR S.L.</div>'
-    +'<div class="ct">Informe Mensual de Mantenimiento Preventivo</div></div>'
-    +'<div class="dm">Mes: <b>'+mesLabel.toUpperCase()+'</b><br>Generado: '+fd+'<br>GESTION 3.0</div></div>'
-    +'<div class="kg">'
-    +'<div class="kb"><div class="kn" style="color:#2980b9">'+total+'</div><div class="kl">Total Tareas</div></div>'
-    +'<div class="kb"><div class="kn" style="color:#1e8449">'+hechas+'</div><div class="kl">Realizadas</div></div>'
-    +'<div class="kb"><div class="kn" style="color:#c0392b">'+pendientes+'</div><div class="kl">Pendientes</div></div>'
-    +'<div class="kb"><div class="kn" style="color:'+kpiBg+'">'+pct+'%</div><div class="kl">Cumplimiento</div></div>'
-    +'</div>'
-    +'<div class="st2">Progreso por mecánico</div>'
-    +'<table class="mt"><thead><tr><th>Mecánico</th><th class="tc">Realizadas</th><th class="tc">Total</th><th class="tc">% Cumplimiento</th></tr></thead>'
-    +'<tbody>'+mecRows+'</tbody></table>'
-    +'<div class="st2">Tareas por máquina</div>'
-    +maqSections
-    +'<div class="ftr"><span>PANALCOR S.L. — Sistema GESTION 3.0</span>'
-    +'<span>'+mesLabel+' | '+total+' tareas | '+pct+'% cumplimiento</span></div>'
-    +'</body></html>';
+    +'<style>'+CSS+'</style></head><body>'+body+'</body></html>';
 
-  var w = window.open('','_blank','width=980,height=720,scrollbars=yes,resizable=yes');
+  var w=window.open('','_blank','width=1000,height=740,scrollbars=yes,resizable=yes');
   if(w){ w.document.write(html); w.document.close(); }
-  else { showToast('⚠️ Activa las ventanas emergentes para ver el informe'); }
+  else { showToast('⚠️ Activa las ventanas emergentes'); }
 }
 
 // ══════════════════════════════════════════════════
