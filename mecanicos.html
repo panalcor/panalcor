@@ -1026,12 +1026,20 @@ function renderCalendario(){
     }
 
     const ring = hoy ? 'box-shadow:0 0 0 2px var(--gold);' : '';
-    html += `<div style="border-radius:7px;padding:6px 2px;background:${bg};border:${border};color:${color};font-size:.85rem;font-weight:${hoy?'700':'500'};${ring}">
+    const click = finde ? '' : `onclick="calIrDia('${fecha}')" style="cursor:pointer"`;
+    html += `<div ${click} style="border-radius:7px;padding:6px 2px;background:${bg};border:${border};color:${color};font-size:.85rem;font-weight:${hoy?'700':'500'};${ring}${finde?'':';cursor:pointer'}">
       ${dia}${!finde && porDia[fecha] ? '<div style="font-size:.55rem;margin-top:1px;opacity:.8">'+porDia[fecha].size+'/3</div>' : ''}
     </div>`;
   }
 
   document.getElementById('calGrid').innerHTML = html;
+}
+
+function calIrDia(fecha){
+  const sel = document.getElementById('fechaSelect');
+  if(sel) sel.value = fecha;
+  onFechaChange();
+  switchTab('mantenimiento');
 }
 
 // Init
