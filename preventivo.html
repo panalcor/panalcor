@@ -2169,21 +2169,31 @@ async function rellenarMesVencido() {
     return d.toISOString().slice(0,10);
   }
 
-  // Entre el 1% y el 5% de slots tendrán retraso aleatorio de 1-4 días
-  const pctRetraso = 0.01 + Math.random() * 0.04; // 1-5%
+  // Contar slots totales para calcular porcentajes
   let slotCount = 0;
-  // Primer paso: contar slots totales para saber cuántos deben retrasarse
   TAREAS.filter(t => FREQS_AUTO.includes(t.frecuencia) && t.frecuencia !== 'DIARIO').forEach(t => {
     if(t.frecuencia==='SEMANAL') slotCount += weeks.length;
     else if(t.frecuencia==='QUINCENAL') slotCount += 2;
     else if(t.frecuencia==='MENSUAL') slotCount += 1;
   });
-  const numRetrasos = Math.max(1, Math.round(slotCount * pctRetraso));
-  // Índices de slots (globales) que tendrán retraso
+
+  // 1-5% de slots se dejan SIN rellenar (quedan pendientes)
+  const pctSinRellenar = 0.01 + Math.random() * 0.04;
+  const numSinRellenar = Math.max(1, Math.round(slotCount * pctSinRellenar));
+  const sinRellenarSet = new Set();
+  while(sinRellenarSet.size < Math.min(numSinRellenar, slotCount)) {
+    sinRellenarSet.add(Math.floor(Math.random() * slotCount));
+  }
+
+  // 1-5% del resto tendrán retraso de 1-4 días laborables
+  const pctRetraso = 0.01 + Math.random() * 0.04;
+  const numRetrasos = Math.max(1, Math.round((slotCount - numSinRellenar) * pctRetraso));
   const retrasosSet = new Set();
   while(retrasosSet.size < Math.min(numRetrasos, slotCount)) {
-    retrasosSet.add(Math.floor(Math.random() * slotCount));
+    const idx = Math.floor(Math.random() * slotCount);
+    if(!sinRellenarSet.has(idx)) retrasosSet.add(idx);
   }
+
   let slotIdx = 0;
 
   TAREAS.filter(t => FREQS_AUTO.includes(t.frecuencia) && t.frecuencia !== 'DIARIO').forEach(t => {
@@ -2207,7 +2217,9 @@ async function rellenarMesVencido() {
       if(!fechaPlan) return;
       const clave = `${t.id}_${wi}`;
       if(completados[clave]) return;
-      const esRetraso = retrasosSet.has(slotIdx++);
+      const idx = slotIdx++;
+      if(sinRellenarSet.has(idx)) return; // dejar pendiente intencionalmente
+      const esRetraso = retrasosSet.has(idx);
       const diasExtra = esRetraso ? (1 + Math.floor(Math.random() * 4)) : 0;
       const fechaReal = esRetraso ? _addWorkDays(fechaPlan, diasExtra) : fechaPlan;
       updates[clave] = { hecho:true, fechaReal, fechaPlan, mecanico, autoRelleno:true, retraso:esRetraso, ts:Date.now() };
@@ -2222,7 +2234,8 @@ async function rellenarMesVencido() {
   try {
     await _DB.ref(`preventivo_completado/${mk}`).update(updates);
     const nRetr = Object.values(updates).filter(u=>u.retraso).length;
-    alert(`✅ ${rellenas} tarea${rellenas!==1?'s':''} auto-rellenada${rellenas!==1?'s':''} en ${mesesN[month]} ${year}.\n\n• EN FECHA: ${rellenas-nRetr}\n• RETRASO (1-4 días): ${nRetr}`);
+    const nPend = sinRellenarSet.size;
+    alert(`✅ Mes vencido ${mesesN[month]} ${year} procesado.\n\n• EN FECHA: ${rellenas-nRetr}\n• RETRASO (1-4 días): ${nRetr}\n• Sin rellenar (pendientes): ${nPend}`);
   } catch(e) {
     alert('⚠️ Error al guardar en Firebase: ' + e.message);
   }
