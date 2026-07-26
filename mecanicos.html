@@ -324,6 +324,9 @@ if('serviceWorker' in navigator){
   <div class="tab" onclick="switchTab('historial')">
     <span class="tab-icon">📋</span>Historial
   </div>
+  <div class="tab" onclick="switchTab('calendario');renderCalendario()">
+    <span class="tab-icon">📅</span>Calendario
+  </div>
   <div class="tab" onclick="switchTab('formacion')">
     <span class="tab-icon">🎓</span>Formación
   </div>
@@ -419,6 +422,23 @@ if('serviceWorker' in navigator){
 <div class="panel" id="panel-historial">
   <div style="font-family:'Oswald',sans-serif;font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:12px">📋 Registros guardados</div>
   <div id="historialContent"></div>
+</div>
+
+<!-- ══════════ PANEL CALENDARIO ══════════ -->
+<div class="panel" id="panel-calendario">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+    <button onclick="calNavMes(-1)" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:1rem">◀</button>
+    <div id="calTitulo" style="flex:1;text-align:center;font-family:'Oswald',sans-serif;font-size:1rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)"></div>
+    <button onclick="calNavMes(1)" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:1rem">▶</button>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-size:.72rem">
+    <span style="background:#27ae60;color:#fff;border-radius:4px;padding:2px 8px">■ 3 turnos</span>
+    <span style="background:#2980b9;color:#fff;border-radius:4px;padding:2px 8px">■ 2 turnos</span>
+    <span style="background:#f39c12;color:#fff;border-radius:4px;padding:2px 8px">■ 1 turno</span>
+    <span style="background:#c0392b;color:#fff;border-radius:4px;padding:2px 8px">■ 0 turnos</span>
+    <span style="background:rgba(255,255,255,.05);color:rgba(255,255,255,.3);border-radius:4px;padding:2px 8px">■ Fin de semana</span>
+  </div>
+  <div id="calGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center"></div>
 </div>
 
 <!-- ══════════ PANEL FORMACIÓN ══════════ -->
@@ -941,6 +961,77 @@ function renderHistorial(){
       </div>
     </div>`;
   }).join('');
+}
+
+// ══════════════════════════════════════
+// CALENDARIO MENSUAL DE TURNOS
+// ══════════════════════════════════════
+var _calMes = { year: new Date().getFullYear(), month: new Date().getMonth() };
+var _MESES_CAL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+var _DIAS_CAL  = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+
+function calNavMes(d){
+  _calMes.month += d;
+  if(_calMes.month > 11){ _calMes.month = 0; _calMes.year++; }
+  if(_calMes.month < 0) { _calMes.month = 11; _calMes.year--; }
+  renderCalendario();
+}
+
+function renderCalendario(){
+  const { year, month } = _calMes;
+  document.getElementById('calTitulo').textContent = _MESES_CAL[month] + ' ' + year;
+
+  // Recopilar turnos guardados para este mes desde localStorage
+  const prefix = 'turno_' + year + '-' + String(month+1).padStart(2,'0') + '-';
+  const porDia = {}; // { 'YYYY-MM-DD': Set{turno,...} }
+  Object.keys(localStorage).filter(k => k.startsWith(prefix)).forEach(k => {
+    try {
+      const r = JSON.parse(localStorage.getItem(k));
+      if(!r || !r.fecha || !r.turno) return;
+      if(!porDia[r.fecha]) porDia[r.fecha] = new Set();
+      porDia[r.fecha].add(r.turno);
+    } catch(e){}
+  });
+
+  const primerDia = new Date(year, month, 1).getDay(); // 0=Dom
+  const diasMes   = new Date(year, month+1, 0).getDate();
+  // Convertir domingo=0 a lunes=0 (semana empieza en lunes)
+  const offset = (primerDia === 0) ? 6 : primerDia - 1;
+
+  let html = _DIAS_CAL.map(d =>
+    `<div style="font-size:.65rem;font-weight:700;letter-spacing:.08em;color:rgba(255,255,255,.4);padding:4px 0">${d}</div>`
+  ).join('');
+
+  // Celdas vacías antes del día 1
+  for(let i = 0; i < offset; i++)
+    html += `<div></div>`;
+
+  for(let dia = 1; dia <= diasMes; dia++){
+    const fecha = year + '-' + String(month+1).padStart(2,'0') + '-' + String(dia).padStart(2,'0');
+    const dow = new Date(year, month, dia).getDay(); // 0=Dom,6=Sáb
+    const finde = (dow === 0 || dow === 6);
+    const hoy = fecha === getTodayKey();
+
+    let bg = '', color = '', border = '';
+    if(finde){
+      bg = 'rgba(255,255,255,.03)';
+      color = 'rgba(255,255,255,.2)';
+      border = '1px solid rgba(255,255,255,.06)';
+    } else {
+      const n = porDia[fecha] ? porDia[fecha].size : 0;
+      if     (n >= 3){ bg='rgba(39,174,96,.25)';  color='#2ecc71'; border='1px solid rgba(39,174,96,.5)'; }
+      else if(n === 2){ bg='rgba(41,128,185,.25)'; color='#74b9ff'; border='1px solid rgba(41,128,185,.5)'; }
+      else if(n === 1){ bg='rgba(243,156,18,.2)';  color='#f39c12'; border='1px solid rgba(243,156,18,.4)'; }
+      else            { bg='rgba(192,57,43,.2)';   color='#e74c3c'; border='1px solid rgba(192,57,43,.4)'; }
+    }
+
+    const ring = hoy ? 'box-shadow:0 0 0 2px var(--gold);' : '';
+    html += `<div style="border-radius:7px;padding:6px 2px;background:${bg};border:${border};color:${color};font-size:.85rem;font-weight:${hoy?'700':'500'};${ring}">
+      ${dia}${!finde && porDia[fecha] ? '<div style="font-size:.55rem;margin-top:1px;opacity:.8">'+porDia[fecha].size+'/3</div>' : ''}
+    </div>`;
+  }
+
+  document.getElementById('calGrid').innerHTML = html;
 }
 
 // Init
