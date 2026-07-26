@@ -1015,11 +1015,12 @@ function renderCalendario(){
   for(let dia = 1; dia <= diasMes; dia++){
     const fecha = year + '-' + String(month+1).padStart(2,'0') + '-' + String(dia).padStart(2,'0');
     const dow = new Date(year, month, dia).getDay(); // 0=Dom,6=Sáb
-    const finde = (dow === 0 || dow === 6);
+    const esDom = (dow === 0);
+    const esSab = (dow === 6);
     const hoy = fecha === getTodayKey();
 
     let bg = '', color = '', border = '';
-    if(finde){
+    if(esDom){
       bg = 'rgba(255,255,255,.03)';
       color = 'rgba(255,255,255,.2)';
       border = '1px solid rgba(255,255,255,.06)';
@@ -1032,10 +1033,10 @@ function renderCalendario(){
     }
 
     const ring = hoy ? 'box-shadow:0 0 0 2px var(--gold);' : '';
-    const pointer = finde ? '' : 'cursor:pointer;';
-    const onclick = finde ? '' : `onclick="calIrDia('${fecha}')"`;
+    const pointer = esDom ? '' : 'cursor:pointer;';
+    const onclick = esDom ? '' : `onclick="calIrDia('${fecha}')"`;
     html += `<div ${onclick} style="border-radius:7px;padding:10px 2px;min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:${bg};border:${border};color:${color};font-size:.85rem;font-weight:${hoy?'700':'500'};${ring}${pointer}">
-      ${dia}${!finde && porDia[fecha] ? '<div style="font-size:.55rem;margin-top:2px;opacity:.8">'+porDia[fecha].size+'/3</div>' : ''}
+      ${dia}${!esDom && porDia[fecha] ? '<div style="font-size:.55rem;margin-top:2px;opacity:.8">'+porDia[fecha].size+'/3</div>' : ''}
     </div>`;
   }
 
