@@ -8,7 +8,7 @@ var _notifVistas = JSON.parse(localStorage.getItem('notif_vistas') || '[]');
 // Llamar cuando se sabe el nombre del mecánico
 function fcmRegistrar(nombreMecanico) {
   if (!nombreMecanico) return;
-  _notifMecKey = nombreMecanico.replace(/\s+/g, '_').toLowerCase();
+  _notifMecKey = nombreMecanico.replace(/[.#$[\]]/g, '').replace(/\s+/g, '_').toLowerCase();
 
   // Registrar presencia en Firebase
   firebase.database().ref('mecanicos_online/' + _notifMecKey).set({
@@ -94,7 +94,7 @@ function _mostrarNotif(titulo, cuerpo, url, icono) {
 // Se exporta globalmente para usarla desde admin.html también
 function fcmEnviar(nombreMecanico, titulo, cuerpo, url, icono) {
   if (!nombreMecanico) return;
-  var key = nombreMecanico.replace(/\s+/g, '_').toLowerCase();
+  var key = nombreMecanico.replace(/[.#$[\]]/g, '').replace(/\s+/g, '_').toLowerCase();
   var ref = firebase.database().ref('notificaciones/' + key);
   ref.push({
     titulo: titulo || 'PANALCOR',
