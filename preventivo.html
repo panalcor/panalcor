@@ -659,6 +659,63 @@ tbody td:last-child  { border-radius: 0 8px 8px 0; }
   .plan-wrap { padding:0.8rem 0.5rem 5rem; }
   .ajustes-wrap { padding:1rem; }
 }
+
+/* ══ SEGUIMIENTO ══ */
+.seg-wrap { padding:1rem 1.5rem 5rem; }
+.seg-resumen { display:flex;flex-wrap:wrap;gap:0.5rem;padding:0.8rem 1.5rem;border-bottom:1px solid var(--border);background:var(--navy-mid); }
+.seg-chip { display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:20px;font-size:0.82rem;font-weight:600;border:1px solid transparent; }
+.prog-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;padding:1rem 1.5rem;border-bottom:1px solid var(--border); }
+.prog-card { background:var(--navy-mid);border:1px solid var(--border);border-radius:10px;padding:14px; }
+.prog-name { font-weight:700;font-size:0.9rem;margin-bottom:8px;color:var(--cream); }
+.prog-bar-bg { background:rgba(255,255,255,0.1);border-radius:4px;height:8px;margin-bottom:6px; }
+.prog-bar-fill { border-radius:4px;height:8px;transition:width .4s; }
+.prog-label { display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text-dim); }
+.prog-label b { color:#e8c14e; }
+.seg-filters { display:flex;gap:8px;flex-wrap:wrap;padding:0.8rem 1.5rem;border-bottom:1px solid var(--border);background:var(--navy-mid);align-items:center; }
+.seg-filters input[type=month],.seg-filters select,.seg-filters input[type=text],.seg-filters input[type=search] { background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:7px;color:var(--white);font-family:'Barlow',sans-serif;font-size:0.88rem;padding:8px 12px;outline:none; color-scheme:dark; }
+.seg-load-btn { padding:8px 16px;border-radius:7px;font-family:'Barlow',sans-serif;font-size:0.88rem;font-weight:600;cursor:pointer;background:rgba(39,174,96,0.15);border:1px solid rgba(39,174,96,0.4);color:var(--green); }
+.seg-estado-hecha   { display:inline-block;padding:3px 10px;border-radius:5px;font-size:0.78rem;font-weight:700;background:rgba(39,174,96,0.2);color:#27ae60;border:1px solid rgba(39,174,96,0.3); }
+.seg-estado-auto    { display:inline-block;padding:3px 10px;border-radius:5px;font-size:0.78rem;font-weight:700;background:rgba(230,126,34,0.15);color:#e67e22;border:1px solid rgba(230,126,34,0.3); }
+.seg-estado-pend    { display:inline-block;padding:3px 10px;border-radius:5px;font-size:0.78rem;font-weight:700;background:rgba(255,255,255,0.06);color:var(--text-dim);border:1px solid rgba(255,255,255,0.12); }
+
+/* ══ ALARMAS ══ */
+.al-wrap { padding:1rem 1.5rem 5rem; }
+.al-resumen { display:flex;flex-wrap:wrap;gap:0.5rem;padding:0.8rem 0 1rem; }
+.al-chip { display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:20px;font-size:0.85rem;font-weight:700;border:1px solid transparent;cursor:default; }
+.al-chip .al-n { font-family:'Oswald',sans-serif;font-size:1.1rem; }
+.al-section { background:var(--navy-mid);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px; }
+.al-sec-title { font-size:0.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:12px; }
+.al-row { display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05); }
+.al-row:last-child { border-bottom:none; }
+.al-dot { width:10px;height:10px;border-radius:50%;flex-shrink:0; }
+.al-maq { font-family:'Oswald',sans-serif;font-size:0.8rem;color:var(--text-dim);min-width:120px; }
+.al-task { flex:1;font-size:0.88rem;color:var(--cream); }
+.al-prox { font-size:0.78rem;white-space:nowrap; }
+.al-reg-btn { padding:4px 10px;border-radius:6px;font-size:0.75rem;font-family:'Barlow',sans-serif;font-weight:600;cursor:pointer;border:1px solid rgba(39,174,96,0.4);background:rgba(39,174,96,0.1);color:#27ae60;transition:all .2s; }
+.al-reg-btn:hover { background:rgba(39,174,96,0.2);border-color:#27ae60; }
+
+/* ══ HISTORIAL ══ */
+.hist-wrap { padding:1rem 1.5rem 5rem; }
+.hist-item { display:flex;justify-content:space-between;align-items:center;padding:14px;background:var(--navy-mid);border-radius:8px;margin-bottom:8px;border:1px solid var(--border); }
+.hist-left { flex:1; }
+.hist-titulo { font-weight:700;font-size:0.95rem;color:var(--cream); }
+.hist-meta { font-size:0.8rem;color:var(--text-dim);margin-top:4px; }
+.hist-bar-bg { background:rgba(255,255,255,0.1);border-radius:3px;height:6px;margin-top:8px; }
+.hist-bar-fill { border-radius:3px;height:6px; }
+.hist-pct { font-family:'Oswald',sans-serif;font-size:1.4rem;font-weight:700;color:var(--gold);margin-left:16px;min-width:56px;text-align:right; }
+.hist-ver-btn { padding:5px 12px;border-radius:6px;font-size:0.75rem;font-family:'Barlow',sans-serif;font-weight:600;cursor:pointer;border:1px solid rgba(201,162,39,0.4);background:rgba(201,162,39,0.1);color:var(--gold);margin-left:12px;transition:all .2s; }
+.hist-ver-btn:hover { background:rgba(201,162,39,0.2); }
+
+/* ══ CRUD CATÁLOGO ══ */
+#modalCrudBg { display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center; }
+#modalCrudBg.open { display:flex; }
+.crud-modal { background:var(--navy-mid);border-radius:12px;padding:24px;width:min(480px,90vw);border:1px solid rgba(255,255,255,.15); }
+.crud-modal h3 { font-family:'Oswald',sans-serif;font-size:1.05rem;color:var(--gold);margin-bottom:16px; }
+.crud-field { margin-bottom:12px; }
+.crud-field label { display:block;font-size:0.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);margin-bottom:5px; }
+.crud-field input,.crud-field select { width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:7px;color:var(--white);font-family:'Barlow',sans-serif;font-size:0.95rem;padding:9px 12px;outline:none;transition:border-color .2s; }
+.crud-field input:focus,.crud-field select:focus { border-color:var(--green); }
+.crud-field select option { background:#1a2d42; }
 </style>
 <script>
 if('serviceWorker' in navigator){
@@ -759,9 +816,12 @@ if('serviceWorker' in navigator){
 
   <!-- ══ TAB NAV ══ -->
   <div class="tab-nav">
-    <button type="button" class="tab-btn active" id="tbtn-plan"     onclick="switchTab('plan')">📅 Plan Mensual</button>
-    <button type="button" class="tab-btn"        id="tbtn-catalogo" onclick="switchTab('catalogo')">📋 Catálogo</button>
-    <button type="button" class="tab-btn"        id="tbtn-ajustes"  onclick="switchTab('ajustes')">⚙️ Ajustes</button>
+    <button type="button" class="tab-btn active" id="tbtn-plan"        onclick="switchTab('plan')">📅 Plan Mensual</button>
+    <button type="button" class="tab-btn"        id="tbtn-seguimiento" onclick="switchTab('seguimiento')">📋 Seguimiento</button>
+    <button type="button" class="tab-btn"        id="tbtn-alarmas"     onclick="switchTab('alarmas')">🔔 Alarmas</button>
+    <button type="button" class="tab-btn"        id="tbtn-historial"   onclick="switchTab('historial')">📜 Historial</button>
+    <button type="button" class="tab-btn"        id="tbtn-catalogo"    onclick="switchTab('catalogo')">📋 Catálogo</button>
+    <button type="button" class="tab-btn"        id="tbtn-ajustes"     onclick="switchTab('ajustes')">⚙️ Ajustes</button>
   </div>
 
   <!-- ══ PLAN MENSUAL ══ -->
@@ -802,6 +862,68 @@ if('serviceWorker' in navigator){
     <!-- ARRANQUE / CIERRE — tareas compartidas -->
     <div id="planAC" style="margin-bottom:12px"></div>
     <div class="plan-wrap" id="planWrap"></div>
+  </div>
+
+  <!-- ══ SEGUIMIENTO ══ -->
+  <div id="tab-seguimiento" style="display:none">
+    <div class="seg-filters">
+      <input type="month" id="segMes" style="min-width:150px">
+      <select id="segMecFilt" class="ctrl-select" style="min-width:160px">
+        <option value="">Todos los mecánicos</option>
+      </select>
+      <select id="segEstFilt" class="ctrl-select" style="min-width:160px">
+        <option value="">Todos los estados</option>
+        <option value="hecha">✓ Hechas</option>
+        <option value="pendiente">— Pendientes</option>
+      </select>
+      <button type="button" class="seg-load-btn" onclick="cargarSeguimiento()">Cargar</button>
+    </div>
+    <div class="seg-resumen" id="segResumen"></div>
+    <div class="prog-grid" id="segProgGrid"></div>
+    <div class="seg-wrap">
+      <div class="seg-tbl-wrap">
+        <table style="width:100%;border-collapse:separate;border-spacing:0 3px">
+          <thead>
+            <tr>
+              <th style="padding:10px 12px;font-size:0.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);background:var(--navy-mid);text-align:left">Máquina</th>
+              <th style="padding:10px 12px;font-size:0.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);background:var(--navy-mid);text-align:left">Tarea</th>
+              <th style="padding:10px 12px;font-size:0.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);background:var(--navy-mid);text-align:center;width:100px">Frec.</th>
+              <th style="padding:10px 12px;font-size:0.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);background:var(--navy-mid);text-align:left;width:120px">Mecánico</th>
+              <th style="padding:10px 12px;font-size:0.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);background:var(--navy-mid);text-align:center;width:110px">Fecha Plan</th>
+              <th style="padding:10px 12px;font-size:0.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);background:var(--navy-mid);text-align:center;width:110px">Estado</th>
+              <th style="padding:10px 12px;font-size:0.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);background:var(--navy-mid);text-align:center;width:110px">Fecha Real</th>
+            </tr>
+          </thead>
+          <tbody id="segTabla"></tbody>
+        </table>
+      </div>
+      <div id="segEmpty" class="empty-state" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <p>Selecciona un mes y pulsa Cargar para ver el seguimiento.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ALARMAS ══ -->
+  <div id="tab-alarmas" style="display:none">
+    <div class="al-wrap">
+      <div class="al-resumen" id="alResumen"></div>
+      <div class="al-section">
+        <div class="al-sec-title">⚠️ Urgentes — vencidas y próximos 15 días</div>
+        <div id="alUrgentes"><p style="color:var(--text-dim);font-size:0.85rem">Cargando...</p></div>
+      </div>
+      <div class="al-section">
+        <div class="al-sec-title">🗓 Todas las periódicas (TRIMESTRAL / SEMESTRAL / ANUAL)</div>
+        <div id="alTodas"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ HISTORIAL ══ -->
+  <div id="tab-historial" style="display:none">
+    <div class="hist-wrap">
+      <div id="historialList"><p style="color:var(--text-dim);padding:2rem">Cargando historial...</p></div>
+    </div>
   </div>
 
   <!-- ══ CATÁLOGO ══ -->
@@ -866,6 +988,9 @@ if('serviceWorker' in navigator){
       </svg>
       Exportar Excel
     </button>
+    <button type="button" class="export-btn" onclick="exportarCatalogoJSON()" style="background:rgba(116,185,255,0.12);border-color:rgba(116,185,255,0.4);color:#74b9ff">⬇️ JSON</button>
+    <button type="button" class="export-btn" onclick="exportarCatalogoCSV()" style="background:rgba(162,155,254,0.12);border-color:rgba(162,155,254,0.4);color:#a29bfe">⬇️ CSV</button>
+    <button type="button" class="export-btn" onclick="abrirCrud(null)" style="background:rgba(39,174,96,0.15);border-color:rgba(39,174,96,0.5);color:#2ecc71">➕ Nueva tarea</button>
   </div>
 
   <!-- Stats chips -->
@@ -882,6 +1007,7 @@ if('serviceWorker' in navigator){
           <th style="width:200px">Máquina</th>
           <th>Tarea</th>
           <th style="width:130px;text-align:center">Frecuencia</th>
+          <th style="width:100px;text-align:center">Acciones</th>
         </tr>
       </thead>
       <tbody id="tareasBody">
@@ -961,6 +1087,34 @@ if('serviceWorker' in navigator){
   </div><!-- /tab-ajustes -->
 
 </div><!-- /appScreen -->
+
+<!-- ══ MODAL CRUD CATÁLOGO ══ -->
+<div id="modalCrudBg" onclick="if(event.target===this)cerrarCrud()">
+  <div class="crud-modal">
+    <h3 id="modalCrudTitle">➕ Nueva tarea</h3>
+    <div class="crud-field">
+      <label>Máquina</label>
+      <input type="text" id="crudMaquina" list="crudMaqList" placeholder="Ej: HORNOS" oninput="this.value=this.value.toUpperCase()">
+      <datalist id="crudMaqList"></datalist>
+    </div>
+    <div class="crud-field">
+      <label>Tarea</label>
+      <input type="text" id="crudTarea" placeholder="Descripción de la tarea" oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <div class="crud-field">
+      <label>Frecuencia</label>
+      <select id="crudFrecuencia">
+        <option>DIARIO</option><option>ARRANQUE</option><option>CIERRE</option>
+        <option>SEMANAL</option><option>QUINCENAL</option><option selected>MENSUAL</option>
+        <option>TRIMESTRAL</option><option>SEMESTRAL</option><option>ANUAL</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button type="button" class="save-btn" onclick="guardarCrud()" style="flex:1">💾 Guardar</button>
+      <button type="button" class="save-btn" onclick="cerrarCrud()" style="background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.15);color:var(--text-dim)">Cancelar</button>
+    </div>
+  </div>
+</div>
 
 <script>
 /* ════════════════════════════════════════════
@@ -1461,7 +1615,8 @@ function aplicarFiltros(){
   const freq = document.getElementById('filtroFrecuencia').value.trim().toUpperCase();
   const txt  = document.getElementById('filtroTexto').value.trim().toUpperCase();
 
-  const result = TAREAS.filter(t => {
+  const cat = getCatalogoEffectivo();
+  const result = cat.filter(t => {
     if(maq  && t.maquina !== maq) return false;
     if(freq && t.frecuencia !== freq) return false;
     if(txt  && !t.tarea.toUpperCase().includes(txt)) return false;
@@ -1472,7 +1627,7 @@ function aplicarFiltros(){
 
   // Update count
   const cd = document.getElementById('countDisplay');
-  if(cd) cd.innerHTML = `Mostrando <b>${result.length}</b> de ${TAREAS.length} tareas`;
+  if(cd) cd.innerHTML = `Mostrando <b>${result.length}</b> de ${cat.length} tareas`;
 }
 
 /* ── Render table ── */
@@ -1497,13 +1652,18 @@ function renderTabla(data){
     const cfg = FREQ_CFG[t.frecuencia] || {color:'#fff',bg:'rgba(255,255,255,0.05)',border:'rgba(255,255,255,0.2)'};
     const showMaq = t.maquina !== lastMaq;
     lastMaq = t.maquina;
+    const isCustom = _catalogoOverrides[t.id] && !_catalogoOverrides[t.id].deleted;
     html += `<tr>
       <td>${rowNum}</td>
       <td class="td-machine">${showMaq ? escHtml(t.maquina) : '<span style="opacity:0.25">↳</span>'}</td>
-      <td class="td-task">${escHtml(t.tarea)}</td>
+      <td class="td-task">${escHtml(t.tarea)}${isCustom ? ' <span style="font-size:0.65rem;color:var(--gold);opacity:0.7">(editada)</span>' : ''}</td>
       <td style="text-align:center">
         <span class="freq-badge freq-${t.frecuencia}" style="color:${cfg.color};background:${cfg.bg};border-color:${cfg.border}">${t.frecuencia}</span>
         ${cfg.nota ? `<div style="font-size:0.65rem;color:rgba(255,255,255,0.35);margin-top:3px;line-height:1.3">${cfg.nota}</div>` : ''}
+      </td>
+      <td style="text-align:center;white-space:nowrap">
+        <button onclick="abrirCrud('${t.id}')" title="Editar" style="background:rgba(116,185,255,0.1);border:1px solid rgba(116,185,255,0.3);color:#74b9ff;border-radius:5px;padding:3px 8px;cursor:pointer;font-size:0.75rem;margin-right:3px">✏️</button>
+        <button onclick="eliminarCrud('${t.id}')" title="Eliminar" style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);color:#e74c3c;border-radius:5px;padding:3px 8px;cursor:pointer;font-size:0.75rem">🗑️</button>
       </td>
     </tr>`;
   });
@@ -1642,12 +1802,15 @@ function getWeeksOfMonth(year, month) {
 
 /* ════ TABS ════ */
 function switchTab(tab) {
-  ['plan','catalogo','ajustes'].forEach(t => {
+  ['plan','seguimiento','alarmas','historial','catalogo','ajustes'].forEach(t => {
     document.getElementById('tab-'+t).style.display    = t===tab ? '' : 'none';
     document.getElementById('tbtn-'+t).classList.toggle('active', t===tab);
   });
-  if(tab==='ajustes') renderAjustes();
-  if(tab==='catalogo'){ iniciarCatalogo(); }
+  if(tab==='ajustes')     renderAjustes();
+  if(tab==='catalogo')    { cargarOverrides(); iniciarCatalogo(); }
+  if(tab==='seguimiento') iniciarSeguimiento();
+  if(tab==='alarmas')     cargarAlarmas();
+  if(tab==='historial')   cargarHistorial();
 }
 
 /* ════ PLAN MENSUAL ════ */
@@ -1952,6 +2115,15 @@ async function publicarPlan() {
     btn.textContent = '✅ Publicado';
     setTimeout(() => { btn.disabled = false; btn.textContent = '📤 Publicar a mecánicos'; }, 3000);
     alert(`✅ Plan de ${mesesN[month]} ${year} publicado. Los mecánicos ya pueden ver sus tareas en "Mis Tareas".`);
+    // Notificar a mecánicos asignados via FCM
+    if(typeof fcmEnviar === 'function') {
+      const mecAsignados = [...new Set(Object.values(ST.asig()))].filter(m => m && m !== '—');
+      mecAsignados.forEach(function(mec) {
+        fcmEnviar(mec, '📅 Plan preventivo publicado',
+          'El plan de ' + MESES_L[curMes.month] + ' ' + curMes.year + ' ya está disponible',
+          'mis_tareas.html', '');
+      });
+    }
   } catch(e) {
     btn.disabled = false; btn.textContent = '📤 Publicar a mecánicos';
     alert('⚠️ Error al publicar: ' + e.message);
@@ -2269,8 +2441,14 @@ function showOk(id) {
 
 /* ── Update iniciarApp to launch plan by default ── */
 function iniciarCatalogo(){
-  renderStats(TAREAS);
-  renderTabla(TAREAS);
+  // Populate datalist for CRUD modal
+  const dl = document.getElementById('crudMaqList');
+  if(dl && !dl.children.length) {
+    MAQUINAS.forEach(m => { const o = document.createElement('option'); o.value = m; dl.appendChild(o); });
+  }
+  const cat = getCatalogoEffectivo();
+  renderStats(cat);
+  renderTabla(cat);
 }
 
 /* ════════════════════════════════════════════
@@ -2444,7 +2622,451 @@ function confirmarAutoAsig(){
   const rot = window._autoAsigRotInfo;
   alert(`✅ Asignación guardada. El próximo mes rotará al siguiente mecánico.`);
 }
+
+/* ════════════════════════════════════════════
+   FUNCIONALIDAD 1 — TAB SEGUIMIENTO
+   ════════════════════════════════════════════ */
+var _segData = null; // {tareas, compData}
+
+function iniciarSeguimiento() {
+  // Rellenar selector de mecánicos
+  const sel = document.getElementById('segMecFilt');
+  const meqs = ST.meqs();
+  if(sel.children.length <= 1) {
+    meqs.forEach(m => {
+      const o = document.createElement('option'); o.value = m; o.textContent = m; sel.appendChild(o);
+    });
+  }
+  // Mes por defecto: mes actual
+  const mi = document.getElementById('segMes');
+  if(!mi.value) mi.value = mesKey(new Date().getFullYear(), new Date().getMonth());
+  // Si ya hay datos cargados para ese mes, re-renderizar; si no, mostrar empty
+  if(_segData) {
+    renderSeguimiento(_segData.tareas, _segData.compData,
+      document.getElementById('segMecFilt').value,
+      document.getElementById('segEstFilt').value);
+  } else {
+    document.getElementById('segEmpty').style.display = 'block';
+    document.getElementById('segTabla').innerHTML = '';
+    document.getElementById('segResumen').innerHTML = '';
+    document.getElementById('segProgGrid').innerHTML = '';
+  }
+}
+
+async function cargarSeguimiento(mkOverride) {
+  const mi = document.getElementById('segMes');
+  const mk = mkOverride || mi.value;
+  if(!mk) { alert('Selecciona un mes primero.'); return; }
+  if(mkOverride) mi.value = mkOverride;
+
+  document.getElementById('segTabla').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-dim)">⏳ Cargando...</td></tr>';
+  document.getElementById('segEmpty').style.display = 'none';
+
+  try {
+    const [snapPlan, snapComp] = await Promise.all([
+      _DB.ref('preventivo_plan/'+mk).once('value'),
+      _DB.ref('preventivo_completado/'+mk).once('value')
+    ]);
+    const planData  = snapPlan.val()  || {};
+    const compData  = snapComp.val()  || {};
+    const tareas    = planData.tareas || [];
+
+    if(!tareas.length) {
+      document.getElementById('segTabla').innerHTML = '';
+      document.getElementById('segEmpty').style.display = 'block';
+      document.getElementById('segEmpty').querySelector('p').textContent =
+        'No hay plan publicado para este mes. Publica el plan desde la pestaña Plan Mensual.';
+      document.getElementById('segResumen').innerHTML = '';
+      document.getElementById('segProgGrid').innerHTML = '';
+      _segData = null;
+      return;
+    }
+
+    _segData = { tareas, compData };
+    renderSeguimiento(tareas, compData,
+      document.getElementById('segMecFilt').value,
+      document.getElementById('segEstFilt').value);
+  } catch(e) {
+    document.getElementById('segTabla').innerHTML =
+      `<tr><td colspan="7" style="color:#e74c3c;padding:1rem">⚠️ Error: ${escHtml(e.message)}</td></tr>`;
+  }
+}
+
+function renderSeguimiento(tareas, compData, filtMec, filtEst) {
+  // Expande slots: cada slot es una fila
+  const slots = [];
+  tareas.forEach(t => {
+    const frecs = Object.keys(t.fechas || {});
+    if(t.frecuencia === 'DIARIO') {
+      slots.push({ t, slotKey: t.id+'_diario', fechaPlan:'Cada día', wi:'diario' });
+    } else if(!frecs.length) {
+      slots.push({ t, slotKey: t.id+'_0', fechaPlan:'', wi:'0' });
+    } else {
+      frecs.forEach(wi => {
+        slots.push({ t, slotKey: t.id+'_'+wi, fechaPlan: t.frecuencia==='DIARIO'?'Cada día':(t.fechas[wi]||''), wi });
+      });
+    }
+  });
+
+  // Aplicar filtros
+  let visible = slots;
+  if(filtMec) visible = visible.filter(s => s.t.mecanico === filtMec);
+  if(filtEst === 'hecha')     visible = visible.filter(s => compData[s.slotKey]);
+  if(filtEst === 'pendiente') visible = visible.filter(s => !compData[s.slotKey]);
+
+  // Resumen
+  const total   = slots.length;
+  const hechos  = slots.filter(s => compData[s.slotKey]).length;
+  const pend    = total - hechos;
+  const pct     = total ? Math.round(hechos/total*100) : 0;
+  document.getElementById('segResumen').innerHTML = `
+    <span class="seg-chip" style="background:rgba(39,174,96,0.15);border-color:rgba(39,174,96,0.3);color:#27ae60">✓ Hechas <b>${hechos}</b></span>
+    <span class="seg-chip" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.15);color:var(--text-dim)">— Pendientes <b>${pend}</b></span>
+    <span class="seg-chip" style="background:rgba(201,162,39,0.12);border-color:rgba(201,162,39,0.3);color:var(--gold)">Total <b>${total}</b></span>
+    <span class="seg-chip" style="background:rgba(116,185,255,0.12);border-color:rgba(116,185,255,0.3);color:#74b9ff">% Cumplimiento <b>${pct}%</b></span>`;
+
+  // Progreso por mecánico
+  const mecStats = {};
+  slots.forEach(s => {
+    const m = s.t.mecanico || '—';
+    if(!mecStats[m]) mecStats[m] = {total:0,hechos:0};
+    mecStats[m].total++;
+    if(compData[s.slotKey]) mecStats[m].hechos++;
+  });
+  let progHtml = '';
+  Object.entries(mecStats).forEach(([m, st]) => {
+    const p = st.total ? Math.round(st.hechos/st.total*100) : 0;
+    const color = p>=90?'#27ae60':p>=70?'#e67e22':'#e74c3c';
+    progHtml += `<div class="prog-card">
+      <div class="prog-name">👷 ${escHtml(m)}</div>
+      <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:${p}%;background:${color}"></div></div>
+      <div class="prog-label"><span>${st.hechos}/${st.total}</span><b>${p}%</b></div>
+    </div>`;
+  });
+  document.getElementById('segProgGrid').innerHTML = progHtml;
+
+  // Tabla
+  if(!visible.length) {
+    document.getElementById('segTabla').innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-dim)">No hay tareas con los filtros seleccionados.</td></tr>`;
+    return;
+  }
+  document.getElementById('segEmpty').style.display = 'none';
+
+  let html = '';
+  visible.forEach(({t, slotKey, fechaPlan}) => {
+    const comp = compData[slotKey];
+    const cfg  = FREQ_CFG[t.frecuencia] || {color:'#fff',bg:'rgba(255,255,255,0.05)',border:'rgba(255,255,255,0.2)'};
+    let estadoHtml, fechaReal = '';
+    if(comp) {
+      if(comp.autoRelleno) {
+        estadoHtml = `<span class="seg-estado-auto">⚙ AUTO</span>`;
+      } else {
+        estadoHtml = `<span class="seg-estado-hecha">✓ HECHA</span>`;
+      }
+      fechaReal = comp.fechaReal || comp.fecha || '';
+    } else {
+      estadoHtml = `<span class="seg-estado-pend">— PEND.</span>`;
+    }
+    html += `<tr style="background:var(--navy-card)">
+      <td style="padding:10px 12px;font-family:'Oswald',sans-serif;font-size:0.8rem;color:var(--text-dim)">${escHtml(t.maquina)}</td>
+      <td style="padding:10px 12px;color:var(--cream);font-size:0.9rem">${escHtml(t.tarea)}</td>
+      <td style="padding:10px 12px;text-align:center"><span class="freq-badge freq-${t.frecuencia}" style="color:${cfg.color};background:${cfg.bg};border-color:${cfg.border}">${t.frecuencia}</span></td>
+      <td style="padding:10px 12px;font-size:0.85rem;color:var(--gold)">${escHtml(t.mecanico||'—')}</td>
+      <td style="padding:10px 12px;text-align:center;font-size:0.82rem;color:var(--text-dim)">${fechaPlan?fechaPlan.slice(8)+'/'+fechaPlan.slice(5,7):''}</td>
+      <td style="padding:10px 12px;text-align:center">${estadoHtml}</td>
+      <td style="padding:10px 12px;text-align:center;font-size:0.82rem;color:${comp&&comp.retraso?'#e67e22':'var(--text-dim)'}">${fechaReal?fechaReal.slice(8)+'/'+fechaReal.slice(5,7):''}</td>
+    </tr>`;
+  });
+  document.getElementById('segTabla').innerHTML = html;
+}
+
+/* ════════════════════════════════════════════
+   FUNCIONALIDAD 2 — TAB ALARMAS
+   ════════════════════════════════════════════ */
+function alProximaFecha(ultimaISO, frecuencia) {
+  if(!ultimaISO) return null;
+  const d = new Date(ultimaISO+'T12:00:00');
+  if(frecuencia==='TRIMESTRAL') d.setMonth(d.getMonth()+3);
+  else if(frecuencia==='SEMESTRAL') d.setMonth(d.getMonth()+6);
+  else if(frecuencia==='ANUAL') d.setFullYear(d.getFullYear()+1);
+  return d.toISOString().slice(0,10);
+}
+
+function alEstado(proxISO) {
+  if(!proxISO) return 'SIN_FECHA';
+  const hoy  = new Date(); hoy.setHours(0,0,0,0);
+  const prox = new Date(proxISO+'T00:00:00');
+  const diff = Math.round((prox-hoy)/(1000*60*60*24));
+  if(diff < 0)   return 'VENCIDA';
+  if(diff <= 15) return 'PROXIMA';
+  return 'OK';
+}
+
+async function cargarAlarmas() {
+  const snap = await _DB.ref('config/ultima_realizacion').once('value').catch(()=>({val:()=>({})}));
+  const ultimas = snap.val() || {};
+
+  const periodicas = TAREAS.filter(t => ['TRIMESTRAL','SEMESTRAL','ANUAL'].includes(t.frecuencia));
+
+  const conteo = {VENCIDA:0,PROXIMA:0,SIN_FECHA:0,OK:0};
+  const urgentes = [], todas = [];
+
+  periodicas.forEach(t => {
+    const ultima = ultimas[t.id] || null;
+    const prox   = ultima ? alProximaFecha(ultima, t.frecuencia) : null;
+    const estado = alEstado(prox);
+    conteo[estado]++;
+    const item = {t, ultima, prox, estado};
+    todas.push(item);
+    if(estado==='VENCIDA' || estado==='PROXIMA') urgentes.push(item);
+  });
+
+  // Resumen chips
+  const chips = [
+    {k:'VENCIDA', label:'VENCIDAS', color:'#e74c3c', bg:'rgba(231,76,60,0.15)', border:'rgba(231,76,60,0.4)'},
+    {k:'PROXIMA', label:'PRÓXIMAS ≤15d', color:'#e67e22', bg:'rgba(230,126,34,0.15)', border:'rgba(230,126,34,0.4)'},
+    {k:'SIN_FECHA',label:'SIN FECHA', color:'var(--text-dim)', bg:'rgba(255,255,255,0.06)', border:'rgba(255,255,255,0.15)'},
+    {k:'OK',      label:'AL DÍA', color:'#27ae60', bg:'rgba(39,174,96,0.15)', border:'rgba(39,174,96,0.4)'}
+  ];
+  document.getElementById('alResumen').innerHTML = chips.map(c =>
+    `<span class="al-chip" style="color:${c.color};background:${c.bg};border-color:${c.border}">
+      <span class="al-n">${conteo[c.k]}</span> ${c.label}
+    </span>`).join('');
+
+  // Urgentes
+  if(!urgentes.length) {
+    document.getElementById('alUrgentes').innerHTML = '<p style="color:var(--green);font-size:0.88rem">✅ No hay tareas vencidas ni próximas. Todo al día.</p>';
+  } else {
+    document.getElementById('alUrgentes').innerHTML = urgentes.map(({t,ultima,prox,estado}) => {
+      const dot = estado==='VENCIDA'?'#e74c3c':'#e67e22';
+      const proxTxt = prox ? prox.slice(8)+'/'+prox.slice(5,7)+'/'+prox.slice(0,4) : '—';
+      return `<div class="al-row">
+        <div class="al-dot" style="background:${dot}"></div>
+        <span class="al-maq">${escHtml(t.maquina)}</span>
+        <span class="al-task">${escHtml(t.tarea)}</span>
+        <span class="al-prox freq-badge freq-${t.frecuencia}" style="font-size:0.72rem">${t.frecuencia}</span>
+        <span class="al-prox" style="color:${dot}">Vence: ${proxTxt}</span>
+        <button class="al-reg-btn" onclick="registrarRealizacion(${t.id},'${t.frecuencia}')">✓ Registrar</button>
+      </div>`;
+    }).join('');
+  }
+
+  // Tabla todas
+  const stateOrder = {VENCIDA:0,PROXIMA:1,SIN_FECHA:2,OK:3};
+  todas.sort((a,b) => stateOrder[a.estado]-stateOrder[b.estado]);
+  document.getElementById('alTodas').innerHTML = todas.map(({t,ultima,prox,estado}) => {
+    const colors = {VENCIDA:'#e74c3c',PROXIMA:'#e67e22',SIN_FECHA:'var(--text-dim)',OK:'#27ae60'};
+    const labels = {VENCIDA:'VENCIDA',PROXIMA:'PRÓXIMA',SIN_FECHA:'SIN FECHA',OK:'AL DÍA'};
+    const dot = colors[estado];
+    const proxTxt = prox ? prox.slice(8)+'/'+prox.slice(5,7)+'/'+prox.slice(0,4) : '—';
+    const ultTxt  = ultima ? ultima.slice(8)+'/'+ultima.slice(5,7)+'/'+ultima.slice(0,4) : '—';
+    return `<div class="al-row">
+      <div class="al-dot" style="background:${dot}"></div>
+      <span class="al-maq">${escHtml(t.maquina)}</span>
+      <span class="al-task">${escHtml(t.tarea)}</span>
+      <span style="font-size:0.72rem;font-family:'Oswald',sans-serif;min-width:90px;color:${dot}">${labels[estado]}</span>
+      <span class="al-prox" style="color:var(--text-dim)">Ult: ${ultTxt}</span>
+      <span class="al-prox" style="color:${dot}">Prox: ${proxTxt}</span>
+      <button class="al-reg-btn" onclick="registrarRealizacion(${t.id},'${t.frecuencia}')">✓ Registrar</button>
+    </div>`;
+  }).join('') || '<p style="color:var(--text-dim);font-size:0.85rem">No hay tareas periódicas en el catálogo.</p>';
+}
+
+async function registrarRealizacion(taskId, frecuencia) {
+  const hoy = new Date().toISOString().slice(0,10);
+  if(!confirm(`Registrar realización hoy (${hoy.slice(8)+'/'+hoy.slice(5,7)+'/'+hoy.slice(0,4)}) para esta tarea?`)) return;
+  try {
+    await _DB.ref('config/ultima_realizacion/'+taskId).set(hoy);
+    cargarAlarmas();
+  } catch(e) {
+    alert('⚠️ Error al guardar: ' + e.message);
+  }
+}
+
+/* ════════════════════════════════════════════
+   FUNCIONALIDAD 3 — TAB HISTORIAL
+   ════════════════════════════════════════════ */
+const _MESES_NOMBRE = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+async function cargarHistorial() {
+  document.getElementById('historialList').innerHTML = '<p style="color:var(--text-dim);padding:2rem">⏳ Cargando...</p>';
+  try {
+    const [snapComp, snapPlan] = await Promise.all([
+      _DB.ref('preventivo_completado').once('value'),
+      _DB.ref('preventivo_plan').once('value')
+    ]);
+    const compAll = snapComp.val() || {};
+    const planAll = snapPlan.val() || {};
+
+    const meses = Object.keys(compAll).sort().reverse();
+    if(!meses.length) {
+      document.getElementById('historialList').innerHTML = '<p style="color:var(--text-dim);padding:2rem">No hay historial de meses completados aún.</p>';
+      return;
+    }
+
+    let html = '';
+    meses.forEach(mk => {
+      const compData = compAll[mk] || {};
+      const planData = planAll[mk] || {};
+      const tareas   = planData.tareas || [];
+      // Contar slots
+      let total = 0;
+      tareas.forEach(t => {
+        if(t.frecuencia==='DIARIO') return;
+        const wis = Object.keys(t.fechas||{});
+        total += wis.length || 1;
+      });
+      const hechos = Object.keys(compData).length;
+      const pct    = total ? Math.min(100, Math.round(hechos/total*100)) : (hechos?100:0);
+      const color  = pct>=90?'#27ae60':pct>=70?'#e67e22':'#e74c3c';
+      const [y,m]  = mk.split('-');
+      const nombre = _MESES_NOMBRE[parseInt(m,10)-1] + ' ' + y;
+
+      html += `<div class="hist-item">
+        <div class="hist-left">
+          <div class="hist-titulo">${nombre}</div>
+          <div class="hist-meta">${hechos} tarea${hechos!==1?'s':''} realizadas${total?' de '+total:''}</div>
+          <div class="hist-bar-bg"><div class="hist-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+        </div>
+        <span class="hist-pct" style="color:${color}">${pct}%</span>
+        <button class="hist-ver-btn" onclick="verSeguimientoMes('${mk}')">Ver</button>
+      </div>`;
+    });
+    document.getElementById('historialList').innerHTML = html;
+  } catch(e) {
+    document.getElementById('historialList').innerHTML = `<p style="color:#e74c3c;padding:1rem">⚠️ Error: ${escHtml(e.message)}</p>`;
+  }
+}
+
+function verSeguimientoMes(mk) {
+  switchTab('seguimiento');
+  cargarSeguimiento(mk);
+}
+
+/* ════════════════════════════════════════════
+   FUNCIONALIDAD 4 — CRUD CATÁLOGO
+   ════════════════════════════════════════════ */
+var _crudEditing = null; // null=new, string=id editing
+var _catalogoOverrides = {}; // {id: {...tarea} | {deleted:true}}
+
+function cargarOverrides() {
+  try { _catalogoOverrides = JSON.parse(localStorage.getItem('panalcor_catalogo_overrides') || '{}'); } catch(e){ _catalogoOverrides = {}; }
+  // Sincronizar desde Firebase en background
+  _DB.ref('catalogo_overrides').once('value').then(snap => {
+    const fbData = snap.val() || {};
+    // Firebase tiene prioridad; mezclar
+    Object.assign(_catalogoOverrides, fbData);
+    localStorage.setItem('panalcor_catalogo_overrides', JSON.stringify(_catalogoOverrides));
+  }).catch(()=>{});
+}
+
+function getCatalogoEffectivo() {
+  const base = TAREAS.slice(); // copia
+  const result = [];
+  const overriddenIds = new Set();
+  // Aplicar ediciones y borrados sobre la base
+  base.forEach(t => {
+    if(_catalogoOverrides[t.id] && _catalogoOverrides[t.id].deleted) return; // borrado
+    if(_catalogoOverrides[t.id] && !_catalogoOverrides[t.id].deleted) {
+      result.push(Object.assign({}, t, _catalogoOverrides[t.id]));
+    } else {
+      result.push(t);
+    }
+    overriddenIds.add(String(t.id));
+  });
+  // Añadir tareas nuevas (id como string que no coincide con base)
+  Object.entries(_catalogoOverrides).forEach(([id, ov]) => {
+    if(ov.deleted) return;
+    if(overriddenIds.has(String(id))) return;
+    result.push(ov);
+  });
+  return result;
+}
+
+function abrirCrud(id) {
+  _crudEditing = id;
+  const modal = document.getElementById('modalCrudBg');
+  modal.classList.add('open');
+  if(id === null) {
+    document.getElementById('modalCrudTitle').textContent = '➕ Nueva tarea';
+    document.getElementById('crudMaquina').value   = '';
+    document.getElementById('crudTarea').value     = '';
+    document.getElementById('crudFrecuencia').value = 'MENSUAL';
+  } else {
+    document.getElementById('modalCrudTitle').textContent = '✏️ Editar tarea';
+    const cat = getCatalogoEffectivo();
+    const t = cat.find(x => String(x.id) === String(id));
+    if(t) {
+      document.getElementById('crudMaquina').value    = t.maquina;
+      document.getElementById('crudTarea').value      = t.tarea;
+      document.getElementById('crudFrecuencia').value = t.frecuencia;
+    }
+  }
+}
+
+function cerrarCrud() {
+  document.getElementById('modalCrudBg').classList.remove('open');
+}
+
+async function guardarCrud() {
+  const maquina   = document.getElementById('crudMaquina').value.trim().toUpperCase();
+  const tarea     = document.getElementById('crudTarea').value.trim().toUpperCase();
+  const frecuencia = document.getElementById('crudFrecuencia').value;
+  if(!maquina || !tarea) { alert('Rellena Máquina y Tarea.'); return; }
+
+  const id = _crudEditing !== null ? _crudEditing : ('c_'+Date.now());
+  const override = { id, maquina, tarea, frecuencia };
+
+  _catalogoOverrides[id] = override;
+  localStorage.setItem('panalcor_catalogo_overrides', JSON.stringify(_catalogoOverrides));
+  try { await _DB.ref('catalogo_overrides/'+id).set(override); } catch(e){}
+
+  cerrarCrud();
+  iniciarCatalogo();
+  aplicarFiltros();
+}
+
+async function eliminarCrud(id) {
+  const cat = getCatalogoEffectivo();
+  const t = cat.find(x => String(x.id) === String(id));
+  if(!confirm(`¿Eliminar la tarea "${t ? t.tarea : id}"?`)) return;
+
+  _catalogoOverrides[id] = { deleted: true };
+  localStorage.setItem('panalcor_catalogo_overrides', JSON.stringify(_catalogoOverrides));
+  try { await _DB.ref('catalogo_overrides/'+id).set({ deleted: true }); } catch(e){}
+
+  iniciarCatalogo();
+  aplicarFiltros();
+}
+
+/* ════════════════════════════════════════════
+   FUNCIONALIDAD 6 — EXPORTAR JSON Y CSV
+   ════════════════════════════════════════════ */
+function exportarCatalogoJSON() {
+  const cat = getCatalogoEffectivo();
+  const blob = new Blob([JSON.stringify(cat, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'catalogo_panalcor_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function exportarCatalogoCSV() {
+  const cat = getCatalogoEffectivo();
+  const BOM = '﻿';
+  const header = 'ID;Máquina;Tarea;Frecuencia\n';
+  const rows = cat.map(t => [t.id, t.maquina, t.tarea, t.frecuencia].join(';')).join('\n');
+  const blob = new Blob([BOM+header+rows], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'catalogo_panalcor_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
 </script>
+
+<script src="fcm.js"></script>
 
 <!-- Modal auto-asignación -->
 <div id="autoAsigModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;align-items:center;justify-content:center;padding:16px">
