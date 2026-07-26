@@ -936,6 +936,12 @@ function guardarChecks(){
   showAlert(adminUnlocked ? '✏️ Turno modificado por admin: '+done+'/'+total : '✅ Turno guardado: '+done+'/'+total+' tareas');
   adminUnlocked = false;
   document.getElementById('unlockBadge').style.display='none';
+
+  // Limpiar tensión de cadenas (di-006) tras guardar para que no quede marcada en el siguiente turno
+  delete checks['di-006'];
+  localStorage.removeItem('info_'+fecha+'_di-006');
+  renderTasks();
+
   checkTurnoWarning();
 }
 
