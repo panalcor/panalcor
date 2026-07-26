@@ -1026,9 +1026,10 @@ function renderCalendario(){
     }
 
     const ring = hoy ? 'box-shadow:0 0 0 2px var(--gold);' : '';
-    const click = finde ? '' : `onclick="calIrDia('${fecha}')" style="cursor:pointer"`;
-    html += `<div ${click} style="border-radius:7px;padding:6px 2px;background:${bg};border:${border};color:${color};font-size:.85rem;font-weight:${hoy?'700':'500'};${ring}${finde?'':';cursor:pointer'}">
-      ${dia}${!finde && porDia[fecha] ? '<div style="font-size:.55rem;margin-top:1px;opacity:.8">'+porDia[fecha].size+'/3</div>' : ''}
+    const pointer = finde ? '' : 'cursor:pointer;';
+    const onclick = finde ? '' : `onclick="calIrDia('${fecha}')"`;
+    html += `<div ${onclick} style="border-radius:7px;padding:10px 2px;min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:${bg};border:${border};color:${color};font-size:.85rem;font-weight:${hoy?'700':'500'};${ring}${pointer}">
+      ${dia}${!finde && porDia[fecha] ? '<div style="font-size:.55rem;margin-top:2px;opacity:.8">'+porDia[fecha].size+'/3</div>' : ''}
     </div>`;
   }
 
