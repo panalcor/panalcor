@@ -11469,6 +11469,7 @@ function calBorrar(id) {
   <div class="rub-stab" onclick="rubTab('seg',this)">📊 Seguimiento</div>
   <div class="rub-stab" onclick="rubTab('obrador',this)">🏭 Obrador</div>
   <div class="rub-stab" onclick="rubTab('divisoras',this)">🔧 Divisoras</div>
+  <div class="rub-stab" onclick="rubTab('informe',this)">🖨️ Informe</div>
 </div>
 
 <!-- ── CATÁLOGO ── -->
@@ -11563,6 +11564,33 @@ function calBorrar(id) {
     El número de divisora que está físicamente en cada línea de producción. Se guarda en Firebase y aparece en la página de Rubiel.
   </div>
   <div id="rubDivLista"><div class="no-data">⏳ Cargando...</div></div>
+</div>
+
+<!-- ── INFORME ── -->
+<div class="rub-sec" id="rsec-informe">
+  <!-- Controles -->
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="rubInfNavMes(-1)" style="padding:6px 12px;border-radius:7px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:var(--white);font-family:'Barlow',sans-serif;cursor:pointer">‹</button>
+      <span style="font-size:1rem;font-weight:700;min-width:130px;text-align:center" id="rubInfMesLabel">—</span>
+      <button onclick="rubInfNavMes(1)" style="padding:6px 12px;border-radius:7px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:var(--white);font-family:'Barlow',sans-serif;cursor:pointer">›</button>
+    </div>
+    <button onclick="rubInfGenerar()" style="padding:8px 18px;border-radius:7px;background:rgba(201,162,39,.15);border:1px solid rgba(201,162,39,.4);color:var(--gold);font-family:'Barlow',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer">🔄 Generar informe</button>
+    <button onclick="rubInfImprimir()" style="padding:8px 18px;border-radius:7px;background:var(--green);border:none;color:#fff;font-family:'Barlow',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer">🖨️ Imprimir / PDF</button>
+  </div>
+  <!-- Secciones a incluir -->
+  <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:18px;background:var(--navy-mid);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:12px 16px">
+    <span style="font-size:.75rem;font-weight:700;color:var(--gold);letter-spacing:.08em;align-self:center">INCLUIR:</span>
+    <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;cursor:pointer"><input type="checkbox" id="rubInfChkResumen" checked> Resumen</label>
+    <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;cursor:pointer"><input type="checkbox" id="rubInfChkFreqs" checked> Por frecuencia</label>
+    <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;cursor:pointer"><input type="checkbox" id="rubInfChkDetalle" checked> Detalle tareas</label>
+    <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;cursor:pointer"><input type="checkbox" id="rubInfChkObrador" checked> Obrador</label>
+    <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;cursor:pointer"><input type="checkbox" id="rubInfChkDivisoras"> Divisoras</label>
+  </div>
+  <!-- Área de previsualización -->
+  <div id="rubInfPreview" style="background:#fff;color:#111;border-radius:10px;padding:0;min-height:200px;font-family:Arial,sans-serif">
+    <div style="text-align:center;padding:60px 20px;color:#aaa;font-size:.95rem">Selecciona mes y pulsa "Generar informe"</div>
+  </div>
 </div>
 </div><!-- /panel-rubiel -->
 
@@ -12006,6 +12034,218 @@ function rubDivGuardar(linea){
   });
 }
 
+// ── INFORME ─────────────────────────────────────────────────────
+
+var _rubInfMes = '';
+var _rubInfComp = {};
+var _rubInfObr = {};
+var _rubInfDivs = {};
+
+function rubInfNavMes(dir){
+  var p=_rubInfMes.split('-');
+  var y=parseInt(p[0],10), m=parseInt(p[1],10)+dir;
+  if(m<1){m=12;y--;} if(m>12){m=1;y++;}
+  _rubInfMes = y+'-'+_rubPad(m);
+  document.getElementById('rubInfMesLabel').textContent = _rubLabelMes(_rubInfMes);
+}
+
+function rubInfGenerar(){
+  if(!_rubInfMes) _rubInfMes = _rubHoyMes();
+  document.getElementById('rubInfPreview').innerHTML = '<div style="text-align:center;padding:40px;color:#aaa">⏳ Cargando datos...</div>';
+
+  Promise.all([
+    DB.ref('rubiel_completado/'+_rubInfMes).once('value'),
+    DB.ref('rubiel_obrador/'+_rubInfMes).once('value'),
+    DB.ref('rubiel_divisoras').once('value'),
+    DB.ref('rubiel_catalogo').once('value'),
+  ]).then(function(snaps){
+    _rubInfComp  = snaps[0].val() || {};
+    _rubInfObr   = snaps[1].val() || {};
+    _rubInfDivs  = snaps[2].val() || {};
+    var catData  = snaps[3].val() || {};
+    var catFlat  = Object.values(catData).filter(function(t){return t.activa!==false;})
+                         .sort(function(a,b){return (a.orden||99)-(b.orden||99);});
+
+    var chkRes  = document.getElementById('rubInfChkResumen').checked;
+    var chkFreq = document.getElementById('rubInfChkFreqs').checked;
+    var chkDet  = document.getElementById('rubInfChkDetalle').checked;
+    var chkObr  = document.getElementById('rubInfChkObrador').checked;
+    var chkDiv  = document.getElementById('rubInfChkDivisoras').checked;
+
+    var mes = _rubInfMes;
+    var mesLabel = _rubLabelMes(mes);
+    var freqLabel = {DIARIO:'Diario',SEMANAL:'Semanal',QUINCENAL:'Quincenal',MENSUAL:'Mensual',TRIMESTRAL:'Trimestral',ANUAL:'Anual'};
+    var freqs = ['DIARIO','SEMANAL','QUINCENAL','MENSUAL','TRIMESTRAL','ANUAL'];
+
+    // Calcular instancias y estado
+    var totalInst=0, hechasInst=0;
+    var freqStats = {};
+    freqs.forEach(function(fr){
+      freqStats[fr] = {total:0, hechas:0, tareas:[]};
+    });
+
+    catFlat.forEach(function(t){
+      var insts = _rubInstancias(t, mes);
+      insts.forEach(function(ins){
+        totalInst++;
+        freqStats[t.freq].total++;
+        var key = t.id+'_'+ins.inst;
+        var comp = _rubInfComp[key];
+        var done = !!comp;
+        if(done){ hechasInst++; freqStats[t.freq].hechas++; }
+        freqStats[t.freq].tareas.push({t:t, ins:ins, comp:comp, done:done});
+      });
+    });
+
+    var pct = totalInst ? Math.round(hechasInst/totalInst*100) : 0;
+
+    // KPI colores
+    var col = pct>=90?'#27ae60':pct>=70?'#f39c12':'#e74c3c';
+
+    var html = '<div id="rubInfDoc" style="padding:28px 32px;font-family:Arial,sans-serif;color:#111;max-width:860px;margin:0 auto">';
+
+    // Cabecera
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #c9a227;padding-bottom:14px;margin-bottom:20px">'
+      + '<div><div style="font-size:1.5rem;font-weight:900;letter-spacing:.06em;color:#0d1b2a">PANALCOR S.L.</div>'
+      + '<div style="font-size:.82rem;color:#666;letter-spacing:.1em;text-transform:uppercase">Informe de Mantenimiento — RUBIEL</div></div>'
+      + '<div style="text-align:right"><div style="font-size:1.2rem;font-weight:900;color:#c9a227">'+mesLabel+'</div>'
+      + '<div style="font-size:.75rem;color:#999">Generado: '+_rubHoy()+'</div></div>'
+      + '</div>';
+
+    // RESUMEN
+    if(chkRes){
+      html += '<div style="margin-bottom:22px">'
+        + '<div style="font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#c9a227;border-bottom:1px solid #e8d99a;padding-bottom:4px;margin-bottom:12px">RESUMEN DEL MES</div>'
+        + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">';
+      [
+        {v:pct+'%', l:'Completado', c:col},
+        {v:hechasInst, l:'Realizadas', c:'#27ae60'},
+        {v:totalInst-hechasInst, l:'Pendientes', c:'#e74c3c'},
+        {v:totalInst, l:'Total instancias', c:'#333'},
+      ].forEach(function(k){
+        html += '<div style="border:1px solid #e0e0e0;border-radius:8px;padding:12px;text-align:center">'
+          + '<div style="font-size:1.8rem;font-weight:900;color:'+k.c+'">'+k.v+'</div>'
+          + '<div style="font-size:.72rem;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-top:3px">'+k.l+'</div></div>';
+      });
+      html += '</div></div>';
+
+      // Barra de progreso
+      html += '<div style="margin-bottom:22px">'
+        + '<div style="background:#f0f0f0;border-radius:8px;height:14px;overflow:hidden">'
+        + '<div style="height:100%;width:'+pct+'%;background:'+col+';border-radius:8px"></div></div>'
+        + '<div style="text-align:right;font-size:.75rem;color:#888;margin-top:3px">'+pct+'% completado</div>'
+        + '</div>';
+    }
+
+    // POR FRECUENCIA
+    if(chkFreq){
+      html += '<div style="margin-bottom:22px">'
+        + '<div style="font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#c9a227;border-bottom:1px solid #e8d99a;padding-bottom:4px;margin-bottom:12px">RESUMEN POR FRECUENCIA</div>'
+        + '<table style="width:100%;border-collapse:collapse;font-size:.88rem">'
+        + '<tr style="background:#f5f0e0"><th style="text-align:left;padding:7px 10px">Frecuencia</th><th style="text-align:center;padding:7px 10px">Total</th><th style="text-align:center;padding:7px 10px">Realizadas</th><th style="text-align:center;padding:7px 10px">Pendientes</th><th style="text-align:center;padding:7px 10px">%</th></tr>';
+      freqs.forEach(function(fr){
+        var st = freqStats[fr];
+        if(!st.total) return;
+        var p2 = st.total?Math.round(st.hechas/st.total*100):0;
+        var c2 = p2>=90?'#27ae60':p2>=70?'#f39c12':'#e74c3c';
+        html += '<tr style="border-bottom:1px solid #eee">'
+          + '<td style="padding:7px 10px;font-weight:700">'+freqLabel[fr]+'</td>'
+          + '<td style="text-align:center;padding:7px 10px">'+st.total+'</td>'
+          + '<td style="text-align:center;padding:7px 10px;color:#27ae60;font-weight:700">'+st.hechas+'</td>'
+          + '<td style="text-align:center;padding:7px 10px;color:#e74c3c;font-weight:700">'+(st.total-st.hechas)+'</td>'
+          + '<td style="text-align:center;padding:7px 10px;font-weight:900;color:'+c2+'">'+p2+'%</td></tr>';
+      });
+      html += '</table></div>';
+    }
+
+    // DETALLE POR TAREA
+    if(chkDet){
+      html += '<div style="margin-bottom:22px">'
+        + '<div style="font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#c9a227;border-bottom:1px solid #e8d99a;padding-bottom:4px;margin-bottom:12px">DETALLE DE TAREAS</div>';
+      freqs.forEach(function(fr){
+        var st = freqStats[fr];
+        if(!st.tareas.length) return;
+        html += '<div style="font-size:.75rem;font-weight:700;letter-spacing:.1em;color:#666;text-transform:uppercase;margin:10px 0 4px">'+freqLabel[fr]+'</div>'
+          + '<table style="width:100%;border-collapse:collapse;font-size:.82rem;margin-bottom:8px">'
+          + '<tr style="background:#f9f9f9"><th style="text-align:left;padding:5px 8px">Tarea</th><th style="text-align:center;padding:5px 8px">Período</th><th style="text-align:center;padding:5px 8px">Estado</th><th style="text-align:center;padding:5px 8px">Fecha</th></tr>';
+        st.tareas.forEach(function(row){
+          var color = row.done ? '#27ae60' : '#e74c3c';
+          var estado = row.done ? '✅ Realizado' : '⏳ Pendiente';
+          var fecha = row.comp && row.comp.fecha ? row.comp.fecha : '—';
+          var divExtra = row.comp && row.comp.divisora ? ' (Div.'+row.comp.divisora+')' : '';
+          html += '<tr style="border-bottom:1px solid #f0f0f0">'
+            + '<td style="padding:5px 8px">'+escHtml(row.t.desc)+'</td>'
+            + '<td style="text-align:center;padding:5px 8px;color:#888;font-size:.76rem">'+escHtml(row.ins.label)+'</td>'
+            + '<td style="text-align:center;padding:5px 8px;color:'+color+';font-weight:700">'+estado+'</td>'
+            + '<td style="text-align:center;padding:5px 8px;font-weight:600">'+fecha+divExtra+'</td></tr>';
+        });
+        html += '</table>';
+      });
+      html += '</div>';
+    }
+
+    // OBRADOR
+    if(chkObr){
+      var obrEntries = Object.values(_rubInfObr).sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'');});
+      var totalH = obrEntries.reduce(function(s,e){return s+(e.horas||0);},0);
+      html += '<div style="margin-bottom:22px">'
+        + '<div style="font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#c9a227;border-bottom:1px solid #e8d99a;padding-bottom:4px;margin-bottom:12px">PLAZA EN OBRADOR</div>';
+      if(!obrEntries.length){
+        html += '<div style="color:#aaa;font-size:.88rem">Sin registros de obrador este mes.</div>';
+      } else {
+        html += '<div style="display:flex;gap:16px;margin-bottom:10px">'
+          + '<div style="border:1px solid #e0e0e0;border-radius:8px;padding:10px 16px;text-align:center"><div style="font-size:1.5rem;font-weight:900;color:#2980b9">'+obrEntries.length+'</div><div style="font-size:.7rem;color:#888;text-transform:uppercase">Días</div></div>'
+          + '<div style="border:1px solid #e0e0e0;border-radius:8px;padding:10px 16px;text-align:center"><div style="font-size:1.5rem;font-weight:900;color:#2980b9">'+totalH.toFixed(1)+'h</div><div style="font-size:.7rem;color:#888;text-transform:uppercase">Horas totales</div></div>'
+          + '<div style="border:1px solid #e0e0e0;border-radius:8px;padding:10px 16px;text-align:center"><div style="font-size:1.5rem;font-weight:900;color:#2980b9">'+(totalH/obrEntries.length).toFixed(1)+'h</div><div style="font-size:.7rem;color:#888;text-transform:uppercase">Media/día</div></div>'
+          + '</div>'
+          + '<table style="width:100%;border-collapse:collapse;font-size:.82rem">'
+          + '<tr style="background:#f9f9f9"><th style="text-align:left;padding:5px 8px">Fecha</th><th style="text-align:center;padding:5px 8px">Horas</th><th style="text-align:left;padding:5px 8px">Observaciones</th></tr>';
+        obrEntries.forEach(function(e){
+          html += '<tr style="border-bottom:1px solid #f0f0f0">'
+            + '<td style="padding:5px 8px;font-weight:700">'+escHtml(e.fecha||'')+'</td>'
+            + '<td style="text-align:center;padding:5px 8px;font-weight:700">'+e.horas+'h</td>'
+            + '<td style="padding:5px 8px;color:#555">'+escHtml(e.observaciones||'—')+'</td></tr>';
+        });
+        html += '</table>';
+      }
+      html += '</div>';
+    }
+
+    // DIVISORAS
+    if(chkDiv){
+      html += '<div style="margin-bottom:22px">'
+        + '<div style="font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#c9a227;border-bottom:1px solid #e8d99a;padding-bottom:4px;margin-bottom:12px">DIVISORAS EN LÍNEA</div>'
+        + '<table style="width:100%;border-collapse:collapse;font-size:.88rem">'
+        + '<tr style="background:#f5f0e0"><th style="text-align:left;padding:7px 10px">Línea</th><th style="text-align:left;padding:7px 10px">Nº Divisora</th></tr>';
+      for(var i=1;i<=7;i++){
+        var dv = _rubInfDivs['div'+i] || {};
+        html += '<tr style="border-bottom:1px solid #eee"><td style="padding:7px 10px;font-weight:700">Línea '+i+'</td><td style="padding:7px 10px">'+escHtml(dv.numero||'—')+'</td></tr>';
+      }
+      html += '</table></div>';
+    }
+
+    // Pie
+    html += '<div style="border-top:1px solid #ddd;margin-top:24px;padding-top:12px;font-size:.72rem;color:#bbb;text-align:center">'
+      + 'PANALCOR S.L. — Sistema de Gestión de Mantenimiento — '+mesLabel+'</div>';
+
+    html += '</div>'; // /rubInfDoc
+    document.getElementById('rubInfPreview').innerHTML = html;
+  });
+}
+
+function rubInfImprimir(){
+  var doc = document.getElementById('rubInfDoc');
+  if(!doc){ showToast('⚠️ Genera el informe primero','w'); return; }
+  var win = window.open('','_blank','width=900,height=700');
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8">'
+    +'<title>Informe Rubiel — '+_rubLabelMes(_rubInfMes)+'</title>'
+    +'<style>body{margin:0;padding:0;font-family:Arial,sans-serif}@media print{body{margin:0}}</style>'
+    +'</head><body>'+doc.outerHTML+'</body></html>');
+  win.document.close();
+  win.focus();
+  setTimeout(function(){ win.print(); }, 600);
+}
+
 // Inicializar cuando se activa el tab Rubiel
 (function(){
   var origSwitch = window.switchTab;
@@ -12014,6 +12254,8 @@ function rubDivGuardar(linea){
     if(tab==='rubiel'){
       _rubSegMes = _rubHoyMes();
       _rubObrMes = _rubHoyMes();
+      _rubInfMes = _rubHoyMes();
+      document.getElementById('rubInfMesLabel').textContent = _rubLabelMes(_rubInfMes);
       // Cargar catálogo si no está cargado
       if(!_rubCatalogo.length) rubCatCargar();
     }
