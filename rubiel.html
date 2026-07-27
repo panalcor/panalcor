@@ -568,13 +568,24 @@ function cambiarTab(tab, el){
 function cargarCompletados(){
   var ref = DB.ref('rubiel_completado/'+mesActual);
   if(dbUnsub) try{ dbUnsub(); }catch(e){}
+
+  // Render inmediato con lo que haya (muestra tareas aunque estén pendientes)
+  renderTodosLosTabs();
+
   var handler = function(snap){
     compData = snap.val() || {};
-    renderTab(tabActual);
+    renderTodosLosTabs();
     actualizarProgreso();
   };
   ref.on('value', handler);
   dbUnsub = function(){ ref.off('value', handler); };
+}
+
+function renderTodosLosTabs(){
+  renderFreq('DIARIO',   'tab-diario',   'Tareas de hoy');
+  renderFreq('SEMANAL',  'tab-semanal',  'Esta semana');
+  renderQuincenal();
+  renderPeriodico();
 }
 
 function cargarDivisoras(){
