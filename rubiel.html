@@ -322,7 +322,7 @@ var pinActual = '';
 // Precargar PIN desde Firebase (config/rubiel_pin)
 DB.ref('config/rubiel_pin').once('value')
   .then(function(s){ PIN_CACHE = s.val() || null; })
-  .catch(function(){});
+  .catch(function(e){ console.warn('PIN preload error:', e.message); });
 
 function pinTecla(n){
   if(pinActual.length >= 4) return;
@@ -367,7 +367,6 @@ function pinEntrar(){
       if(PIN_CACHE !== null){
         verificar(PIN_CACHE);
       } else {
-        // Sin PIN configurado, comprobar contra mecanicos_pwd como fallback
         DB.ref('config/mecanicos_pwd/'+NOMBRE).once('value').then(function(s2){
           var pwd = s2.val() || '';
           if(String(pwd) === String(pinActual)){
@@ -380,8 +379,8 @@ function pinEntrar(){
           }
         });
       }
-    }).catch(function(){
-      err.textContent = 'Error de conexión. Comprueba el WiFi.';
+    }).catch(function(e){
+      err.textContent = 'Error: ' + e.message;
       pinActual = '';
       actualizarDots();
     });
