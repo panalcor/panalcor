@@ -215,26 +215,15 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:'Bar
   <div class="login-empresa">PANALCOR</div>
   <div class="login-nombre">RUBIEL</div>
 
-  <div class="pin-dots">
-    <div class="pin-dot" id="d0"></div>
-    <div class="pin-dot" id="d1"></div>
-    <div class="pin-dot" id="d2"></div>
-    <div class="pin-dot" id="d3"></div>
-  </div>
-
-  <div class="numpad">
-    <button class="numpad-btn" onclick="pinTecla('1')">1</button>
-    <button class="numpad-btn" onclick="pinTecla('2')">2</button>
-    <button class="numpad-btn" onclick="pinTecla('3')">3</button>
-    <button class="numpad-btn" onclick="pinTecla('4')">4</button>
-    <button class="numpad-btn" onclick="pinTecla('5')">5</button>
-    <button class="numpad-btn" onclick="pinTecla('6')">6</button>
-    <button class="numpad-btn" onclick="pinTecla('7')">7</button>
-    <button class="numpad-btn" onclick="pinTecla('8')">8</button>
-    <button class="numpad-btn" onclick="pinTecla('9')">9</button>
-    <button class="numpad-btn borrar" onclick="pinBorrar()">⌫</button>
-    <button class="numpad-btn" onclick="pinTecla('0')">0</button>
-    <button class="numpad-btn entrar" onclick="pinEntrar()">OK</button>
+  <div style="width:100%;max-width:300px;display:flex;flex-direction:column;gap:12px">
+    <input type="password" id="loginPwd" placeholder="Contraseña"
+      autocomplete="current-password"
+      style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:12px;color:#fff;font-family:'Barlow',sans-serif;font-size:1.1rem;padding:14px 18px;outline:none;text-align:center;letter-spacing:.15em"
+      onkeydown="if(event.key==='Enter')loginEntrar()">
+    <button onclick="loginEntrar()"
+      style="background:var(--green);border:none;border-radius:12px;color:#fff;font-family:'Barlow',sans-serif;font-size:1rem;font-weight:700;padding:14px;cursor:pointer;letter-spacing:.05em">
+      Entrar
+    </button>
   </div>
   <div class="login-error" id="loginErr"></div>
 </div>
@@ -316,79 +305,30 @@ function toast(msg){
   setTimeout(function(){ t.classList.remove('show'); }, 2500);
 }
 
-// ── PIN / LOGIN ───────────────────────────────────────────────
-var pinActual = '';
-
-// Precargar PIN desde Firebase (config/rubiel_pin)
-DB.ref('config/rubiel_pin').once('value')
-  .then(function(s){ PIN_CACHE = s.val() || null; })
-  .catch(function(e){ console.warn('PIN preload error:', e.message); });
-
-function pinTecla(n){
-  if(pinActual.length >= 4) return;
-  pinActual += n;
-  actualizarDots();
-  if(pinActual.length === 4) setTimeout(pinEntrar, 120);
-}
-function pinBorrar(){
-  pinActual = pinActual.slice(0,-1);
-  actualizarDots();
-  document.getElementById('loginErr').textContent = '';
-}
-function actualizarDots(){
-  for(var i=0;i<4;i++){
-    document.getElementById('d'+i).classList.toggle('filled', i < pinActual.length);
-  }
-}
-function pinEntrar(){
-  if(!pinActual){ document.getElementById('loginErr').textContent = 'Introduce tu PIN'; return; }
+// ── LOGIN ─────────────────────────────────────────────────────
+function loginEntrar(){
+  var pwd = (document.getElementById('loginPwd').value || '').trim();
   var err = document.getElementById('loginErr');
+  if(!pwd){ err.textContent = 'Introduce tu contraseña'; return; }
+  err.textContent = '';
 
-  function verificar(pin){
-    if(String(pin) === String(pinActual)){
+  DB.ref('config/mecanicos_pwd/'+NOMBRE).once('value').then(function(s){
+    var pwdReal = s.val() || '';
+    if(String(pwdReal) === String(pwd)){
       guardarSesion();
       abrirApp();
     } else {
-      err.textContent = 'PIN incorrecto. Inténtalo otra vez.';
-      pinActual = '';
-      actualizarDots();
-      // Vibración suave si disponible
+      err.textContent = 'Contraseña incorrecta.';
+      document.getElementById('loginPwd').value = '';
       if(navigator.vibrate) navigator.vibrate(200);
     }
-  }
-
-  if(PIN_CACHE !== null){
-    verificar(PIN_CACHE);
-  } else {
-    // Fallback: intentar contra mecanicos_pwd con la contraseña completa
-    // (por si no hay rubiel_pin configurado aún)
-    DB.ref('config/rubiel_pin').once('value').then(function(s){
-      PIN_CACHE = s.val();
-      if(PIN_CACHE !== null){
-        verificar(PIN_CACHE);
-      } else {
-        DB.ref('config/mecanicos_pwd/'+NOMBRE).once('value').then(function(s2){
-          var pwd = s2.val() || '';
-          if(String(pwd) === String(pinActual)){
-            guardarSesion();
-            abrirApp();
-          } else {
-            err.textContent = 'PIN no configurado. Avisa al administrador.';
-            pinActual = '';
-            actualizarDots();
-          }
-        });
-      }
-    }).catch(function(e){
-      err.textContent = 'Error: ' + e.message;
-      pinActual = '';
-      actualizarDots();
-    });
-  }
+  }).catch(function(e){
+    err.textContent = 'Error de conexión: ' + e.message;
+  });
 }
 
 function guardarSesion(){
-  var exp = Date.now() + 8 * 3600 * 1000; // 8 horas
+  var exp = Date.now() + 8 * 3600 * 1000;
   localStorage.setItem(SESION_KEY, JSON.stringify({nombre:NOMBRE, expires:exp}));
 }
 function sesionValida(){
@@ -402,8 +342,7 @@ function salir(){
   if(dbListener) try{ DB.ref('asignaciones/'+mesActual).off('value',dbListener); }catch(e){}
   document.getElementById('mainScreen').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
-  pinActual = '';
-  actualizarDots();
+  document.getElementById('loginPwd').value = '';
   document.getElementById('loginErr').textContent = '';
 }
 
