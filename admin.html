@@ -462,6 +462,7 @@ if('serviceWorker' in navigator){
   <a href="calendario.html" target="_blank" class="tab" style="text-decoration:none">📅 Calendario</a>
   <a href="manual.html" target="_blank" class="tab" style="text-decoration:none">📖 Manual</a>
   <a href="ayuda.html" target="_blank" class="tab" style="text-decoration:none;color:#64d2ff">❄️ Normativa</a>
+  <div class="tab" onclick="switchTab('rubiel')" id="tab-rubiel">👷 Rubiel</div>
 </div>
 
 <!-- ═══ DASHBOARD ═══ -->
@@ -11411,6 +11412,613 @@ function calBorrar(id) {
     showToast('🗑 Instrumento borrado');
   }).catch(function(){ showToast('❌ Error'); });
 }
+</script>
+
+<!-- ═══ PANEL RUBIEL ═══ -->
+<div class="panel" id="panel-rubiel">
+<style>
+.rub-subtabs{display:flex;gap:0;border-bottom:2px solid rgba(201,162,39,.2);margin-bottom:18px;overflow-x:auto}
+.rub-stab{padding:10px 18px;cursor:pointer;font-size:.85rem;font-weight:700;letter-spacing:.05em;color:rgba(255,255,255,.45);border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap}
+.rub-stab:hover{color:var(--white)}
+.rub-stab.active{color:var(--gold-light);border-bottom-color:var(--gold)}
+.rub-sec{display:none}.rub-sec.active{display:block}
+
+.freq-badge{display:inline-block;padding:2px 9px;border-radius:12px;font-size:.7rem;font-weight:700;letter-spacing:.05em}
+.fb-DIARIO{background:rgba(46,204,113,.15);color:#2ecc71;border:1px solid rgba(46,204,113,.3)}
+.fb-SEMANAL{background:rgba(52,152,219,.15);color:#3498db;border:1px solid rgba(52,152,219,.3)}
+.fb-QUINCENAL{background:rgba(155,89,182,.15);color:#bb8fce;border:1px solid rgba(155,89,182,.3)}
+.fb-MENSUAL{background:rgba(243,156,18,.15);color:#f39c12;border:1px solid rgba(243,156,18,.3)}
+.fb-TRIMESTRAL{background:rgba(231,76,60,.15);color:#e74c3c;border:1px solid rgba(231,76,60,.3)}
+.fb-ANUAL{background:rgba(201,162,39,.15);color:var(--gold);border:1px solid rgba(201,162,39,.3)}
+
+.rub-form{background:var(--navy-mid);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:18px;margin-bottom:16px}
+.rub-form label{display:block;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:5px;margin-top:12px}
+.rub-form label:first-child{margin-top:0}
+.rub-form input,.rub-form select,.rub-form textarea{width:100%;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,.15);border-radius:7px;padding:9px 12px;font-family:'Barlow',sans-serif;font-size:.9rem}
+.rub-form input:focus,.rub-form select:focus{outline:none;border-color:var(--gold)}
+.rub-form .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rub-form .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+
+.tarea-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--navy-mid);border:1px solid rgba(255,255,255,.08);border-radius:8px;margin-bottom:6px}
+.tarea-row.inactiva{opacity:.45}
+.tarea-row .tr-desc{flex:1;font-size:.9rem;font-weight:600}
+.tarea-row .tr-acc{display:flex;gap:6px;flex-shrink:0}
+.btn-xs{padding:5px 10px;border-radius:6px;font-family:'Barlow',sans-serif;font-size:.75rem;font-weight:700;cursor:pointer;border:1px solid}
+.btn-edit{background:rgba(52,152,219,.15);border-color:rgba(52,152,219,.4);color:#5dade2}
+.btn-del{background:rgba(231,76,60,.1);border-color:rgba(231,76,60,.3);color:#e74c3c}
+.btn-tog{background:rgba(46,204,113,.1);border-color:rgba(46,204,113,.3);color:#2ecc71}
+.btn-tog.off{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.4)}
+
+/* seguimiento */
+.seg-card{background:var(--navy-mid);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.seg-done{border-color:rgba(46,204,113,.3);background:rgba(39,174,96,.06)}
+.seg-date-input{background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:5px 8px;font-family:'Barlow',sans-serif;font-size:.82rem}
+.btn-seg-mark{padding:5px 12px;border-radius:6px;background:var(--green);border:none;color:#fff;font-family:'Barlow',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer}
+.btn-seg-del{padding:5px 10px;border-radius:6px;background:rgba(231,76,60,.15);border:1px solid rgba(231,76,60,.3);color:#e74c3c;font-family:'Barlow',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer}
+
+/* obrador */
+.obr-entry{background:var(--navy-mid);border:1px solid rgba(41,128,185,.2);border-radius:8px;padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;gap:12px}
+.obr-fecha{font-size:.82rem;font-weight:700;color:#5dade2;white-space:nowrap}
+.obr-horas{font-size:1rem;font-weight:900;color:var(--white);white-space:nowrap}
+.obr-obs{font-size:.82rem;color:var(--grey);flex:1}
+</style>
+
+<!-- Sub-tabs -->
+<div class="rub-subtabs">
+  <div class="rub-stab active" onclick="rubTab('catalogo',this)">📋 Catálogo</div>
+  <div class="rub-stab" onclick="rubTab('seg',this)">📊 Seguimiento</div>
+  <div class="rub-stab" onclick="rubTab('obrador',this)">🏭 Obrador</div>
+  <div class="rub-stab" onclick="rubTab('divisoras',this)">🔧 Divisoras</div>
+</div>
+
+<!-- ── CATÁLOGO ── -->
+<div class="rub-sec active" id="rsec-catalogo">
+  <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+    <div style="font-size:.95rem;font-weight:700;color:var(--white);flex:1">Tareas de Rubiel</div>
+    <button onclick="rubCatInicializar()" style="padding:7px 14px;border-radius:7px;background:rgba(201,162,39,.12);border:1px solid rgba(201,162,39,.3);color:var(--gold);font-family:'Barlow',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer">↺ Restaurar defecto</button>
+  </div>
+
+  <!-- Formulario añadir/editar -->
+  <div class="rub-form" id="rubCatForm">
+    <div style="font-size:.82rem;font-weight:900;color:var(--gold);letter-spacing:.08em;margin-bottom:14px" id="rubCatFormTitle">➕ NUEVA TAREA</div>
+    <label>Descripción</label>
+    <input type="text" id="rubCatDesc" placeholder="Descripción de la tarea...">
+    <div class="row2" style="margin-top:12px">
+      <div>
+        <label>Frecuencia</label>
+        <select id="rubCatFreq">
+          <option value="DIARIO">Diario</option>
+          <option value="SEMANAL">Semanal</option>
+          <option value="QUINCENAL">Quincenal</option>
+          <option value="MENSUAL">Mensual</option>
+          <option value="TRIMESTRAL">Trimestral</option>
+          <option value="ANUAL">Anual</option>
+        </select>
+      </div>
+      <div>
+        <label>Línea divisora (opcional)</label>
+        <select id="rubCatLinea">
+          <option value="">— No es divisora —</option>
+          <option value="1">Línea 1</option>
+          <option value="2">Línea 2</option>
+          <option value="3">Línea 3</option>
+          <option value="4">Línea 4</option>
+          <option value="5">Línea 5</option>
+          <option value="6">Línea 6</option>
+          <option value="7">Línea 7</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button onclick="rubCatGuardar()" style="flex:1;padding:10px;border-radius:7px;background:var(--green);border:none;color:#fff;font-family:'Barlow',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer">💾 Guardar</button>
+      <button onclick="rubCatCancelar()" id="rubCatBtnCancel" style="display:none;padding:10px 16px;border-radius:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.6);font-family:'Barlow',sans-serif;font-size:.9rem;cursor:pointer">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Lista tareas por frecuencia -->
+  <div id="rubCatLista"><div class="no-data">⏳ Cargando...</div></div>
+</div>
+
+<!-- ── SEGUIMIENTO ── -->
+<div class="rub-sec" id="rsec-seg">
+  <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="rubSegNavMes(-1)" style="padding:6px 12px;border-radius:7px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:var(--white);font-family:'Barlow',sans-serif;cursor:pointer">‹</button>
+      <span style="font-size:1rem;font-weight:700;min-width:130px;text-align:center" id="rubSegMesLabel">—</span>
+      <button onclick="rubSegNavMes(1)" style="padding:6px 12px;border-radius:7px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:var(--white);font-family:'Barlow',sans-serif;cursor:pointer">›</button>
+    </div>
+    <button onclick="rubSegRellenarTodo()" style="padding:8px 16px;border-radius:7px;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.35);color:#2ecc71;font-family:'Barlow',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer">✅ Rellenar mes completo</button>
+    <button onclick="rubSegBorrarMes()" style="padding:8px 16px;border-radius:7px;background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.3);color:#e74c3c;font-family:'Barlow',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer">🗑 Borrar mes</button>
+  </div>
+  <div id="rubSegResumen" style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap"></div>
+  <div id="rubSegLista"><div class="no-data">⏳ Cargando...</div></div>
+</div>
+
+<!-- ── OBRADOR ── -->
+<div class="rub-sec" id="rsec-obrador">
+  <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="rubObrNavMes(-1)" style="padding:6px 12px;border-radius:7px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:var(--white);font-family:'Barlow',sans-serif;cursor:pointer">‹</button>
+      <span style="font-size:1rem;font-weight:700;min-width:130px;text-align:center" id="rubObrMesLabel">—</span>
+      <button onclick="rubObrNavMes(1)" style="padding:6px 12px;border-radius:7px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:var(--white);font-family:'Barlow',sans-serif;cursor:pointer">›</button>
+    </div>
+  </div>
+  <!-- Añadir entrada manual -->
+  <div class="rub-form" style="margin-bottom:16px">
+    <div style="font-size:.8rem;font-weight:900;color:var(--gold);letter-spacing:.08em;margin-bottom:12px">➕ AÑADIR REGISTRO</div>
+    <div class="row3">
+      <div><label>Fecha</label><input type="date" id="rubObrFecha"></div>
+      <div><label>Horas</label><input type="number" id="rubObrHoras" placeholder="4" min="0.5" max="12" step="0.5"></div>
+      <div><label>Observaciones</label><input type="text" id="rubObrObs" placeholder="Notas..."></div>
+    </div>
+    <button onclick="rubObrGuardar()" style="margin-top:12px;padding:9px 20px;border-radius:7px;background:var(--blue);border:none;color:#fff;font-family:'Barlow',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer">💾 Guardar</button>
+  </div>
+  <div id="rubObrKpis" style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap"></div>
+  <div id="rubObrLista"><div class="no-data">⏳ Cargando...</div></div>
+</div>
+
+<!-- ── DIVISORAS ── -->
+<div class="rub-sec" id="rsec-divisoras">
+  <div style="font-size:.82rem;color:rgba(255,255,255,.5);margin-bottom:14px">
+    El número de divisora que está físicamente en cada línea de producción. Se guarda en Firebase y aparece en la página de Rubiel.
+  </div>
+  <div id="rubDivLista"><div class="no-data">⏳ Cargando...</div></div>
+</div>
+</div><!-- /panel-rubiel -->
+
+<script>
+// ════ PANEL RUBIEL — ADMIN ════════════════════════════════════
+
+var _rubCatEditing = null;
+var _rubCatalogo   = [];
+var _rubSegMes     = '';
+var _rubObrMes     = '';
+var _rubCompData   = {};
+var _rubObrData    = {};
+var _rubDivisoras  = {};
+
+var MESES_LABEL=['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                 'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+function _rubLabelMes(m){
+  if(!m) return '';
+  var p=m.split('-');
+  return MESES_LABEL[parseInt(p[1],10)-1]+' '+p[0];
+}
+function _rubPad(n){ return n<10?'0'+n:''+n; }
+function _rubHoy(){
+  var d=new Date();
+  return d.getFullYear()+'-'+_rubPad(d.getMonth()+1)+'-'+_rubPad(d.getDate());
+}
+function _rubHoyMes(){
+  var d=new Date();
+  return d.getFullYear()+'-'+_rubPad(d.getMonth()+1);
+}
+
+// Sub-tabs
+function rubTab(sec, el){
+  document.querySelectorAll('.rub-stab').forEach(function(b){b.classList.remove('active')});
+  el.classList.add('active');
+  document.querySelectorAll('.rub-sec').forEach(function(s){s.classList.remove('active')});
+  document.getElementById('rsec-'+sec).classList.add('active');
+  if(sec==='catalogo') rubCatCargar();
+  if(sec==='seg')      rubSegCargar();
+  if(sec==='obrador')  rubObrCargar();
+  if(sec==='divisoras')rubDivCargar();
+}
+
+// ── CATÁLOGO ────────────────────────────────────────────────────
+
+var TAREAS_DEFAULT = [
+  {id:'cort', desc:'CORTINAS RELÁMPAGO Y TRUENO, FÁBRICA Y CÁMARAS EXTERIORES', freq:'DIARIO',  orden:1,  activa:true},
+  {id:'mosq', desc:'MOSQUITERAS RELÁMPAGO Y TRUENO',                             freq:'DIARIO',  orden:2,  activa:true},
+  {id:'perf', desc:'PERFILES SANITARIOS RELÁMPAGO Y TRUENO',                     freq:'DIARIO',  orden:3,  activa:true},
+  {id:'cart', desc:'RECOGER CARTÓN',                                             freq:'DIARIO',  orden:4,  activa:true},
+  {id:'cerr', desc:'LIMPIAR Y ENGRASAR CERRADURAS HORNOS',                       freq:'SEMANAL', orden:5,  activa:true},
+  {id:'canj', desc:'REPARAR CANJILONES',                                         freq:'SEMANAL', orden:6,  activa:true},
+  {id:'carr', desc:'LAVADO CARROS',                                              freq:'SEMANAL', orden:7,  activa:true},
+  {id:'filt', desc:'LIMPIAR FILTRO VESTUARIO',                                   freq:'SEMANAL', orden:8,  activa:true},
+  {id:'tira', desc:'TIRAS ANTIDESLIZANTES HORNOS, FERMENTADORA Y ENTRADA FERMEN.',freq:'SEMANAL',orden:9,  activa:true},
+  {id:'volc', desc:'LIMPIAR Y ENGRASAR VOLCADORES RELÁMPAGO Y TRUENO',           freq:'QUINCENAL',orden:10,activa:true},
+  {id:'guia', desc:'LIMPIAR Y ENGRASAR GUÍAS PABAT RELÁMPAGO Y TRUENO',         freq:'QUINCENAL',orden:11,activa:true},
+  {id:'cade', desc:'ENGRASAR CADENAS TÚNEL PREFRIO',                             freq:'QUINCENAL',orden:12,activa:true},
+  {id:'mane', desc:'REVISAR MANETAS PUERTAS TÚNELES RELÁMPAGO Y TRUENO',        freq:'QUINCENAL',orden:13,activa:true},
+  {id:'bisa', desc:'REVISAR BISAGRAS TÚNELES RELÁMPAGO Y TRUENO',               freq:'QUINCENAL',orden:14,activa:true},
+  {id:'div1', desc:'LIMPIEZA DIVISORA LÍNEA #1', freq:'QUINCENAL', orden:15, activa:true, divisora:true, linea:1},
+  {id:'div2', desc:'LIMPIEZA DIVISORA LÍNEA #2', freq:'QUINCENAL', orden:16, activa:true, divisora:true, linea:2},
+  {id:'div3', desc:'LIMPIEZA DIVISORA LÍNEA #3', freq:'QUINCENAL', orden:17, activa:true, divisora:true, linea:3},
+  {id:'div4', desc:'LIMPIEZA DIVISORA LÍNEA #4', freq:'QUINCENAL', orden:18, activa:true, divisora:true, linea:4},
+  {id:'div5', desc:'LIMPIEZA DIVISORA LÍNEA #5', freq:'QUINCENAL', orden:19, activa:true, divisora:true, linea:5},
+  {id:'div6', desc:'LIMPIEZA DIVISORA LÍNEA #6', freq:'QUINCENAL', orden:20, activa:true, divisora:true, linea:6},
+  {id:'div7', desc:'LIMPIEZA DIVISORA LÍNEA #7', freq:'QUINCENAL', orden:21, activa:true, divisora:true, linea:7},
+  {id:'pane', desc:'REVISIÓN Y REPARACIÓN PANEL SÁNDWICH FÁBRICA',              freq:'QUINCENAL',orden:22,activa:true},
+  {id:'mvts', desc:'LIMPIEZA MOSQUITERAS VENTILADORES TALLADO',                  freq:'MENSUAL', orden:23,activa:true},
+  {id:'repa', desc:'LIMPIEZA REPARTIDORES',                                      freq:'TRIMESTRAL',orden:24,activa:true},
+  {id:'arqu', desc:'ARQUETAS (RAFA - RUBIEL) — CADA 3 MESES',                   freq:'TRIMESTRAL',orden:25,activa:true},
+  {id:'aspi', desc:'ASPIRAR REVÓLVER (ENE · JUN · OCT)',                         freq:'TRIMESTRAL',orden:26,activa:true},
+  {id:'cona', desc:'LIMPIEZA CONDENSADORES TEJADOS — ABRIL/MAYO (Relámpago y Trueno)',   freq:'ANUAL',orden:27,activa:true},
+  {id:'cons', desc:'LIMPIEZA CONDENSADORES TEJADOS — SEPTIEMBRE/OCTUBRE (Relámpago y Trueno)',freq:'ANUAL',orden:28,activa:true},
+];
+
+function rubCatCargar(){
+  DB.ref('rubiel_catalogo').once('value').then(function(snap){
+    var data = snap.val() || {};
+    _rubCatalogo = Object.values(data).sort(function(a,b){return (a.orden||99)-(b.orden||99);});
+    rubCatRender();
+  });
+}
+
+function rubCatInicializar(){
+  if(!confirm('¿Restaurar el catálogo a las tareas por defecto? Se mantendrán las tareas nuevas que hayas añadido.')) return;
+  var updates = {};
+  TAREAS_DEFAULT.forEach(function(t){
+    updates['rubiel_catalogo/'+t.id] = t;
+  });
+  DB.ref().update(updates).then(function(){
+    showToast('✅ Catálogo restaurado');
+    rubCatCargar();
+  });
+}
+
+function rubCatRender(){
+  var freqs = ['DIARIO','SEMANAL','QUINCENAL','MENSUAL','TRIMESTRAL','ANUAL'];
+  var freqLabel = {DIARIO:'Diario',SEMANAL:'Semanal',QUINCENAL:'Quincenal',MENSUAL:'Mensual',TRIMESTRAL:'Trimestral',ANUAL:'Anual'};
+  var wrap = document.getElementById('rubCatLista');
+  var html = '';
+  freqs.forEach(function(fr){
+    var tareas = _rubCatalogo.filter(function(t){return t.freq===fr;});
+    if(!tareas.length) return;
+    html += '<div class="sec-title" style="margin-top:8px">'+freqLabel[fr]+' <span style="color:rgba(255,255,255,.3);font-weight:400">('+tareas.length+')</span></div>';
+    tareas.forEach(function(t){
+      html += '<div class="tarea-row'+(t.activa===false?' inactiva':'')+'" id="rubrow-'+t.id+'">'+
+        '<div class="tr-desc">'+
+          '<span class="freq-badge fb-'+t.freq+'">'+freqLabel[t.freq]+'</span> '+
+          (t.divisora ? '<span style="font-size:.72rem;color:#bb8fce;margin-right:4px">🔧 L'+t.linea+'</span>' : '')+
+          escHtml(t.desc)+
+        '</div>'+
+        '<div class="tr-acc">'+
+          '<button class="btn-xs btn-edit" onclick="rubCatEditar(\''+t.id+'\')">✏️ Editar</button>'+
+          '<button class="btn-xs btn-tog'+(t.activa===false?' off':'')+'" onclick="rubCatToggle(\''+t.id+'\')">'+
+            (t.activa===false?'Activar':'Activa')+'</button>'+
+          '<button class="btn-xs btn-del" onclick="rubCatBorrar(\''+t.id+'\')">🗑</button>'+
+        '</div>'+
+      '</div>';
+    });
+  });
+  if(!html) html = '<div class="no-data">No hay tareas. Pulsa "Restaurar defecto" para cargar las tareas de Rubiel.</div>';
+  wrap.innerHTML = html;
+}
+
+function rubCatEditar(id){
+  var t = _rubCatalogo.find(function(x){return x.id===id;});
+  if(!t) return;
+  _rubCatEditing = id;
+  document.getElementById('rubCatDesc').value  = t.desc || '';
+  document.getElementById('rubCatFreq').value  = t.freq || 'DIARIO';
+  document.getElementById('rubCatLinea').value = t.linea ? String(t.linea) : '';
+  document.getElementById('rubCatFormTitle').textContent = '✏️ EDITANDO: '+t.desc.substring(0,40)+'...';
+  document.getElementById('rubCatBtnCancel').style.display = 'inline-block';
+  document.getElementById('rubCatForm').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function rubCatCancelar(){
+  _rubCatEditing = null;
+  document.getElementById('rubCatDesc').value  = '';
+  document.getElementById('rubCatFreq').value  = 'DIARIO';
+  document.getElementById('rubCatLinea').value = '';
+  document.getElementById('rubCatFormTitle').textContent = '➕ NUEVA TAREA';
+  document.getElementById('rubCatBtnCancel').style.display = 'none';
+}
+
+function rubCatGuardar(){
+  var desc  = (document.getElementById('rubCatDesc').value||'').trim().toUpperCase();
+  var freq  = document.getElementById('rubCatFreq').value;
+  var linea = document.getElementById('rubCatLinea').value;
+  if(!desc){ showToast('⚠️ Introduce una descripción','w'); return; }
+
+  if(_rubCatEditing){
+    var t = _rubCatalogo.find(function(x){return x.id===_rubCatEditing;});
+    var updates = {desc:desc, freq:freq};
+    if(linea){ updates.divisora=true; updates.linea=parseInt(linea,10); }
+    else { updates.divisora=false; updates.linea=null; }
+    DB.ref('rubiel_catalogo/'+_rubCatEditing).update(updates).then(function(){
+      showToast('✅ Tarea actualizada');
+      rubCatCancelar();
+      rubCatCargar();
+    });
+  } else {
+    // Nueva tarea — generar ID único
+    var newId = 'rub_'+Date.now();
+    var maxOrden = _rubCatalogo.reduce(function(m,t){return Math.max(m,t.orden||0);},0);
+    var obj = {id:newId, desc:desc, freq:freq, orden:maxOrden+1, activa:true};
+    if(linea){ obj.divisora=true; obj.linea=parseInt(linea,10); }
+    DB.ref('rubiel_catalogo/'+newId).set(obj).then(function(){
+      showToast('✅ Tarea añadida');
+      rubCatCancelar();
+      rubCatCargar();
+    });
+  }
+}
+
+function rubCatToggle(id){
+  var t = _rubCatalogo.find(function(x){return x.id===id;});
+  if(!t) return;
+  DB.ref('rubiel_catalogo/'+id+'/activa').set(t.activa===false ? true : false).then(function(){
+    rubCatCargar();
+  });
+}
+
+function rubCatBorrar(id){
+  var t = _rubCatalogo.find(function(x){return x.id===id;});
+  if(!t || !confirm('¿Borrar la tarea "'+t.desc+'"? Los registros de completado NO se borran.')) return;
+  DB.ref('rubiel_catalogo/'+id).remove().then(function(){
+    showToast('🗑 Tarea borrada');
+    rubCatCargar();
+  });
+}
+
+// ── SEGUIMIENTO ─────────────────────────────────────────────────
+
+function rubSegCargar(){
+  if(!_rubSegMes) _rubSegMes = _rubHoyMes();
+  document.getElementById('rubSegMesLabel').textContent = _rubLabelMes(_rubSegMes);
+  DB.ref('rubiel_completado/'+_rubSegMes).once('value').then(function(snap){
+    _rubCompData = snap.val() || {};
+    rubSegRender();
+  });
+}
+
+function rubSegNavMes(dir){
+  var p=_rubSegMes.split('-');
+  var y=parseInt(p[0],10), m=parseInt(p[1],10)+dir;
+  if(m<1){m=12;y--;} if(m>12){m=1;y++;}
+  _rubSegMes = y+'-'+_rubPad(m);
+  rubSegCargar();
+}
+
+function _rubInstancias(t, mes){
+  // Devuelve array de {inst, label, fechaEsp}
+  var p=mes.split('-');
+  var y=parseInt(p[0],10), mo=parseInt(p[1],10);
+  var diasMes = new Date(y,mo,0).getDate();
+
+  if(t.freq==='DIARIO'){
+    var inst=[];
+    for(var d=1;d<=diasMes;d++){
+      var ds = y+'-'+_rubPad(mo)+'-'+_rubPad(d);
+      var dow = new Date(y,mo-1,d).getDay();
+      if(dow===0) continue; // sin domingos
+      inst.push({inst:ds, label:_rubPad(d)+'/'+_rubPad(mo), fechaEsp:ds});
+    }
+    return inst;
+  }
+  if(t.freq==='SEMANAL'){
+    var res=[], semVista={};
+    for(var d=1;d<=diasMes;d++){
+      var ds=y+'-'+_rubPad(mo)+'-'+_rubPad(d);
+      var sk = d<=7?'S1':d<=14?'S2':d<=21?'S3':d<=28?'S4':'S5';
+      if(!semVista[sk]){ semVista[sk]=true; res.push({inst:sk,label:sk,fechaEsp:ds}); }
+    }
+    return res;
+  }
+  if(t.freq==='QUINCENAL'){
+    var q1d=y+'-'+_rubPad(mo)+'-01';
+    var q2d=y+'-'+_rubPad(mo)+'-16';
+    return[{inst:'Q1',label:'1ª Quincena',fechaEsp:q1d},{inst:'Q2',label:'2ª Quincena',fechaEsp:q2d}];
+  }
+  // MENSUAL/TRIMESTRAL/ANUAL: una instancia
+  return [{inst:'0',label:_rubLabelMes(mes),fechaEsp:y+'-'+_rubPad(mo)+'-01'}];
+}
+
+function rubSegRender(){
+  var tareas = _rubCatalogo.filter(function(t){return t.activa!==false;});
+  var total=0, hechas=0;
+  var html='';
+  var freqLabel={DIARIO:'Diario',SEMANAL:'Semanal',QUINCENAL:'Quincenal',MENSUAL:'Mensual',TRIMESTRAL:'Trimestral',ANUAL:'Anual'};
+  var freqs=['DIARIO','SEMANAL','QUINCENAL','MENSUAL','TRIMESTRAL','ANUAL'];
+
+  freqs.forEach(function(fr){
+    var ft=tareas.filter(function(t){return t.freq===fr;});
+    if(!ft.length) return;
+    html+='<div class="sec-title" style="margin-top:10px">'+freqLabel[fr]+'</div>';
+    ft.forEach(function(t){
+      var insts = _rubInstancias(t, _rubSegMes);
+      insts.forEach(function(ins){
+        total++;
+        var key = t.id+'_'+ins.inst;
+        var comp = _rubCompData[key];
+        var done = !!comp;
+        if(done) hechas++;
+        var fecha = comp&&comp.fecha ? comp.fecha : ins.fechaEsp;
+        var divInfo = comp&&comp.divisora ? ' · Div.'+comp.divisora : '';
+
+        html+='<div class="seg-card'+(done?' seg-done':'')+'">'+
+          '<span class="freq-badge fb-'+fr+'" style="flex-shrink:0">'+ins.label+'</span>'+
+          '<span style="flex:1;font-size:.85rem;font-weight:600">'+escHtml(t.desc)+'</span>'+
+          (done
+            ? '<span style="font-size:.82rem;color:#2ecc71;white-space:nowrap">✅ '+comp.fecha+divInfo+'</span>'+
+              '<button class="btn-seg-del" onclick="rubSegBorrar(\''+key+'\')">✕</button>'
+            : '<input type="date" class="seg-date-input" id="rubsd-'+key+'" value="'+fecha+'">'+
+              '<button class="btn-seg-mark" onclick="rubSegMarcar(\''+key+'\',\'rubsd-'+key+'\')">✓ Marcar</button>'
+          )+
+        '</div>';
+      });
+    });
+  });
+
+  // KPIs
+  var pct=total?Math.round(hechas/total*100):0;
+  document.getElementById('rubSegResumen').innerHTML=
+    '<div class="kpi" style="padding:12px 16px"><div class="kpi-num" style="font-size:1.6rem;color:var(--gold)">'+pct+'%</div><div class="kpi-label">Completado</div></div>'+
+    '<div class="kpi" style="padding:12px 16px"><div class="kpi-num" style="font-size:1.6rem;color:var(--green)">'+hechas+'</div><div class="kpi-label">Hechas</div></div>'+
+    '<div class="kpi" style="padding:12px 16px"><div class="kpi-num" style="font-size:1.6rem;color:var(--red)">'+(total-hechas)+'</div><div class="kpi-label">Pendientes</div></div>'+
+    '<div class="kpi" style="padding:12px 16px"><div class="kpi-num" style="font-size:1.6rem">'+total+'</div><div class="kpi-label">Total</div></div>';
+
+  document.getElementById('rubSegLista').innerHTML = html||'<div class="no-data">Sin tareas activas</div>';
+}
+
+function rubSegMarcar(key, inputId){
+  var fecha = document.getElementById(inputId).value || _rubHoy();
+  DB.ref('rubiel_completado/'+_rubSegMes+'/'+key).set({fecha:fecha, ts:Date.now(), porAdmin:true})
+    .then(function(){
+      showToast('✅ Marcado');
+      _rubCompData[key]={fecha:fecha,ts:Date.now(),porAdmin:true};
+      rubSegRender();
+    }).catch(function(e){ showToast('❌ Error','e'); });
+}
+
+function rubSegBorrar(key){
+  if(!confirm('¿Desmarcar esta tarea?')) return;
+  DB.ref('rubiel_completado/'+_rubSegMes+'/'+key).remove()
+    .then(function(){
+      delete _rubCompData[key];
+      showToast('🗑 Desmarcado');
+      rubSegRender();
+    });
+}
+
+function rubSegRellenarTodo(){
+  if(!confirm('¿Marcar como realizadas TODAS las tareas pendientes de '+_rubLabelMes(_rubSegMes)+'?')) return;
+  var tareas=_rubCatalogo.filter(function(t){return t.activa!==false;});
+  var updates={};
+  tareas.forEach(function(t){
+    var insts=_rubInstancias(t,_rubSegMes);
+    insts.forEach(function(ins){
+      var key=t.id+'_'+ins.inst;
+      if(!_rubCompData[key]){
+        updates['rubiel_completado/'+_rubSegMes+'/'+key]={fecha:ins.fechaEsp,ts:Date.now(),porAdmin:true,autoRellenado:true};
+      }
+    });
+  });
+  if(!Object.keys(updates).length){ showToast('✅ Ya está todo completado'); return; }
+  DB.ref().update(updates).then(function(){
+    showToast('✅ Mes rellenado ('+Object.keys(updates).length+' tareas)');
+    rubSegCargar();
+  }).catch(function(){ showToast('❌ Error','e'); });
+}
+
+function rubSegBorrarMes(){
+  if(!confirm('¿Borrar TODOS los registros de '+_rubLabelMes(_rubSegMes)+'? Esta acción no se puede deshacer.')) return;
+  DB.ref('rubiel_completado/'+_rubSegMes).remove().then(function(){
+    showToast('🗑 Mes borrado');
+    _rubCompData={};
+    rubSegRender();
+  });
+}
+
+// ── OBRADOR ─────────────────────────────────────────────────────
+
+function rubObrCargar(){
+  if(!_rubObrMes) _rubObrMes = _rubHoyMes();
+  document.getElementById('rubObrMesLabel').textContent = _rubLabelMes(_rubObrMes);
+  document.getElementById('rubObrFecha').value = _rubHoy();
+  DB.ref('rubiel_obrador/'+_rubObrMes).once('value').then(function(snap){
+    _rubObrData = snap.val() || {};
+    rubObrRender();
+  });
+}
+
+function rubObrNavMes(dir){
+  var p=_rubObrMes.split('-');
+  var y=parseInt(p[0],10), m=parseInt(p[1],10)+dir;
+  if(m<1){m=12;y--;} if(m>12){m=1;y++;}
+  _rubObrMes = y+'-'+_rubPad(m);
+  rubObrCargar();
+}
+
+function rubObrGuardar(){
+  var fecha = document.getElementById('rubObrFecha').value;
+  var horas = parseFloat(document.getElementById('rubObrHoras').value)||0;
+  var obs   = (document.getElementById('rubObrObs').value||'').trim();
+  if(!fecha||!horas){ showToast('⚠️ Introduce fecha y horas','w'); return; }
+  var mes = fecha.substring(0,7);
+  DB.ref('rubiel_obrador/'+mes+'/'+fecha.replace(/-/g,'_')).set({
+    fecha:fecha,horas:horas,observaciones:obs,ts:Date.now()
+  }).then(function(){
+    showToast('💾 Guardado');
+    document.getElementById('rubObrHoras').value='';
+    document.getElementById('rubObrObs').value='';
+    if(mes===_rubObrMes) rubObrCargar();
+  });
+}
+
+function rubObrRender(){
+  var entries=Object.values(_rubObrData).sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'');});
+  var totalH=entries.reduce(function(s,e){return s+(e.horas||0);},0);
+  document.getElementById('rubObrKpis').innerHTML=
+    '<div class="kpi" style="padding:12px 16px"><div class="kpi-num" style="font-size:1.6rem;color:var(--blue)">'+entries.length+'</div><div class="kpi-label">Días en obrador</div></div>'+
+    '<div class="kpi" style="padding:12px 16px"><div class="kpi-num" style="font-size:1.6rem;color:var(--gold)">'+totalH.toFixed(1)+'h</div><div class="kpi-label">Horas totales</div></div>'+
+    (entries.length?'<div class="kpi" style="padding:12px 16px"><div class="kpi-num" style="font-size:1.6rem">'+(totalH/entries.length).toFixed(1)+'h</div><div class="kpi-label">Media por día</div></div>':'');
+
+  if(!entries.length){ document.getElementById('rubObrLista').innerHTML='<div class="no-data">Sin registros este mes.</div>'; return; }
+  var html='';
+  entries.forEach(function(e){
+    var fkey=e.fecha?e.fecha.replace(/-/g,'_'):'';
+    html+='<div class="obr-entry">'+
+      '<span class="obr-fecha">📅 '+escHtml(e.fecha||'')+'</span>'+
+      '<span class="obr-horas">⏱️ '+e.horas+'h</span>'+
+      '<span class="obr-obs">'+escHtml(e.observaciones||'—')+'</span>'+
+      '<button class="btn-xs btn-del" onclick="rubObrBorrar(\''+fkey+'\')">🗑</button>'+
+    '</div>';
+  });
+  document.getElementById('rubObrLista').innerHTML=html;
+}
+
+function rubObrBorrar(fkey){
+  if(!confirm('¿Borrar este registro?')) return;
+  DB.ref('rubiel_obrador/'+_rubObrMes+'/'+fkey).remove().then(function(){
+    showToast('🗑 Borrado');
+    rubObrCargar();
+  });
+}
+
+// ── DIVISORAS ───────────────────────────────────────────────────
+
+function rubDivCargar(){
+  DB.ref('rubiel_divisoras').once('value').then(function(snap){
+    _rubDivisoras = snap.val() || {};
+    rubDivRender();
+  });
+}
+
+function rubDivRender(){
+  var html='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">';
+  for(var i=1;i<=7;i++){
+    var d = _rubDivisoras['div'+i] || {};
+    html+='<div class="card" style="padding:14px">'+
+      '<div style="font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">🔧 Línea '+i+'</div>'+
+      '<div style="display:flex;gap:8px;align-items:center">'+
+        '<input type="text" id="rubdiv'+i+'" value="'+escHtml(d.numero||'')+'" placeholder="Nº divisora" '+
+          'style="flex:1;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,.15);border-radius:7px;padding:8px 10px;font-family:Barlow,sans-serif;font-size:.95rem;font-weight:700">'+
+        '<button onclick="rubDivGuardar('+i+')" style="padding:8px 12px;border-radius:7px;background:var(--green);border:none;color:#fff;font-family:Barlow,sans-serif;font-size:.8rem;font-weight:700;cursor:pointer">OK</button>'+
+      '</div>'+
+    '</div>';
+  }
+  html+='</div>';
+  document.getElementById('rubDivLista').innerHTML=html;
+}
+
+function rubDivGuardar(linea){
+  var num=(document.getElementById('rubdiv'+linea).value||'').trim();
+  DB.ref('rubiel_divisoras/div'+linea).set({numero:num}).then(function(){
+    showToast('💾 Divisora L'+linea+' guardada');
+    _rubDivisoras['div'+linea]={numero:num};
+  });
+}
+
+// Inicializar cuando se activa el tab Rubiel
+(function(){
+  var origSwitch = window.switchTab;
+  window.switchTab = function(tab){
+    origSwitch && origSwitch(tab);
+    if(tab==='rubiel'){
+      _rubSegMes = _rubHoyMes();
+      _rubObrMes = _rubHoyMes();
+      // Cargar catálogo si no está cargado
+      if(!_rubCatalogo.length) rubCatCargar();
+    }
+  };
+})();
 </script>
 
 <!-- Modal QR máquina (admin) -->

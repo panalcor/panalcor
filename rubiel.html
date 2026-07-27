@@ -16,17 +16,21 @@
 :root{
   --navy:#0d1b2a;
   --navy-mid:#152336;
+  --navy-light:#1c2f46;
   --gold:#c9a227;
+  --gold-dim:rgba(201,162,39,.15);
   --green:#27ae60;
   --green-dark:#1e8449;
   --white:#f0f4f8;
   --grey:#8899aa;
   --done-bg:#0f2a1a;
+  --red:#e74c3c;
+  --blue:#2980b9;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;overflow-x:hidden}
 
-/* ══ PANTALLA LOGIN ══ */
+/* ══ LOGIN ══ */
 #loginScreen{
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   min-height:100vh;padding:24px 20px;
@@ -34,177 +38,206 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:'Bar
 .login-logo{font-size:3.5rem;margin-bottom:6px}
 .login-empresa{font-size:1rem;font-weight:700;letter-spacing:.15em;color:var(--gold);margin-bottom:4px}
 .login-nombre{font-size:2.2rem;font-weight:900;color:var(--white);margin-bottom:32px}
+.login-error{margin-top:18px;color:#ff6b6b;font-size:1rem;font-weight:600;min-height:24px;text-align:center}
 
-.pin-dots{display:flex;gap:16px;justify-content:center;margin-bottom:28px}
-.pin-dot{
-  width:18px;height:18px;border-radius:50%;
-  border:2px solid rgba(255,255,255,0.35);
-  background:transparent;transition:background .15s;
-}
-.pin-dot.filled{background:var(--gold);border-color:var(--gold)}
-
-.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;max-width:300px}
-.numpad-btn{
-  background:rgba(255,255,255,0.08);
-  border:1px solid rgba(255,255,255,0.12);
-  border-radius:14px;
-  color:var(--white);
-  font-family:'Barlow',sans-serif;
-  font-size:1.8rem;
-  font-weight:700;
-  padding:18px 0;
-  cursor:pointer;
-  transition:background .1s,transform .08s;
-  user-select:none;
-}
-.numpad-btn:active{background:rgba(201,162,39,0.25);transform:scale(0.94)}
-.numpad-btn.borrar{font-size:1.3rem;color:var(--grey)}
-.numpad-btn.entrar{
-  background:var(--green);border-color:var(--green-dark);
-  font-size:1.1rem;letter-spacing:.05em;
-}
-.numpad-btn.entrar:active{background:var(--green-dark)}
-
-.login-error{
-  margin-top:18px;color:#ff6b6b;font-size:1rem;font-weight:600;
-  min-height:24px;text-align:center;
-}
-
-/* ══ PANTALLA PRINCIPAL ══ */
-#mainScreen{display:none;min-height:100vh;padding-bottom:100px}
-
+/* ══ TOPBAR ══ */
 .topbar{
-  background:var(--navy-mid);
-  border-bottom:3px solid var(--gold);
-  padding:16px 20px;
+  background:var(--navy-mid);border-bottom:3px solid var(--gold);
+  padding:14px 20px;
   display:flex;align-items:center;justify-content:space-between;
-  position:sticky;top:0;z-index:10;
+  position:sticky;top:0;z-index:20;
 }
-.topbar-nombre{font-size:1.4rem;font-weight:900;color:var(--white)}
-.topbar-sub{font-size:.82rem;color:var(--gold);margin-top:1px}
+.topbar-nombre{font-size:1.3rem;font-weight:900;color:var(--white)}
+.topbar-sub{font-size:.8rem;color:var(--gold);margin-top:1px}
 .btn-salir{
-  background:rgba(255,255,255,0.08);
-  border:1px solid rgba(255,255,255,0.2);
-  color:rgba(255,255,255,0.5);
-  border-radius:10px;padding:8px 14px;
-  font-family:'Barlow',sans-serif;font-size:.85rem;
-  cursor:pointer;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);
+  color:rgba(255,255,255,.5);border-radius:10px;padding:8px 14px;
+  font-family:'Barlow',sans-serif;font-size:.82rem;cursor:pointer;
 }
 
-/* ══ PROGRESO ══ */
-.progreso-wrap{padding:18px 20px 10px}
-.progreso-label{
-  display:flex;justify-content:space-between;align-items:baseline;
-  margin-bottom:8px;
-}
-.progreso-txt{font-size:1rem;color:rgba(255,255,255,.65)}
-.progreso-pct{font-size:1.4rem;font-weight:900;color:var(--gold)}
-.progreso-bar{
-  height:10px;background:rgba(255,255,255,0.1);
-  border-radius:10px;overflow:hidden;
-}
-.progreso-fill{
-  height:100%;background:linear-gradient(90deg,var(--green),#2ecc71);
-  border-radius:10px;transition:width .4s ease;
-}
-
-/* ══ MES ══ */
+/* ══ MES NAV ══ */
 .mes-nav{
   display:flex;align-items:center;justify-content:center;
-  gap:20px;padding:10px 20px 16px;
+  gap:16px;padding:10px 20px 8px;background:var(--navy);
 }
 .mes-btn{
-  background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
   color:var(--white);border-radius:10px;
-  font-size:1.5rem;width:44px;height:44px;
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;
+  font-size:1.4rem;width:40px;height:40px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
 }
 .mes-btn:active{background:rgba(201,162,39,.2)}
-.mes-label{font-size:1.1rem;font-weight:700;color:var(--white);min-width:140px;text-align:center}
+.mes-label{font-size:1.05rem;font-weight:700;color:var(--white);min-width:140px;text-align:center}
 
-/* ══ BANNER TODO HECHO ══ */
-#bannerDone{
-  display:none;margin:0 16px 16px;
-  background:rgba(39,174,96,.15);border:2px solid var(--green);
-  border-radius:14px;padding:20px;text-align:center;
+/* ══ TABS ══ */
+.tabs-bar{
+  display:flex;background:var(--navy-mid);
+  border-bottom:2px solid rgba(255,255,255,.08);
+  overflow-x:auto;scrollbar-width:none;
+  position:sticky;top:59px;z-index:19;
 }
-#bannerDone .ico{font-size:2.5rem;margin-bottom:6px}
-#bannerDone .txt{font-size:1.1rem;font-weight:700;color:var(--green)}
+.tabs-bar::-webkit-scrollbar{display:none}
+.tab-btn{
+  flex:1;min-width:80px;padding:11px 8px 9px;
+  text-align:center;cursor:pointer;
+  font-family:'Barlow',sans-serif;font-size:.72rem;font-weight:700;
+  color:var(--grey);letter-spacing:.04em;
+  border-bottom:3px solid transparent;
+  transition:color .15s,border-color .15s;
+  white-space:nowrap;
+}
+.tab-btn.activa{color:var(--gold);border-bottom-color:var(--gold)}
+.tab-btn .tab-ico{font-size:1.1rem;display:block;margin-bottom:2px}
 
-/* ══ LISTA DE TAREAS ══ */
-.tareas-lista{padding:0 16px;display:flex;flex-direction:column;gap:14px}
+/* ══ PROGRESO ══ */
+.progreso-wrap{padding:12px 16px 8px;background:var(--navy)}
+.progreso-label{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.progreso-txt{font-size:.9rem;color:rgba(255,255,255,.6)}
+.progreso-pct{font-size:1.2rem;font-weight:900;color:var(--gold)}
+.progreso-bar{height:8px;background:rgba(255,255,255,.1);border-radius:8px;overflow:hidden}
+.progreso-fill{height:100%;background:linear-gradient(90deg,var(--green),#2ecc71);border-radius:8px;transition:width .4s ease}
 
+/* ══ CONTENT ══ */
+#mainScreen{display:none;min-height:100vh;padding-bottom:80px}
+.tab-content{display:none;padding:14px 14px 0}
+.tab-content.activa{display:block}
+
+/* ══ SECCION HEADER ══ */
+.seccion-header{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 0 8px;
+  font-size:.78rem;font-weight:900;letter-spacing:.12em;
+  color:var(--gold);text-transform:uppercase;
+  border-bottom:1px solid rgba(201,162,39,.2);
+  margin-bottom:12px;
+}
+.seccion-header:not(:first-child){margin-top:20px}
+
+/* ══ TAREA CARD ══ */
 .tarea-card{
   background:var(--navy-mid);
-  border:2px solid rgba(255,255,255,0.1);
-  border-radius:16px;
+  border:2px solid rgba(255,255,255,.1);
+  border-radius:14px;
   overflow:hidden;
-  transition:opacity .3s;
+  margin-bottom:10px;
+  transition:border-color .2s;
 }
 .tarea-card.hecha{
   background:var(--done-bg);
-  border-color:rgba(39,174,96,0.25);
-  opacity:.75;
+  border-color:rgba(39,174,96,.3);
 }
+.tarea-card.hecha .btn-hecho{display:none}
+.tarea-card.hecha .hecha-info{display:flex}
 
-.tarea-info{padding:16px 18px 12px}
-.tarea-lugar{
-  font-size:.82rem;font-weight:700;
-  color:var(--gold);letter-spacing:.06em;text-transform:uppercase;
-  margin-bottom:6px;
+.tarea-body{padding:14px 16px 10px}
+.tarea-desc{font-size:1.05rem;font-weight:700;color:var(--white);line-height:1.35}
+
+/* Divisora field */
+.divisora-row{
+  display:flex;align-items:center;gap:8px;
+  margin-top:10px;
+  background:rgba(201,162,39,.06);
+  border:1px solid rgba(201,162,39,.2);
+  border-radius:8px;padding:8px 10px;
 }
-.tarea-desc{
-  font-size:1.15rem;font-weight:600;
-  color:var(--white);line-height:1.4;
+.divisora-lbl{font-size:.8rem;color:var(--gold);font-weight:700;white-space:nowrap}
+.divisora-input{
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+  border-radius:6px;color:var(--white);
+  font-family:'Barlow',sans-serif;font-size:.95rem;font-weight:700;
+  padding:5px 10px;width:80px;text-align:center;
 }
-.tarea-freq{
-  display:inline-block;margin-top:8px;
-  background:rgba(201,162,39,0.1);border:1px solid rgba(201,162,39,0.25);
-  color:var(--gold);border-radius:20px;
-  padding:2px 10px;font-size:.78rem;font-weight:700;
+.divisora-input:focus{outline:none;border-color:var(--gold)}
+.divisora-save{
+  background:rgba(201,162,39,.2);border:1px solid rgba(201,162,39,.35);
+  color:var(--gold);border-radius:6px;
+  font-family:'Barlow',sans-serif;font-size:.78rem;font-weight:700;
+  padding:5px 10px;cursor:pointer;white-space:nowrap;
+}
+.divisora-save:active{background:rgba(201,162,39,.4)}
+
+.hecha-info{
+  display:none;align-items:center;gap:8px;
+  background:rgba(39,174,96,.08);
+  padding:10px 16px;font-size:.88rem;color:var(--green);font-weight:600;
 }
 
 .btn-hecho{
   display:block;width:100%;
-  background:var(--green);
-  border:none;color:#fff;
-  font-family:'Barlow',sans-serif;font-size:1.25rem;font-weight:900;
-  letter-spacing:.05em;padding:18px;
-  cursor:pointer;transition:background .15s,transform .08s;
+  background:var(--green);border:none;color:#fff;
+  font-family:'Barlow',sans-serif;font-size:1.15rem;font-weight:900;
+  letter-spacing:.06em;padding:15px;
+  cursor:pointer;transition:background .12s,transform .08s;
 }
 .btn-hecho:active{background:var(--green-dark);transform:scale(0.98)}
 
-.tarea-hecha-info{
-  background:rgba(39,174,96,.08);
-  padding:12px 18px;
-  font-size:.9rem;color:var(--green);font-weight:600;
-  display:flex;align-items:center;gap:8px;
+/* período badge */
+.periodo-badge{
+  display:inline-block;margin-top:6px;
+  background:rgba(201,162,39,.1);border:1px solid rgba(201,162,39,.25);
+  color:var(--gold);border-radius:20px;
+  padding:2px 10px;font-size:.74rem;font-weight:700;
 }
 
-/* ══ VACÍO ══ */
-.vacio{
-  text-align:center;padding:60px 20px;
-  font-size:1rem;color:rgba(255,255,255,.4);
+/* ══ BANNER TODO HECHO ══ */
+.banner-done{
+  margin:0 0 14px;
+  background:rgba(39,174,96,.12);border:2px solid var(--green);
+  border-radius:14px;padding:18px;text-align:center;
 }
-.vacio .ico{font-size:3rem;margin-bottom:12px}
+.banner-done .ico{font-size:2rem;margin-bottom:4px}
+.banner-done .txt{font-size:1rem;font-weight:700;color:var(--green)}
+
+/* ══ OBRADOR ══ */
+.obrador-form{
+  background:var(--navy-mid);border:2px solid rgba(255,255,255,.1);
+  border-radius:14px;padding:18px;
+}
+.obrador-form label{
+  display:block;font-size:.82rem;font-weight:700;color:var(--gold);
+  letter-spacing:.06em;margin-bottom:6px;
+}
+.obrador-form input,.obrador-form textarea{
+  width:100%;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:10px;color:var(--white);
+  font-family:'Barlow',sans-serif;font-size:.95rem;
+  padding:11px 14px;outline:none;
+  margin-bottom:14px;
+}
+.obrador-form input:focus,.obrador-form textarea:focus{border-color:var(--gold)}
+.obrador-form textarea{resize:vertical;min-height:80px}
+.btn-guardar-obrador{
+  width:100%;background:var(--blue);border:none;color:#fff;
+  font-family:'Barlow',sans-serif;font-size:1rem;font-weight:700;
+  padding:14px;border-radius:10px;cursor:pointer;
+  transition:opacity .15s;
+}
+.btn-guardar-obrador:active{opacity:.8}
+
+.obrador-historial{margin-top:18px}
+.obrador-entry{
+  background:rgba(41,128,185,.08);border:1px solid rgba(41,128,185,.2);
+  border-radius:10px;padding:12px 14px;margin-bottom:8px;
+}
+.obrador-entry-fecha{font-size:.82rem;font-weight:700;color:#5dade2;margin-bottom:4px}
+.obrador-entry-horas{font-size:1.1rem;font-weight:900;color:var(--white)}
+.obrador-entry-obs{font-size:.85rem;color:var(--grey);margin-top:3px}
 
 /* ══ TOAST ══ */
 #toast{
-  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);
   background:var(--green);color:#fff;
-  font-family:'Barlow',sans-serif;font-size:1rem;font-weight:700;
-  padding:14px 28px;border-radius:30px;
+  font-family:'Barlow',sans-serif;font-size:.95rem;font-weight:700;
+  padding:12px 26px;border-radius:30px;
   transition:transform .3s ease;z-index:999;
   pointer-events:none;white-space:nowrap;
 }
 #toast.show{transform:translateX(-50%) translateY(0)}
+#toast.error{background:var(--red)}
 
-/* ══ CARGANDO ══ */
-.cargando{
-  text-align:center;padding:60px 20px;
-  font-size:1rem;color:rgba(255,255,255,.4);
-}
+.cargando{text-align:center;padding:50px 20px;font-size:1rem;color:rgba(255,255,255,.4)}
+.vacio{text-align:center;padding:40px 20px;font-size:.95rem;color:rgba(255,255,255,.35)}
 </style>
 </head>
 <body>
@@ -214,7 +247,6 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:'Bar
   <div class="login-logo">👷</div>
   <div class="login-empresa">PANALCOR</div>
   <div class="login-nombre">RUBIEL</div>
-
   <div style="width:100%;max-width:300px;display:flex;flex-direction:column;gap:12px">
     <input type="password" id="loginPwd" placeholder="Contraseña"
       autocomplete="current-password"
@@ -238,7 +270,31 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:'Bar
     <button class="btn-salir" onclick="salir()">Salir</button>
   </div>
 
-  <div class="progreso-wrap">
+  <div class="mes-nav">
+    <div class="mes-btn" onclick="cambiarMes(-1)">‹</div>
+    <div class="mes-label" id="mesLabel">—</div>
+    <div class="mes-btn" onclick="cambiarMes(1)">›</div>
+  </div>
+
+  <div class="tabs-bar">
+    <div class="tab-btn activa" onclick="cambiarTab('diario',this)">
+      <span class="tab-ico">📅</span>DIARIO
+    </div>
+    <div class="tab-btn" onclick="cambiarTab('semanal',this)">
+      <span class="tab-ico">📆</span>SEMANAL
+    </div>
+    <div class="tab-btn" onclick="cambiarTab('quincenal',this)">
+      <span class="tab-ico">🔄</span>QUINCENAL
+    </div>
+    <div class="tab-btn" onclick="cambiarTab('periodico',this)">
+      <span class="tab-ico">📋</span>PERIÓDICO
+    </div>
+    <div class="tab-btn" onclick="cambiarTab('obrador',this)">
+      <span class="tab-ico">🏭</span>OBRADOR
+    </div>
+  </div>
+
+  <div class="progreso-wrap" id="progresoWrap">
     <div class="progreso-label">
       <span class="progreso-txt" id="progresoTxt">Cargando...</span>
       <span class="progreso-pct" id="progresoPct"></span>
@@ -246,26 +302,45 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:'Bar
     <div class="progreso-bar"><div class="progreso-fill" id="progresoFill" style="width:0%"></div></div>
   </div>
 
-  <div class="mes-nav">
-    <div class="mes-btn" onclick="cambiarMes(-1)">‹</div>
-    <div class="mes-label" id="mesLabel">—</div>
-    <div class="mes-btn" onclick="cambiarMes(1)">›</div>
+  <!-- TAB DIARIO -->
+  <div class="tab-content activa" id="tab-diario">
+    <div class="cargando">⏳ Cargando...</div>
   </div>
 
-  <div id="bannerDone">
-    <div class="ico">🎉</div>
-    <div class="txt">¡Todo hecho! Buen trabajo, Rubiel.</div>
+  <!-- TAB SEMANAL -->
+  <div class="tab-content" id="tab-semanal">
+    <div class="cargando">⏳ Cargando...</div>
   </div>
 
-  <div class="tareas-lista" id="tareasLista">
-    <div class="cargando"><div class="ico" style="font-size:2rem;margin-bottom:8px">⏳</div>Cargando tareas...</div>
+  <!-- TAB QUINCENAL -->
+  <div class="tab-content" id="tab-quincenal">
+    <div class="cargando">⏳ Cargando...</div>
+  </div>
+
+  <!-- TAB PERIÓDICO (mensual/trimestral/anual) -->
+  <div class="tab-content" id="tab-periodico">
+    <div class="cargando">⏳ Cargando...</div>
+  </div>
+
+  <!-- TAB OBRADOR -->
+  <div class="tab-content" id="tab-obrador">
+    <div class="obrador-form">
+      <label>FECHA</label>
+      <input type="date" id="obradorFecha">
+      <label>HORAS EN OBRADOR</label>
+      <input type="number" id="obradorHoras" placeholder="Ej: 4" min="0.5" max="12" step="0.5">
+      <label>OBSERVACIONES</label>
+      <textarea id="obradorObs" placeholder="Detalles del turno en obrador..."></textarea>
+      <button class="btn-guardar-obrador" onclick="guardarObrador()">💾 &nbsp;GUARDAR</button>
+    </div>
+    <div class="obrador-historial" id="obradorHistorial"></div>
   </div>
 </div>
 
-<div id="toast">✅ Tarea marcada como hecha</div>
+<div id="toast"></div>
 
 <script>
-// ── FIREBASE ─────────────────────────────────────────────────
+// ── FIREBASE ──────────────────────────────────────────────────
 var FB_CFG = {
   apiKey:"AIzaSyBWlOJqOKyFaUBkT1s73VVkHTqQpVDxPJc",
   authDomain:"panalcor-mantenimiento.firebaseapp.com",
@@ -278,189 +353,455 @@ var FB_CFG = {
 firebase.initializeApp(FB_CFG);
 var DB = firebase.database();
 
-// ── ESTADO ───────────────────────────────────────────────────
-var NOMBRE      = 'RUBIEL';
-var SESION_KEY  = 'rubiel_sesion';
-var PIN_CACHE   = null;   // se carga de config/rubiel_pin
-var mesActual   = '';
-var asigs       = {};
-var dbListener  = null;
+// ── CATÁLOGO DE TAREAS (cargado desde Firebase) ──────────────
+var TAREAS = { DIARIO:[], SEMANAL:[], QUINCENAL:[], MENSUAL:[], TRIMESTRAL:[], ANUAL:[] };
 
-// ── UTILIDADES ───────────────────────────────────────────────
+var TAREAS_DEFAULT = [
+  {id:'cort', desc:'CORTINAS RELÁMPAGO Y TRUENO, FÁBRICA Y CÁMARAS EXTERIORES', freq:'DIARIO',  orden:1,  activa:true},
+  {id:'mosq', desc:'MOSQUITERAS RELÁMPAGO Y TRUENO',                             freq:'DIARIO',  orden:2,  activa:true},
+  {id:'perf', desc:'PERFILES SANITARIOS RELÁMPAGO Y TRUENO',                     freq:'DIARIO',  orden:3,  activa:true},
+  {id:'cart', desc:'RECOGER CARTÓN',                                             freq:'DIARIO',  orden:4,  activa:true},
+  {id:'cerr', desc:'LIMPIAR Y ENGRASAR CERRADURAS HORNOS',                       freq:'SEMANAL', orden:5,  activa:true},
+  {id:'canj', desc:'REPARAR CANJILONES',                                         freq:'SEMANAL', orden:6,  activa:true},
+  {id:'carr', desc:'LAVADO CARROS',                                              freq:'SEMANAL', orden:7,  activa:true},
+  {id:'filt', desc:'LIMPIAR FILTRO VESTUARIO',                                   freq:'SEMANAL', orden:8,  activa:true},
+  {id:'tira', desc:'TIRAS ANTIDESLIZANTES HORNOS, FERMENTADORA Y ENTRADA FERMEN.',freq:'SEMANAL',orden:9,  activa:true},
+  {id:'volc', desc:'LIMPIAR Y ENGRASAR VOLCADORES RELÁMPAGO Y TRUENO',           freq:'QUINCENAL',orden:10,activa:true},
+  {id:'guia', desc:'LIMPIAR Y ENGRASAR GUÍAS PABAT RELÁMPAGO Y TRUENO',         freq:'QUINCENAL',orden:11,activa:true},
+  {id:'cade', desc:'ENGRASAR CADENAS TÚNEL PREFRIO',                             freq:'QUINCENAL',orden:12,activa:true},
+  {id:'mane', desc:'REVISAR MANETAS PUERTAS TÚNELES RELÁMPAGO Y TRUENO',        freq:'QUINCENAL',orden:13,activa:true},
+  {id:'bisa', desc:'REVISAR BISAGRAS TÚNELES RELÁMPAGO Y TRUENO',               freq:'QUINCENAL',orden:14,activa:true},
+  {id:'div1', desc:'LIMPIEZA DIVISORA LÍNEA #1', freq:'QUINCENAL', orden:15, activa:true, divisora:true, linea:1},
+  {id:'div2', desc:'LIMPIEZA DIVISORA LÍNEA #2', freq:'QUINCENAL', orden:16, activa:true, divisora:true, linea:2},
+  {id:'div3', desc:'LIMPIEZA DIVISORA LÍNEA #3', freq:'QUINCENAL', orden:17, activa:true, divisora:true, linea:3},
+  {id:'div4', desc:'LIMPIEZA DIVISORA LÍNEA #4', freq:'QUINCENAL', orden:18, activa:true, divisora:true, linea:4},
+  {id:'div5', desc:'LIMPIEZA DIVISORA LÍNEA #5', freq:'QUINCENAL', orden:19, activa:true, divisora:true, linea:5},
+  {id:'div6', desc:'LIMPIEZA DIVISORA LÍNEA #6', freq:'QUINCENAL', orden:20, activa:true, divisora:true, linea:6},
+  {id:'div7', desc:'LIMPIEZA DIVISORA LÍNEA #7', freq:'QUINCENAL', orden:21, activa:true, divisora:true, linea:7},
+  {id:'pane', desc:'REVISIÓN Y REPARACIÓN PANEL SÁNDWICH FÁBRICA',              freq:'QUINCENAL',orden:22,activa:true},
+  {id:'mvts', desc:'LIMPIEZA MOSQUITERAS VENTILADORES TALLADO',                  freq:'MENSUAL', orden:23,activa:true},
+  {id:'repa', desc:'LIMPIEZA REPARTIDORES',                                      freq:'TRIMESTRAL',orden:24,activa:true},
+  {id:'arqu', desc:'ARQUETAS (RAFA - RUBIEL) — CADA 3 MESES',                   freq:'TRIMESTRAL',orden:25,activa:true},
+  {id:'aspi', desc:'ASPIRAR REVÓLVER (ENE · JUN · OCT)',                         freq:'TRIMESTRAL',orden:26,activa:true},
+  {id:'cona', desc:'LIMPIEZA CONDENSADORES TEJADOS — ABRIL/MAYO (Relámpago y Trueno)',   freq:'ANUAL',orden:27,activa:true},
+  {id:'cons', desc:'LIMPIEZA CONDENSADORES TEJADOS — SEPTIEMBRE/OCTUBRE (Relámpago y Trueno)',freq:'ANUAL',orden:28,activa:true},
+];
+
+function _buildTareasObj(flat){
+  TAREAS = { DIARIO:[], SEMANAL:[], QUINCENAL:[], MENSUAL:[], TRIMESTRAL:[], ANUAL:[] };
+  flat.filter(function(t){return t.activa!==false;})
+      .sort(function(a,b){return (a.orden||99)-(b.orden||99);})
+      .forEach(function(t){
+        if(TAREAS[t.freq]) TAREAS[t.freq].push(t);
+      });
+}
+
+function cargarCatalogo(cb){
+  DB.ref('rubiel_catalogo').once('value').then(function(snap){
+    var data = snap.val() || {};
+    var flat = Object.values(data);
+    if(!flat.length){
+      var updates = {};
+      TAREAS_DEFAULT.forEach(function(t){ updates['rubiel_catalogo/'+t.id] = t; });
+      DB.ref().update(updates).then(function(){
+        _buildTareasObj(TAREAS_DEFAULT);
+        cb && cb();
+      });
+    } else {
+      _buildTareasObj(flat);
+      cb && cb();
+    }
+  }).catch(function(){
+    _buildTareasObj(TAREAS_DEFAULT);
+    cb && cb();
+  });
+}
+
+// ── ESTADO ────────────────────────────────────────────────────
+var NOMBRE     = 'RUBIEL';
+var SESION_KEY = 'rubiel_sesion';
+var mesActual  = '';
+var tabActual  = 'diario';
+var compData   = {};   // {key: {fecha, divisora?}}
+var divisoras  = {};   // {div1..div7: {numero}}
+var dbUnsub    = null;
+
+// ── UTILIDADES ────────────────────────────────────────────────
+function hoy(){
+  var d = new Date();
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+}
 function hoyMes(){
   var d = new Date();
-  return d.getFullYear()+'-'+(d.getMonth()+1<10?'0':'')+(d.getMonth()+1);
+  return d.getFullYear()+'-'+pad(d.getMonth()+1);
+}
+function pad(n){ return n<10?'0'+n:''+n; }
+function escHtml(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 function labelMes(m){
   if(!m) return '';
-  var meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
-               'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  var p = m.split('-');
-  return meses[parseInt(p[1],10)-1] + ' ' + p[0];
+  var meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+             'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  var p=m.split('-');
+  return meses[parseInt(p[1],10)-1]+' '+p[0];
 }
-function toast(msg){
+function semanaDelMes(fecha){
+  var day = parseInt((fecha||hoy()).split('-')[2],10);
+  if(day<=7)  return 'S1';
+  if(day<=14) return 'S2';
+  if(day<=21) return 'S3';
+  if(day<=28) return 'S4';
+  return 'S5';
+}
+function quincenaDeFecha(fecha){
+  var day = parseInt((fecha||hoy()).split('-')[2],10);
+  return day<=15 ? 'Q1' : 'Q2';
+}
+function esMesActual(){ return mesActual === hoyMes(); }
+
+function toast(msg, error){
   var t = document.getElementById('toast');
   t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(function(){ t.classList.remove('show'); }, 2500);
+  t.className = error ? 'error show' : 'show';
+  setTimeout(function(){ t.className=''; }, 2500);
 }
 
 // ── LOGIN ─────────────────────────────────────────────────────
 function loginEntrar(){
-  var pwd = (document.getElementById('loginPwd').value || '').trim();
+  var pwd = (document.getElementById('loginPwd').value||'').trim();
   var err = document.getElementById('loginErr');
-  if(!pwd){ err.textContent = 'Introduce tu contraseña'; return; }
-  err.textContent = '';
-
+  if(!pwd){ err.textContent='Introduce tu contraseña'; return; }
+  err.textContent='';
   DB.ref('config/mecanicos_pwd/'+NOMBRE).once('value').then(function(s){
-    var pwdReal = s.val() || '';
-    if(String(pwdReal) === String(pwd)){
-      guardarSesion();
-      abrirApp();
+    var pwdReal = s.val()||'';
+    if(String(pwdReal)===String(pwd)){
+      guardarSesion(); abrirApp();
     } else {
-      err.textContent = 'Contraseña incorrecta.';
-      document.getElementById('loginPwd').value = '';
+      err.textContent='Contraseña incorrecta.';
+      document.getElementById('loginPwd').value='';
       if(navigator.vibrate) navigator.vibrate(200);
     }
-  }).catch(function(e){
-    err.textContent = 'Error de conexión: ' + e.message;
-  });
+  }).catch(function(e){ err.textContent='Error: '+e.message; });
 }
-
 function guardarSesion(){
-  var exp = Date.now() + 30 * 24 * 3600 * 1000; // 30 días
-  localStorage.setItem(SESION_KEY, JSON.stringify({nombre:NOMBRE, expires:exp}));
+  localStorage.setItem(SESION_KEY, JSON.stringify({nombre:NOMBRE, expires:Date.now()+30*24*3600*1000}));
 }
 function sesionValida(){
   try{
-    var s = JSON.parse(localStorage.getItem(SESION_KEY)||'null');
-    return s && Date.now() < s.expires;
-  }catch(e){ return false; }
+    var s=JSON.parse(localStorage.getItem(SESION_KEY)||'null');
+    return s && Date.now()<s.expires;
+  }catch(e){return false;}
 }
 function salir(){
   localStorage.removeItem(SESION_KEY);
-  if(dbListener) try{ DB.ref('asignaciones/'+mesActual).off('value',dbListener); }catch(e){}
-  document.getElementById('mainScreen').style.display = 'none';
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('loginPwd').value = '';
-  document.getElementById('loginErr').textContent = '';
+  if(dbUnsub) try{ dbUnsub(); }catch(e){}
+  document.getElementById('mainScreen').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('loginPwd').value='';
+  document.getElementById('loginErr').textContent='';
 }
 
 // ── APP ───────────────────────────────────────────────────────
 function abrirApp(){
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('mainScreen').style.display = 'block';
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('mainScreen').style.display='block';
   mesActual = hoyMes();
-  actualizarFecha();
-  cargarTareas();
+  actualizarTopbar();
+  inicializarObrador();
+  cargarDivisoras();
+  cargarCatalogo(function(){
+    cargarCompletados();
+  });
 }
 
-function actualizarFecha(){
+function actualizarTopbar(){
   document.getElementById('mesLabel').textContent = labelMes(mesActual);
-  var hoy = new Date();
-  var dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  var hd = new Date();
+  var dias=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   document.getElementById('topbarFecha').textContent =
-    dias[hoy.getDay()] + ' ' + hoy.getDate() + '/' + (hoy.getMonth()+1);
+    dias[hd.getDay()]+' '+hd.getDate()+'/'+(hd.getMonth()+1);
 }
 
 function cambiarMes(dir){
-  if(dbListener) try{ DB.ref('asignaciones/'+mesActual).off('value',dbListener); }catch(e){}
-  var p = mesActual.split('-');
-  var y = parseInt(p[0],10), m = parseInt(p[1],10) + dir;
-  if(m < 1){ m=12; y--; } if(m > 12){ m=1; y++; }
-  mesActual = y+'-'+(m<10?'0':'')+m;
+  if(dbUnsub) try{ dbUnsub(); }catch(e){}
+  var p=mesActual.split('-');
+  var y=parseInt(p[0],10), m=parseInt(p[1],10)+dir;
+  if(m<1){m=12;y--;} if(m>12){m=1;y++;}
+  mesActual = y+'-'+pad(m);
   document.getElementById('mesLabel').textContent = labelMes(mesActual);
-  cargarTareas();
+  cargarCompletados();
+  cargarObradorHistorial();
 }
 
-function cargarTareas(){
-  document.getElementById('tareasLista').innerHTML =
-    '<div class="cargando"><div style="font-size:2rem;margin-bottom:8px">⏳</div>Cargando...</div>';
-  document.getElementById('bannerDone').style.display = 'none';
+function cambiarTab(tab, el){
+  tabActual = tab;
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('activa')});
+  el.classList.add('activa');
+  document.querySelectorAll('.tab-content').forEach(function(c){c.classList.remove('activa')});
+  document.getElementById('tab-'+tab).classList.add('activa');
+  // Ocultar progreso en obrador
+  document.getElementById('progresoWrap').style.display = tab==='obrador' ? 'none' : 'block';
+  renderTab(tab);
+}
 
-  dbListener = DB.ref('asignaciones/'+mesActual).on('value', function(snap){
-    var val = snap.val() || {};
-    asigs = {};
-    Object.keys(val).forEach(function(k){
-      if(val[k] && val[k].mecanico === NOMBRE) asigs[k] = val[k];
-    });
-    renderTareas();
-  }, function(){
-    document.getElementById('tareasLista').innerHTML =
-      '<div class="vacio"><div class="ico">❌</div>Sin conexión. Comprueba el WiFi.</div>';
+// ── FIREBASE COMPLETADOS ─────────────────────────────────────
+function cargarCompletados(){
+  var ref = DB.ref('rubiel_completado/'+mesActual);
+  if(dbUnsub) try{ dbUnsub(); }catch(e){}
+  var handler = function(snap){
+    compData = snap.val() || {};
+    renderTab(tabActual);
+    actualizarProgreso();
+  };
+  ref.on('value', handler);
+  dbUnsub = function(){ ref.off('value', handler); };
+}
+
+function cargarDivisoras(){
+  DB.ref('rubiel_divisoras').on('value', function(snap){
+    divisoras = snap.val() || {};
+    if(tabActual==='quincenal') renderTab('quincenal');
   });
 }
 
-function renderTareas(){
-  var lista = Object.keys(asigs).map(function(k){ return Object.assign({_id:k}, asigs[k]); });
+// ── CLAVE DE INSTANCIA ────────────────────────────────────────
+function claveInstancia(freq, override){
+  if(override) return override;
+  var h = hoy();
+  if(freq==='DIARIO')    return h;
+  if(freq==='SEMANAL')   return semanaDelMes(h);
+  if(freq==='QUINCENAL') return quincenaDeFecha(h);
+  return '0';
+}
 
-  // Ordenar: pendientes primero, luego hechas
-  lista.sort(function(a,b){
-    if(a.hecho && !b.hecho) return 1;
-    if(!a.hecho && b.hecho) return -1;
-    return (a.instancia||a.maquina||'').localeCompare(b.instancia||b.maquina||'');
+function estaHechaHoy(tid, freq){
+  var inst = claveInstancia(freq);
+  return !!(compData[tid+'_'+inst]);
+}
+
+function ultimaFecha(tid){
+  var keys = Object.keys(compData).filter(function(k){ return k.indexOf(tid+'_')===0; });
+  if(!keys.length) return null;
+  keys.sort();
+  var last = compData[keys[keys.length-1]];
+  return last ? last.fecha : null;
+}
+
+// ── PROGRESO ──────────────────────────────────────────────────
+function actualizarProgreso(){
+  var allTareas = [];
+  ['DIARIO','SEMANAL','QUINCENAL','MENSUAL','TRIMESTRAL','ANUAL'].forEach(function(f){
+    TAREAS[f].forEach(function(t){ allTareas.push({id:t.id, freq:f}); });
   });
+  var total = allTareas.length;
+  var hechas = allTareas.filter(function(t){ return estaHechaHoy(t.id, t.freq); }).length;
+  var pct = total ? Math.round(hechas/total*100) : 0;
+  document.getElementById('progresoTxt').textContent = hechas+' de '+total+' tareas completadas';
+  document.getElementById('progresoPct').textContent = pct+'%';
+  document.getElementById('progresoFill').style.width = pct+'%';
+}
 
-  var total  = lista.length;
-  var hechas = lista.filter(function(t){ return t.hecho; }).length;
-  var pct    = total ? Math.round(hechas/total*100) : 0;
+// ── RENDER TABS ───────────────────────────────────────────────
+function renderTab(tab){
+  if(tab==='diario')    renderFreq('DIARIO',   'tab-diario',    'Tareas de hoy');
+  if(tab==='semanal')   renderFreq('SEMANAL',  'tab-semanal',   'Esta semana');
+  if(tab==='quincenal') renderQuincenal();
+  if(tab==='periodico') renderPeriodico();
+  if(tab==='obrador')   return;
+}
 
-  document.getElementById('progresoTxt').textContent  = hechas + ' de ' + total + ' tareas';
-  document.getElementById('progresoPct').textContent  = pct + '%';
-  document.getElementById('progresoFill').style.width = pct + '%';
-  document.getElementById('bannerDone').style.display = (total > 0 && hechas === total) ? 'block' : 'none';
+function renderFreq(freq, containerId, periodoLabel){
+  var wrap = document.getElementById(containerId);
+  var tareas = TAREAS[freq];
+  var hechas = tareas.filter(function(t){ return estaHechaHoy(t.id, freq); }).length;
+  var total  = tareas.length;
+  var html = '';
+  if(total>0 && hechas===total){
+    html += '<div class="banner-done"><div class="ico">🎉</div><div class="txt">¡Todo completado!</div></div>';
+  }
+  tareas.forEach(function(t){
+    var hecha = estaHechaHoy(t.id, freq);
+    var ultima = ultimaFecha(t.id);
+    html += renderCard(t, freq, hecha, ultima, periodoLabel);
+  });
+  wrap.innerHTML = html;
+}
 
-  if(!total){
-    document.getElementById('tareasLista').innerHTML =
-      '<div class="vacio"><div class="ico">📋</div>No tienes tareas para '+labelMes(mesActual)+'.</div>';
-    return;
+function renderQuincenal(){
+  var wrap = document.getElementById('tab-quincenal');
+  var tareas = TAREAS.QUINCENAL;
+  var hechas = tareas.filter(function(t){ return estaHechaHoy(t.id,'QUINCENAL'); }).length;
+  var html = '';
+  if(hechas===tareas.length){
+    html += '<div class="banner-done"><div class="ico">🎉</div><div class="txt">¡Todo completado esta quincena!</div></div>';
   }
 
-  var freqLabel = {DIARIO:'Cada día',SEMANAL:'Cada semana',QUINCENAL:'Cada 2 semanas',
-                   MENSUAL:'Este mes',TRIMESTRAL:'Este trimestre',SEMESTRAL:'Cada 6 meses',ANUAL:'Este año'};
+  var qActual = quincenaDeFecha(hoy());
+  var qLabel  = qActual==='Q1' ? '1ª Quincena (1-15)' : '2ª Quincena (16-fin)';
 
-  var wrap = document.getElementById('tareasLista');
-  wrap.innerHTML = '';
-
-  lista.forEach(function(t){
-    var lugar = t.instancia || t.maquina || '';
-    var desc  = t.tarea || '—';
-    var freq  = freqLabel[t.frecuencia] || t.frecuencia || '';
-
-    var card = document.createElement('div');
-    card.className = 'tarea-card' + (t.hecho ? ' hecha' : '');
-
-    var infoHtml =
-      '<div class="tarea-info">'
-      + (lugar ? '<div class="tarea-lugar">📍 '+escHtml(lugar)+'</div>' : '')
-      + '<div class="tarea-desc">'+escHtml(desc)+'</div>'
-      + (freq ? '<span class="tarea-freq">'+escHtml(freq)+'</span>' : '')
-      + '</div>';
-
-    var accionHtml = '';
-    if(t.hecho){
-      var d = t.hechoEn ? new Date(t.hechoEn) : null;
-      var fechaStr = d ? d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'})
-                       + ' a las ' + d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}) : '';
-      accionHtml = '<div class="tarea-hecha-info">✅ Hecho' + (fechaStr ? ' · '+fechaStr : '') + '</div>';
-    } else {
-      accionHtml = '<button class="btn-hecho" onclick="marcarHecha(\''+t._id+'\')">✅ &nbsp;HECHO</button>';
-    }
-
-    card.innerHTML = infoHtml + accionHtml;
-    wrap.appendChild(card);
+  html += '<div class="seccion-header">⚙️ General</div>';
+  TAREAS.QUINCENAL.filter(function(t){return !t.divisora;}).forEach(function(t){
+    var hecha  = estaHechaHoy(t.id,'QUINCENAL');
+    var ultima = ultimaFecha(t.id);
+    html += renderCard(t, 'QUINCENAL', hecha, ultima, qLabel);
   });
+
+  html += '<div class="seccion-header">🔧 Divisoras</div>';
+  TAREAS.QUINCENAL.filter(function(t){return t.divisora;}).forEach(function(t){
+    var hecha    = estaHechaHoy(t.id,'QUINCENAL');
+    var ultima   = ultimaFecha(t.id);
+    var divData  = divisoras['div'+t.linea] || {};
+    var divNum   = divData.numero || '';
+    html += renderCardDivisora(t, hecha, ultima, qLabel, divNum);
+  });
+
+  wrap.innerHTML = html;
 }
 
-function marcarHecha(id){
-  var now = Date.now();
-  DB.ref('asignaciones/'+mesActual+'/'+id).update({ hecho:true, hechoEn:now, hechoBy:NOMBRE })
-    .then(function(){ toast('✅ ¡Tarea completada!'); })
-    .catch(function(){ toast('❌ Error. Comprueba el WiFi.'); });
+function renderPeriodico(){
+  var wrap = document.getElementById('tab-periodico');
+  var html = '';
+
+  html += '<div class="seccion-header">📅 Mensual</div>';
+  TAREAS.MENSUAL.forEach(function(t){
+    html += renderCard(t,'MENSUAL', estaHechaHoy(t.id,'MENSUAL'), ultimaFecha(t.id), 'Este mes');
+  });
+
+  html += '<div class="seccion-header">🗓️ Trimestral</div>';
+  TAREAS.TRIMESTRAL.forEach(function(t){
+    html += renderCard(t,'TRIMESTRAL', estaHechaHoy(t.id,'TRIMESTRAL'), ultimaFecha(t.id), 'Este trimestre');
+  });
+
+  html += '<div class="seccion-header">📆 Anual</div>';
+  TAREAS.ANUAL.forEach(function(t){
+    html += renderCard(t,'ANUAL', estaHechaHoy(t.id,'ANUAL'), ultimaFecha(t.id), 'Este año');
+  });
+
+  wrap.innerHTML = html;
 }
 
-function escHtml(s){
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function renderCard(t, freq, hecha, ultimaFh, periodoLabel){
+  var periodoIcon = {DIARIO:'📅',SEMANAL:'📆',QUINCENAL:'🔄',MENSUAL:'🗓️',TRIMESTRAL:'📋',ANUAL:'📆'}[freq]||'';
+  var btnAttr = hecha ? '' : 'onclick="marcarHecha(\''+t.id+'\',\''+freq+'\')"';
+  var instActual = claveInstancia(freq);
+  var recData = compData[t.id+'_'+instActual];
+  var fechaHechaStr = recData && recData.fecha ? recData.fecha : (ultimaFh||'');
+
+  return '<div class="tarea-card'+(hecha?' hecha':'')+'">'+
+    '<div class="tarea-body">'+
+      '<div class="tarea-desc">'+escHtml(t.desc)+'</div>'+
+      '<span class="periodo-badge">'+periodoIcon+' '+escHtml(periodoLabel)+'</span>'+
+    '</div>'+
+    (hecha
+      ? '<div class="hecha-info">✅ Realizado · '+escHtml(fechaHechaStr)+'</div>'
+      : (esMesActual()
+        ? '<button class="btn-hecho" '+btnAttr+'>✅ &nbsp;REALIZADO</button>'
+        : '<div class="hecha-info" style="display:flex;color:var(--grey)">— Sin completar este período</div>'
+      )
+    )+
+  '</div>';
+}
+
+function renderCardDivisora(t, hecha, ultimaFh, periodoLabel, divNum){
+  var instActual = claveInstancia('QUINCENAL');
+  var recData = compData[t.id+'_'+instActual];
+  var fechaHechaStr = recData && recData.fecha ? recData.fecha : (ultimaFh||'');
+  var divSaved = recData && recData.divisora ? recData.divisora : divNum;
+
+  return '<div class="tarea-card'+(hecha?' hecha':'')+'">'+
+    '<div class="tarea-body">'+
+      '<div class="tarea-desc">'+escHtml(t.desc)+'</div>'+
+      '<span class="periodo-badge">🔄 '+escHtml(periodoLabel)+'</span>'+
+      '<div class="divisora-row">'+
+        '<span class="divisora-lbl">Nº Divisora:</span>'+
+        '<input class="divisora-input" id="divnum-'+t.id+'" type="text" placeholder="Nº" value="'+escHtml(divNum)+'" maxlength="6">'+
+        '<button class="divisora-save" onclick="guardarNumeroDivisora(\''+t.id+'\','+t.linea+')">Guardar</button>'+
+      '</div>'+
+    '</div>'+
+    (hecha
+      ? '<div class="hecha-info">✅ Realizado · '+escHtml(fechaHechaStr)+(divSaved ? ' · Div. '+escHtml(divSaved) : '')+'</div>'
+      : (esMesActual()
+        ? '<button class="btn-hecho" onclick="marcarHechaDivisora(\''+t.id+'\','+t.linea+')">✅ &nbsp;REALIZADO</button>'
+        : '<div class="hecha-info" style="display:flex;color:var(--grey)">— Sin completar</div>'
+      )
+    )+
+  '</div>';
+}
+
+// ── MARCAR HECHA ─────────────────────────────────────────────
+function marcarHecha(tid, freq){
+  var h   = hoy();
+  var inst = claveInstancia(freq);
+  var key = tid+'_'+inst;
+  DB.ref('rubiel_completado/'+mesActual+'/'+key).set({fecha:h, ts:Date.now()})
+    .then(function(){ toast('✅ ¡Realizado!'); })
+    .catch(function(e){ toast('❌ Error: '+e.message, true); });
+}
+
+function marcarHechaDivisora(tid, linea){
+  var h    = hoy();
+  var inst = claveInstancia('QUINCENAL');
+  var key  = tid+'_'+inst;
+  var divNum = (document.getElementById('divnum-'+tid)||{}).value || '';
+  DB.ref('rubiel_completado/'+mesActual+'/'+key).set({fecha:h, ts:Date.now(), divisora:divNum})
+    .then(function(){ toast('✅ ¡Realizado!'); })
+    .catch(function(e){ toast('❌ Error: '+e.message, true); });
+}
+
+function guardarNumeroDivisora(tid, linea){
+  var input = document.getElementById('divnum-'+tid);
+  if(!input) return;
+  var num = (input.value||'').trim();
+  DB.ref('rubiel_divisoras/div'+linea).set({numero:num})
+    .then(function(){ toast('💾 Divisora guardada'); })
+    .catch(function(e){ toast('❌ Error: '+e.message, true); });
+}
+
+// ── OBRADOR ───────────────────────────────────────────────────
+function inicializarObrador(){
+  document.getElementById('obradorFecha').value = hoy();
+  cargarObradorHistorial();
+}
+
+function guardarObrador(){
+  var fecha = document.getElementById('obradorFecha').value;
+  var horas = parseFloat(document.getElementById('obradorHoras').value)||0;
+  var obs   = (document.getElementById('obradorObs').value||'').trim();
+  if(!fecha || !horas){
+    toast('⚠️ Introduce fecha y horas', true);
+    return;
+  }
+  var mesKey = fecha.substring(0,7);
+  DB.ref('rubiel_obrador/'+mesKey+'/'+fecha.replace(/-/g,'_')).set({
+    fecha:fecha, horas:horas, observaciones:obs, ts:Date.now()
+  }).then(function(){
+    toast('💾 Guardado correctamente');
+    document.getElementById('obradorHoras').value='';
+    document.getElementById('obradorObs').value='';
+    cargarObradorHistorial();
+  }).catch(function(e){ toast('❌ Error: '+e.message, true); });
+}
+
+function cargarObradorHistorial(){
+  var wrap = document.getElementById('obradorHistorial');
+  wrap.innerHTML = '<div class="cargando">⏳</div>';
+  DB.ref('rubiel_obrador/'+mesActual).once('value').then(function(snap){
+    var data = snap.val()||{};
+    var entries = Object.values(data).sort(function(a,b){return (b.fecha||'').localeCompare(a.fecha||'');});
+    if(!entries.length){ wrap.innerHTML='<div class="vacio">Sin registros este mes.</div>'; return; }
+    var totalH = entries.reduce(function(s,e){return s+(e.horas||0);},0);
+    var html = '<div style="font-size:.85rem;color:var(--grey);font-weight:700;padding:6px 0 10px">'+
+      entries.length+' registros · '+totalH.toFixed(1)+' horas en '+labelMes(mesActual)+'</div>';
+    entries.forEach(function(e){
+      html += '<div class="obrador-entry">'+
+        '<div class="obrador-entry-fecha">📅 '+escHtml(e.fecha||'')+'</div>'+
+        '<div class="obrador-entry-horas">⏱️ '+e.horas+' horas</div>'+
+        (e.observaciones?'<div class="obrador-entry-obs">'+escHtml(e.observaciones)+'</div>':'')+
+      '</div>';
+    });
+    wrap.innerHTML = html;
+  });
 }
 
 // ── ARRANQUE ─────────────────────────────────────────────────
