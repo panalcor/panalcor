@@ -11790,10 +11790,23 @@ function rubCatBorrar(id){
 function rubSegCargar(){
   if(!_rubSegMes) _rubSegMes = _rubHoyMes();
   document.getElementById('rubSegMesLabel').textContent = _rubLabelMes(_rubSegMes);
-  DB.ref('rubiel_completado/'+_rubSegMes).once('value').then(function(snap){
-    _rubCompData = snap.val() || {};
-    rubSegRender();
-  });
+
+  var cargarComp = function(){
+    DB.ref('rubiel_completado/'+_rubSegMes).once('value').then(function(snap){
+      _rubCompData = snap.val() || {};
+      rubSegRender();
+    });
+  };
+
+  if(!_rubCatalogo.length){
+    DB.ref('rubiel_catalogo').once('value').then(function(snap){
+      var data = snap.val() || {};
+      _rubCatalogo = Object.values(data).sort(function(a,b){return (a.orden||99)-(b.orden||99);});
+      cargarComp();
+    });
+  } else {
+    cargarComp();
+  }
 }
 
 function rubSegNavMes(dir){
