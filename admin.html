@@ -11801,7 +11801,16 @@ function rubSegCargar(){
   if(!_rubCatalogo.length){
     DB.ref('rubiel_catalogo').once('value').then(function(snap){
       var data = snap.val() || {};
-      _rubCatalogo = Object.values(data).sort(function(a,b){return (a.orden||99)-(b.orden||99);});
+      var flat = Object.values(data);
+      if(!flat.length){
+        // Catálogo vacío en Firebase → sembrar con defaults y usarlos
+        var updates = {};
+        TAREAS_DEFAULT.forEach(function(t){ updates['rubiel_catalogo/'+t.id] = t; });
+        DB.ref().update(updates).catch(function(){});
+        _rubCatalogo = TAREAS_DEFAULT.slice();
+      } else {
+        _rubCatalogo = flat.sort(function(a,b){return (a.orden||99)-(b.orden||99);});
+      }
       cargarComp();
     });
   } else {
