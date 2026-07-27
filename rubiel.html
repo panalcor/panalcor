@@ -328,7 +328,7 @@ function loginEntrar(){
 }
 
 function guardarSesion(){
-  var exp = Date.now() + 8 * 3600 * 1000;
+  var exp = Date.now() + 30 * 24 * 3600 * 1000; // 30 días
   localStorage.setItem(SESION_KEY, JSON.stringify({nombre:NOMBRE, expires:exp}));
 }
 function sesionValida(){
