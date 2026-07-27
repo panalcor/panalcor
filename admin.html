@@ -11905,12 +11905,7 @@ function rubSegRender(){
     '<div class="kpi" style="padding:12px 16px"><div class="kpi-num" style="font-size:1.6rem;color:var(--green)">'+hechas+'</div><div class="kpi-label">Hechas</div></div>'+
     '<div class="kpi" style="padding:12px 16px"><div class="kpi-num" style="font-size:1.6rem;color:var(--red)">'+(total-hechas)+'</div><div class="kpi-label">Pendientes</div></div>'+
     '<div class="kpi" style="padding:12px 16px"><div class="kpi-num" style="font-size:1.6rem">'+total+'</div><div class="kpi-label">Total inst.</div></div>'+
-    '<div style="width:100%;margin-top:8px;padding:8px 12px;background:rgba(255,255,255,.04);border-radius:6px;font-size:.75rem;color:rgba(255,255,255,.4);word-break:break-all">'+
-      '🔍 Catálogo: <b style="color:rgba(255,255,255,.7)">'+tareas.length+' tareas</b> · '+
-      'Firebase completados: <b style="color:rgba(255,255,255,.7)">'+compKeys.length+' registros</b> · '+
-      'Mes: <b style="color:rgba(255,255,255,.7)">'+_rubSegMes+'</b>'+
-      (sampleComp ? '<br>Claves en Firebase: <span style="color:rgba(255,255,255,.5)">'+sampleComp+(compKeys.length>3?' …':'')+'</span>' : '')+
-    '</div>';
+    '';
 
   document.getElementById('rubSegLista').innerHTML = html||'<div class="no-data">Sin tareas activas</div>';
 }
