@@ -396,7 +396,20 @@ function _buildTareasObj(flat){
       });
 }
 
+var CAT_CACHE_KEY = 'rubiel_cat_v1';
+
 function cargarCatalogo(cb){
+  // Usar caché local para arranque inmediato
+  try {
+    var cached = JSON.parse(localStorage.getItem(CAT_CACHE_KEY)||'null');
+    if(cached && cached.length){
+      _buildTareasObj(cached);
+      cb && cb();        // render inmediato
+      cb = null;         // no llamar dos veces
+    }
+  } catch(e){}
+
+  // Leer Firebase (siempre, para refrescar caché)
   DB.ref('rubiel_catalogo').once('value').then(function(snap){
     var data = snap.val() || {};
     var flat = Object.values(data);
@@ -404,16 +417,22 @@ function cargarCatalogo(cb){
       var updates = {};
       TAREAS_DEFAULT.forEach(function(t){ updates['rubiel_catalogo/'+t.id] = t; });
       DB.ref().update(updates).then(function(){
+        localStorage.setItem(CAT_CACHE_KEY, JSON.stringify(TAREAS_DEFAULT));
         _buildTareasObj(TAREAS_DEFAULT);
         cb && cb();
       });
     } else {
+      localStorage.setItem(CAT_CACHE_KEY, JSON.stringify(flat));
       _buildTareasObj(flat);
       cb && cb();
+      // Si ya renderizamos desde caché, refrescar silenciosamente
+      if(!cb) { renderTab(tabActual); actualizarProgreso(); }
     }
   }).catch(function(){
-    _buildTareasObj(TAREAS_DEFAULT);
-    cb && cb();
+    if(!Object.keys(TAREAS.DIARIO||{}).length){
+      _buildTareasObj(TAREAS_DEFAULT);
+      cb && cb();
+    }
   });
 }
 
