@@ -740,9 +740,12 @@ function _buildBtns(rol, nombre){
   var adm = (rol === 'admin');
   var n = (nombre||'').toUpperCase();
   var verFrio = adm || n==='GREGORIO' || n==='JOSE' || n==='JAVIER H';
-  // Estilo base para botones fila compactos
-  var row = 'grid-column:1/-1;flex-direction:row;padding:0.8rem 1.4rem;gap:14px;align-items:center;text-decoration:none';
-  var ico = 'width:28px;height:28px;flex-shrink:0';
+  // Admin: 2 por fila (sin grid-column:1/-1), más alto
+  // Otros roles: ancho completo
+  var row = adm
+    ? 'flex-direction:row;padding:0.85rem 1rem;gap:10px;align-items:center;text-decoration:none;min-height:68px'
+    : 'grid-column:1/-1;flex-direction:row;padding:0.8rem 1.4rem;gap:14px;align-items:center;text-decoration:none';
+  var ico = adm ? 'width:22px;height:22px;flex-shrink:0' : 'width:28px;height:28px;flex-shrink:0';
   var badgeAv = '<span id="badgeAverias" style="display:none;position:absolute;top:8px;right:8px;background:#e74c3c;color:#fff;border-radius:50%;width:20px;height:20px;font-size:0.68rem;font-weight:900;line-height:20px;text-align:center;font-family:Barlow,sans-serif"></span>';
   var badgeOt = '<span id="badgeOtros" style="display:none;position:absolute;top:8px;right:8px;background:#c9a227;color:#0d1b2a;border-radius:50%;width:20px;height:20px;font-size:0.68rem;font-weight:900;line-height:20px;text-align:center;font-family:Barlow,sans-serif"></span>';
 
@@ -812,9 +815,13 @@ function _buildBtns(rol, nombre){
        + '<div class="btn-sublabel" style="color:rgba(155,89,182,0.6)">Panel de encargados</div></div></a>';
   }
   if(rol === 'mecanico' || adm){
-    h += '<a class="btn btn-averia" href="averias.html" style="position:relative;'+row+'">'
-       + '<div class="btn-icon" style="'+ico+'">'+_SVGS.alert+'</div>'
-       + '<div><div class="btn-label">Averias</div><div class="btn-sublabel">Registro de incidencias</div></div>'
+    var avClass = adm ? 'btn' : 'btn btn-averia';
+    var avStyle = adm
+      ? 'position:relative;'+row+';border-color:rgba(192,57,43,0.35);background:rgba(192,57,43,0.07)'
+      : 'position:relative;'+row;
+    h += '<a class="'+avClass+'" href="averias.html" style="'+avStyle+'">'
+       + '<div class="btn-icon" style="'+ico+';color:#e74c3c">'+_SVGS.alert+'</div>'
+       + '<div><div class="btn-label" style="color:#e74c3c">Averias</div><div class="btn-sublabel" style="color:rgba(231,76,60,0.6)">Registro de incidencias</div></div>'
        + badgeAv + '</a>';
     h += '<a class="btn" href="mis_tareas.html#otros" style="position:relative;'+row+';border-color:rgba(201,162,39,0.3);background:rgba(201,162,39,0.06)">'
        + '<div class="btn-icon" style="'+ico+';color:var(--gold)">🔩</div>'
