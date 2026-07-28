@@ -11597,13 +11597,14 @@ function calBorrar(id) {
 <script>
 // ════ PANEL RUBIEL — ADMIN ════════════════════════════════════
 
-var _rubCatEditing = null;
-var _rubCatalogo   = [];
-var _rubSegMes     = '';
-var _rubObrMes     = '';
-var _rubCompData   = {};
-var _rubObrData    = {};
-var _rubDivisoras  = {};
+var _rubCatEditing    = null;
+var _rubCatalogo      = [];
+var _rubSegMes        = '';
+var _rubObrMes        = '';
+var _rubCompData      = {};
+var _rubPeriodicoData = {};   // rubiel_comp_periodos/ : {tid_periodKey: {fecha,mes,ts}}
+var _rubObrData       = {};
+var _rubDivisoras     = {};
 
 var MESES_LABEL=['Enero','Febrero','Marzo','Abril','Mayo','Junio',
                  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -11792,8 +11793,12 @@ function rubSegCargar(){
   document.getElementById('rubSegMesLabel').textContent = _rubLabelMes(_rubSegMes);
 
   var cargarComp = function(){
-    DB.ref('rubiel_completado/'+_rubSegMes).once('value').then(function(snap){
-      _rubCompData = snap.val() || {};
+    Promise.all([
+      DB.ref('rubiel_completado/'+_rubSegMes).once('value'),
+      DB.ref('rubiel_comp_periodos').once('value')
+    ]).then(function(snaps){
+      _rubCompData      = snaps[0].val() || {};
+      _rubPeriodicoData = snaps[1].val() || {};
       rubSegRender();
     });
   };
@@ -11856,7 +11861,16 @@ function _rubInstancias(t, mes){
     var q2d=y+'-'+_rubPad(mo)+'-16';
     return[{inst:'Q1',label:'1ª Quincena',fechaEsp:q1d},{inst:'Q2',label:'2ª Quincena',fechaEsp:q2d}];
   }
-  // MENSUAL/TRIMESTRAL/ANUAL: una instancia
+  if(t.freq==='TRIMESTRAL'){
+    var trim = mo<=3?'T1':mo<=6?'T2':mo<=9?'T3':'T4';
+    var pk = y+'-'+trim;
+    return [{inst:pk, label:trim+' '+y, fechaEsp:y+'-'+_rubPad(mo)+'-01', periodico:true}];
+  }
+  if(t.freq==='ANUAL'){
+    var pk = ''+y;
+    return [{inst:pk, label:'Año '+y, fechaEsp:y+'-01-01', periodico:true}];
+  }
+  // MENSUAL: una instancia
   return [{inst:'0',label:_rubLabelMes(mes),fechaEsp:y+'-'+_rubPad(mo)+'-01'}];
 }
 
@@ -11876,20 +11890,24 @@ function rubSegRender(){
       insts.forEach(function(ins){
         total++;
         var key = t.id+'_'+ins.inst;
-        var comp = _rubCompData[key];
+        var isPeriodico = !!ins.periodico;
+        var comp = isPeriodico ? _rubPeriodicoData[key] : _rubCompData[key];
         var done = !!comp;
         if(done) hechas++;
         var fecha = comp&&comp.fecha ? comp.fecha : ins.fechaEsp;
         var divInfo = comp&&comp.divisora ? ' · Div.'+comp.divisora : '';
+        // Para tareas periódicas completadas en otro mes del mismo período
+        var realizadaEnMes = isPeriodico && comp && comp.mes && comp.mes!==_rubSegMes
+          ? ' ('+_rubLabelMes(comp.mes)+')' : '';
 
         html+='<div class="seg-card'+(done?' seg-done':'')+'">'+
           '<span class="freq-badge fb-'+fr+'" style="flex-shrink:0">'+ins.label+'</span>'+
           '<span style="flex:1;font-size:.85rem;font-weight:600">'+escHtml(t.desc)+'</span>'+
           (done
-            ? '<span style="font-size:.82rem;color:#2ecc71;white-space:nowrap">✅ '+comp.fecha+divInfo+'</span>'+
-              '<button class="btn-seg-del" onclick="rubSegBorrar(\''+key+'\')">✕</button>'
+            ? '<span style="font-size:.82rem;color:#2ecc71;white-space:nowrap">✅ '+fecha+realizadaEnMes+divInfo+'</span>'+
+              '<button class="btn-seg-del" onclick="rubSegBorrar(\''+key+'\','+isPeriodico+')">✕</button>'
             : '<input type="date" class="seg-date-input" id="rubsd-'+key+'" value="'+fecha+'">'+
-              '<button class="btn-seg-mark" onclick="rubSegMarcar(\''+key+'\',\'rubsd-'+key+'\')">✓ Marcar</button>'
+              '<button class="btn-seg-mark" onclick="rubSegMarcar(\''+key+'\',\'rubsd-'+key+'\','+isPeriodico+')">✓ Marcar</button>'
           )+
         '</div>';
       });
@@ -11910,24 +11928,33 @@ function rubSegRender(){
   document.getElementById('rubSegLista').innerHTML = html||'<div class="no-data">Sin tareas activas</div>';
 }
 
-function rubSegMarcar(key, inputId){
+function rubSegMarcar(key, inputId, isPeriodico){
   var fecha = document.getElementById(inputId).value || _rubHoy();
-  DB.ref('rubiel_completado/'+_rubSegMes+'/'+key).set({fecha:fecha, ts:Date.now(), porAdmin:true})
-    .then(function(){
-      showToast('✅ Marcado');
-      _rubCompData[key]={fecha:fecha,ts:Date.now(),porAdmin:true};
-      rubSegRender();
-    }).catch(function(e){ showToast('❌ Error','e'); });
+  var ref = isPeriodico
+    ? DB.ref('rubiel_comp_periodos/'+key)
+    : DB.ref('rubiel_completado/'+_rubSegMes+'/'+key);
+  var data = isPeriodico
+    ? {fecha:fecha, mes:_rubSegMes, ts:Date.now(), porAdmin:true}
+    : {fecha:fecha, ts:Date.now(), porAdmin:true};
+  ref.set(data).then(function(){
+    showToast('✅ Marcado');
+    if(isPeriodico) _rubPeriodicoData[key]=data;
+    else _rubCompData[key]=data;
+    rubSegRender();
+  }).catch(function(e){ showToast('❌ Error','e'); });
 }
 
-function rubSegBorrar(key){
+function rubSegBorrar(key, isPeriodico){
   if(!confirm('¿Desmarcar esta tarea?')) return;
-  DB.ref('rubiel_completado/'+_rubSegMes+'/'+key).remove()
-    .then(function(){
-      delete _rubCompData[key];
-      showToast('🗑 Desmarcado');
-      rubSegRender();
-    });
+  var ref = isPeriodico
+    ? DB.ref('rubiel_comp_periodos/'+key)
+    : DB.ref('rubiel_completado/'+_rubSegMes+'/'+key);
+  ref.remove().then(function(){
+    if(isPeriodico) delete _rubPeriodicoData[key];
+    else delete _rubCompData[key];
+    showToast('🗑 Desmarcado');
+    rubSegRender();
+  });
 }
 
 function rubSegRellenarTodo(){
@@ -11938,8 +11965,15 @@ function rubSegRellenarTodo(){
     var insts=_rubInstancias(t,_rubSegMes);
     insts.forEach(function(ins){
       var key=t.id+'_'+ins.inst;
-      if(!_rubCompData[key]){
-        updates['rubiel_completado/'+_rubSegMes+'/'+key]={fecha:ins.fechaEsp,ts:Date.now(),porAdmin:true,autoRellenado:true};
+      if(ins.periodico){
+        // Solo marcar si no está ya hecha en ningún mes del período
+        if(!_rubPeriodicoData[key]){
+          updates['rubiel_comp_periodos/'+key]={fecha:ins.fechaEsp,mes:_rubSegMes,ts:Date.now(),porAdmin:true,autoRellenado:true};
+        }
+      } else {
+        if(!_rubCompData[key]){
+          updates['rubiel_completado/'+_rubSegMes+'/'+key]={fecha:ins.fechaEsp,ts:Date.now(),porAdmin:true,autoRellenado:true};
+        }
       }
     });
   });

@@ -441,9 +441,10 @@ var NOMBRE     = 'RUBIEL';
 var SESION_KEY = 'rubiel_sesion';
 var mesActual  = '';
 var tabActual  = 'diario';
-var compData   = {};   // {key: {fecha, divisora?}}
-var divisoras  = {};   // {div1..div7: {numero}}
-var dbUnsub    = null;
+var compData       = {};   // {key: {fecha, divisora?}}
+var periodicoData  = {};   // rubiel_comp_periodos/ {tid_periodKey: {fecha,mes,ts}}
+var divisoras      = {};   // {div1..div7: {numero}}
+var dbUnsub        = null;
 
 // ── UTILIDADES ────────────────────────────────────────────────
 function hoy(){
@@ -572,6 +573,11 @@ function cargarCompletados(){
   // Render inmediato con lo que haya (muestra tareas aunque estén pendientes)
   renderTodosLosTabs();
 
+  // Cargar tareas periódicas (TRIMESTRAL/ANUAL) una vez
+  DB.ref('rubiel_comp_periodos').once('value').then(function(snap){
+    periodicoData = snap.val() || {};
+  });
+
   var handler = function(snap){
     compData = snap.val() || {};
     renderTodosLosTabs();
@@ -599,18 +605,31 @@ function cargarDivisoras(){
 function claveInstancia(freq, override){
   if(override) return override;
   var h = hoy();
-  if(freq==='DIARIO')    return h;
-  if(freq==='SEMANAL')   return semanaDelMes(h);
-  if(freq==='QUINCENAL') return quincenaDeFecha(h);
+  if(freq==='DIARIO')      return h;
+  if(freq==='SEMANAL')     return semanaDelMes(h);
+  if(freq==='QUINCENAL')   return quincenaDeFecha(h);
+  if(freq==='TRIMESTRAL'){
+    var p=mesActual.split('-'); var mo=parseInt(p[1],10);
+    var trim=mo<=3?'T1':mo<=6?'T2':mo<=9?'T3':'T4';
+    return p[0]+'-'+trim;
+  }
+  if(freq==='ANUAL') return mesActual.split('-')[0];
   return '0';
 }
 
 function estaHechaHoy(tid, freq){
   var inst = claveInstancia(freq);
+  if(freq==='TRIMESTRAL'||freq==='ANUAL') return !!(periodicoData[tid+'_'+inst]);
   return !!(compData[tid+'_'+inst]);
 }
 
-function ultimaFecha(tid){
+function ultimaFecha(tid, freq){
+  // Para tareas periódicas buscar en periodicoData
+  if(freq==='TRIMESTRAL'||freq==='ANUAL'){
+    var inst = claveInstancia(freq);
+    var rec = periodicoData[tid+'_'+inst];
+    return rec ? rec.fecha : null;
+  }
   var keys = Object.keys(compData).filter(function(k){ return k.indexOf(tid+'_')===0; });
   if(!keys.length) return null;
   keys.sort();
@@ -700,12 +719,12 @@ function renderPeriodico(){
 
   html += '<div class="seccion-header">🗓️ Trimestral</div>';
   TAREAS.TRIMESTRAL.forEach(function(t){
-    html += renderCard(t,'TRIMESTRAL', estaHechaHoy(t.id,'TRIMESTRAL'), ultimaFecha(t.id), 'Este trimestre');
+    html += renderCard(t,'TRIMESTRAL', estaHechaHoy(t.id,'TRIMESTRAL'), ultimaFecha(t.id,'TRIMESTRAL'), 'Este trimestre');
   });
 
   html += '<div class="seccion-header">📆 Anual</div>';
   TAREAS.ANUAL.forEach(function(t){
-    html += renderCard(t,'ANUAL', estaHechaHoy(t.id,'ANUAL'), ultimaFecha(t.id), 'Este año');
+    html += renderCard(t,'ANUAL', estaHechaHoy(t.id,'ANUAL'), ultimaFecha(t.id,'ANUAL'), 'Este año');
   });
 
   wrap.innerHTML = html;
@@ -715,8 +734,12 @@ function renderCard(t, freq, hecha, ultimaFh, periodoLabel){
   var periodoIcon = {DIARIO:'📅',SEMANAL:'📆',QUINCENAL:'🔄',MENSUAL:'🗓️',TRIMESTRAL:'📋',ANUAL:'📆'}[freq]||'';
   var btnAttr = hecha ? '' : 'onclick="marcarHecha(\''+t.id+'\',\''+freq+'\')"';
   var instActual = claveInstancia(freq);
-  var recData = compData[t.id+'_'+instActual];
+  var isPeriodico = freq==='TRIMESTRAL'||freq==='ANUAL';
+  var recData = isPeriodico ? periodicoData[t.id+'_'+instActual] : compData[t.id+'_'+instActual];
   var fechaHechaStr = recData && recData.fecha ? recData.fecha : (ultimaFh||'');
+  // Mostrar "Realizada en [mes]" si fue hecha en un mes anterior del mismo período
+  var realizadaEnMes = isPeriodico && recData && recData.mes && recData.mes !== mesActual
+    ? ' ('+recData.mes+')' : '';
 
   return '<div class="tarea-card'+(hecha?' hecha':'')+'">'+
     '<div class="tarea-body">'+
@@ -724,7 +747,7 @@ function renderCard(t, freq, hecha, ultimaFh, periodoLabel){
       '<span class="periodo-badge">'+periodoIcon+' '+escHtml(periodoLabel)+'</span>'+
     '</div>'+
     (hecha
-      ? '<div class="hecha-info">✅ Realizado · '+escHtml(fechaHechaStr)+'</div>'
+      ? '<div class="hecha-info">✅ Realizado · '+escHtml(fechaHechaStr)+escHtml(realizadaEnMes)+'</div>'
       : (esMesActual()
         ? '<button class="btn-hecho" '+btnAttr+'>✅ &nbsp;REALIZADO</button>'
         : '<div class="hecha-info" style="display:flex;color:var(--grey)">— Sin completar este período</div>'
@@ -761,11 +784,22 @@ function renderCardDivisora(t, hecha, ultimaFh, periodoLabel, divNum){
 
 // ── MARCAR HECHA ─────────────────────────────────────────────
 function marcarHecha(tid, freq){
-  var h   = hoy();
+  var h    = hoy();
   var inst = claveInstancia(freq);
-  var key = tid+'_'+inst;
-  DB.ref('rubiel_completado/'+mesActual+'/'+key).set({fecha:h, ts:Date.now()})
-    .then(function(){ toast('✅ ¡Realizado!'); })
+  var key  = tid+'_'+inst;
+  var isPeriodico = freq==='TRIMESTRAL'||freq==='ANUAL';
+  var ref = isPeriodico
+    ? DB.ref('rubiel_comp_periodos/'+key)
+    : DB.ref('rubiel_completado/'+mesActual+'/'+key);
+  var data = isPeriodico
+    ? {fecha:h, mes:mesActual, ts:Date.now()}
+    : {fecha:h, ts:Date.now()};
+  ref.set(data)
+    .then(function(){
+      if(isPeriodico) periodicoData[key] = data;
+      toast('✅ ¡Realizado!');
+      renderTodosLosTabs();
+    })
     .catch(function(e){ toast('❌ Error: '+e.message, true); });
 }
 
