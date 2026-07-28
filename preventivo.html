@@ -877,6 +877,7 @@ if('serviceWorker' in navigator){
         <option value="pendiente">— Pendientes</option>
       </select>
       <button type="button" class="seg-load-btn" onclick="cargarSeguimiento()">Cargar</button>
+      <button type="button" class="seg-load-btn" onclick="imprimirInformeSeguimiento()" style="background:rgba(201,162,39,0.15);border-color:rgba(201,162,39,0.4);color:var(--gold)">🖨️ Imprimir</button>
     </div>
     <div class="seg-resumen" id="segResumen"></div>
     <div class="prog-grid" id="segProgGrid"></div>
@@ -2791,6 +2792,103 @@ function renderSeguimiento(tareas, compData, filtMec, filtEst) {
     </tr>`;
   });
   document.getElementById('segTabla').innerHTML = html;
+}
+
+function imprimirInformeSeguimiento() {
+  if(!_segData) { alert('Carga un mes primero.'); return; }
+  const mk = document.getElementById('segMes').value;
+  const [y, m] = mk.split('-');
+  const nombreMes = _MESES_NOMBRE[parseInt(m,10)-1] + ' ' + y;
+  const { tareas, compData } = _segData;
+
+  // Construir slots igual que renderSeguimiento
+  const slots = [];
+  tareas.forEach(t => {
+    const frecs = Object.keys(t.fechas || {});
+    if(t.frecuencia === 'DIARIO') {
+      slots.push({ t, slotKey: t.id+'_diario', fechaPlan:'Cada día' });
+    } else if(!frecs.length) {
+      slots.push({ t, slotKey: t.id+'_0', fechaPlan:'' });
+    } else {
+      frecs.forEach(wi => slots.push({ t, slotKey: t.id+'_'+wi, fechaPlan: t.fechas[wi]||'' }));
+    }
+  });
+
+  const total  = slots.length;
+  const hechos = slots.filter(s => compData[s.slotKey]).length;
+  const pct    = total ? Math.round(hechos/total*100) : 0;
+
+  // Progreso por mecánico
+  const mecStats = {};
+  slots.forEach(s => {
+    const mn = s.t.mecanico || '—';
+    if(!mecStats[mn]) mecStats[mn] = {total:0, hechos:0};
+    mecStats[mn].total++;
+    if(compData[s.slotKey]) mecStats[mn].hechos++;
+  });
+
+  const mecRows = Object.entries(mecStats).map(([mn, st]) => {
+    const p = st.total ? Math.round(st.hechos/st.total*100) : 0;
+    return `<tr><td>${mn}</td><td style="text-align:center">${st.hechos}</td><td style="text-align:center">${st.total}</td><td style="text-align:center;font-weight:700;color:${p>=90?'#27ae60':p>=70?'#e67e22':'#c0392b'}">${p}%</td></tr>`;
+  }).join('');
+
+  const tareasRows = slots.map(({t, slotKey, fechaPlan}) => {
+    const comp = compData[slotKey];
+    const estado = comp ? (comp.autoRelleno ? 'AUTO' : 'HECHA') : 'PENDIENTE';
+    const fechaReal = comp ? (comp.fechaReal || comp.fecha || '') : '';
+    return `<tr>
+      <td>${t.maquina||''}</td>
+      <td>${t.tarea||''}</td>
+      <td style="text-align:center">${t.frecuencia||''}</td>
+      <td style="text-align:center">${t.mecanico||'—'}</td>
+      <td style="text-align:center">${fechaPlan ? fechaPlan.slice(8)+'/'+fechaPlan.slice(5,7) : ''}</td>
+      <td style="text-align:center;font-weight:700;color:${comp?'#27ae60':'#c0392b'}">${estado}</td>
+      <td style="text-align:center">${fechaReal ? fechaReal.slice(8)+'/'+fechaReal.slice(5,7) : ''}</td>
+    </tr>`;
+  }).join('');
+
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Informe Preventivo — ${nombreMes}</title>
+<style>
+  body{font-family:Arial,sans-serif;font-size:12px;color:#111;padding:24px;max-width:1000px;margin:0 auto}
+  h1{font-size:18px;margin-bottom:2px}
+  h2{font-size:13px;color:#555;font-weight:400;margin-bottom:20px}
+  .kpis{display:flex;gap:20px;margin-bottom:20px;flex-wrap:wrap}
+  .kpi{border:1px solid #ddd;border-radius:6px;padding:10px 18px;text-align:center;min-width:90px}
+  .kpi-num{font-size:22px;font-weight:700}
+  .kpi-lbl{font-size:10px;color:#777;margin-top:2px;text-transform:uppercase;letter-spacing:.05em}
+  table{width:100%;border-collapse:collapse;margin-bottom:24px}
+  th{background:#f0f0f0;padding:7px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;border:1px solid #ddd}
+  td{padding:6px 10px;border:1px solid #e0e0e0;vertical-align:top}
+  tr:nth-child(even){background:#fafafa}
+  .sec{font-size:13px;font-weight:700;margin:20px 0 8px;padding-bottom:4px;border-bottom:2px solid #c9a227;color:#333}
+  @media print{body{padding:0} button{display:none}}
+</style></head><body>
+<h1>PANALCOR S.L. — Informe Plan Preventivo</h1>
+<h2>${nombreMes}</h2>
+
+<div class="kpis">
+  <div class="kpi"><div class="kpi-num" style="color:${pct>=90?'#27ae60':pct>=70?'#e67e22':'#c0392b'}">${pct}%</div><div class="kpi-lbl">Cumplimiento</div></div>
+  <div class="kpi"><div class="kpi-num" style="color:#27ae60">${hechos}</div><div class="kpi-lbl">Realizadas</div></div>
+  <div class="kpi"><div class="kpi-num" style="color:#c0392b">${total-hechos}</div><div class="kpi-lbl">Pendientes</div></div>
+  <div class="kpi"><div class="kpi-num">${total}</div><div class="kpi-lbl">Total tareas</div></div>
+</div>
+
+<div class="sec">Cumplimiento por mecánico</div>
+<table>
+  <thead><tr><th>Mecánico</th><th style="text-align:center">Realizadas</th><th style="text-align:center">Total</th><th style="text-align:center">%</th></tr></thead>
+  <tbody>${mecRows}</tbody>
+</table>
+
+<div class="sec">Detalle de tareas</div>
+<table>
+  <thead><tr><th>Máquina</th><th>Tarea</th><th style="text-align:center">Frec.</th><th style="text-align:center">Mecánico</th><th style="text-align:center">Fecha plan</th><th style="text-align:center">Estado</th><th style="text-align:center">Fecha real</th></tr></thead>
+  <tbody>${tareasRows}</tbody>
+</table>
+<script>window.onload=function(){window.print();}<\/script>
+</body></html>`);
+  w.document.close();
 }
 
 /* ════════════════════════════════════════════
