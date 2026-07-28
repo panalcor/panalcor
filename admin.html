@@ -1062,6 +1062,22 @@ if('serviceWorker' in navigator){
     </div>
   </div>
 
+  <!-- ══ HISTORIAL POR MÁQUINA ══ -->
+  <div class="card">
+    <div class="sec-title">📋 Historial por máquina</div>
+    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+      <select id="histMaqSel" onchange="histMaqCargar()"
+        style="flex:1;min-width:200px;background:var(--navy-deep);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:10px 14px;color:#fff;font-family:'Barlow',sans-serif;font-size:0.9rem">
+        <option value="">— Selecciona una máquina —</option>
+      </select>
+      <a id="histMaqLink" href="#" target="_blank"
+        style="display:none;padding:9px 16px;background:rgba(155,89,182,0.15);border:1px solid rgba(155,89,182,0.4);border-radius:8px;color:#c39bd3;font-size:0.85rem;font-weight:700;text-decoration:none;white-space:nowrap">
+        🔗 Abrir página completa
+      </a>
+    </div>
+    <div id="histMaqResult"></div>
+  </div>
+
   <!-- ══ FICHAS REGLAMENTARIAS — todas las máquinas ══ -->
   <div class="card">
     <div class="sec-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
@@ -4726,6 +4742,82 @@ function ejecutarRenombradoHistorial(){
 }
 
 // ══════════════════════════════════════════════════
+// HISTORIAL POR MÁQUINA (inline en admin)
+// ══════════════════════════════════════════════════
+function histMaqPoblar(){
+  var sel = document.getElementById('histMaqSel');
+  if(!sel || sel.options.length > 1) return;
+  var todas = MAQUINAS_BASE_ADMIN.concat(maquinasExtra).sort(function(a,b){ return a.n.localeCompare(b.n); });
+  todas.forEach(function(m){
+    var o = document.createElement('option');
+    o.value = m.id;
+    o.textContent = m.n + ' (' + m.id + ')';
+    sel.appendChild(o);
+  });
+}
+
+function histMaqCargar(){
+  var sel   = document.getElementById('histMaqSel');
+  var res   = document.getElementById('histMaqResult');
+  var link  = document.getElementById('histMaqLink');
+  var maqId = sel.value;
+  if(!maqId){ res.innerHTML=''; link.style.display='none'; return; }
+
+  var maqNombre = sel.options[sel.selectedIndex].textContent.replace(/\s*\([^)]+\)$/,'').trim();
+  link.href = 'historial_maquina.html?maq=' + encodeURIComponent(maqId);
+  link.style.display = 'inline-block';
+  res.innerHTML = '<div style="color:rgba(255,255,255,0.4);font-size:.85rem;padding:12px 0">Cargando...</div>';
+
+  Promise.all([
+    DB.ref('averias').once('value'),
+    DB.ref('turnos').once('value')
+  ]).then(function(snaps){
+    var averias = Object.values(snaps[0].val()||{}).filter(function(a){
+      return a && (a.maquina===maqId || (a.maquina||'').toUpperCase()===(maqNombre||'').toUpperCase());
+    });
+    var turnos = Object.values(snaps[1].val()||{}).filter(function(t){
+      return t && (t.maquina===maqId || (t.maquina||'').toUpperCase()===(maqNombre||'').toUpperCase());
+    });
+
+    var entries = [];
+    averias.forEach(function(a){ entries.push({tipo:'averia', ts:a.ts||0, data:a}); });
+    turnos.forEach(function(t){ entries.push({tipo:'turno', ts:t.ts||0, data:t}); });
+    entries.sort(function(a,b){ return b.ts-a.ts; });
+
+    if(!entries.length){
+      res.innerHTML='<div style="color:rgba(255,255,255,0.35);font-size:.85rem;padding:12px 0">Sin registros para esta máquina.</div>';
+      return;
+    }
+
+    var html = '<div style="font-size:.75rem;color:rgba(255,255,255,0.35);margin-bottom:10px">'+entries.length+' registros encontrados</div>';
+    entries.slice(0,30).forEach(function(e){
+      var d=e.data;
+      if(e.tipo==='averia'){
+        var col = d.estado==='RESUELTA'?'#2ecc71':d.estado==='CRÍTICA'?'#e74c3c':'#f39c12';
+        html+='<div style="display:flex;gap:10px;align-items:flex-start;padding:9px 12px;background:rgba(231,76,60,0.05);border:1px solid rgba(231,76,60,0.2);border-left:3px solid '+col+';border-radius:8px;margin-bottom:7px">'
+          +'<div style="flex:1;min-width:0">'
+            +'<div style="font-size:.72rem;color:rgba(255,255,255,.4);margin-bottom:2px">'+escHtml(d.fecha||'')+(d.turno?' · '+escHtml(d.turno):'')+(d.mecanico?' · '+escHtml(d.mecanico):'')+'</div>'
+            +'<div style="font-size:.88rem;line-height:1.4">'+escHtml(d.descripcion||d.desc||'')+'</div>'
+            +(d.solucion?'<div style="font-size:.78rem;color:#2ecc71;margin-top:3px">✅ '+escHtml(d.solucion)+'</div>':'')
+          +'</div>'
+          +'<span style="font-size:.65rem;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,0.07);color:'+col+';border:1px solid '+col+';white-space:nowrap;flex-shrink:0">'+escHtml(d.estado||'AVERÍA')+'</span>'
+        +'</div>';
+      } else {
+        html+='<div style="display:flex;gap:10px;align-items:flex-start;padding:9px 12px;background:rgba(46,204,113,0.05);border:1px solid rgba(46,204,113,0.15);border-left:3px solid #2ecc71;border-radius:8px;margin-bottom:7px">'
+          +'<div style="flex:1;min-width:0">'
+            +'<div style="font-size:.72rem;color:rgba(255,255,255,.4);margin-bottom:2px">'+escHtml(d.fecha||'')+(d.turno?' · '+escHtml(d.turno):'')+(d.mecanico?' · '+escHtml(d.mecanico):'')+'</div>'
+            +'<div style="font-size:.88rem;line-height:1.4">'+escHtml(d.observaciones||d.obs||'Mantenimiento de turno')+'</div>'
+          +'</div>'
+          +'<span style="font-size:.65rem;padding:2px 8px;border-radius:20px;background:rgba(46,204,113,0.15);color:#2ecc71;border:1px solid rgba(46,204,113,0.3);white-space:nowrap;flex-shrink:0">TURNO</span>'
+        +'</div>';
+      }
+    });
+    if(entries.length>30) html+='<div style="font-size:.78rem;color:rgba(255,255,255,0.3);text-align:center;padding:8px 0">… y '+(entries.length-30)+' registros más — <a href="historial_maquina.html?maq='+encodeURIComponent(maqId)+'" target="_blank" style="color:#c39bd3">ver página completa</a></div>';
+    res.innerHTML = html;
+  }).catch(function(){ res.innerHTML='<div style="color:#e74c3c;font-size:.85rem">Error al cargar el historial.</div>'; });
+}
+
+// ══════════════════════════════════════════════════
 // QR POR MAQUINA
 // ══════════════════════════════════════════════════
 var _qrInstance = null;
@@ -5391,7 +5483,7 @@ function switchTab(name){
   document.getElementById('tab-'+name).classList.add('active');
   if(name==='mec') { renderMecanicos(); loadPersonal(renderPersonal); }
   if(name==='inf') renderInformes();
-  if(name==='maq') { loadMaquinasExtra(renderMaquinas); fichasCargar(); }
+  if(name==='maq') { loadMaquinasExtra(renderMaquinas); fichasCargar(); histMaqPoblar(); }
   if(name==='rep') { cargarCatalogoRepuestos(); initPedidos(); }
   if(name==='docs') { docsInit(); }
   if(name==='cfg') cargarTareasDiariasAdmin();
