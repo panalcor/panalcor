@@ -841,21 +841,21 @@ if('serviceWorker' in navigator){
           <span style="font-size:0.68rem;letter-spacing:0.14em;color:var(--text-dim);text-transform:uppercase;display:block;margin-bottom:4px">Mecánico</span>
           <select class="ajuste-sel" id="planMecanico" onchange="renderPlan()" style="min-width:145px"></select>
         </div>
-        <button type="button" class="export-btn" onclick="exportPlan()" style="padding:9px 16px">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
-          Exportar Plan
-        </button>
         <button type="button" class="export-btn" onclick="abrirAutoAsignar()" style="padding:9px 16px;background:rgba(39,174,96,0.15);border-color:rgba(39,174,96,0.4);color:#2ecc71">
           🤖 Auto-asignar mes
-        </button>
-        <button type="button" class="export-btn" onclick="autoRellenarFechas(false)" style="padding:9px 16px;background:rgba(116,185,255,0.12);border-color:rgba(116,185,255,0.4);color:#74b9ff">
-          🎲 Auto-rellenar fechas
         </button>
         <button type="button" class="export-btn" onclick="publicarPlan()" style="padding:9px 16px;background:rgba(253,203,110,0.12);border-color:rgba(253,203,110,0.4);color:#fdcb6e" id="btnPublicar">
           📤 Publicar a mecánicos
         </button>
+        <button type="button" class="export-btn" onclick="autoRellenarFechas(false)" style="padding:9px 16px;background:rgba(116,185,255,0.12);border-color:rgba(116,185,255,0.4);color:#74b9ff">
+          🎲 Auto-rellenar fechas
+        </button>
         <button type="button" class="export-btn" onclick="rellenarMesVencido()" style="padding:9px 16px;background:rgba(162,155,254,0.12);border-color:rgba(162,155,254,0.4);color:#a29bfe">
           📅 Rellenar mes vencido
+        </button>
+        <button type="button" class="export-btn" onclick="exportPlan()" style="padding:9px 16px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
+          Exportar Plan
         </button>
       </div>
     </div>
