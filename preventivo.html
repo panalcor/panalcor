@@ -2834,7 +2834,7 @@ function imprimirInformeSeguimiento() {
 
   const tareasRows = slots.map(({t, slotKey, fechaPlan}) => {
     const comp = compData[slotKey];
-    const estado = comp ? (comp.autoRelleno ? 'AUTO' : 'HECHA') : 'PENDIENTE';
+    const estado = comp ? 'HECHA' : 'PENDIENTE';
     const fechaReal = comp ? (comp.fechaReal || comp.fecha || '') : '';
     return `<tr>
       <td>${t.maquina||''}</td>
