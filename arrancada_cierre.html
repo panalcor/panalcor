@@ -159,6 +159,17 @@ body { padding-bottom: 40px; }
 .hist-item .check-icon { color: #27ae60; }
 .hist-item .mec-tag { color: var(--gold); font-weight: 600; }
 
+/* ── Ítem mensual bloqueado ── */
+.item.mensual-ok { opacity: 0.4; pointer-events: none; }
+.item.mensual-ok .item-check { background: rgba(39,174,96,0.2); border-color: rgba(39,174,96,0.4); }
+.item.mensual-ok .item-check svg { display: block; }
+.mensual-tag {
+  display: inline-block; margin-top: 5px;
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em;
+  background: rgba(39,174,96,0.12); color: #5dde95;
+  border: 1px solid rgba(39,174,96,0.3); border-radius: 4px; padding: 2px 9px;
+}
+
 /* ── Toast ── */
 #toast {
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
@@ -275,6 +286,49 @@ DB.ref('config/mecanicos_pwd').once('value').then(function(snap) {
   renderLista(ITEMS_ARR, stateArr, 'listArr', 'countArr', 'arrancada');
   renderLista(ITEMS_CIE, stateCie, 'listCie', 'countCie', 'cierre');
 }).catch(function(){});
+
+// Ítems con frecuencia mensual (30 días de bloqueo tras completarse)
+var ITEMS_MENSUAL_SET = new Set([
+  'APRETAR ÁNGULOS CARGADOR 1',
+  'APRETAR ÁNGULOS DESCARGADOR 1',
+  'APRETAR ÁNGULOS CARGADOR 2',
+  'APRETAR ÁNGULOS DESCARGADOR 2',
+  'APRETAR ÁNGULOS CARGADOR/DESCARGADOR TALLADORAS'
+]);
+
+var _mensualStatus = {}; // label -> {fecha:'YYYY-MM-DD'}
+
+function labelKey(label) {
+  return label.replace(/[^A-Z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+}
+
+function getMensualBlock(label) {
+  if (!ITEMS_MENSUAL_SET.has(label)) return null;
+  var ms = _mensualStatus[label];
+  if (!ms || !ms.fecha) return null;
+  var done = new Date(ms.fecha + 'T12:00:00');
+  var cur  = new Date(fechaActual + 'T12:00:00');
+  var diff = Math.floor((cur - done) / 86400000);
+  if (diff <= 0 || diff >= 30) return null;
+  var proximo = new Date(done); proximo.setDate(proximo.getDate() + 30);
+  return {
+    fecha: ms.fecha,
+    diasRestantes: 30 - diff,
+    proximoDs: proximo.toLocaleDateString('es-ES', {day:'numeric', month:'short'})
+  };
+}
+
+function cargarMensual() {
+  return DB.ref('arrancada_cierre_mensual').once('value').then(function(snap) {
+    var data = snap.val() || {};
+    Object.keys(data).forEach(function(key) {
+      var val = data[key];
+      if (val && val.label && val.fecha) {
+        _mensualStatus[val.label] = { fecha: val.fecha };
+      }
+    });
+  }).catch(function(){});
+}
 
 var ITEMS_ARR_DEFAULT = [
   'LIMPIEZA MÁQUINA DE CAJAS',
@@ -422,6 +476,7 @@ document.getElementById('hdrDate').textContent = _ahora.toLocaleDateString('es-E
 
 document.getElementById('fechaSel').addEventListener('change', function() {
   fechaActual = this.value;
+  // Recalcular bloqueos mensuales para la nueva fecha antes de renderizar
   cargarRegistrosDelDia();
 });
 
@@ -453,20 +508,26 @@ function renderLista(items, state, containerId, countId, tipo) {
   var el = document.getElementById(containerId);
   el.innerHTML = items.map(function(label, i) {
     var s = state[i];
-    return '<div class="item' + (s.done ? ' done' : '') + '" id="item-' + tipo + '-' + i + '">'
+    var blk = (!s.done) ? getMensualBlock(label) : null;
+    var cls = s.done ? ' done' : (blk ? ' mensual-ok' : '');
+    return '<div class="item' + cls + '" id="item-' + tipo + '-' + i + '">'
       + '<div class="item-check-col">'
-      + '<div class="item-check' + (s.done ? ' checked' : '') + '" onclick="toggleCheck(\'' + tipo + '\',' + i + ')">'
+      + '<div class="item-check' + (s.done || blk ? ' checked' : '') + '"'
+      + (blk ? '' : ' onclick="toggleCheck(\'' + tipo + '\',' + i + ')"') + '>'
       + '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>'
       + '</div></div>'
       + '<div class="item-body">'
       + '<div class="item-num">ÍTEM ' + (i+1) + '</div>'
       + '<div class="item-label">' + esc(label) + '</div>'
-      + '<div class="item-fields">'
-      + selMecanico(tipo, i, s.mecanico)
-      + '<input class="field-inp obs-inp" type="text" placeholder="Observaciones (opcional)" value="' + esc(s.obs) + '" '
-      + 'oninput="updateField(\'' + tipo + '\',' + i + ',\'obs\',this.value)">'
-      + (s.hora ? '<span class="field-hora">🕐 ' + s.hora + '</span>' : '')
-      + '</div></div></div>';
+      + (blk
+        ? '<span class="mensual-tag">✓ Realizado el ' + blk.fecha.split('-').reverse().join('/') + ' · Próximo: ' + blk.proximoDs + ' (' + blk.diasRestantes + ' días)</span>'
+        : '<div class="item-fields">'
+          + selMecanico(tipo, i, s.mecanico)
+          + '<input class="field-inp obs-inp" type="text" placeholder="Observaciones (opcional)" value="' + esc(s.obs) + '" '
+          + 'oninput="updateField(\'' + tipo + '\',' + i + ',\'obs\',this.value)">'
+          + (s.hora ? '<span class="field-hora">🕐 ' + s.hora + '</span>' : '')
+          + '</div>')
+      + '</div></div>';
   }).join('');
   actualizarCount(state, countId, items.length);
 }
@@ -587,6 +648,18 @@ function guardar(tipo) {
       };
     })
   };
+  // Actualizar estado mensual de ítems con frecuencia mensual
+  var updMensual = {};
+  items.forEach(function(label, i) {
+    if (ITEMS_MENSUAL_SET.has(label) && state[i].done) {
+      updMensual[labelKey(label)] = { label: label, fecha: fechaActual, ts: Date.now() };
+      _mensualStatus[label] = { fecha: fechaActual };
+    }
+  });
+  if (Object.keys(updMensual).length) {
+    DB.ref('arrancada_cierre_mensual').update(updMensual).catch(function(){});
+  }
+
   DB.ref('arrancada_cierre/' + fechaActual + '/' + tipo).set(registro)
     .then(function() {
       mostrarToast('✅ ' + (tipo === 'arrancada' ? 'Arrancada' : 'Cierre') + ' guardado correctamente', false);
@@ -646,7 +719,7 @@ function mostrarToast(msg, esError) {
 // ── Init ──────────────────────────────────────────────────────
 renderLista(ITEMS_ARR, stateArr, 'listArr', 'countArr', 'arrancada');
 renderLista(ITEMS_CIE, stateCie, 'listCie', 'countCie', 'cierre');
-cargarRegistrosDelDia();
+cargarMensual().then(function() { cargarRegistrosDelDia(); });
 </script>
 </body>
 </html>
