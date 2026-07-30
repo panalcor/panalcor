@@ -3496,9 +3496,20 @@ async function calcularAutoAsig(){
   const mesVal = document.getElementById('autoMes').value;
   if(!mesVal){ alert('Selecciona un mes'); return; }
   const [anio, mes] = mesVal.split('-').map(Number);
+  const esDiciembre = mes === 12;
+  const esEnero     = mes === 1;
 
   const preview = document.getElementById('autoAsigPreview');
   preview.innerHTML = '<div style="color:rgba(255,255,255,0.35);text-align:center;padding:20px">⏳ Leyendo turnos de Firebase...</div>';
+
+  // Cargar pendiente de diciembre anterior si es enero
+  let pendienteDic = {}; // {maquina: mecanico} — máquinas diferidas desde diciembre
+  if(esEnero){
+    try {
+      const snap = await _DB.ref(`config/pendiente_enero/${anio}`).once('value');
+      pendienteDic = snap.val() || {};
+    } catch(e){}
+  }
 
   // Cargar datos de turnos desde Firebase
   let dias = {}, mecanicos = {}, ausencias = {};
@@ -3547,7 +3558,8 @@ async function calcularAutoAsig(){
 
   // Repartir máquinas proporcionalmente a días disponibles
   const totalDias = mecActivos.reduce((s,k) => s+disponibles[k].dias, 0);
-  const maquinas = [...MAQUINAS];
+  // Enero: excluir máquinas ya asignadas desde diciembre (vienen de pendiente)
+  const maquinas = [...MAQUINAS].filter(m => !pendienteDic[m]);
   const totalMaq = maquinas.length;
 
   // Calcular cuántas máquinas corresponden a cada mecánico
@@ -3583,31 +3595,73 @@ async function calcularAutoAsig(){
     }
   });
 
+  // ── Diciembre: split 50/50 ────────────────────────────────────
+  window._pendienteEnero = {};
+  if(esDiciembre){
+    const asigDic = {};
+    mecRotados.forEach(k => {
+      const nombre = disponibles[k].nombre;
+      const maqsMec = Object.entries(asigNueva).filter(([,v])=>v===nombre).map(([m])=>m);
+      const mitad = Math.ceil(maqsMec.length / 2);
+      maqsMec.forEach((m, i) => {
+        if(i < mitad) asigDic[m] = nombre;
+        else          window._pendienteEnero[m] = nombre;
+      });
+    });
+    Object.keys(asigNueva).forEach(k => delete asigNueva[k]);
+    Object.assign(asigNueva, asigDic);
+  }
+
+  // ── Enero: fusionar pendientes de diciembre ───────────────────
+  if(esEnero && Object.keys(pendienteDic).length){
+    Object.assign(asigNueva, pendienteDic);
+  }
+
   // Guardar propuesta para confirmar (incluye qué mecánico inicia la rotación y el mes)
   window._autoAsigPropuesta = asigNueva;
-  window._autoAsigMk = mesVal; // 'YYYY-MM'
+  window._autoAsigMk = mesVal;
   window._autoAsigRotInfo = { offset: rot, iniciaCon: disponibles[mecRotados[0]]?.nombre };
 
   // Construir preview HTML
   const mesesES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const totalMaqFinal = Object.keys(asigNueva).length;
   let html = `<div style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-bottom:8px">
-    ${mesesES[mes]} ${anio} — ${diasMes.length} días laborables · ${totalMaq} grupos de máquinas</div>
+    ${mesesES[mes]} ${anio} — ${diasMes.length} días laborables · ${totalMaqFinal} grupos de máquinas</div>
   <div style="font-size:0.75rem;color:rgba(116,185,255,0.8);background:rgba(116,185,255,0.08);border:1px solid rgba(116,185,255,0.2);border-radius:6px;padding:5px 10px;margin-bottom:12px">
     🔄 Rotación nº ${rot+1} — inicia el bloque: <b>${disponibles[mecRotados[0]]?.nombre}</b>. El próximo mes rotará al siguiente mecánico.
   </div>`;
 
+  if(esDiciembre){
+    const nPend = Object.keys(window._pendienteEnero).length;
+    html += `<div style="font-size:0.78rem;color:#fdcb6e;background:rgba(253,203,110,0.1);border:1px solid rgba(253,203,110,0.3);border-radius:6px;padding:8px 12px;margin-bottom:12px">
+      ⚠️ <b>Modo Diciembre/Enero:</b> ${totalMaqFinal} máquinas en Diciembre · ${nPend} máquinas diferidas a Enero ${anio+1}
+    </div>`;
+  }
+  if(esEnero && Object.keys(pendienteDic).length){
+    const nPend = Object.keys(pendienteDic).length;
+    html += `<div style="font-size:0.78rem;color:#00b894;background:rgba(0,184,148,0.1);border:1px solid rgba(0,184,148,0.3);border-radius:6px;padding:8px 12px;margin-bottom:12px">
+      ✅ <b>Pendientes de Diciembre incluidos:</b> ${nPend} máquinas ya asignadas a sus mecánicos habituales.
+    </div>`;
+  }
+
   // Tabla de disponibilidad
+  const colExtra = esDiciembre ? '<th style="padding:7px 10px;text-align:center;color:rgba(255,255,255,0.5)">→ Enero</th>' : '';
   html += `<table style="width:100%;border-collapse:collapse;font-size:0.82rem;margin-bottom:16px">
     <thead><tr style="background:rgba(255,255,255,0.05)">
       <th style="padding:7px 10px;text-align:left;color:rgba(255,255,255,0.5)">Mecánico</th>
       <th style="padding:7px 10px;text-align:center;color:rgba(255,255,255,0.5)">Días disp.</th>
-      <th style="padding:7px 10px;text-align:center;color:rgba(255,255,255,0.5)">Grupos asignados</th>
+      <th style="padding:7px 10px;text-align:center;color:rgba(255,255,255,0.5)">${esDiciembre?'Dic':'Grupos'}</th>
+      ${colExtra}
     </tr></thead><tbody>`;
   mecRotados.forEach(k => {
+    const nombre = disponibles[k].nombre;
+    const nDic  = Object.entries(asigNueva).filter(([,v])=>v===nombre).length;
+    const nEne  = esDiciembre ? Object.entries(window._pendienteEnero).filter(([,v])=>v===nombre).length : 0;
     html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">
-      <td style="padding:7px 10px;font-weight:600;color:#e8c14e">${disponibles[k].nombre}</td>
+      <td style="padding:7px 10px;font-weight:600;color:#e8c14e">${nombre}</td>
       <td style="padding:7px 10px;text-align:center">${disponibles[k].dias}</td>
-      <td style="padding:7px 10px;text-align:center;color:#2ecc71;font-weight:700">${repartoRot[k]}</td>
+      <td style="padding:7px 10px;text-align:center;color:#2ecc71;font-weight:700">${nDic}</td>
+      ${esDiciembre ? `<td style="padding:7px 10px;text-align:center;color:#fdcb6e;font-weight:700">${nEne}</td>` : ''}
     </tr>`;
   });
   // Mecánicos ausentes todo el mes
@@ -3636,17 +3690,29 @@ async function calcularAutoAsig(){
   document.getElementById('btnConfirmarAsig').style.display = 'block';
 }
 
-function confirmarAutoAsig(){
+async function confirmarAutoAsig(){
   const asig = window._autoAsigPropuesta;
   if(!asig){ alert('Primero pulsa Calcular'); return; }
-  ST.setAsig(asig, window._autoAsigMk); // guarda por mes
-  ST.incRotOffset(); // avanzar rotación para el próximo mes
-  renderAsigGrid();
-  poblarPlanMecanicos();
-  renderPlan();
-  cerrarAutoAsignar();
-  const rot = window._autoAsigRotInfo;
-  alert(`✅ Asignación guardada. El próximo mes rotará al siguiente mecánico.`);
+  const mk = window._autoAsigMk;
+  const [anio, mes] = mk.split('-').map(Number);
+
+  ST.setAsig(asig, mk);
+  ST.incRotOffset();
+
+  // Si es diciembre, guardar pendiente enero en Firebase
+  if(mes === 12 && window._pendienteEnero && Object.keys(window._pendienteEnero).length){
+    try {
+      await _DB.ref(`config/pendiente_enero/${anio+1}`).set(window._pendienteEnero);
+      const nPend = Object.keys(window._pendienteEnero).length;
+      renderAsigGrid(); poblarPlanMecanicos(); renderPlan(); cerrarAutoAsignar();
+      alert(`✅ Asignación de Diciembre guardada.\n📦 ${nPend} máquinas guardadas como pendientes para Enero ${anio+1}.`);
+    } catch(e) {
+      alert('⚠️ Asignación guardada localmente pero error al guardar pendientes en Firebase: ' + e.message);
+    }
+  } else {
+    renderAsigGrid(); poblarPlanMecanicos(); renderPlan(); cerrarAutoAsignar();
+    alert(`✅ Asignación guardada. El próximo mes rotará al siguiente mecánico.`);
+  }
 }
 
 /* ════════════════════════════════════════════
