@@ -287,14 +287,16 @@ DB.ref('config/mecanicos_pwd').once('value').then(function(snap) {
   renderLista(ITEMS_CIE, stateCie, 'listCie', 'countCie', 'cierre');
 }).catch(function(){});
 
-// Ítems con frecuencia mensual (30 días de bloqueo tras completarse)
-var ITEMS_MENSUAL_SET = new Set([
-  'APRETAR ÁNGULOS CARGADOR 1',
-  'APRETAR ÁNGULOS DESCARGADOR 1',
-  'APRETAR ÁNGULOS CARGADOR 2',
-  'APRETAR ÁNGULOS DESCARGADOR 2',
-  'APRETAR ÁNGULOS CARGADOR/DESCARGADOR TALLADORAS'
-]);
+// Ítems con frecuencia periódica: label -> días de bloqueo
+var ITEMS_PERIODICO = {
+  'APRETAR ÁNGULOS CARGADOR 1':                    30,
+  'APRETAR ÁNGULOS DESCARGADOR 1':                 30,
+  'APRETAR ÁNGULOS CARGADOR 2':                    30,
+  'APRETAR ÁNGULOS DESCARGADOR 2':                 30,
+  'APRETAR ÁNGULOS CARGADOR/DESCARGADOR TALLADORAS': 30,
+  'SOPLAR DRIVERS INFRANOR (SEGUIR PROCEDIMIENTO)':  90
+};
+var ITEMS_MENSUAL_SET = new Set(Object.keys(ITEMS_PERIODICO));
 
 var _mensualStatus = {}; // label -> {fecha:'YYYY-MM-DD'}
 
@@ -303,17 +305,18 @@ function labelKey(label) {
 }
 
 function getMensualBlock(label) {
-  if (!ITEMS_MENSUAL_SET.has(label)) return null;
+  var dias = ITEMS_PERIODICO[label];
+  if (!dias) return null;
   var ms = _mensualStatus[label];
   if (!ms || !ms.fecha) return null;
   var done = new Date(ms.fecha + 'T12:00:00');
   var cur  = new Date(fechaActual + 'T12:00:00');
   var diff = Math.floor((cur - done) / 86400000);
-  if (diff <= 0 || diff >= 30) return null;
-  var proximo = new Date(done); proximo.setDate(proximo.getDate() + 30);
+  if (diff <= 0 || diff >= dias) return null;
+  var proximo = new Date(done); proximo.setDate(proximo.getDate() + dias);
   return {
     fecha: ms.fecha,
-    diasRestantes: 30 - diff,
+    diasRestantes: dias - diff,
     proximoDs: proximo.toLocaleDateString('es-ES', {day:'numeric', month:'short'})
   };
 }
