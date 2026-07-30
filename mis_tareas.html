@@ -10,87 +10,12 @@
   --bg:#0a1628; --surface:#0f2035; --surface2:#142840;
   --gold:#e8c14e; --cream:#f0f4f8; --text-dim:rgba(255,255,255,0.4);
   --green:#00b894; --red:#e74c3c; --blue:#74b9ff; --purple:#a29bfe;
+  --orange:#e17055;
 }
 * { box-sizing:border-box; margin:0; padding:0; }
 body { background:var(--bg); color:var(--cream); font-family:Barlow,sans-serif; min-height:100vh; }
 
-header {
-  background:linear-gradient(135deg,#0d2137 0%,#162d45 100%);
-  border-bottom:1px solid rgba(255,255,255,0.08);
-  padding:14px 20px;
-  display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
-}
-.header-logo { font-family:Oswald,sans-serif; font-size:1.1rem; font-weight:700; color:var(--gold); letter-spacing:0.05em; }
-.header-sub  { font-size:0.72rem; color:var(--text-dim); margin-top:1px; }
-.header-mec  { font-size:0.88rem; font-weight:600; color:var(--blue); }
-
-.mes-nav {
-  display:flex; align-items:center; gap:10px;
-  background:var(--surface2); border:1px solid rgba(255,255,255,0.08);
-  border-radius:10px; padding:10px 16px; margin:14px 14px 6px; flex-wrap:wrap;
-}
-.mes-nav button {
-  background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15);
-  color:var(--cream); border-radius:6px; padding:6px 14px;
-  font-family:Barlow,sans-serif; font-size:0.85rem; cursor:pointer;
-}
-.mes-nav button:hover { background:rgba(255,255,255,0.1); }
-.mes-title { font-family:Oswald,sans-serif; font-size:1.05rem; font-weight:600; color:var(--gold); flex:1; text-align:center; }
-
-.content { padding:0 14px 40px; }
-
-.section-label {
-  font-size:0.65rem; letter-spacing:0.14em; color:var(--text-dim);
-  text-transform:uppercase; margin:14px 0 7px; font-weight:600;
-}
-
-.task-card {
-  background:var(--surface); border:1px solid rgba(255,255,255,0.08);
-  border-radius:10px; padding:13px 15px; margin-bottom:8px; transition:opacity .2s;
-}
-.task-card.done  { opacity:.6; border-color:rgba(0,184,148,.25); background:rgba(0,184,148,.04); }
-.task-card.auto  { opacity:.55; border-color:rgba(162,155,254,.2); background:rgba(162,155,254,.04); }
-
-.task-maq  { font-size:.67rem; font-weight:700; letter-spacing:.1em; color:var(--gold); text-transform:uppercase; margin-bottom:3px; }
-.task-name { font-size:.87rem; color:var(--cream); line-height:1.35; }
-.task-head { display:flex; align-items:flex-start; gap:8px; margin-bottom:8px; }
-.freq-pill {
-  font-size:.67rem; font-weight:700; border:1px solid; border-radius:4px;
-  padding:2px 7px; white-space:nowrap; flex-shrink:0; margin-top:1px;
-}
-
-.slot-row { display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-top:5px; }
-.slot-label { font-size:.7rem; color:var(--text-dim); min-width:50px; }
-.fecha-pill {
-  font-size:.77rem; border:1px solid; border-radius:5px; padding:3px 9px;
-}
-.fecha-plan { color:var(--blue); background:rgba(116,185,255,.08); border-color:rgba(116,185,255,.25); }
-.fecha-real { color:var(--green); background:rgba(0,184,148,.08); border-color:rgba(0,184,148,.25); }
-.fecha-auto { color:var(--purple); background:rgba(162,155,254,.08); border-color:rgba(162,155,254,.2); }
-
-.btn-hecho {
-  background:rgba(0,184,148,.15); border:1px solid rgba(0,184,148,.4);
-  color:var(--green); border-radius:7px; padding:5px 13px;
-  font-family:Barlow,sans-serif; font-size:.8rem; font-weight:600; cursor:pointer;
-}
-.btn-hecho:hover  { background:rgba(0,184,148,.25); }
-.btn-hecho:disabled { opacity:.45; cursor:default; }
-
-.diario-note { font-size:.75rem; color:rgba(255,255,255,.3); font-style:italic; }
-.no-fecha    { font-size:.75rem; color:rgba(255,255,255,.25); }
-
-.stats-row {
-  display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;
-}
-.stat-chip {
-  font-size:.74rem; border:1px solid; border-radius:5px; padding:3px 10px;
-}
-
-.empty-state { text-align:center; padding:50px 20px; color:var(--text-dim); }
-.empty-state svg { width:46px; height:46px; margin-bottom:14px; opacity:.25; display:block; margin-left:auto; margin-right:auto; }
-.loading { text-align:center; padding:50px 20px; color:var(--text-dim); font-size:.9rem; }
-
-/* Login */
+/* ── Login ── */
 #loginOverlay {
   position:fixed; inset:0; background:var(--bg); z-index:999;
   display:flex; align-items:center; justify-content:center; padding:20px;
@@ -112,6 +37,174 @@ header {
   color:var(--gold); border-radius:8px; padding:10px;
   font-family:Barlow,sans-serif; font-size:.95rem; font-weight:700; cursor:pointer;
 }
+
+/* ── Header ── */
+header {
+  background:linear-gradient(135deg,#0d2137,#162d45);
+  border-bottom:1px solid rgba(255,255,255,.08);
+  padding:12px 16px;
+  display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+}
+.header-logo { font-family:Oswald,sans-serif; font-size:1.05rem; font-weight:700; color:var(--gold); letter-spacing:.05em; }
+.header-sub  { font-size:.7rem; color:var(--text-dim); }
+.header-mec  { font-size:.85rem; font-weight:600; color:var(--blue); }
+
+/* ── Mes nav ── */
+.mes-nav {
+  display:flex; align-items:center; gap:10px;
+  background:var(--surface2); border:1px solid rgba(255,255,255,.08);
+  border-radius:10px; padding:9px 14px; margin:12px 12px 6px; flex-wrap:wrap;
+}
+.mes-nav button {
+  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15);
+  color:var(--cream); border-radius:6px; padding:5px 13px;
+  font-family:Barlow,sans-serif; font-size:.82rem; cursor:pointer;
+}
+.mes-nav button:hover { background:rgba(255,255,255,.1); }
+.mes-title { font-family:Oswald,sans-serif; font-size:1rem; font-weight:600; color:var(--gold); flex:1; text-align:center; }
+
+/* ── Stats ── */
+.stats-bar {
+  display:flex; gap:8px; flex-wrap:wrap; padding:0 12px 8px;
+}
+.stat-chip {
+  font-size:.73rem; border:1px solid; border-radius:5px; padding:3px 10px;
+}
+.prog-bar-wrap { flex:1; min-width:120px; display:flex; align-items:center; gap:8px; }
+.prog-bar { flex:1; height:5px; background:rgba(255,255,255,.1); border-radius:3px; overflow:hidden; }
+.prog-fill { height:100%; background:var(--green); border-radius:3px; transition:width .4s; }
+.prog-pct  { font-size:.72rem; color:var(--text-dim); min-width:30px; text-align:right; }
+
+/* ── Mode toggle ── */
+.mode-toggle {
+  display:flex; gap:0; margin:0 12px 10px;
+  background:var(--surface2); border:1px solid rgba(255,255,255,.1);
+  border-radius:10px; overflow:hidden;
+}
+.mode-btn {
+  flex:1; padding:10px 8px; font-family:Barlow,sans-serif; font-size:.83rem;
+  font-weight:600; letter-spacing:.02em; cursor:pointer;
+  background:transparent; border:none; color:var(--text-dim);
+  transition:background .2s, color .2s;
+}
+.mode-btn.active {
+  background:rgba(232,193,78,.15); color:var(--gold);
+}
+
+/* ── Search ── */
+.search-wrap { padding:0 12px 10px; }
+.search-inp {
+  width:100%; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+  border-radius:8px; color:var(--cream); font-family:Barlow,sans-serif;
+  font-size:.85rem; padding:8px 12px; outline:none;
+}
+.search-inp::placeholder { color:var(--text-dim); }
+
+/* ── Shared (arranque/cierre) ── */
+.shared-section { padding:0 12px 4px; }
+.section-label { font-size:.63rem; letter-spacing:.14em; color:var(--text-dim); text-transform:uppercase; margin-bottom:6px; font-weight:600; }
+
+/* ══ MODO MÁQUINA ══ */
+.maq-grid { display:flex; flex-direction:column; gap:6px; padding:0 12px; }
+.maq-card {
+  background:var(--surface); border:1px solid rgba(255,255,255,.08);
+  border-radius:10px; overflow:hidden;
+}
+.maq-card-head {
+  display:flex; align-items:center; gap:10px; padding:11px 14px;
+  cursor:pointer; user-select:none;
+}
+.maq-card-head:hover { background:rgba(255,255,255,.03); }
+.maq-nm { font-family:Oswald,sans-serif; font-size:.95rem; font-weight:600; letter-spacing:.03em; flex:1; }
+.maq-prog { display:flex; flex-direction:column; align-items:flex-end; gap:3px; flex-shrink:0; }
+.maq-pct  { font-size:.7rem; font-weight:700; }
+.maq-mini-bar { width:52px; height:4px; background:rgba(255,255,255,.1); border-radius:2px; overflow:hidden; }
+.maq-mini-fill { height:100%; border-radius:2px; transition:width .3s; }
+.maq-chev { font-size:.65rem; color:var(--text-dim); transition:transform .2s; margin-left:4px; }
+.maq-card.open .maq-chev { transform:rotate(180deg); }
+.maq-tasks { display:none; border-top:1px solid rgba(255,255,255,.06); }
+.maq-card.open .maq-tasks { display:block; }
+
+/* ── Task row inside machine ── */
+.task-row {
+  display:flex; align-items:center; gap:8px; padding:9px 14px;
+  border-bottom:1px solid rgba(255,255,255,.04); flex-wrap:wrap;
+}
+.task-row:last-child { border-bottom:none; }
+.task-row.done { background:rgba(0,184,148,.04); }
+.task-row.fuera { background:rgba(225,112,85,.04); }
+.task-info { flex:1; min-width:0; }
+.task-nm { font-size:.82rem; color:var(--cream); line-height:1.3; }
+.task-meta { font-size:.68rem; color:var(--text-dim); margin-top:2px; }
+.freq-pill {
+  font-size:.65rem; font-weight:700; border:1px solid; border-radius:4px;
+  padding:2px 7px; white-space:nowrap; flex-shrink:0;
+}
+.slot-block { display:flex; flex-direction:column; gap:5px; width:100%; padding:2px 0 4px; }
+.slot-line  { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.slot-lbl   { font-size:.7rem; color:var(--text-dim); min-width:60px; }
+.slot-fecha { font-size:.73rem; color:var(--blue); white-space:nowrap; }
+.inp-fecha  {
+  background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.2);
+  border-radius:6px; color:#fff; padding:4px 8px; font-size:.78rem; outline:none;
+}
+.btn-mark {
+  padding:4px 12px; border-radius:7px; font-family:Barlow,sans-serif;
+  font-size:.78rem; font-weight:600; cursor:pointer; border:1px solid; white-space:nowrap;
+}
+.btn-mark-pend { background:rgba(0,184,148,.12); border-color:rgba(0,184,148,.4); color:var(--green); }
+.btn-mark-done { background:rgba(0,184,148,.06); border-color:rgba(0,184,148,.2); color:rgba(0,184,148,.6); font-size:.72rem; }
+.btn-mark-auto { background:rgba(116,185,255,.1); border-color:rgba(116,185,255,.3); color:var(--blue); }
+.done-tag   { font-size:.72rem; color:var(--green); font-weight:700; }
+.fuera-tag  { font-size:.7rem; background:var(--orange); color:#fff; border-radius:4px; padding:1px 6px; font-weight:700; }
+
+/* ══ MODO TAREA ══ */
+.tarea-list { display:flex; flex-direction:column; gap:6px; padding:0 12px; }
+.tarea-group {
+  background:var(--surface); border:1px solid rgba(255,255,255,.08); border-radius:10px; overflow:hidden;
+}
+.tarea-group-head {
+  display:flex; align-items:center; gap:10px; padding:11px 14px;
+  cursor:pointer; user-select:none;
+}
+.tarea-group-head:hover { background:rgba(255,255,255,.03); }
+.tarea-group-nm { flex:1; font-size:.85rem; font-weight:600; color:var(--cream); line-height:1.3; }
+.tarea-cnt-badge {
+  font-size:.68rem; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12);
+  border-radius:10px; padding:2px 9px; color:var(--text-dim); white-space:nowrap;
+}
+.tarea-group.open .tarea-chev { transform:rotate(180deg); }
+.tarea-chev { font-size:.65rem; color:var(--text-dim); transition:transform .2s; }
+.tarea-maq-list { display:none; border-top:1px solid rgba(255,255,255,.06); }
+.tarea-group.open .tarea-maq-list { display:block; }
+.tarea-maq-row {
+  display:flex; align-items:center; gap:8px; padding:9px 14px;
+  border-bottom:1px solid rgba(255,255,255,.04); flex-wrap:wrap;
+}
+.tarea-maq-row:last-child { border-bottom:none; }
+.tarea-maq-row.done { background:rgba(0,184,148,.04); }
+.tarea-maq-nm { font-family:Oswald,sans-serif; font-size:.82rem; font-weight:600; color:var(--gold); flex:1; letter-spacing:.02em; }
+
+/* ── Shared task card (arranque/cierre) ── */
+.shared-card {
+  background:var(--surface); border:1px solid rgba(255,255,255,.08);
+  border-radius:10px; padding:12px 14px; margin-bottom:6px;
+}
+.shared-head { display:flex; align-items:flex-start; gap:8px; margin-bottom:6px; }
+.shared-nm { font-size:.85rem; color:var(--cream); flex:1; }
+
+/* ── Empty / loading ── */
+.empty-state { text-align:center; padding:50px 20px; color:var(--text-dim); }
+.loading     { text-align:center; padding:50px 20px; color:var(--text-dim); font-size:.9rem; }
+
+/* ── "Marcar todas" flotante ── */
+.fab-mark-all {
+  display:none; position:fixed; bottom:20px; right:16px; z-index:50;
+  background:var(--green); color:#fff; border:none; border-radius:24px;
+  padding:12px 20px; font-family:Barlow,sans-serif; font-size:.9rem; font-weight:700;
+  cursor:pointer; box-shadow:0 4px 16px rgba(0,184,148,.4);
+}
+.fab-mark-all.visible { display:block; }
 </style>
 </head>
 <body>
@@ -145,9 +238,31 @@ header {
   <button onclick="navMes(1)">Sig. →</button>
 </div>
 
-<div class="content" id="content">
-  <div class="loading">Cargando...</div>
+<!-- Stats -->
+<div class="stats-bar" id="statsBar" style="display:none">
+  <span class="stat-chip" id="statHechas" style="color:var(--green);background:rgba(0,184,148,.1);border-color:rgba(0,184,148,.3)"></span>
+  <span class="stat-chip" id="statPend"   style="color:var(--gold);background:rgba(232,193,78,.1);border-color:rgba(232,193,78,.3)"></span>
+  <div class="prog-bar-wrap">
+    <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+    <span class="prog-pct" id="progPct">0%</span>
+  </div>
 </div>
+
+<!-- Mode toggle -->
+<div class="mode-toggle" id="modeToggle" style="display:none">
+  <button class="mode-btn active" id="btnModeMaq" onclick="setMode('maquina')">🏭 Por Máquina</button>
+  <button class="mode-btn"        id="btnModeTarea" onclick="setMode('tarea')">📋 Por Tarea</button>
+</div>
+
+<!-- Search -->
+<div class="search-wrap" id="searchWrap" style="display:none">
+  <input class="search-inp" id="searchInp" type="search" placeholder="Buscar máquina o tarea…" oninput="renderMode()">
+</div>
+
+<div id="content"><div class="loading">Cargando...</div></div>
+
+<!-- FAB marcar todas (modo tarea, grupo expandido) -->
+<button class="fab-mark-all" id="fabMarkAll" onclick="marcarTodasGrupo()">✓ Marcar todas pendientes</button>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -164,219 +279,450 @@ const _DB = firebase.database();
 const MESES_L = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const DIAS_ES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 const FREQ_CFG = {
-  DIARIO:    {color:'#fd79a8',bg:'rgba(253,121,168,.12)',border:'rgba(253,121,168,.3)'},
   SEMANAL:   {color:'#00cec9',bg:'rgba(0,206,201,.12)', border:'rgba(0,206,201,.3)'},
   QUINCENAL: {color:'#6c5ce7',bg:'rgba(108,92,231,.12)',border:'rgba(108,92,231,.3)'},
   MENSUAL:   {color:'#e17055',bg:'rgba(225,112,85,.12)',border:'rgba(225,112,85,.3)'},
+  SEMESTRAL: {color:'#fdcb6e',bg:'rgba(253,203,110,.1)',border:'rgba(253,203,110,.3)'},
+  ANUAL:     {color:'#b2bec3',bg:'rgba(178,190,195,.08)',border:'rgba(178,190,195,.2)'},
   ARRANQUE:  {color:'#00cec9',bg:'rgba(0,206,201,.12)', border:'rgba(0,206,201,.3)'},
   CIERRE:    {color:'#fd79a8',bg:'rgba(253,121,168,.12)',border:'rgba(253,121,168,.3)'},
 };
 
-let curMes = { year: new Date().getFullYear(), month: new Date().getMonth() };
-let mecNombre = '';
-let _plan = null;
-let _comp = {};
-let _compListener = null; // listener activo de completados
+let curMes       = { year: new Date().getFullYear(), month: new Date().getMonth() };
+let mecNombre    = '';
+let _plan        = null;
+let _comp        = {};
+let _compListener= null;
+let _curMode     = 'maquina'; // 'maquina' | 'tarea'
+let _fabTarget   = null; // {tarea, slots:[{taskId,wi}]} para marcar todas
 
+// ── Helpers ──
 function mesKey(y,m){ return y+'-'+String(m+1).padStart(2,'0'); }
 function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function hoyDs(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
 function fmtDs(ds){
   if(!ds) return '—';
-  const d = new Date(ds+'T12:00:00');
+  const d=new Date(ds+'T12:00:00');
   return DIAS_ES[d.getDay()]+' '+d.getDate()+'/'+String(d.getMonth()+1).padStart(2,'0');
 }
+function slotLabel(t, wi, totalSlots){
+  if(totalSlots<=1) return '';
+  if(t.frecuencia==='SEMANAL') return 'Sem '+(parseInt(wi)+1);
+  return wi==='0'?'1ª quincena':'2ª quincena';
+}
 
-// ── Auto-login desde sesión activa ──
+// ── Auto-login ──
 (function(){
   try {
-    const s = JSON.parse(localStorage.getItem('panalcor_session')||'null');
-    if(s && s.nombre && (!s.expires || Date.now() < s.expires)){
-      mecNombre = s.nombre.toUpperCase();
-      document.getElementById('loginOverlay').style.display = 'none';
-      document.getElementById('headerMec').textContent = '👷 '+mecNombre;
+    const s=JSON.parse(localStorage.getItem('panalcor_session')||'null');
+    if(s && s.nombre && (!s.expires || Date.now()<s.expires)){
+      mecNombre=s.nombre.toUpperCase();
+      document.getElementById('loginOverlay').style.display='none';
+      document.getElementById('headerMec').textContent='👷 '+mecNombre;
       cargarMes();
     }
   } catch(e){}
 })();
 
 function loginMec(){
-  const n = document.getElementById('loginNombre').value.trim().toUpperCase();
+  const n=document.getElementById('loginNombre').value.trim().toUpperCase();
   if(!n){ alert('Introduce tu nombre'); return; }
-  mecNombre = n;
-  document.getElementById('loginOverlay').style.display = 'none';
-  document.getElementById('headerMec').textContent = '👷 '+n;
+  mecNombre=n;
+  document.getElementById('loginOverlay').style.display='none';
+  document.getElementById('headerMec').textContent='👷 '+n;
   cargarMes();
 }
 
 function navMes(delta){
-  let {year,month} = curMes;
-  month += delta;
+  let {year,month}=curMes;
+  month+=delta;
   if(month<0){year--;month=11;} if(month>11){year++;month=0;}
-  curMes = {year,month};
+  curMes={year,month};
   cargarMes();
 }
 
+// ── Cargar mes ──
 async function cargarMes(){
-  const {year,month} = curMes;
-  const mk = mesKey(year,month);
-  const tit = MESES_L[month].charAt(0).toUpperCase()+MESES_L[month].slice(1)+' '+year;
-  document.getElementById('mesTitle').textContent = tit;
-  document.getElementById('content').innerHTML = `<div class="loading">⏳ Cargando ${tit}...</div>`;
+  const {year,month}=curMes;
+  const mk=mesKey(year,month);
+  const tit=MESES_L[month].charAt(0).toUpperCase()+MESES_L[month].slice(1)+' '+year;
+  document.getElementById('mesTitle').textContent=tit;
+  document.getElementById('content').innerHTML=`<div class="loading">⏳ Cargando ${tit}...</div>`;
+  document.getElementById('statsBar').style.display='none';
+  document.getElementById('modeToggle').style.display='none';
+  document.getElementById('searchWrap').style.display='none';
+  document.getElementById('fabMarkAll').classList.remove('visible');
 
-  // Desconectar listener anterior si existía
-  if(_compListener) { _compListener.off(); _compListener = null; }
+  if(_compListener){ _compListener.off(); _compListener=null; }
 
   try {
-    const sp = await _DB.ref(`preventivo_plan/${mk}`).once('value');
-    _plan = sp.val();
+    const sp=await _DB.ref(`preventivo_plan/${mk}`).once('value');
+    _plan=sp.val();
   } catch(e){
-    document.getElementById('content').innerHTML =
-      `<div class="empty-state"><p style="color:#e74c3c">⚠️ Sin conexión. Comprueba la red.</p></div>`;
+    document.getElementById('content').innerHTML=
+      `<div class="empty-state"><p style="color:#e74c3c">⚠️ Sin conexión.</p></div>`;
     return;
   }
 
   if(!_plan||!_plan.tareas){
-    document.getElementById('content').innerHTML = `
+    document.getElementById('content').innerHTML=`
       <div class="empty-state">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <p>No hay plan publicado para <b>${tit}</b>.<br><span style="font-size:.8rem;opacity:.5">El administrador aún no ha publicado el plan.</span></p>
+        <p>No hay plan publicado para <b>${tit}</b>.<br>
+        <span style="font-size:.8rem;opacity:.5">El administrador aún no ha publicado el plan.</span></p>
       </div>`;
     return;
   }
 
-  // Listener en tiempo real para completados — se actualiza solo cuando el admin rellena
-  _compListener = _DB.ref(`preventivo_completado/${mk}`);
-  _compListener.on('value', snap => {
-    _comp = snap.val() || {};
-    renderMisTareas(mk);
+  _compListener=_DB.ref(`preventivo_completado/${mk}`);
+  _compListener.on('value', snap=>{
+    _comp=snap.val()||{};
+    renderMode();
   });
 }
 
-function renderMisTareas(mk){
-  const tareas = (_plan.tareas||[]).filter(t =>
-    t.mecanico.toUpperCase() === mecNombre ||
-    t.frecuencia === 'ARRANQUE' || t.frecuencia === 'CIERRE'
+// ── Mis tareas filtradas ──
+function getMisTareas(){
+  return (_plan.tareas||[]).filter(t=>
+    t.mecanico && t.mecanico.toUpperCase()===mecNombre
   );
+}
+function getShared(){
+  return (_plan.tareas||[]).filter(t=>
+    t.frecuencia==='ARRANQUE'||t.frecuencia==='CIERRE'
+  );
+}
+function getSlotsOf(t){
+  return Object.entries(t.fechas||{}).filter(([,v])=>typeof v==='string');
+}
 
-  if(!tareas.length){
-    document.getElementById('content').innerHTML = `
-      <div class="empty-state">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <p>No tienes tareas asignadas este mes.</p>
-      </div>`;
+// ── Stats ──
+function actualizarStats(tareas){
+  let total=0,hechas=0;
+  tareas.forEach(t=>{
+    getSlotsOf(t).forEach(([wi])=>{
+      total++;
+      if(_comp[`${t.id}_${wi}`]) hechas++;
+    });
+  });
+  document.getElementById('statsBar').style.display='flex';
+  document.getElementById('statHechas').textContent='✓ '+hechas+' hechas';
+  document.getElementById('statPend').textContent=(total-hechas)+' pendientes';
+  const pct=total?Math.round(hechas/total*100):0;
+  document.getElementById('progFill').style.width=pct+'%';
+  document.getElementById('progPct').textContent=pct+'%';
+}
+
+// ── Modo ──
+function setMode(m){
+  _curMode=m;
+  document.getElementById('btnModeMaq').classList.toggle('active',m==='maquina');
+  document.getElementById('btnModeTarea').classList.toggle('active',m==='tarea');
+  document.getElementById('searchInp').value='';
+  _fabTarget=null;
+  document.getElementById('fabMarkAll').classList.remove('visible');
+  renderMode();
+}
+
+function renderMode(){
+  const mk=mesKey(curMes.year,curMes.month);
+  const tareas=getMisTareas();
+  const shared=getShared();
+  actualizarStats(tareas);
+  document.getElementById('modeToggle').style.display='flex';
+  document.getElementById('searchWrap').style.display='block';
+  if(_curMode==='maquina') renderPorMaquina(tareas,shared,mk);
+  else                      renderPorTarea(tareas,shared,mk);
+}
+
+/* ═══════════════════════════════════
+   MODO MÁQUINA
+═══════════════════════════════════ */
+function renderPorMaquina(tareas, shared, mk){
+  _fabTarget=null;
+  document.getElementById('fabMarkAll').classList.remove('visible');
+  const q=(document.getElementById('searchInp').value||'').trim().toUpperCase();
+
+  // Agrupar por máquina
+  const byMaq={};
+  tareas.forEach(t=>{
+    if(q && !t.maquina.toUpperCase().includes(q) && !t.tarea.toUpperCase().includes(q)) return;
+    if(!byMaq[t.maquina]) byMaq[t.maquina]=[];
+    byMaq[t.maquina].push(t);
+  });
+
+  const maqNames=Object.keys(byMaq).sort((a,b)=>{
+    const na=a.match(/\d+$/),nb=b.match(/\d+$/);
+    if(na&&nb) return parseInt(na[0])-parseInt(nb[0]);
+    return a.localeCompare(b,'es');
+  });
+
+  let html='';
+
+  // Shared (arranque/cierre)
+  if(shared.length){
+    html+=`<div class="shared-section"><div class="section-label">🔄 Compartidas — Arranque / Cierre</div>`;
+    shared.forEach(t=>{ html+=sharedCardHtml(t,mk); });
+    html+=`</div>`;
+  }
+
+  if(!maqNames.length){
+    html+=`<div class="empty-state"><p>${q?'Sin resultados para "'+escH(q)+'"':'No tienes tareas asignadas este mes.'}</p></div>`;
+    document.getElementById('content').innerHTML=html;
     return;
   }
 
-  // Stats
-  let total=0, hechas=0;
+  html+=`<div class="maq-grid">`;
+  maqNames.forEach(maq=>{
+    const tasks=byMaq[maq];
+    let total=0,hechas=0;
+    tasks.forEach(t=>getSlotsOf(t).forEach(([wi])=>{ total++; if(_comp[`${t.id}_${wi}`]) hechas++; }));
+    const pct=total?Math.round(hechas/total*100):0;
+    const col=pct===100?'var(--green)':pct>0?'var(--gold)':'rgba(255,255,255,.25)';
+    const cardId='mc_'+maq.replace(/[^a-zA-Z0-9]/g,'_');
+
+    let taskRows='';
+    tasks.forEach(t=>{ taskRows+=taskRowHtml(t,mk); });
+
+    html+=`<div class="maq-card" id="${cardId}">
+      <div class="maq-card-head" onclick="toggleMaqCard('${cardId}')">
+        <span class="maq-nm">${escH(maq)}</span>
+        <div class="maq-prog">
+          <span class="maq-pct" style="color:${col}">${pct}%</span>
+          <div class="maq-mini-bar"><div class="maq-mini-fill" style="width:${pct}%;background:${col}"></div></div>
+        </div>
+        <span class="maq-chev">▼</span>
+      </div>
+      <div class="maq-tasks">${taskRows}</div>
+    </div>`;
+  });
+  html+=`</div>`;
+  document.getElementById('content').innerHTML=html;
+}
+
+function toggleMaqCard(id){
+  document.getElementById(id).classList.toggle('open');
+}
+
+/* ═══════════════════════════════════
+   MODO TAREA
+═══════════════════════════════════ */
+function renderPorTarea(tareas, shared, mk){
+  _fabTarget=null;
+  document.getElementById('fabMarkAll').classList.remove('visible');
+  const q=(document.getElementById('searchInp').value||'').trim().toUpperCase();
+
+  // Agrupar por nombre de tarea
+  const byTarea={};
   tareas.forEach(t=>{
-    if(t.frecuencia==='DIARIO') return;
-    const slots = Object.entries(t.fechas||{}).filter(([,v])=>typeof v==='string');
-    slots.forEach(([wi])=>{ total++; if(_comp[`${t.id}_${wi}`]) hechas++; });
+    if(q && !t.tarea.toUpperCase().includes(q) && !t.maquina.toUpperCase().includes(q)) return;
+    if(!byTarea[t.tarea]) byTarea[t.tarea]=[];
+    byTarea[t.tarea].push(t);
   });
 
-  const tareasAC  = tareas.filter(t=>t.frecuencia==='ARRANQUE'||t.frecuencia==='CIERRE');
-  const tareasReg = tareas.filter(t=>t.frecuencia!=='ARRANQUE'&&t.frecuencia!=='CIERRE');
+  const tareaNames=Object.keys(byTarea).sort((a,b)=>a.localeCompare(b,'es'));
 
-  let html = `<div class="stats-row" style="margin-top:6px">
-    <span class="stat-chip" style="color:#00b894;background:rgba(0,184,148,.1);border-color:rgba(0,184,148,.3)">✓ ${hechas} hechas</span>
-    <span class="stat-chip" style="color:#e8c14e;background:rgba(232,193,78,.1);border-color:rgba(232,193,78,.3)">${total-hechas} pendientes</span>
+  let html='';
+
+  // Shared
+  if(shared.length){
+    html+=`<div class="shared-section"><div class="section-label">🔄 Compartidas — Arranque / Cierre</div>`;
+    shared.forEach(t=>{ html+=sharedCardHtml(t,mk); });
+    html+=`</div>`;
+  }
+
+  if(!tareaNames.length){
+    html+=`<div class="empty-state"><p>${q?'Sin resultados para "'+escH(q)+'"':'No tienes tareas asignadas este mes.'}</p></div>`;
+    document.getElementById('content').innerHTML=html;
+    return;
+  }
+
+  html+=`<div class="tarea-list">`;
+  tareaNames.forEach(tarea=>{
+    const tasks=byTarea[tarea];
+    let totalSlots=0,hechasSlots=0;
+    tasks.forEach(t=>getSlotsOf(t).forEach(([wi])=>{ totalSlots++; if(_comp[`${t.id}_${wi}`]) hechasSlots++; }));
+    const allDone=totalSlots>0&&hechasSlots===totalSlots;
+    const groupId='tg_'+tarea.replace(/[^a-zA-Z0-9]/g,'_').slice(0,30);
+    const pendCnt=totalSlots-hechasSlots;
+
+    // Frecuencias únicas
+    const freqs=[...new Set(tasks.map(t=>t.frecuencia))];
+    const cfg=FREQ_CFG[freqs[0]]||{color:'#fff',border:'rgba(255,255,255,.2)'};
+
+    let maqRows='';
+    tasks.forEach(t=>{
+      const slots=getSlotsOf(t);
+      slots.forEach(([wi,fechaPlan])=>{
+        const clave=`${t.id}_${wi}`;
+        const comp=_comp[clave];
+        const hecha=!!(comp);
+        const inputId=`ti_${t.id}_${wi}`;
+        const lbl=slotLabel(t,wi,slots.length);
+        const maqLbl=escH(t.maquina)+(lbl?` <span style="color:var(--text-dim);font-size:.72rem">(${lbl})</span>`:'');
+        let btnHtml='';
+        if(hecha){
+          const tag=comp.retraso?`<span class="fuera-tag">RETRASO</span>`:`<span class="done-tag">✅</span>`;
+          btnHtml=`${tag}<button class="btn-mark btn-mark-done"
+            onclick="marcarHecha(${t.id},'${wi}','${mesKey(curMes.year,curMes.month)}',this,document.getElementById('${inputId}').value)">
+            ✏️</button>`;
+        } else {
+          btnHtml=`<button class="btn-mark btn-mark-pend"
+            onclick="marcarHecha(${t.id},'${wi}','${mesKey(curMes.year,curMes.month)}',this,document.getElementById('${inputId}').value)">
+            ✓ Hecha</button>`;
+        }
+        maqRows+=`<div class="tarea-maq-row${hecha?' done':''}">
+          <span class="tarea-maq-nm">${maqLbl}</span>
+          <span class="slot-fecha">📅 ${fmtDs(fechaPlan)}</span>
+          <input type="date" id="${inputId}" value="${comp?comp.fechaReal||fechaPlan:fechaPlan}" class="inp-fecha">
+          ${btnHtml}
+        </div>`;
+      });
+    });
+
+    html+=`<div class="tarea-group${allDone?' done-group':''}" id="${groupId}">
+      <div class="tarea-group-head" onclick="toggleTareaGroup('${groupId}','${escH(tarea).replace(/'/g,'\\\'')}',[${
+        tasks.flatMap(t=>getSlotsOf(t).filter(([wi])=>!_comp[`${t.id}_${wi}`]).map(([wi])=>`[${t.id},'${wi}']`))
+      }])">
+        <div class="tarea-group-nm">${escH(tarea)}</div>
+        <span class="tarea-cnt-badge" style="color:${cfg.color};border-color:${cfg.border}">
+          ${tasks.length} máq${pendCnt>0?' · '+pendCnt+' pend.':''}
+        </span>
+        <span class="tarea-chev">▼</span>
+      </div>
+      <div class="tarea-maq-list">${maqRows}</div>
+    </div>`;
+  });
+  html+=`</div>`;
+  document.getElementById('content').innerHTML=html;
+}
+
+function toggleTareaGroup(id, nombre, pendSlots){
+  const el=document.getElementById(id);
+  el.classList.toggle('open');
+  // Mostrar/ocultar FAB según si hay pendientes en el grupo abierto
+  if(el.classList.contains('open') && pendSlots.length>0){
+    _fabTarget={nombre, slots:pendSlots};
+    document.getElementById('fabMarkAll').classList.add('visible');
+  } else {
+    _fabTarget=null;
+    document.getElementById('fabMarkAll').classList.remove('visible');
+  }
+}
+
+async function marcarTodasGrupo(){
+  if(!_fabTarget) return;
+  const mk=mesKey(curMes.year,curMes.month);
+  const btn=document.getElementById('fabMarkAll');
+  btn.textContent='⏳ Marcando...';
+  btn.disabled=true;
+  const hoy=hoyDs();
+  const updates={};
+  _fabTarget.slots.forEach(([taskId,wi])=>{
+    updates[`${taskId}_${wi}`]={hecho:true,fechaReal:hoy,fechaPlan:'',mecanico:mecNombre,autoRelleno:false,ts:Date.now()};
+  });
+  try {
+    await _DB.ref(`preventivo_completado/${mk}`).update(updates);
+  } catch(e){ alert('⚠️ Error: '+e.message); }
+  btn.textContent='✓ Marcar todas pendientes';
+  btn.disabled=false;
+}
+
+/* ═══════════════════════════════════
+   HELPERS HTML
+═══════════════════════════════════ */
+function taskRowHtml(t, mk){
+  const cfg=FREQ_CFG[t.frecuencia]||{color:'#fff',bg:'rgba(255,255,255,.05)',border:'rgba(255,255,255,.2)'};
+  const slots=getSlotsOf(t);
+  if(!slots.length) return `<div class="task-row">
+    <div class="task-info"><div class="task-nm">${escH(t.tarea)}</div><div class="task-meta">Sin fecha asignada</div></div>
+    <span class="freq-pill" style="color:${cfg.color};background:${cfg.bg};border-color:${cfg.border}">${t.frecuencia}</span>
   </div>`;
 
-  if(tareasAC.length){
-    html += `<div class="section-label">🔄 Arranque y Cierre — compartidas</div>`;
-    tareasAC.forEach(t => { html += tarjetaCard(t, mk, true); });
-  }
-  if(tareasReg.length){
-    html += `<div class="section-label">🔧 Mis tareas</div>`;
-    tareasReg.forEach(t => { html += tarjetaCard(t, mk, false); });
-  }
+  const allDone=slots.every(([wi])=>_comp[`${t.id}_${wi}`]);
+  const anyFuera=slots.some(([wi])=>_comp[`${t.id}_${wi}`]&&_comp[`${t.id}_${wi}`].retraso);
+  const rowCls=allDone?(anyFuera?'fuera':'done'):'';
 
-  document.getElementById('content').innerHTML = html;
-}
-
-function tarjetaCard(t, mk, isAC){
-  const cfg = FREQ_CFG[t.frecuencia]||{color:'#fff',bg:'rgba(255,255,255,.05)',border:'rgba(255,255,255,.2)'};
-  const slots = Object.entries(t.fechas||{}).filter(([,v])=>typeof v==='string');
-
-  // Calcular estado general
-  const allDone = slots.length > 0 && slots.every(([wi])=>_comp[`${t.id}_${wi}`]);
-  const allAuto = slots.length > 0 && slots.every(([wi])=>_comp[`${t.id}_${wi}`]?.autoRelleno);
-  const cls = allAuto ? 'auto' : allDone ? 'done' : '';
-
-  let html = `<div class="task-card ${cls}" id="card_${t.id}">
-    <div class="task-head">
-      <div style="flex:1"><div class="task-maq">${escH(t.maquina||'GENERAL')}</div><div class="task-name">${escH(t.tarea)}</div></div>
-      <span class="freq-pill" style="color:${cfg.color};background:${cfg.bg};border-color:${cfg.border}">${t.frecuencia}</span>
+  let slotsHtml='';
+  slots.forEach(([wi,fechaPlan])=>{
+    const clave=`${t.id}_${wi}`;
+    const comp=_comp[clave];
+    const inputId=`r_${t.id}_${wi}`;
+    const lbl=slotLabel(t,wi,slots.length);
+    let btnHtml='';
+    if(comp){
+      const tag=comp.retraso?`<span class="fuera-tag">RETRASO</span>`:`<span class="done-tag">✅</span>`;
+      btnHtml=`${tag}<button class="btn-mark btn-mark-done"
+        onclick="marcarHecha(${t.id},'${wi}','${mk}',this,document.getElementById('${inputId}').value)">
+        ✏️</button>`;
+    } else if(false){ // espacio para autoRelleno si aplica
+    } else {
+      btnHtml=`<button class="btn-mark btn-mark-pend"
+        onclick="marcarHecha(${t.id},'${wi}','${mk}',this,document.getElementById('${inputId}').value)">
+        ✓ Hecha</button>`;
+    }
+    slotsHtml+=`<div class="slot-line">
+      ${lbl?`<span class="slot-lbl">${lbl}</span>`:''}
+      <span class="slot-fecha">📅 ${fmtDs(fechaPlan)}</span>
+      <input type="date" id="${inputId}" value="${comp?comp.fechaReal||fechaPlan:fechaPlan}" class="inp-fecha">
+      ${btnHtml}
     </div>`;
+  });
 
-  if(t.frecuencia==='DIARIO'){
-    html += `<div class="slot-row"><span class="diario-note">Cada día de lunes a viernes</span></div>`;
-  } else if(!slots.length){
-    html += `<div class="slot-row"><span class="no-fecha">Sin fecha asignada aún</span></div>`;
-  } else {
-    slots.forEach(([wi, fechaPlan])=>{
-      const clave = `${t.id}_${wi}`;
-      const comp  = _comp[clave];
-      let slotLabel = '';
-      if(slots.length>1){
-        if(t.frecuencia==='SEMANAL') slotLabel = `Semana ${parseInt(wi)+1}`;
-        else if(wi==='0') slotLabel = '1ª mitad';
-        else slotLabel = '2ª mitad';
-      }
-      const inputId = `fi_${t.id}_${wi}`;
-      const fechaInput = comp ? comp.fechaReal : fechaPlan;
-      const hecha = comp && !comp.autoRelleno;
-      const autoRell = comp && comp.autoRelleno;
-
-      html += `<div class="slot-row" style="flex-wrap:wrap;gap:6px;align-items:center">
-        ${slotLabel ? `<span class="slot-label">${slotLabel}</span>` : ''}
-        <span class="fecha-pill fecha-plan" style="font-size:.75rem">📅 Plan: ${fmtDs(fechaPlan)}</span>
-        <input type="date" id="${inputId}" value="${fechaInput}"
-          style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);border-radius:8px;color:#fff;padding:5px 10px;font-size:.82rem;outline:none"
-          ${hecha?'':''}/>`;
-
-      if(hecha){
-        html += `<span style="color:#00b894;font-size:.8rem;font-weight:700">✅ Hecha</span>
-          <button onclick="marcarHecha(${t.id},'${wi}','${mk}',this,document.getElementById('${inputId}').value)"
-            style="background:rgba(0,184,148,.15);border:1px solid rgba(0,184,148,.4);color:#00b894;border-radius:8px;padding:4px 10px;font-size:.75rem;cursor:pointer">
-            ✏️ Corregir fecha
-          </button>`;
-      } else if(autoRell){
-        const etq = comp.retraso
-          ? `<span style="background:#e17055;color:#fff;border-radius:4px;font-size:.7rem;padding:1px 6px;font-weight:700">RETRASO</span>`
-          : `<span style="background:#00b894;color:#fff;border-radius:4px;font-size:.7rem;padding:1px 6px;font-weight:700">EN FECHA</span>`;
-        html += `${etq}<button onclick="marcarHecha(${t.id},'${wi}','${mk}',this,document.getElementById('${inputId}').value)"
-            style="background:rgba(116,185,255,.12);border:1px solid rgba(116,185,255,.35);color:#74b9ff;border-radius:8px;padding:4px 10px;font-size:.75rem;cursor:pointer">
-            ✓ Confirmar / Corregir
-          </button>`;
-      } else {
-        html += `<button onclick="marcarHecha(${t.id},'${wi}','${mk}',this,document.getElementById('${inputId}').value)"
-            style="background:rgba(0,184,148,.12);border:1px solid rgba(0,184,148,.4);color:#00b894;border-radius:8px;padding:5px 14px;font-size:.82rem;font-weight:600;cursor:pointer">
-            ${isAC?'✓ La hice yo':'✓ Marcar hecha'}
-          </button>`;
-      }
-      html += `</div>`;
-    });
-  }
-
-  html += `</div>`;
-  return html;
+  return `<div class="task-row ${rowCls}">
+    <div class="task-info" style="width:100%;margin-bottom:4px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="task-nm" style="flex:1">${escH(t.tarea)}</div>
+        <span class="freq-pill" style="color:${cfg.color};background:${cfg.bg};border-color:${cfg.border}">${t.frecuencia}</span>
+      </div>
+    </div>
+    <div class="slot-block">${slotsHtml}</div>
+  </div>`;
 }
 
+function sharedCardHtml(t, mk){
+  const cfg=FREQ_CFG[t.frecuencia]||{color:'#fff',bg:'rgba(255,255,255,.05)',border:'rgba(255,255,255,.2)'};
+  const slots=getSlotsOf(t);
+  let slotsHtml='';
+  slots.forEach(([wi,fechaPlan])=>{
+    const clave=`${t.id}_${wi}`;
+    const comp=_comp[clave];
+    const inputId=`sh_${t.id}_${wi}`;
+    const hecha=!!(comp&&!comp.autoRelleno);
+    slotsHtml+=`<div class="slot-line" style="margin-top:5px">
+      <span class="slot-fecha">📅 ${fmtDs(fechaPlan)}</span>
+      <input type="date" id="${inputId}" value="${comp?comp.fechaReal||fechaPlan:fechaPlan}" class="inp-fecha">
+      ${hecha
+        ?`<span class="done-tag">✅ Hecha</span>
+           <button class="btn-mark btn-mark-done" onclick="marcarHecha(${t.id},'${wi}','${mk}',this,document.getElementById('${inputId}').value)">✏️</button>`
+        :`<button class="btn-mark btn-mark-pend" onclick="marcarHecha(${t.id},'${wi}','${mk}',this,document.getElementById('${inputId}').value)">✓ La hice yo</button>`
+      }
+    </div>`;
+  });
+  if(!slots.length) slotsHtml=`<div style="font-size:.75rem;color:var(--text-dim);margin-top:4px">Sin fecha asignada</div>`;
+  return `<div class="shared-card">
+    <div class="shared-head">
+      <div class="shared-nm" style="flex:1">${escH(t.tarea)}</div>
+      <span class="freq-pill" style="color:${cfg.color};background:${cfg.bg};border-color:${cfg.border}">${t.frecuencia}</span>
+    </div>
+    ${slotsHtml}
+  </div>`;
+}
+
+/* ═══════════════════════════════════
+   MARCAR HECHA
+═══════════════════════════════════ */
 async function marcarHecha(taskId, wi, mk, btn, fechaElegida){
   btn.disabled=true; btn.textContent='⏳';
-  const hoy = new Date();
-  const hoyDs = hoy.getFullYear()+'-'+String(hoy.getMonth()+1).padStart(2,'0')+'-'+String(hoy.getDate()).padStart(2,'0');
-  const fechaReal = fechaElegida || hoyDs;
+  const fechaReal=fechaElegida||hoyDs();
   try {
     await _DB.ref(`preventivo_completado/${mk}/${taskId}_${wi}`).set({
       hecho:true, fechaReal, fechaPlan:'', mecanico:mecNombre, autoRelleno:false, ts:Date.now()
     });
-    _comp[`${taskId}_${wi}`] = {hecho:true, fechaReal, mecanico:mecNombre, autoRelleno:false};
-    renderMisTareas(mk);
   } catch(e){
-    btn.disabled=false; btn.textContent='✓ Marcar hecha';
+    btn.disabled=false; btn.textContent='✓ Hecha';
     alert('⚠️ Error: '+e.message);
   }
 }
