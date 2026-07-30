@@ -314,6 +314,10 @@ function toast(msg, err){
 
 // ── ARRANQUE ──
 (function(){
+  try {
+    var adm=JSON.parse(localStorage.getItem('panalcor_session')||'null');
+    if(adm && adm.rol==='admin' && Date.now()<adm.expires){ abrirApp(); return; }
+  } catch(e){}
   if(getSesion()) abrirApp();
 })();
 </script>

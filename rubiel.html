@@ -869,9 +869,13 @@ function cargarObradorHistorial(){
 }
 
 // ── ARRANQUE ─────────────────────────────────────────────────
-if(sesionValida()){
-  abrirApp();
-}
+(function(){
+  try {
+    var adm=JSON.parse(localStorage.getItem('panalcor_session')||'null');
+    if(adm && adm.rol==='admin' && Date.now()<adm.expires){ abrirApp(); return; }
+  } catch(e){}
+  if(sesionValida()) abrirApp();
+})();
 </script>
 </body>
 </html>
