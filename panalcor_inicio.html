@@ -604,7 +604,9 @@ function getSession(){
     // Fallback: sesión de mecánico guardada desde landing.html o mis_tareas.html
     var m = JSON.parse(localStorage.getItem('mecSesion') || 'null');
     if(m && m.nombre && (m.expires === null || Date.now() < m.expires)){
-      return {nombre: m.nombre, rol: 'mecanico', expires: Date.now() + 30*24*3600*1000};
+      var s2 = {nombre: m.nombre, rol: 'mecanico', expires: Date.now() + 30*24*3600*1000};
+      localStorage.setItem(PS_KEY, JSON.stringify(s2));
+      return s2;
     }
     return null;
   }catch(e){ return null; }
@@ -801,11 +803,11 @@ function _buildBtns(rol, nombre){
        + '<div><div class="btn-label" style="color:#74b9ff">Mis Tareas</div>'
        + '<div class="btn-sublabel" style="color:rgba(52,152,219,0.6)">Ver tareas asignadas</div></div></a>';
     }
-    h += '<a class="btn" href="mecanicos.html#mantenimiento" style="'+row+';border-color:rgba(39,174,96,0.35);background:rgba(39,174,96,0.07)">'
+    h += '<a class="btn" href="mecanicos.html#panel-mantenimiento" style="'+row+';border-color:rgba(39,174,96,0.35);background:rgba(39,174,96,0.07)">'
        + '<div class="btn-icon" style="'+ico+';color:#2ecc71">📅</div>'
        + '<div><div class="btn-label" style="color:#5dde95">Mantenimiento Diario</div>'
        + '<div class="btn-sublabel" style="color:rgba(39,174,96,0.6)">Checklist de revisiones del día</div></div></a>';
-    h += '<a class="btn" href="mecanicos.html#cierre" style="'+row+';border-color:rgba(231,76,60,0.35);background:rgba(231,76,60,0.07)">'
+    h += '<a class="btn" href="mecanicos.html#panel-cierre" style="'+row+';border-color:rgba(231,76,60,0.35);background:rgba(231,76,60,0.07)">'
        + '<div class="btn-icon" style="'+ico+';color:#e74c3c">🚪</div>'
        + '<div><div class="btn-label" style="color:#ff8a80">Cerrar Turno</div>'
        + '<div class="btn-sublabel" style="color:rgba(231,76,60,0.6)">Nota para el relevo y averías abiertas</div></div></a>';
@@ -825,7 +827,7 @@ function _buildBtns(rol, nombre){
        + '<div class="btn-icon" style="'+ico+';color:#e74c3c">'+_SVGS.alert+'</div>'
        + '<div><div class="btn-label" style="color:#e74c3c">Averias</div><div class="btn-sublabel" style="color:rgba(231,76,60,0.6)">Registro de incidencias</div></div>'
        + badgeAv + '</a>';
-    h += '<a class="btn" href="mis_tareas.html#otros" style="position:relative;'+row+';border-color:rgba(201,162,39,0.3);background:rgba(201,162,39,0.06)">'
+    h += '<a class="btn" href="mis_tareas.html" style="position:relative;'+row+';border-color:rgba(201,162,39,0.3);background:rgba(201,162,39,0.06)">'
        + '<div class="btn-icon" style="'+ico+';color:var(--gold)">🔩</div>'
        + '<div><div class="btn-label" style="color:var(--gold)">Otros Trabajos</div>'
        + '<div class="btn-sublabel" style="color:rgba(201,162,39,0.6)">Trabajos no planificados</div></div>'
@@ -846,7 +848,7 @@ function _buildBtns(rol, nombre){
        + '<div class="btn-icon" style="'+ico+';color:#74b9ff">🔍</div>'
        + '<div><div class="btn-label" style="color:#74b9ff">Repuestos</div>'
        + '<div class="btn-sublabel" style="color:rgba(52,152,219,0.6)">Buscar referencia</div></div></button>';
-    h += '<a class="btn" href="mecanicos.html#formacion" style="'+row+';border-color:rgba(155,89,182,0.35);background:rgba(155,89,182,0.07)">'
+    h += '<a class="btn" href="mecanicos.html#panel-formacion" style="'+row+';border-color:rgba(155,89,182,0.35);background:rgba(155,89,182,0.07)">'
        + '<div class="btn-icon" style="'+ico+';color:#c39bd3">🎓</div>'
        + '<div><div class="btn-label" style="color:#c39bd3">Formación</div>'
        + '<div class="btn-sublabel" style="color:rgba(155,89,182,0.6)">Cursos y manuales</div></div></a>';
