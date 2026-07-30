@@ -209,7 +209,7 @@ body { padding-bottom: 40px; }
     <div class="panel-title" style="color:#5dde95">▶ ARRANCADA</div>
     <div style="display:flex;align-items:center;gap:10px">
       <div class="panel-count" id="countArr">0 / 14</div>
-      <button onclick="abrirGestorItems('arrancada')" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:0.78rem;font-family:'Barlow',sans-serif" title="Gestionar ítems">⚙️ Ítems</button>
+      <button id="btnGestorArr" onclick="abrirGestorItems('arrancada')" style="display:none;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:0.78rem;font-family:'Barlow',sans-serif" title="Gestionar ítems">⚙️ Ítems</button>
     </div>
   </div>
   <div class="checklist" id="listArr"></div>
@@ -225,7 +225,7 @@ body { padding-bottom: 40px; }
     <div class="panel-title" style="color:#ff8a80">■ CIERRE</div>
     <div style="display:flex;align-items:center;gap:10px">
       <div class="panel-count" id="countCie">0 / 4</div>
-      <button onclick="abrirGestorItems('cierre')" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:0.78rem;font-family:'Barlow',sans-serif" title="Gestionar ítems">⚙️ Ítems</button>
+      <button id="btnGestorCie" onclick="abrirGestorItems('cierre')" style="display:none;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:0.78rem;font-family:'Barlow',sans-serif" title="Gestionar ítems">⚙️ Ítems</button>
     </div>
   </div>
   <div class="checklist" id="listCie"></div>
@@ -357,20 +357,23 @@ var ITEMS_CIE_DEFAULT = [
   'REVISAR SEGURIDADES'
 ];
 
-function loadItems(tipo) {
-  try {
-    var saved = JSON.parse(localStorage.getItem('ac_items_' + tipo) || 'null');
-    if (Array.isArray(saved) && saved.length) return saved;
-  } catch(e) {}
-  return tipo === 'arrancada' ? ITEMS_ARR_DEFAULT.slice() : ITEMS_CIE_DEFAULT.slice();
-}
+var ITEMS_ARR = ITEMS_ARR_DEFAULT.slice();
+var ITEMS_CIE = ITEMS_CIE_DEFAULT.slice();
 
 function saveItems(tipo, items) {
-  localStorage.setItem('ac_items_' + tipo, JSON.stringify(items));
+  // Solo admin puede guardar ítems — se persisten en Firebase
+  DB.ref('config/ac_items/' + tipo).set(items).catch(function(e) {
+    mostrarToast('❌ Error al guardar ítems: ' + e.message, true);
+  });
 }
 
-var ITEMS_ARR = loadItems('arrancada');
-var ITEMS_CIE = loadItems('cierre');
+function cargarItems() {
+  return DB.ref('config/ac_items').once('value').then(function(snap) {
+    var data = snap.val() || {};
+    if (Array.isArray(data.arrancada) && data.arrancada.length) ITEMS_ARR = data.arrancada;
+    if (Array.isArray(data.cierre)    && data.cierre.length)    ITEMS_CIE = data.cierre;
+  }).catch(function(){});
+}
 
 // Estado de los checks
 var stateArr = ITEMS_ARR.map(function(){ return {done:false, mecanico:'', obs:'', hora:''}; });
@@ -720,9 +723,22 @@ function mostrarToast(msg, esError) {
 }
 
 // ── Init ──────────────────────────────────────────────────────
-renderLista(ITEMS_ARR, stateArr, 'listArr', 'countArr', 'arrancada');
-renderLista(ITEMS_CIE, stateCie, 'listCie', 'countCie', 'cierre');
-cargarMensual().then(function() { cargarRegistrosDelDia(); });
+// Mostrar botones de gestión solo al admin
+if (esAdmin) {
+  document.getElementById('btnGestorArr').style.display = 'inline-block';
+  document.getElementById('btnGestorCie').style.display = 'inline-block';
+}
+
+// Cargar ítems desde Firebase, luego estado mensual, luego registros del día
+cargarItems().then(function() {
+  stateArr = ITEMS_ARR.map(function(){ return {done:false,mecanico:'',obs:'',hora:''}; });
+  stateCie = ITEMS_CIE.map(function(){ return {done:false,mecanico:'',obs:'',hora:''}; });
+  renderLista(ITEMS_ARR, stateArr, 'listArr', 'countArr', 'arrancada');
+  renderLista(ITEMS_CIE, stateCie, 'listCie', 'countCie', 'cierre');
+  return cargarMensual();
+}).then(function() {
+  cargarRegistrosDelDia();
+});
 </script>
 </body>
 </html>
