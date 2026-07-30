@@ -3123,10 +3123,16 @@ async function publicarPlan() {
 
   const btn = document.getElementById('btnPublicar');
   btn.disabled = true; btn.textContent = '⏳ Publicando...';
+  // Sanitizar claves de asig: Firebase no permite . # $ / [ ] en keys
+  const asigFB = {};
+  Object.entries(asig).forEach(([k, v]) => {
+    asigFB[k.replace(/[.#$/\[\]]/g, '_')] = v;
+  });
+
   try {
     await _DB.ref(`preventivo_plan/${mk}`).set({
       tareas: tareasPlan,
-      asig,
+      asig: asigFB,
       publicado: true,
       mes: mk,
       publicadoEn: Date.now()
