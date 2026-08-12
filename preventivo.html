@@ -664,12 +664,17 @@ tbody td:last-child  { border-radius: 0 8px 8px 0; }
 .seg-wrap { padding:1rem 1.5rem 5rem; }
 .seg-resumen { display:flex;flex-wrap:wrap;gap:0.5rem;padding:0.8rem 1.5rem;border-bottom:1px solid var(--border);background:var(--navy-mid); }
 .seg-chip { display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:20px;font-size:0.82rem;font-weight:600;border:1px solid transparent; }
-.prog-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;padding:1rem 1.5rem;border-bottom:1px solid var(--border); }
-.prog-card { background:var(--navy-mid);border:1px solid var(--border);border-radius:10px;padding:14px; }
-.prog-name { font-weight:700;font-size:0.9rem;margin-bottom:8px;color:var(--cream); }
-.prog-bar-bg { background:rgba(255,255,255,0.1);border-radius:4px;height:8px;margin-bottom:6px; }
-.prog-bar-fill { border-radius:4px;height:8px;transition:width .4s; }
-.prog-label { display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text-dim); }
+.prog-wrap { display:flex;gap:0;border-bottom:1px solid var(--border); }
+.prog-section { flex:1;min-width:0; }
+.prog-section + .prog-section { border-left:1px solid var(--border); }
+.prog-section-title { font-size:0.68rem;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;
+  color:var(--gold);padding:0.55rem 1.2rem 0;opacity:0.75; }
+.prog-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;padding:0.6rem 1.2rem 0.9rem; }
+.prog-card { background:var(--navy-mid);border:1px solid var(--border);border-radius:10px;padding:12px; }
+.prog-name { font-weight:700;font-size:0.85rem;margin-bottom:7px;color:var(--cream); }
+.prog-bar-bg { background:rgba(255,255,255,0.1);border-radius:4px;height:7px;margin-bottom:5px; }
+.prog-bar-fill { border-radius:4px;height:7px;transition:width .4s; }
+.prog-label { display:flex;justify-content:space-between;font-size:0.75rem;color:var(--text-dim); }
 .prog-label b { color:#e8c14e; }
 .seg-filters { display:flex;gap:8px;flex-wrap:wrap;padding:0.8rem 1.5rem;border-bottom:1px solid var(--border);background:var(--navy-mid);align-items:center; }
 .seg-filters input[type=month],.seg-filters select,.seg-filters input[type=text],.seg-filters input[type=search] { background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:7px;color:var(--white);font-family:'Barlow',sans-serif;font-size:0.88rem;padding:8px 12px;outline:none; color-scheme:dark; }
@@ -880,7 +885,16 @@ if('serviceWorker' in navigator){
       <button type="button" class="seg-load-btn" onclick="imprimirInformeSeguimiento()" style="background:rgba(201,162,39,0.15);border-color:rgba(201,162,39,0.4);color:var(--gold)">🖨️ Imprimir</button>
     </div>
     <div class="seg-resumen" id="segResumen"></div>
-    <div class="prog-grid" id="segProgGrid"></div>
+    <div class="prog-wrap" id="segProgWrap" style="display:none">
+      <div class="prog-section">
+        <div class="prog-section-title">% Tareas realizadas</div>
+        <div class="prog-grid" id="segProgGrid"></div>
+      </div>
+      <div class="prog-section">
+        <div class="prog-section-title">% Carga asignada</div>
+        <div class="prog-grid" id="segProgGridCarga"></div>
+      </div>
+    </div>
     <div class="seg-wrap">
       <div class="seg-tbl-wrap">
         <table style="width:100%;border-collapse:separate;border-spacing:0 3px">
@@ -3861,6 +3875,8 @@ function iniciarSeguimiento() {
     document.getElementById('segTabla').innerHTML = '';
     document.getElementById('segResumen').innerHTML = '';
     document.getElementById('segProgGrid').innerHTML = '';
+    document.getElementById('segProgGridCarga').innerHTML = '';
+    document.getElementById('segProgWrap').style.display = 'none';
   }
 }
 
@@ -3889,6 +3905,8 @@ async function cargarSeguimiento(mkOverride) {
         'No hay plan publicado para este mes. Publica el plan desde la pestaña Plan Mensual.';
       document.getElementById('segResumen').innerHTML = '';
       document.getElementById('segProgGrid').innerHTML = '';
+    document.getElementById('segProgGridCarga').innerHTML = '';
+    document.getElementById('segProgWrap').style.display = 'none';
       _segData = null;
       return;
     }
@@ -3943,17 +3961,29 @@ function renderSeguimiento(tareas, compData, filtMec, filtEst) {
     mecStats[m].total++;
     if(compData[s.slotKey]) mecStats[m].hechos++;
   });
-  let progHtml = '';
-  Object.entries(mecStats).forEach(([m, st]) => {
+  const totalSlots = slots.length || 1;
+  // Ordenar por nombre
+  const mecEntries = Object.entries(mecStats).sort((a,b) => a[0].localeCompare(b[0]));
+  let progHtml = '', cargaHtml = '';
+  mecEntries.forEach(([m, st]) => {
     const p = st.total ? Math.round(st.hechos/st.total*100) : 0;
-    const color = p>=90?'#27ae60':p>=70?'#e67e22':'#e74c3c';
+    const colorP = p>=90?'#27ae60':p>=70?'#e67e22':'#e74c3c';
     progHtml += `<div class="prog-card">
       <div class="prog-name">👷 ${escHtml(m)}</div>
-      <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:${p}%;background:${color}"></div></div>
+      <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:${p}%;background:${colorP}"></div></div>
       <div class="prog-label"><span>${st.hechos}/${st.total}</span><b>${p}%</b></div>
+    </div>`;
+    const c = Math.round(st.total/totalSlots*100);
+    const colorC = c>=25?'#9b59b6':c>=15?'#3498db':'#74b9ff';
+    cargaHtml += `<div class="prog-card">
+      <div class="prog-name">👷 ${escHtml(m)}</div>
+      <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:${c}%;background:${colorC}"></div></div>
+      <div class="prog-label"><span>${st.total} tareas</span><b>${c}%</b></div>
     </div>`;
   });
   document.getElementById('segProgGrid').innerHTML = progHtml;
+  document.getElementById('segProgGridCarga').innerHTML = cargaHtml;
+  document.getElementById('segProgWrap').style.display = mecEntries.length ? '' : 'none';
 
   // Tabla
   if(!visible.length) {
