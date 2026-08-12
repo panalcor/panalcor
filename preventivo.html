@@ -2869,6 +2869,16 @@ const _FB_CFG = {
 if(!firebase.apps.length) firebase.initializeApp(_FB_CFG);
 const _DB = firebase.database();
 
+// Actualizar contador automático de tareas en la versión
+(function(){
+  try {
+    var s = JSON.parse(localStorage.getItem('panalcor_session')||'null');
+    if(s && s.rol === 'admin' && Date.now() < s.expires){
+      _DB.ref('config/versionData/tareasActual').set(TAREAS.length);
+    }
+  } catch(e){}
+})();
+
 const ST = {
   pwd:   () => localStorage.getItem('preventivoPwd')    || 'admin',
   ref:   () => localStorage.getItem('preventivoRef')    || '2026-06-01',

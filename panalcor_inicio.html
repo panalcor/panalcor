@@ -752,23 +752,24 @@ function _numToVer(n){
 }
 
 function _mostrarVersion(){
-  DB.ref('config/version').once('value').then(function(snap){
-    var n = snap.val() || 0;
+  DB.ref('config/versionData').once('value').then(function(snap){
+    var d = snap.val() || {base:109, tareasRef:1539, tareasActual:1539, manual:0};
+    var total = (d.base||0) + ((d.tareasActual||0) - (d.tareasRef||0)) + (d.manual||0);
+    if(total < 0) total = 0;
     var chip = document.getElementById('versionChip');
-    if(chip) chip.textContent = 'v' + _numToVer(n);
+    if(chip) chip.textContent = 'v' + _numToVer(total);
     document.getElementById('portalVersion').style.display = 'block';
   });
 }
 
 function adminSumarCambios(){
-  var input = prompt('¿Cuántos cambios añadir a la versión?');
+  var input = prompt('¿Cuántos cambios manuales añadir a la versión?\n(las tareas del catálogo se cuentan automáticamente)');
   if(input === null) return;
   var delta = parseInt(input, 10);
   if(isNaN(delta) || delta <= 0){ alert('Introduce un número positivo.'); return; }
-  DB.ref('config/version').once('value').then(function(snap){
+  DB.ref('config/versionData/manual').once('value').then(function(snap){
     var actual = snap.val() || 0;
-    var nuevo = actual + delta;
-    return DB.ref('config/version').set(nuevo);
+    return DB.ref('config/versionData/manual').set(actual + delta);
   }).then(function(){
     _mostrarVersion();
   });
