@@ -744,35 +744,23 @@ function mostrarPortal(s){
   if(s.rol === 'admin'){ _checkRepuestos(); _mostrarVersion(); }
 }
 
-function _numToVer(n){
-  var patch = n % 1000;
-  var minor = Math.floor(n / 1000) % 1000;
-  var major = Math.floor(n / 1000000) + 1;
-  return major + '.' + minor + '.' + patch;
-}
-
 function _mostrarVersion(){
-  DB.ref('config/versionData').once('value').then(function(snap){
-    var d = snap.val() || {base:109, tareasRef:1539, tareasActual:1539, manual:0};
-    var total = (d.base||0) + ((d.tareasActual||0) - (d.tareasRef||0)) + (d.manual||0);
-    if(total < 0) total = 0;
+  DB.ref('config/ver').once('value').then(function(snap){
+    var v = snap.val() || {major:1, minor:0, patch:119};
     var chip = document.getElementById('versionChip');
-    if(chip) chip.textContent = 'v' + _numToVer(total);
+    if(chip) chip.textContent = 'v' + v.major + '.' + v.minor + '.' + v.patch;
     document.getElementById('portalVersion').style.display = 'block';
   });
 }
 
 function adminSumarCambios(){
-  var input = prompt('¿Cuántos cambios manuales añadir a la versión?\n(las tareas del catálogo se cuentan automáticamente)');
+  var input = prompt('¿Cuántos cambios añadir al patch?\n(normalmente se suma automáticamente en cada subida a GitHub)');
   if(input === null) return;
   var delta = parseInt(input, 10);
   if(isNaN(delta) || delta <= 0){ alert('Introduce un número positivo.'); return; }
-  DB.ref('config/versionData/manual').once('value').then(function(snap){
-    var actual = snap.val() || 0;
-    return DB.ref('config/versionData/manual').set(actual + delta);
-  }).then(function(){
-    _mostrarVersion();
-  });
+  DB.ref('config/ver/patch').once('value').then(function(snap){
+    return DB.ref('config/ver/patch').set((snap.val()||0) + delta);
+  }).then(function(){ _mostrarVersion(); });
 }
 
 function _buildBtns(rol, nombre){

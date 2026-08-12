@@ -1,0 +1,29 @@
+PANALCOR — Registro de versiones
+=====================================
+Formato: v1.MINOR.PATCH
+  PATCH  +10 por cada subida a GitHub
+  MINOR  +1 al añadir una página nueva
+
+=====================================
+
+v1.0.119 — 2026-08-12
+  - historial_maquina.html reescrito por completo
+    · Ficha técnica desde Firebase (fabricante, modelo, serie, ubicación, etc.)
+    · 6 KPIs: Disponibilidad %, MTBF, MTTR, Total averías, Horas parada, Cumplimiento prev.
+    · Gráfico de tendencia de averías (últimos 12 meses, barras CSS)
+    · Desglose por tipo y gravedad con barras proporcionales
+    · Tabla de tareas preventivas con cumplimiento de los últimos 3 meses
+    · Historial completo de intervenciones ordenado por fecha
+    · Botón imprimir con CSS @media print profesional (apto PDF)
+    · MAQ_MAP embebido con las 157 máquinas
+  - Sistema de versiones rediseñado: {major, minor, patch} en Firebase config/ver
+  - CHANGELOG.txt creado
+
+v1.0.109 — 2026-08-12
+  - Añadida COMPROBACIÓN DE SEGURIDADES (SETAS, BARRERAS, ETC.) MENSUAL
+    a las 109 máquinas que no la tenían en preventivo.html (ids 1431-1539)
+  - Asignadas en Firebase preventivo_plan/2026-06, 07, 08 y marcadas como realizadas
+  - Chip de versión en panalcor_inicio.html visible para admin
+  - Admin bypass en alberto.html y rubiel.html (sesión admin omite contraseña)
+  - "Otros Trabajos" corregido: apunta a averias.html?tab=otros
+
