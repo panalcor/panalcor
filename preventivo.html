@@ -3953,16 +3953,36 @@ function renderSeguimiento(tareas, compData, filtMec, filtEst) {
     <span class="seg-chip" style="background:rgba(201,162,39,0.12);border-color:rgba(201,162,39,0.3);color:var(--gold)">Total <b>${total}</b></span>
     <span class="seg-chip" style="background:rgba(116,185,255,0.12);border-color:rgba(116,185,255,0.3);color:#74b9ff">% Cumplimiento <b>${pct}%</b></span>`;
 
-  // Progreso por mecánico
+  // Progreso por mecánico — incluye desglose por frecuencia (tareas únicas, no slots)
   const mecStats = {};
+  const FREQ_CFG = {
+    SEMANAL:    {lbl:'SEM',  color:'#2ecc71'},
+    QUINCENAL:  {lbl:'QUI',  color:'#3498db'},
+    MENSUAL:    {lbl:'MEN',  color:'#74b9ff'},
+    BIMESTRAL:  {lbl:'BIM',  color:'#9b59b6'},
+    TRIMESTRAL: {lbl:'TRI',  color:'#c39bd3'},
+    SEMESTRAL:  {lbl:'SEM6', color:'#f39c12'},
+    ANUAL:      {lbl:'ANU',  color:'#e67e22'},
+    ARRANQUE:   {lbl:'ARR',  color:'#e74c3c'},
+    CIERRE:     {lbl:'CIE',  color:'#e74c3c'},
+  };
+  // Contar tareas únicas (no slots) por mecánico y frecuencia para el desglose visual
+  const mecTareasUnicas = {};
+  tareas.forEach(t => {
+    if(t.frecuencia === 'DIARIO') return;
+    const m = t.mecanico || '—';
+    if(!mecTareasUnicas[m]) mecTareasUnicas[m] = {};
+    const frq = t.frecuencia || 'OTRO';
+    mecTareasUnicas[m][frq] = (mecTareasUnicas[m][frq] || 0) + 1;
+  });
+  // Contar slots (para % cumplimiento)
   slots.forEach(s => {
     const m = s.t.mecanico || '—';
-    if(!mecStats[m]) mecStats[m] = {total:0,hechos:0};
+    if(!mecStats[m]) mecStats[m] = {total:0, hechos:0};
     mecStats[m].total++;
     if(compData[s.slotKey]) mecStats[m].hechos++;
   });
   const totalSlots = slots.length || 1;
-  // Ordenar por nombre
   const mecEntries = Object.entries(mecStats).sort((a,b) => a[0].localeCompare(b[0]));
   let progHtml = '', cargaHtml = '';
   mecEntries.forEach(([m, st]) => {
@@ -3971,14 +3991,26 @@ function renderSeguimiento(tareas, compData, filtMec, filtEst) {
     progHtml += `<div class="prog-card">
       <div class="prog-name">👷 ${escHtml(m)}</div>
       <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:${p}%;background:${colorP}"></div></div>
-      <div class="prog-label"><span>${st.hechos}/${st.total}</span><b>${p}%</b></div>
+      <div class="prog-label"><span>${st.hechos}/${st.total} slots</span><b>${p}%</b></div>
     </div>`;
     const c = Math.round(st.total/totalSlots*100);
     const colorC = c>=25?'#9b59b6':c>=15?'#3498db':'#74b9ff';
+    const freqsM = mecTareasUnicas[m] || {};
+    const FREQ_ORDER = ['SEMANAL','QUINCENAL','MENSUAL','BIMESTRAL','TRIMESTRAL','SEMESTRAL','ANUAL','ARRANQUE','CIERRE'];
+    const freqChips = FREQ_ORDER
+      .filter(f => freqsM[f])
+      .map(f => {
+        const cfg = FREQ_CFG[f] || {lbl:f.slice(0,3), color:'#aaa'};
+        return `<span style="display:inline-flex;align-items:center;gap:3px;font-size:0.62rem;font-weight:700;
+          padding:2px 7px;border-radius:8px;border:1px solid ${cfg.color}33;
+          background:${cfg.color}12;color:${cfg.color};white-space:nowrap">
+          ${cfg.lbl} <b style="font-size:0.72rem">${freqsM[f]}</b></span>`;
+      }).join('');
     cargaHtml += `<div class="prog-card">
       <div class="prog-name">👷 ${escHtml(m)}</div>
       <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:${c}%;background:${colorC}"></div></div>
-      <div class="prog-label"><span>${st.total} tareas</span><b>${c}%</b></div>
+      <div class="prog-label" style="margin-bottom:6px"><span>${st.total} slots</span><b>${c}% del total</b></div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">${freqChips || '<span style="font-size:0.68rem;color:var(--text-dim)">—</span>'}</div>
     </div>`;
   });
   document.getElementById('segProgGrid').innerHTML = progHtml;
