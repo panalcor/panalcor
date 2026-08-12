@@ -547,6 +547,13 @@
       <div style="font-size:0.65rem;letter-spacing:0.2em;color:rgba(255,255,255,0.35);text-transform:uppercase;margin-bottom:4px">Sesion activa</div>
       <div id="portalNombre" style="font-family:'Oswald',sans-serif;font-size:1.8rem;font-weight:700;color:var(--gold-light);letter-spacing:0.08em"></div>
       <div id="portalRol" style="font-size:0.68rem;letter-spacing:0.18em;color:rgba(201,162,39,0.5);text-transform:uppercase;margin-top:3px"></div>
+      <div id="portalVersion" style="display:none;margin-top:8px">
+        <span onclick="adminSumarCambios()" title="Clic para registrar cambios"
+          style="font-size:0.62rem;letter-spacing:0.14em;color:rgba(255,255,255,0.18);font-family:'Barlow',sans-serif;cursor:pointer;border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:2px 10px;transition:all .2s"
+          onmouseover="this.style.color='rgba(201,162,39,0.6)';this.style.borderColor='rgba(201,162,39,0.25)'"
+          onmouseout="this.style.color='rgba(255,255,255,0.18)';this.style.borderColor='rgba(255,255,255,0.08)'"
+          id="versionChip">v—</span>
+      </div>
     </div>
     <div class="btns" id="portalBtns"></div>
     <button onclick="doLogout()"
@@ -734,7 +741,37 @@ function mostrarPortal(s){
       else { b.style.display = 'none'; }
     }
   });
-  if(s.rol === 'admin') _checkRepuestos();
+  if(s.rol === 'admin'){ _checkRepuestos(); _mostrarVersion(); }
+}
+
+function _numToVer(n){
+  var patch = n % 1000;
+  var minor = Math.floor(n / 1000) % 1000;
+  var major = Math.floor(n / 1000000) + 1;
+  return major + '.' + minor + '.' + patch;
+}
+
+function _mostrarVersion(){
+  DB.ref('config/version').once('value').then(function(snap){
+    var n = snap.val() || 0;
+    var chip = document.getElementById('versionChip');
+    if(chip) chip.textContent = 'v' + _numToVer(n);
+    document.getElementById('portalVersion').style.display = 'block';
+  });
+}
+
+function adminSumarCambios(){
+  var input = prompt('¿Cuántos cambios añadir a la versión?');
+  if(input === null) return;
+  var delta = parseInt(input, 10);
+  if(isNaN(delta) || delta <= 0){ alert('Introduce un número positivo.'); return; }
+  DB.ref('config/version').once('value').then(function(snap){
+    var actual = snap.val() || 0;
+    var nuevo = actual + delta;
+    return DB.ref('config/version').set(nuevo);
+  }).then(function(){
+    _mostrarVersion();
+  });
 }
 
 function _buildBtns(rol, nombre){
