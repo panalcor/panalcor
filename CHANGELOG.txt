@@ -6,6 +6,15 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.0.129 — 2026-08-12
+  - historial_maquina.html rediseño visual completo
+    · Hero con cuadrícula de fondo, nombre en grande, nav con backdrop-blur
+    · KPIs con barra de acento de color, número grande y glow
+    · Gráfico de barras con degradado rojo, cuadrícula, mes actual en dorado
+    · Historial en timeline vertical con línea conectora y tarjetas hover
+    · Tabla preventivos con badges de frecuencia en color y checks verdes
+    · Breakdown averías con barras proporcionales de colores
+
 v1.0.119 — 2026-08-12
   - historial_maquina.html reescrito por completo
     · Ficha técnica desde Firebase (fabricante, modelo, serie, ubicación, etc.)
