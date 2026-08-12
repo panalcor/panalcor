@@ -6,6 +6,13 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.0.149 — 2026-08-12
+  - preventivo.html › Seguimiento: cajones de % carga asignada por mecánico
+    · A la derecha de los cajones de realización, nueva sección "% Carga asignada"
+    · Muestra qué % del total de tareas del mes lleva cada mecánico
+    · Barra proporcional en azul/morado, con nº de tareas y porcentaje
+    · Ambas secciones lado a lado, ordenadas alfabéticamente por mecánico
+
 v1.0.129 — 2026-08-12
   - historial_maquina.html rediseño visual completo
     · Hero con cuadrícula de fondo, nombre en grande, nav con backdrop-blur
