@@ -6,6 +6,9 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.0.279 — 2026-08-16
+  - rubiel.html y alberto.html: no piden contraseña si ya hay sesión en panalcor_session con ese nombre
+
 v1.0.269 — 2026-08-16
   - panalcor_inicio.html: fuerza rol 'rubiel'/'alberto' por nombre, sin depender de sesión previa
 

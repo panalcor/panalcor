@@ -870,11 +870,13 @@ function cargarObradorHistorial(){
 // ── ARRANQUE ─────────────────────────────────────────────────
 (function(){
   try {
-    var adm=JSON.parse(localStorage.getItem('panalcor_session')||'null');
-    if(adm && adm.rol==='admin' && Date.now()<adm.expires){ abrirApp(); return; }
+    var ps=JSON.parse(localStorage.getItem('panalcor_session')||'null');
+    if(ps && Date.now()<ps.expires){
+      if(ps.rol==='admin'){ abrirApp(); return; }
+      if((ps.nombre||'').toUpperCase()===NOMBRE){ abrirApp(); return; }
+    }
   } catch(e){}
   if(sesionValida()){
-    // Asegurar que panalcor_session refleja el rol rubiel
     var s=JSON.parse(localStorage.getItem(SESION_KEY)||'null');
     localStorage.setItem('panalcor_session', JSON.stringify({nombre:NOMBRE, rol:'rubiel', expires:s.expires}));
     abrirApp();
