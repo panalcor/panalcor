@@ -741,7 +741,109 @@ function mostrarPortal(s){
       else { b.style.display = 'none'; }
     }
   });
-  if(s.rol === 'admin'){ _checkRepuestos(); _mostrarVersion(); }
+  if(s.rol === 'admin'){ _checkRepuestos(); _mostrarVersion(); _initNotificaciones(); }
+}
+
+/* ── NOTIFICACIONES ─────────────────────────────────────────── */
+var _notifReg = null;
+var _notifTimer = null;
+var NOTIF_COOLDOWN = 4 * 3600 * 1000; // no repetir la misma en 4h
+
+function _initNotificaciones(){
+  if(!('serviceWorker' in navigator) || !('Notification' in window)) return;
+  navigator.serviceWorker.register('./sw.js').then(function(reg){
+    _notifReg = reg;
+    Notification.requestPermission().then(function(perm){
+      if(perm !== 'granted') return;
+      _checkNotificaciones();
+      _notifTimer = setInterval(_checkNotificaciones, 30 * 60 * 1000);
+    });
+  }).catch(function(e){ console.warn('SW registro fallido:', e); });
+}
+
+function _notifSent(key){
+  try {
+    var s = JSON.parse(localStorage.getItem('panalcor_notif') || '{}');
+    return s[key] && (Date.now() - s[key]) < NOTIF_COOLDOWN;
+  } catch(e){ return false; }
+}
+function _notifMark(key){
+  try {
+    var s = JSON.parse(localStorage.getItem('panalcor_notif') || '{}');
+    s[key] = Date.now();
+    // limpiar entradas viejas
+    Object.keys(s).forEach(function(k){ if(Date.now()-s[k] > 86400000) delete s[k]; });
+    localStorage.setItem('panalcor_notif', JSON.stringify(s));
+  } catch(e){}
+}
+function _showNotif(title, body, url, key){
+  if(!_notifReg || _notifSent(key)) return;
+  _notifReg.showNotification(title, {
+    body: body,
+    icon: './QR_admin_maquinas.png',
+    data: { url: url },
+    tag: key,
+    requireInteraction: true
+  });
+  _notifMark(key);
+}
+
+function _checkNotificaciones(){
+  var ahora = Date.now();
+  // ── 1. Averías urgentes o abiertas mucho tiempo ──
+  DB.ref('averias').once('value').then(function(snap){
+    var data = snap.val() || {};
+    Object.values(data).forEach(function(a){
+      if(!a || a.estado === 'RESUELTA') return;
+      var ts = a.ts || (a.fecha ? new Date(a.fecha).getTime() : 0);
+      var horas = ts ? (ahora - ts) / 3600000 : 0;
+      var key = 'av_' + (a.id || a.ts || (a.maquina + a.fecha));
+      if(a.prioridad === 'URGENTE' && horas > 1){
+        _showNotif(
+          '🚨 Avería URGENTE sin resolver',
+          (a.maquina||'') + ': ' + (a.descripcion||a.parte||'').slice(0,80),
+          './averias.html', key + '_urg'
+        );
+      } else if(horas > 6){
+        _showNotif(
+          '⚠️ Avería lleva +6h abierta',
+          (a.maquina||'') + ': ' + (a.descripcion||a.parte||'').slice(0,80),
+          './averias.html', key + '_6h'
+        );
+      }
+    });
+  });
+
+  // ── 2. Preventivos vencidos del mes actual ──
+  var mk = (function(){
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+  })();
+  var hoy = new Date().toISOString().slice(0,10);
+  Promise.all([
+    DB.ref('preventivo_plan/' + mk + '/tareas').once('value'),
+    DB.ref('preventivo_completado/' + mk).once('value')
+  ]).then(function(ss){
+    var tareas = Object.values(ss[0].val() || {});
+    var comp   = ss[1].val() || {};
+    var vencidas = 0;
+    tareas.forEach(function(t){
+      if(!t || t.frecuencia === 'DIARIO') return;
+      var fechas = Object.keys(t.fechas || {});
+      fechas.forEach(function(wi){
+        var fp = t.fechas[wi];
+        if(fp && fp < hoy && !comp[t.id + '_' + wi]) vencidas++;
+      });
+    });
+    if(vencidas > 0){
+      var key = 'prev_venc_' + mk + '_' + vencidas;
+      _showNotif(
+        '📋 Preventivos vencidos — ' + mk,
+        vencidas + ' tarea(s) con fecha pasada sin completar este mes',
+        './preventivo.html', key
+      );
+    }
+  });
 }
 
 function _mostrarVersion(){
