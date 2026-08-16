@@ -6,6 +6,10 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.0.249 — 2026-08-16
+  - panalcor_inicio.html: Rubiel y Alberto ven también botón "Mis Tareas"
+    · mis_tareas.html filtra por panalcor_session.nombre, ya funciona con RUBIEL/ALBERTO
+
 v1.0.239 — 2026-08-16
   - rubiel.html y alberto.html: guardan panalcor_session con rol propio al iniciar sesión
   - panalcor_inicio.html: rol 'rubiel' muestra solo botón Rubiel; rol 'alberto' solo botón Alberto
