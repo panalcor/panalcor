@@ -505,7 +505,9 @@ function loginEntrar(){
   }).catch(function(e){ err.textContent='Error: '+e.message; });
 }
 function guardarSesion(){
-  localStorage.setItem(SESION_KEY, JSON.stringify({nombre:NOMBRE, expires:Date.now()+30*24*3600*1000}));
+  var exp = Date.now()+30*24*3600*1000;
+  localStorage.setItem(SESION_KEY, JSON.stringify({nombre:NOMBRE, expires:exp}));
+  localStorage.setItem('panalcor_session', JSON.stringify({nombre:NOMBRE, rol:'rubiel', expires:exp}));
 }
 function sesionValida(){
   try{

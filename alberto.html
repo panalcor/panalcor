@@ -195,7 +195,9 @@ function doLogin(){
   if(!pwd){ err.textContent='Introduce la contraseña'; return; }
   DB.ref('config/mecanicos_pwd/ALBERTO').once('value').then(function(snap){
     if(snap.val() && snap.val()===pwd){
-      localStorage.setItem(SES_KEY, JSON.stringify({exp:Date.now()+30*24*3600*1000}));
+      var exp = Date.now()+30*24*3600*1000;
+      localStorage.setItem(SES_KEY, JSON.stringify({exp:exp}));
+      localStorage.setItem('panalcor_session', JSON.stringify({nombre:'ALBERTO', rol:'alberto', expires:exp}));
       abrirApp();
     } else {
       err.textContent = 'Contraseña incorrecta';

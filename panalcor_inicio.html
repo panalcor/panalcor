@@ -718,7 +718,7 @@ function mostrarPortal(s){
   document.getElementById('loginBox').style.display  = 'none';
   document.getElementById('portalBox').style.display = 'block';
   document.getElementById('portalNombre').textContent = s.nombre;
-  var roles = {mecanico:'Mecanico',encargado:'Encargado',admin:'Administrador',compras:'Compras'};
+  var roles = {mecanico:'Mecanico',encargado:'Encargado',admin:'Administrador',compras:'Compras',rubiel:'Mantenimiento Obrador',alberto:'Fontanería & Instalaciones'};
   document.getElementById('portalRol').textContent = roles[s.rol] || s.rol;
   document.getElementById('portalBtns').innerHTML = _buildBtns(s.rol, s.nombre);
   DB.ref('averias').on('value', function(snap){
@@ -870,6 +870,27 @@ function _buildBtns(rol, nombre){
   var adm = (rol === 'admin');
   var n = (nombre||'').toUpperCase();
   var verFrio = adm || n==='GREGORIO' || n==='JOSE' || n==='JAVIER H';
+
+  // Portales exclusivos: solo su botón propio
+  if(rol === 'rubiel'){
+    var row = 'grid-column:1/-1;flex-direction:row;padding:0.8rem 1.4rem;gap:14px;align-items:center;text-decoration:none';
+    var ico = 'width:28px;height:28px;flex-shrink:0';
+    h += '<a class="btn" href="rubiel.html" style="'+row+';border-color:rgba(243,156,18,0.35);background:rgba(243,156,18,0.07)">'
+       + '<div class="btn-icon" style="'+ico+';color:#f0c040">👷</div>'
+       + '<div><div class="btn-label" style="color:#f0c040">Rubiel</div>'
+       + '<div class="btn-sublabel" style="color:rgba(243,156,18,0.6)">Mantenimiento Obrador</div></div></a>';
+    return h;
+  }
+  if(rol === 'alberto'){
+    var row = 'grid-column:1/-1;flex-direction:row;padding:0.8rem 1.4rem;gap:14px;align-items:center;text-decoration:none';
+    var ico = 'width:28px;height:28px;flex-shrink:0';
+    h += '<a class="btn" href="alberto.html" style="'+row+';border-color:rgba(231,76,60,0.35);background:rgba(231,76,60,0.07)">'
+       + '<div class="btn-icon" style="'+ico+';color:#e74c3c">🔧</div>'
+       + '<div><div class="btn-label" style="color:#ff8a80">Alberto</div>'
+       + '<div class="btn-sublabel" style="color:rgba(231,76,60,0.6)">Fontanería, aire, soldadura...</div></div></a>';
+    return h;
+  }
+
   // Admin: 2 por fila (sin grid-column:1/-1), más alto
   // Otros roles: ancho completo
   var row = adm

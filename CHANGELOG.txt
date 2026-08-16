@@ -6,6 +6,12 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.0.239 — 2026-08-16
+  - rubiel.html y alberto.html: guardan panalcor_session con rol propio al iniciar sesión
+  - panalcor_inicio.html: rol 'rubiel' muestra solo botón Rubiel; rol 'alberto' solo botón Alberto
+  - Ni Rubiel ni Alberto ven Arrancada/Cierre, Cerrar Turno ni Mantenimiento Diario
+  - Subtítulo de rol correcto en el portal para ambos usuarios
+
 v1.0.229 — 2026-08-16
   - Todas las páginas llevan al inicio (panalcor_inicio.html) sin cerrar sesión
     · historial_maquina.html: btn-back apuntaba a history.back()
