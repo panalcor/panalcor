@@ -6,6 +6,15 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.0.159 — 2026-08-16
+  - preventivo.html › Plan Mensual: sustituto por ausencia (punto 14)
+    · Columna "Suplente" en la rejilla de asignación por máquina
+    · Botón 🏥 Ausencias abre modal con checkboxes por mecánico
+    · Al marcar ausentes, el plan aplica automáticamente el suplente configurado
+    · Banner rojo en Plan Mensual indica qué mecánicos están ausentes ese mes
+    · Las ausencias se guardan por mes (clave mes/año en localStorage)
+    · ST.asig() aplica sustituciones de forma transparente al publicar el plan
+
 v1.0.149 — 2026-08-12
   - preventivo.html › Seguimiento: cajones de % carga asignada por mecánico
     · A la derecha de los cajones de realización, nueva sección "% Carga asignada"

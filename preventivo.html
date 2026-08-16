@@ -648,6 +648,12 @@ tbody td:last-child  { border-radius: 0 8px 8px 0; }
 .asig-maq { flex:1; font-size:0.8rem; color:var(--text); font-family:'Oswald',sans-serif; font-weight:500; }
 .asig-mec { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:5px; color:var(--gold); font-family:'Barlow',sans-serif; font-size:0.82rem; padding:4px 8px; outline:none; min-width:115px; }
 .asig-mec option { background:#1a2d42; }
+.asig-sup { background:rgba(155,89,182,0.08); border:1px solid rgba(155,89,182,0.2); border-radius:5px; color:#c39bd3; font-family:'Barlow',sans-serif; font-size:0.82rem; padding:4px 8px; outline:none; min-width:115px; }
+.asig-sup option { background:#1a2d42; }
+.asig-col-heads { display:flex; gap:8px; padding:4px 10px; margin-bottom:2px; }
+.asig-col-lbl { font-size:0.62rem; font-weight:800; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-dim); }
+.ausencia-banner { display:none; margin:0.5rem 1.5rem; padding:10px 16px; background:rgba(231,76,60,0.12); border:1px solid rgba(231,76,60,0.3); border-radius:8px; font-size:0.82rem; color:#e74c3c; font-weight:600; }
+.ausencia-chip { display:inline-flex; align-items:center; gap:5px; background:rgba(231,76,60,0.15); border:1px solid rgba(231,76,60,0.3); border-radius:12px; padding:2px 10px; font-size:0.78rem; font-weight:700; color:#e74c3c; margin:0 4px; }
 .ok-msg { display:none; font-size:0.82rem; color:var(--green); margin-left:10px; }
 
 @media (max-width:640px) {
@@ -829,6 +835,19 @@ if('serviceWorker' in navigator){
     <button type="button" class="tab-btn"        id="tbtn-ajustes"     onclick="switchTab('ajustes')">⚙️ Ajustes</button>
   </div>
 
+  <!-- Modal ausencias -->
+  <div id="ausenciasModalBg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;align-items:center;justify-content:center">
+    <div style="background:var(--navy-mid);border-radius:14px;padding:28px;width:min(380px,92vw);border:1px solid rgba(255,255,255,.15)">
+      <div style="font-family:'Oswald',sans-serif;font-size:1.1rem;color:#e74c3c;margin-bottom:6px">🏥 Ausencias del mes</div>
+      <div style="font-size:0.78rem;color:var(--text-dim);margin-bottom:16px">Marca los mecánicos ausentes. Sus máquinas se asignarán automáticamente al suplente configurado en Ajustes.</div>
+      <div id="ausenciasMecList" style="display:flex;flex-direction:column;gap:7px;max-height:300px;overflow-y:auto;margin-bottom:20px"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button onclick="cerrarAusencias()" style="padding:9px 20px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:transparent;color:var(--text-dim);font-family:'Barlow',sans-serif;font-size:0.88rem;cursor:pointer">Cancelar</button>
+        <button onclick="guardarAusencias()" style="padding:9px 22px;border-radius:8px;border:1px solid rgba(231,76,60,.4);background:rgba(231,76,60,.15);color:#e74c3c;font-family:'Barlow',sans-serif;font-size:0.88rem;font-weight:700;cursor:pointer">Guardar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ══ PLAN MENSUAL ══ -->
   <div id="tab-plan">
     <div class="week-nav">
@@ -849,6 +868,9 @@ if('serviceWorker' in navigator){
         <button type="button" class="export-btn" onclick="abrirAutoAsignar()" style="padding:9px 16px;background:rgba(39,174,96,0.15);border-color:rgba(39,174,96,0.4);color:#2ecc71">
           🤖 Auto-asignar mes
         </button>
+        <button type="button" class="export-btn" onclick="abrirAusencias()" style="padding:9px 16px;background:rgba(231,76,60,0.12);border-color:rgba(231,76,60,0.35);color:#e74c3c" id="btnAusencias">
+          🏥 Ausencias
+        </button>
         <button type="button" class="export-btn" onclick="publicarPlan()" style="padding:9px 16px;background:rgba(253,203,110,0.12);border-color:rgba(253,203,110,0.4);color:#fdcb6e" id="btnPublicar">
           📤 Publicar a mecánicos
         </button>
@@ -864,6 +886,8 @@ if('serviceWorker' in navigator){
         </button>
       </div>
     </div>
+    <!-- Banner ausencias activas -->
+    <div class="ausencia-banner" id="ausenciaBanner"></div>
     <!-- ARRANQUE / CIERRE — tareas compartidas -->
     <div id="planAC" style="margin-bottom:12px"></div>
     <div class="plan-wrap" id="planWrap"></div>
@@ -2918,9 +2942,29 @@ const ST = {
     const mk = mesKey(curMes.year, curMes.month);
     const mes = (()=>{ try{ return JSON.parse(localStorage.getItem('preventivoAsigMes'))||{}; }catch(e){return {};} })();
     const mesAsig = mes[mk];
-    // Solo usar la asig mensual si tiene datos (evitar {} vacío que es truthy)
-    if(mesAsig && Object.keys(mesAsig).length > 0) return mesAsig;
-    return (()=>{ try{ return JSON.parse(localStorage.getItem('preventivoAsig'))||{}; }catch(e){return {};} })();
+    let base = (mesAsig && Object.keys(mesAsig).length > 0)
+      ? mesAsig
+      : (()=>{ try{ return JSON.parse(localStorage.getItem('preventivoAsig'))||{}; }catch(e){return {};} })();
+    // Aplicar sustituciones por ausencia
+    const ausentes = ST.ausencias();
+    if(!ausentes.length) return base;
+    const suplentes = ST.asigSuplente();
+    const result = Object.assign({}, base);
+    Object.keys(result).forEach(maq => {
+      if(ausentes.includes(result[maq]) && suplentes[maq]) result[maq] = suplentes[maq];
+    });
+    return result;
+  },
+  asigSuplente: () => { try{ return JSON.parse(localStorage.getItem('preventivoAsigSup'))||{}; }catch(e){return {};} },
+  setAsigSuplente: v => localStorage.setItem('preventivoAsigSup', JSON.stringify(v)),
+  ausencias: () => {
+    const mk = mesKey(curMes.year, curMes.month);
+    try{ return JSON.parse(localStorage.getItem('preventivoAusencias')||'{}')[mk]||[]; }catch(e){ return []; }
+  },
+  setAusencias: (mk, lista) => {
+    let all = {}; try{ all = JSON.parse(localStorage.getItem('preventivoAusencias')||'{}'); }catch(e){}
+    all[mk] = lista;
+    localStorage.setItem('preventivoAusencias', JSON.stringify(all));
   },
   fechasMes:() => { try{ return JSON.parse(localStorage.getItem('preventivoFechasMes'))||{}; }catch(e){return {};} },
   setRef:   v => localStorage.setItem('preventivoRef', v),
@@ -2985,6 +3029,7 @@ function iniciarPlan() {
   curMes = { year: new Date().getFullYear(), month: new Date().getMonth() };
   poblarPlanMecanicos();
   renderPlan();
+  _renderAusenciaBanner();
 }
 
 function navMes(delta) {
@@ -2994,6 +3039,7 @@ function navMes(delta) {
   if(month > 11) { year++; month = 0;  }
   curMes = { year, month };
   renderPlan();
+  _renderAusenciaBanner();
 }
 
 function poblarPlanMecanicos() {
@@ -3559,26 +3605,103 @@ function renderAsigGrid() {
   const lbl = document.getElementById('asigMesLabel');
   if(lbl) lbl.textContent = `📅 Viendo: ${mesesN[curMes.month]} ${curMes.year}`;
   const meqs = ['', ...ST.meqs()];
-  const asig = ST.asig();
-  let html = '';
+  // Para el titular usamos la asig base (sin aplicar sustituciones) para no confundir
+  const mk = mesKey(curMes.year, curMes.month);
+  const mes = (()=>{ try{ return JSON.parse(localStorage.getItem('preventivoAsigMes'))||{}; }catch(e){return {};} })();
+  const mesAsig = mes[mk];
+  const asigBase = (mesAsig && Object.keys(mesAsig).length > 0)
+    ? mesAsig
+    : (()=>{ try{ return JSON.parse(localStorage.getItem('preventivoAsig'))||{}; }catch(e){return {};} })();
+  const asigSup  = ST.asigSuplente();
+  const supOpts  = ['', ...ST.meqs()];
+  let html = `<div class="asig-col-heads">
+    <div style="flex:1"></div>
+    <div class="asig-col-lbl" style="min-width:115px">👷 Titular</div>
+    <div class="asig-col-lbl" style="min-width:115px;color:#c39bd3">🔄 Suplente</div>
+  </div>`;
   MAQUINAS.forEach(maq => {
-    const opts = meqs.map(m => `<option value="${escHtml(m)}" ${asig[maq]===m?'selected':''}>${m||'— Sin asignar —'}</option>`).join('');
+    const opts    = meqs.map(m => `<option value="${escHtml(m)}" ${asigBase[maq]===m?'selected':''}>${m||'— Sin asignar —'}</option>`).join('');
+    const supOptsH = supOpts.map(m => `<option value="${escHtml(m)}" ${asigSup[maq]===m?'selected':''}>${m||'— Sin suplente —'}</option>`).join('');
     html += `<div class="asig-row">
       <span class="asig-maq">${escHtml(maq)}</span>
       <select class="asig-mec" data-maq="${escHtml(maq)}">${opts}</select>
+      <select class="asig-sup" data-maq="${escHtml(maq)}">${supOptsH}</select>
     </div>`;
   });
   document.getElementById('asigGrid').innerHTML = html;
 }
 
 function guardarAsig() {
-  const asig = {};
+  const asig = {}, sup = {};
   document.querySelectorAll('.asig-mec').forEach(sel => {
     if(sel.value) asig[sel.dataset.maq] = sel.value;
   });
+  document.querySelectorAll('.asig-sup').forEach(sel => {
+    if(sel.value) sup[sel.dataset.maq] = sel.value;
+  });
   ST.setAsig(asig, mesKey(curMes.year, curMes.month));
+  ST.setAsigSuplente(sup);
   showOk('okAsig');
   renderPlan();
+  _renderAusenciaBanner();
+}
+
+/* ════ AUSENCIAS ════ */
+function abrirAusencias() {
+  const meqs = ST.meqs();
+  const ausentes = ST.ausencias();
+  const sup = ST.asigSuplente();
+  // Advertir si algún mecánico no tiene suplente en ninguna de sus máquinas
+  document.getElementById('ausenciasMecList').innerHTML = meqs.map(m => {
+    const tieneSuplente = Object.values(sup).some(s => s !== m) && Object.entries(sup).some(([maq, s]) => {
+      const mk = mesKey(curMes.year, curMes.month);
+      const mes = (()=>{ try{ return JSON.parse(localStorage.getItem('preventivoAsigMes'))||{}; }catch(e){return {};} })();
+      const mesAsig = mes[mk];
+      const base = (mesAsig && Object.keys(mesAsig).length > 0) ? mesAsig : (()=>{ try{ return JSON.parse(localStorage.getItem('preventivoAsig'))||{}; }catch(e){return {};} })();
+      return base[maq] === m && s;
+    });
+    const isAusente = ausentes.includes(m);
+    return `<label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;
+      border:1px solid ${isAusente?'rgba(231,76,60,.4)':'rgba(255,255,255,.08)'};
+      background:${isAusente?'rgba(231,76,60,.08)':'rgba(255,255,255,.03)'};cursor:pointer;
+      font-size:0.9rem;color:var(--cream);font-weight:600;transition:all .15s"
+      onmouseover="this.style.background='rgba(231,76,60,.08)'" onmouseout="this.style.background='${isAusente?'rgba(231,76,60,.08)':'rgba(255,255,255,.03)'}'">
+      <input type="checkbox" name="ausente" value="${escHtml(m)}" ${isAusente?'checked':''}
+        style="accent-color:#e74c3c;width:16px;height:16px;flex-shrink:0">
+      👷 ${escHtml(m)}
+      ${!tieneSuplente?'<span style="font-size:0.7rem;color:#e67e22;margin-left:auto">⚠️ sin suplente</span>':''}
+    </label>`;
+  }).join('');
+  document.getElementById('ausenciasModalBg').style.display = 'flex';
+}
+
+function cerrarAusencias() {
+  document.getElementById('ausenciasModalBg').style.display = 'none';
+}
+
+function guardarAusencias() {
+  const checks = document.querySelectorAll('input[name="ausente"]:checked');
+  const lista = Array.from(checks).map(c => c.value);
+  ST.setAusencias(mesKey(curMes.year, curMes.month), lista);
+  cerrarAusencias();
+  _renderAusenciaBanner();
+  renderPlan();
+}
+
+function _renderAusenciaBanner() {
+  const ausentes = ST.ausencias();
+  const banner = document.getElementById('ausenciaBanner');
+  const btn = document.getElementById('btnAusencias');
+  if(!banner) return;
+  if(!ausentes.length) {
+    banner.style.display = 'none';
+    if(btn) { btn.style.background='rgba(231,76,60,0.12)'; btn.style.borderColor='rgba(231,76,60,0.35)'; }
+    return;
+  }
+  const chips = ausentes.map(m => `<span class="ausencia-chip">🏥 ${escHtml(m)}</span>`).join('');
+  banner.innerHTML = `⚠️ Sustitución activa este mes: ${chips} — sus máquinas se asignan al suplente configurado`;
+  banner.style.display = 'block';
+  if(btn) { btn.style.background='rgba(231,76,60,0.25)'; btn.style.borderColor='rgba(231,76,60,0.6)'; }
 }
 
 function cambiarPwd() {
