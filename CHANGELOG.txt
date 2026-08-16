@@ -6,6 +6,12 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.0.309 — 2026-08-16
+  - parte_trabajo.html: impresión en apaisado A4 con letra más pequeña
+    · @page size A4 landscape, márgenes 0.8cm × 1cm
+    · Fuente reducida a 7.5pt base, tablas a 7pt, cabeceras 6.5pt
+    · Resumen en 6 columnas aprovechando el ancho apaisado
+
 v1.0.299 — 2026-08-16
   - informe_especial.html: nueva página de informe mensual para Rubiel y Alberto
     · Selector de persona y mes, genera informe al instante
