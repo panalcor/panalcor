@@ -514,10 +514,7 @@ function sesionValida(){
   }catch(e){return false;}
 }
 function salir(){
-  localStorage.removeItem(SESION_KEY);
-  if(dbUnsub) try{ dbUnsub(); }catch(e){}
-  document.getElementById('mainScreen').style.display='none';
-  document.getElementById('loginScreen').style.display='flex';
+  window.location.href = './panalcor_inicio.html';
   document.getElementById('loginPwd').value='';
   document.getElementById('loginErr').textContent='';
 }

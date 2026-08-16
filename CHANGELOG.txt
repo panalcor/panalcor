@@ -6,6 +6,10 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.0.219 — 2026-08-16
+  - alberto.html: botón Salir lleva a panalcor_inicio.html sin cerrar sesión
+  - rubiel.html: botón Salir lleva a panalcor_inicio.html sin cerrar sesión
+
 v1.0.209 — 2026-08-16
   - preventivo.html › Plan Mensual: sustituto por ausencia (punto 14)
     · Columna "Suplente" en la rejilla de asignación por máquina
