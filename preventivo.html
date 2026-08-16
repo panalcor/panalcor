@@ -4239,8 +4239,9 @@ function generarParteMecanico() {
       const fColor = FREQ_COL[t.frecuencia] || '#555';
       slots.forEach((sl, si) => {
         const comp = compData[sl.slotKey];
-        const fechaPlanFmt = sl.fechaPlan && sl.fechaPlan !== 'Cada día'
-          ? sl.fechaPlan.slice(8)+'/'+sl.fechaPlan.slice(5,7) : (sl.fechaPlan||'');
+        const rawFP = sl.fechaPlan || (comp && comp.fechaPlan) || '';
+        const fechaPlanFmt = rawFP && rawFP !== 'Cada día'
+          ? rawFP.slice(8)+'/'+rawFP.slice(5,7) : (rawFP||'');
         const isHecha = !!comp;
         filasHtml += `<tr style="${isHecha?'background:#f0faf4':''}">
           <td style="text-align:center;width:36px;padding:8px 4px">
