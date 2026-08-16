@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Informe Especial — PANALCOR</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+:root{
+  --bg:#0d1b2a;--bg2:#111f30;--bg3:#172233;--gold:#c9a227;--gold2:#f0c040;
+  --cream:#e8dcc8;--grey:#8a9bb0;--red:#e74c3c;--green:#27ae60;--blue:#3498db;
+  --border:rgba(255,255,255,0.08);--radius:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--cream);font-family:'Barlow',sans-serif;min-height:100vh}
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;900&family=Oswald:wght@700&display=swap');
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;gap:14px;padding:12px 20px;
+  background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;
+  backdrop-filter:blur(8px)}
+.tb-back{color:var(--gold);text-decoration:none;font-size:1.1rem;font-weight:700;
+  border:1px solid rgba(201,162,39,0.3);border-radius:7px;padding:6px 12px;transition:all .15s}
+.tb-back:hover{background:rgba(201,162,39,0.1)}
+.tb-title{font-family:'Oswald',sans-serif;font-size:1.15rem;font-weight:700;
+  color:var(--gold2);letter-spacing:.06em}
+.tb-right{margin-left:auto;display:flex;gap:10px;align-items:center}
+.btn-print{background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.4);
+  color:var(--gold2);padding:7px 16px;border-radius:7px;cursor:pointer;
+  font-family:'Barlow',sans-serif;font-size:.85rem;font-weight:700;transition:all .2s}
+.btn-print:hover{background:rgba(201,162,39,0.25)}
+
+/* FILTROS */
+.filtros{display:flex;gap:14px;align-items:center;padding:16px 24px;
+  background:var(--bg3);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.filtros label{font-size:.75rem;font-weight:700;color:var(--grey);letter-spacing:.1em}
+.filtros select,.filtros input{background:rgba(255,255,255,0.05);border:1px solid var(--border);
+  color:var(--cream);padding:7px 12px;border-radius:7px;font-family:'Barlow',sans-serif;
+  font-size:.9rem;cursor:pointer}
+.btn-gen{background:rgba(39,174,96,0.15);border:1px solid rgba(39,174,96,0.4);
+  color:#2ecc71;padding:8px 20px;border-radius:7px;cursor:pointer;
+  font-family:'Barlow',sans-serif;font-size:.9rem;font-weight:700;transition:all .2s}
+.btn-gen:hover{background:rgba(39,174,96,0.25)}
+
+/* CONTENIDO */
+.wrap{max-width:900px;margin:0 auto;padding:28px 20px}
+
+/* CABECERA INFORME */
+.inf-header{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:24px 28px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px}
+.inf-nombre{font-family:'Oswald',sans-serif;font-size:2rem;font-weight:700;color:var(--gold2)}
+.inf-mes{font-size:.85rem;color:var(--grey);margin-top:4px;letter-spacing:.06em}
+.inf-logo{font-size:.7rem;color:rgba(255,255,255,.25);text-align:right;line-height:1.6}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px 18px;border-top:3px solid var(--gold)}
+.kpi-val{font-family:'Oswald',sans-serif;font-size:2rem;font-weight:700;color:var(--gold2)}
+.kpi-lbl{font-size:.72rem;color:var(--grey);letter-spacing:.1em;margin-top:4px;text-transform:uppercase}
+
+/* SECCIONES */
+.seccion{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);
+  margin-bottom:20px;overflow:hidden}
+.sec-head{background:var(--bg3);padding:14px 20px;font-weight:700;font-size:.9rem;
+  color:var(--gold);border-bottom:1px solid var(--border);letter-spacing:.05em}
+.sec-body{padding:16px 20px}
+
+/* TABLA */
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{text-align:left;padding:8px 10px;font-size:.72rem;font-weight:700;color:var(--grey);
+  letter-spacing:.1em;border-bottom:1px solid var(--border);text-transform:uppercase}
+td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,0.02)}
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:.7rem;
+  font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+
+/* CHECKLIST RUBIEL */
+.check-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+.check-item{display:flex;align-items:center;gap:10px;padding:8px 12px;
+  background:rgba(255,255,255,0.03);border-radius:7px;border:1px solid rgba(255,255,255,0.05);font-size:.82rem}
+.check-item.hecho{border-color:rgba(39,174,96,0.3);background:rgba(39,174,96,0.05)}
+.check-ico{font-size:1rem;flex-shrink:0}
+.check-fecha{font-size:.7rem;color:var(--grey);margin-top:2px}
+
+.empty{padding:20px;text-align:center;color:var(--grey);font-size:.85rem}
+.cargando{padding:32px;text-align:center;color:var(--grey)}
+
+/* CATEGORÍA COLORS */
+.cat-fontaneria{background:rgba(39,174,96,0.15);color:#2ecc71}
+.cat-aire{background:rgba(52,152,219,0.15);color:#5dade2}
+.cat-soldadura{background:rgba(231,76,60,0.15);color:#e74c3c}
+.cat-estructuras{background:rgba(243,156,18,0.15);color:#f0c040}
+.cat-bandejas{background:rgba(155,89,182,0.15);color:#c39bd3}
+.cat-mecanicos{background:rgba(26,188,156,0.15);color:#1abc9c}
+.cat-otros{background:rgba(127,140,141,0.15);color:#95a5a6}
+
+/* PRINT */
+@media print{
+  .topbar,.filtros,.btn-print,.btn-gen{display:none!important}
+  body{background:#fff;color:#000}
+  .wrap{padding:0;max-width:100%}
+  .inf-header,.seccion,.kpi{background:#fff;border-color:#ddd;color:#000}
+  .kpi-val,.inf-nombre,.sec-head,.tb-title{color:#000}
+  .kpi-lbl,.inf-mes,.grey,.inf-logo{color:#666}
+  .check-item{border-color:#ccc;background:#fafafa}
+  .check-item.hecho{background:#f0fff4;border-color:#a8d5b5}
+  th{color:#444}
+  td{border-bottom-color:#eee}
+  tr:hover td{background:none}
+  .badge{border:1px solid #ccc;background:#f5f5f5;color:#333}
+  .cat-fontaneria,.cat-aire,.cat-soldadura,.cat-estructuras,.cat-bandejas,.cat-mecanicos,.cat-otros{
+    background:#eee;color:#333}
+  @page{margin:1.5cm}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="tb-back" href="panalcor_inicio.html">⌂ Inicio</a>
+  <div class="tb-title">📊 Informe Especial</div>
+  <div class="tb-right">
+    <button class="btn-print" onclick="window.print()">🖨️ Imprimir / PDF</button>
+  </div>
+</div>
+
+<div class="filtros">
+  <div>
+    <label>PERSONA</label><br>
+    <select id="selPersona">
+      <option value="rubiel">👷 Rubiel</option>
+      <option value="alberto">🔧 Alberto</option>
+    </select>
+  </div>
+  <div>
+    <label>MES</label><br>
+    <input type="month" id="selMes">
+  </div>
+  <button class="btn-gen" onclick="generarInforme()">▶ Generar informe</button>
+</div>
+
+<div class="wrap">
+  <div id="informe"><div class="cargando" style="color:var(--grey);padding:60px;text-align:center">
+    Selecciona persona y mes y pulsa Generar
+  </div></div>
+</div>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU",
+  authDomain:"panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:"https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"panalcor-mantenimiento",storageBucket:"panalcor-mantenimiento.appspot.com",
+  messagingSenderId:"735998945",appId:"1"
+});
+var DB = firebase.database();
+
+// Mes actual por defecto
+(function(){
+  var hoy = new Date();
+  var mm = String(hoy.getMonth()+1).padStart(2,'0');
+  document.getElementById('selMes').value = hoy.getFullYear()+'-'+mm;
+})();
+
+var CAT_LABEL = {
+  fontaneria:'Fontanería',aire:'Aire / Clima',soldadura:'Soldadura',
+  estructuras:'Estructuras',bandejas:'Bandejas/Carros',mecanicos:'Apoyo Mecánicos',otros:'Otros'
+};
+
+function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function labelMes(mes){
+  var meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+             'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  var p=mes.split('-'); return meses[parseInt(p[1],10)-1]+' '+p[0];
+}
+
+function generarInforme(){
+  var persona = document.getElementById('selPersona').value;
+  var mes     = document.getElementById('selMes').value;
+  if(!mes){ alert('Selecciona un mes'); return; }
+  document.getElementById('informe').innerHTML = '<div class="cargando">⏳ Cargando datos...</div>';
+  if(persona === 'rubiel') generarRubiel(mes);
+  else generarAlberto(mes);
+}
+
+/* ══════════════════ RUBIEL ══════════════════ */
+function generarRubiel(mes){
+  Promise.all([
+    DB.ref('rubiel_completado/'+mes).once('value'),
+    DB.ref('rubiel_comp_periodos').once('value'),
+    DB.ref('rubiel_catalogo').once('value'),
+    DB.ref('rubiel_obrador/'+mes).once('value')
+  ]).then(function(snaps){
+    var comp       = snaps[0].val()||{};
+    var periodos   = snaps[1].val()||{};
+    var catalogo   = snaps[2].val()||{};
+    var obrador    = snaps[3].val()||{};
+
+    // Filtrar periodos del mes
+    var compPeriodo = {};
+    Object.entries(periodos).forEach(function(e){
+      if((e[1].mes||'')===mes) compPeriodo[e[0]] = e[1];
+    });
+
+    // Aplanar catálogo
+    var tareas = {};
+    Object.values(catalogo).forEach(function(grupo){
+      if(Array.isArray(grupo)) grupo.forEach(function(t){ if(t&&t.id) tareas[t.id]=t; });
+    });
+
+    // Calcular KPIs
+    var totalTareas = Object.keys(tareas).length;
+    var hechas = Object.keys(comp).length + Object.keys(compPeriodo).length;
+    var obradorEntries = Object.values(obrador).sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'');});
+    var totalHorasObrador = obradorEntries.reduce(function(s,e){return s+(parseFloat(e.horas)||0);},0);
+
+    var pct = totalTareas>0 ? Math.round(hechas/totalTareas*100) : 0;
+
+    // Construir tareas con estado
+    var tareasConEstado = Object.values(tareas).map(function(t){
+      var key = t.id+'_mes';
+      var done = comp[t.id] || compPeriodo[t.id+'_'+mes] || compPeriodo[key];
+      // buscar cualquier key que empiece por el id
+      if(!done){
+        var keys = Object.keys(comp).concat(Object.keys(compPeriodo));
+        done = keys.some(function(k){ return k.startsWith(t.id); });
+      }
+      return { tarea:t.nombre||t.id, freq:t.freq||'', done:!!done,
+        fecha: (comp[t.id]&&comp[t.id].fecha)||'' };
+    }).sort(function(a,b){ return (b.done?0:1)-(a.done?0:1) || a.tarea.localeCompare(b.tarea); });
+
+    var html = _headerInforme('RUBIEL', mes);
+
+    // KPIs
+    html += '<div class="kpis">'
+      + _kpi(hechas+'/'+totalTareas,'Tareas realizadas','rgba(39,174,96,1)')
+      + _kpi(pct+'%','Cumplimiento', pct>=80?'rgba(39,174,96,1)':pct>=50?'rgba(243,156,18,1)':'rgba(231,76,60,1)')
+      + _kpi(obradorEntries.length,'Turnos obrador','rgba(52,152,219,1)')
+      + _kpi(totalHorasObrador.toFixed(1)+' h','Horas en obrador','rgba(201,162,39,1)')
+      + '</div>';
+
+    // Checklist tareas
+    html += '<div class="seccion"><div class="sec-head">✅ Checklist de tareas del mes</div><div class="sec-body">';
+    if(tareasConEstado.length){
+      html += '<div class="check-grid">';
+      tareasConEstado.forEach(function(t){
+        html += '<div class="check-item'+(t.done?' hecho':'')+'"><span class="check-ico">'+(t.done?'✅':'⬜')+'</span>'
+          + '<div><div>'+escH(t.tarea)+'</div>'
+          + (t.freq?'<div class="check-fecha">'+escH(t.freq)+'</div>':'')
+          + (t.fecha?'<div class="check-fecha">Realizado: '+escH(t.fecha)+'</div>':'')
+          + '</div></div>';
+      });
+      html += '</div>';
+    } else {
+      html += '<div class="empty">Sin tareas en el catálogo</div>';
+    }
+    html += '</div></div>';
+
+    // Turnos obrador
+    html += '<div class="seccion"><div class="sec-head">🏭 Turnos en obrador</div><div class="sec-body">';
+    if(obradorEntries.length){
+      html += '<table><thead><tr><th>Fecha</th><th>Horas</th><th>Observaciones</th></tr></thead><tbody>';
+      obradorEntries.forEach(function(e){
+        html += '<tr><td>'+escH(e.fecha||'')+'</td><td style="font-weight:700;color:var(--gold)">'+escH(e.horas||'')+'</td>'
+          + '<td>'+escH(e.observaciones||'—')+'</td></tr>';
+      });
+      html += '<tr style="font-weight:700"><td colspan="1" style="color:var(--grey)">TOTAL</td>'
+        + '<td style="color:var(--gold2)">'+totalHorasObrador.toFixed(1)+' h</td><td></td></tr>';
+      html += '</tbody></table>';
+    } else {
+      html += '<div class="empty">Sin turnos registrados en obrador este mes</div>';
+    }
+    html += '</div></div>';
+
+    document.getElementById('informe').innerHTML = html;
+  }).catch(function(e){
+    document.getElementById('informe').innerHTML = '<div class="empty">Error cargando datos: '+escH(e.message)+'</div>';
+  });
+}
+
+/* ══════════════════ ALBERTO ══════════════════ */
+function generarAlberto(mes){
+  DB.ref('alberto_trabajos/'+mes).once('value').then(function(snap){
+    var trabajos = snap.val()||{};
+    var lista = Object.values(trabajos).sort(function(a,b){return (a.fecha||'').localeCompare(b.fecha||'');});
+
+    var totalHoras = lista.reduce(function(s,t){return s+(parseFloat(t.horas)||0);},0);
+    var catCount = {};
+    lista.forEach(function(t){ catCount[t.cat]=(catCount[t.cat]||0)+1; });
+    var topCat = Object.entries(catCount).sort(function(a,b){return b[1]-a[1];})[0];
+
+    var html = _headerInforme('ALBERTO', mes);
+
+    // KPIs
+    html += '<div class="kpis">'
+      + _kpi(lista.length,'Trabajos registrados','rgba(52,152,219,1)')
+      + _kpi(totalHoras.toFixed(1)+' h','Horas totales','rgba(201,162,39,1)')
+      + _kpi(Object.keys(catCount).length,'Categorías distintas','rgba(155,89,182,1)')
+      + _kpi(topCat?CAT_LABEL[topCat[0]]||topCat[0]:'—','Categoría principal','rgba(39,174,96,1)')
+      + '</div>';
+
+    // Resumen por categoría
+    if(Object.keys(catCount).length){
+      html += '<div class="seccion"><div class="sec-head">📊 Resumen por categoría</div><div class="sec-body">';
+      html += '<table><thead><tr><th>Categoría</th><th>Trabajos</th><th>%</th></tr></thead><tbody>';
+      Object.entries(catCount).sort(function(a,b){return b[1]-a[1];}).forEach(function(e){
+        var pct = lista.length>0?Math.round(e[1]/lista.length*100):0;
+        html += '<tr><td><span class="badge cat-'+escH(e[0])+'">'+escH(CAT_LABEL[e[0]]||e[0])+'</span></td>'
+          + '<td style="font-weight:700">'+e[1]+'</td>'
+          + '<td style="color:var(--grey)">'+pct+'%</td></tr>';
+      });
+      html += '</tbody></table></div></div>';
+    }
+
+    // Detalle trabajos
+    html += '<div class="seccion"><div class="sec-head">📋 Detalle de trabajos</div><div class="sec-body">';
+    if(lista.length){
+      html += '<table><thead><tr><th>Fecha</th><th>Categoría</th><th>Descripción</th><th>Horas</th></tr></thead><tbody>';
+      lista.forEach(function(t){
+        html += '<tr>'
+          + '<td style="white-space:nowrap;color:var(--grey)">'+escH(t.fecha||'')+'</td>'
+          + '<td><span class="badge cat-'+escH(t.cat||'otros')+'">'+escH(CAT_LABEL[t.cat]||t.cat||'')+'</span></td>'
+          + '<td>'+escH(t.desc||'—')+'</td>'
+          + '<td style="font-weight:700;color:var(--gold);white-space:nowrap">'+(t.horas?t.horas+' h':'—')+'</td>'
+          + '</tr>';
+      });
+      html += '<tr style="font-weight:700;border-top:2px solid var(--border)">'
+        + '<td colspan="3" style="color:var(--grey)">TOTAL HORAS</td>'
+        + '<td style="color:var(--gold2)">'+totalHoras.toFixed(1)+' h</td></tr>';
+      html += '</tbody></table>';
+    } else {
+      html += '<div class="empty">Sin trabajos registrados este mes</div>';
+    }
+    html += '</div></div>';
+
+    document.getElementById('informe').innerHTML = html;
+  }).catch(function(e){
+    document.getElementById('informe').innerHTML = '<div class="empty">Error: '+escH(e.message)+'</div>';
+  });
+}
+
+/* ══ HELPERS ══ */
+function _headerInforme(nombre, mes){
+  return '<div class="inf-header">'
+    + '<div><div class="inf-nombre">'+nombre+'</div>'
+    + '<div class="inf-mes">'+labelMes(mes).toUpperCase()+' · Informe de actividad</div></div>'
+    + '<div class="inf-logo">PANALCOR S.L.<br>Generado: '+new Date().toLocaleDateString('es-ES')+'</div>'
+    + '</div>';
+}
+function _kpi(val, lbl, color){
+  return '<div class="kpi" style="border-top-color:'+color+'">'
+    + '<div class="kpi-val">'+escH(String(val))+'</div>'
+    + '<div class="kpi-lbl">'+escH(lbl)+'</div></div>';
+}
+</script>
+</body>
+</html>

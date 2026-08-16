@@ -6,6 +6,15 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.0.299 — 2026-08-16
+  - informe_especial.html: nueva página de informe mensual para Rubiel y Alberto
+    · Selector de persona y mes, genera informe al instante
+    · Rubiel: KPIs (tareas/cumplimiento/turnos/horas obrador), checklist completo, tabla turnos obrador
+    · Alberto: KPIs (trabajos/horas/categorías), resumen por categoría, detalle de trabajos
+    · Imprimible/PDF con botón — márgenes y colores optimizados para papel
+  - panalcor_inicio.html: botón "📊 Informe Rubiel/Alberto" en portal admin
+  - MINOR +1 por nueva página → v1.1.299
+
 v1.0.279 — 2026-08-16
   - rubiel.html y alberto.html: no piden contraseña si ya hay sesión en panalcor_session con ese nombre
 
