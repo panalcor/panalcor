@@ -6,7 +6,7 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
-v1.0.159 — 2026-08-16
+v1.0.209 — 2026-08-16
   - preventivo.html › Plan Mensual: sustituto por ausencia (punto 14)
     · Columna "Suplente" en la rejilla de asignación por máquina
     · Botón 🏥 Ausencias abre modal con checkboxes por mecánico
@@ -14,6 +14,33 @@ v1.0.159 — 2026-08-16
     · Banner rojo en Plan Mensual indica qué mecánicos están ausentes ese mes
     · Las ausencias se guardan por mes (clave mes/año en localStorage)
     · ST.asig() aplica sustituciones de forma transparente al publicar el plan
+
+v1.0.199 — 2026-08-12
+  - panalcor_inicio.html: notificaciones push automáticas para admin (punto 3)
+    · Service Worker (sw.js) registrado al entrar como admin
+    · Comprueba cada 30 min: averías URGENTE >1h, cualquier avería >6h, preventivos vencidos
+    · Cooldown de 4h por alerta para evitar spam
+    · Al pulsar la notificación abre la página correspondiente
+
+v1.0.189 — 2026-08-12
+  - preventivo.html › Seguimiento: botón "📋 Parte de trabajo"
+    · Selección de mecánico y generación de parte imprimible A4
+    · Tabla con checkbox, tarea, frecuencia, fecha plan y fecha real por máquina
+    · KPI resumen, 3 líneas de firma y cabecera PANALCOR
+    · Fuente reducida (9.5 px) y márgenes 1 cm para ahorrar papel
+    · Fecha prevista tomada de fechaPlan del slot o del plan general como fallback
+
+v1.0.179 — 2026-08-12
+  - preventivo.html › Seguimiento: desglose por frecuencia en cajones de carga
+    · Chips SEM / QUI / MEN (etc.) dentro de cada cajón de carga asignada
+    · Cuenta tareas únicas por frecuencia para detectar sobrecarga semanal vs mensual
+    · Facilita equilibrar la carga entre mecánicos antes de publicar el plan
+
+v1.0.169 — 2026-08-12
+  - historial_maquina.html: compactado para impresión en menos folios
+    · Padding y márgenes reducidos en toda la página
+    · Fuentes más pequeñas en KPIs, timeline y tabla preventivos
+    · Márgenes de página print reducidos a 1 cm
 
 v1.0.149 — 2026-08-12
   - preventivo.html › Seguimiento: cajones de % carga asignada por mecánico
