@@ -6,6 +6,23 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.0.339 — 2026-08-16
+  - manual_mecanicos.html: nuevo manual completo para mecánicos (19 capítulos)
+    · Login, instalación app, portal de inicio, Mis Tareas, marcar/desmarcar tareas
+    · Avería con QR, avería sin QR, rellenar parte campo por campo
+    · Cerrar avería, buscar averías, Mis Averías, Mantenimiento Diario, Cerrar Turno
+    · Pedir repuesto, sugerencias, Portal Rubiel, Portal Alberto, FAQ
+    · Mockups SVG de pantallas clave, boxes informativos, tablas de referencia
+    · Sidebar con scroll-spy, @media print optimizado, responsive móvil
+  - manual_completo.html: nueva fusión de ambos manuales sin duplicar contenido (39 capítulos)
+    · Parte I — General (login, instalación, portal según rol)
+    · Parte II — Mecánicos (15 capítulos, mismo contenido que manual_mecanicos)
+    · Parte III — Administrador (23 capítulos, mismo contenido que manual_admin)
+    · Parte IV — FAQ fusionada (mecánicos + admin, sin repetir)
+    · Badges de rol en cada capítulo (👷 Mecánico / 🔐 Admin / ⭐ Rubiel/Alberto / 👥 Todos)
+    · Tabla de acceso por rol en Cap. 3 (qué ve cada perfil)
+  - MINOR +2 por 2 nuevas páginas → v1.2.339
+
 v1.0.309 — 2026-08-16
   - parte_trabajo.html: impresión en apaisado A4 con letra más pequeña
     · @page size A4 landscape, márgenes 0.8cm × 1cm

@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Manual Mecánicos — PANALCOR</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;900&family=Oswald:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1b2a;--bg2:#111f30;--bg3:#172233;--bg4:#1e2d40;
+  --gold:#c9a227;--gold2:#f0c040;--cream:#e8dcc8;--grey:#8a9bb0;
+  --green:#27ae60;--green2:#2ecc71;--red:#e74c3c;--orange:#e67e22;
+  --blue:#3498db;--purple:#9b59b6;
+  --border:rgba(255,255,255,0.08);--radius:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--cream);font-family:'Barlow',sans-serif;font-size:15px;line-height:1.7}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;gap:14px;padding:12px 24px;
+  background:var(--bg2);border-bottom:2px solid var(--gold);position:sticky;top:0;z-index:100;
+  backdrop-filter:blur(8px)}
+.tb-back{color:var(--gold);text-decoration:none;font-size:.85rem;font-weight:700;
+  border:1px solid rgba(201,162,39,.3);border-radius:7px;padding:6px 12px}
+.tb-title{font-family:'Oswald',sans-serif;font-size:1.1rem;color:var(--gold2);letter-spacing:.06em}
+.tb-role{margin-left:auto;background:rgba(39,174,96,.15);border:1px solid rgba(39,174,96,.4);
+  color:var(--green2);padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:700}
+
+/* ── LAYOUT ── */
+.layout{display:flex;min-height:calc(100vh - 52px)}
+.sidebar{width:270px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);
+  padding:20px 0;position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto}
+.sb-section{font-size:.65rem;font-weight:700;letter-spacing:.15em;color:var(--grey);
+  padding:14px 20px 6px;text-transform:uppercase}
+.sb-link{display:flex;align-items:center;gap:10px;padding:9px 20px;color:rgba(255,255,255,.65);
+  text-decoration:none;font-size:.85rem;font-weight:600;transition:all .12s;border-left:3px solid transparent}
+.sb-link:hover{color:var(--cream);background:rgba(255,255,255,.04);border-left-color:var(--gold)}
+.sb-link.active{color:var(--gold2);background:rgba(201,162,39,.07);border-left-color:var(--gold2)}
+.sb-num{font-size:.7rem;color:var(--grey);min-width:18px}
+.main{flex:1;padding:40px 48px 80px;max-width:860px}
+
+/* ── PORTADA ── */
+.portada{text-align:center;padding:60px 20px 50px;border-bottom:2px solid rgba(201,162,39,.25);margin-bottom:48px}
+.portada-ico{font-size:4.5rem;margin-bottom:20px}
+.portada-empresa{font-family:'Oswald',sans-serif;font-size:2.2rem;color:var(--gold2);letter-spacing:.1em}
+.portada-sub{font-size:.85rem;color:var(--grey);letter-spacing:.18em;text-transform:uppercase;margin-top:4px}
+.portada-titulo{font-family:'Oswald',sans-serif;font-size:1.8rem;color:var(--cream);margin-top:28px;line-height:1.2}
+.portada-desc{color:var(--grey);margin-top:10px;max-width:480px;margin:10px auto 0}
+.portada-badge{display:inline-block;margin-top:20px;padding:5px 18px;
+  background:rgba(39,174,96,.15);border:1px solid rgba(39,174,96,.4);
+  border-radius:20px;font-size:.78rem;font-weight:700;color:var(--green2);letter-spacing:.1em}
+
+/* ── CAPÍTULOS ── */
+.chapter{margin-bottom:56px;scroll-margin-top:70px}
+.ch-header{display:flex;align-items:center;gap:16px;margin-bottom:20px;
+  padding-bottom:14px;border-bottom:2px solid rgba(201,162,39,.2)}
+.ch-num{font-size:.7rem;font-weight:700;color:var(--grey);letter-spacing:.1em;
+  background:rgba(255,255,255,.06);border:1px solid var(--border);
+  padding:3px 10px;border-radius:20px;white-space:nowrap}
+.ch-ico{font-size:1.8rem}
+.ch-title{font-family:'Oswald',sans-serif;font-size:1.5rem;font-weight:700;color:var(--cream)}
+.role-badge{display:inline-block;padding:3px 12px;border-radius:20px;font-size:.72rem;
+  font-weight:700;margin-bottom:16px;letter-spacing:.08em}
+.rb-mec{background:rgba(39,174,96,.15);border:1px solid rgba(39,174,96,.3);color:var(--green2)}
+.rb-all{background:rgba(201,162,39,.15);border:1px solid rgba(201,162,39,.3);color:var(--gold2)}
+.rb-special{background:rgba(243,156,18,.15);border:1px solid rgba(243,156,18,.3);color:#f0c040}
+
+/* ── TEXTO ── */
+p{color:rgba(232,220,200,.85);margin-bottom:14px}
+h2.sec{font-size:1rem;font-weight:800;color:var(--gold);margin:28px 0 12px;
+  padding-left:12px;border-left:3px solid var(--gold)}
+h3.subsec{font-size:.9rem;font-weight:700;color:var(--cream);margin:20px 0 8px}
+
+/* ── STEPS ── */
+ol.steps{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+ol.steps li{display:flex;gap:14px;align-items:flex-start;
+  background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:12px 16px}
+.step-num{width:28px;height:28px;border-radius:50%;background:var(--gold);color:#0d1b2a;
+  font-weight:900;font-size:.85rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-body{flex:1}
+.step-body b{display:block;font-size:.92rem;color:var(--cream);margin-bottom:3px}
+.step-body span{font-size:.83rem;color:var(--grey)}
+
+/* ── CAJAS ── */
+.box{border-radius:9px;padding:14px 18px;margin:16px 0;font-size:.88rem;border-left:4px solid}
+.box b{display:block;margin-bottom:4px;font-size:.9rem}
+.box.tip{background:rgba(52,152,219,.1);border-color:var(--blue);color:rgba(232,220,200,.9)}
+.box.warn{background:rgba(230,126,34,.1);border-color:var(--orange);color:rgba(232,220,200,.9)}
+.box.ok{background:rgba(39,174,96,.1);border-color:var(--green2);color:rgba(232,220,200,.9)}
+.box.danger{background:rgba(231,76,60,.1);border-color:var(--red);color:rgba(232,220,200,.9)}
+.box.fun{background:rgba(155,89,182,.1);border-color:var(--purple);color:rgba(232,220,200,.9)}
+
+/* ── TABLA ── */
+table.ref{width:100%;border-collapse:collapse;margin:14px 0 20px;font-size:.85rem}
+table.ref th{background:var(--bg4);color:var(--gold);padding:9px 12px;text-align:left;
+  font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+table.ref td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.05);color:rgba(232,220,200,.85);vertical-align:top}
+table.ref tr:hover td{background:rgba(255,255,255,.02)}
+table.ref .tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:.72rem;font-weight:700}
+
+/* ── MOCKUP SVG ── */
+.mockup-wrap{background:var(--bg4);border:1px solid rgba(201,162,39,.2);border-radius:12px;
+  padding:16px;margin:20px 0;overflow:hidden}
+.mockup-label{font-size:.72rem;font-weight:700;color:var(--grey);letter-spacing:.12em;
+  text-transform:uppercase;margin-bottom:10px}
+
+/* ── CAMPO LIST ── */
+.campo{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.campo:last-child{border-bottom:none}
+.campo-nombre{font-weight:700;color:var(--cream);min-width:180px;font-size:.88rem}
+.campo-desc{color:var(--grey);font-size:.83rem}
+
+/* ── PRINT ── */
+@media print{
+  .sidebar,.topbar{display:none!important}
+  body{background:#fff;color:#111;font-size:10pt}
+  .main{padding:0;max-width:100%}
+  .ch-title{color:#111}
+  .ch-num{color:#555;border-color:#ccc;background:#f5f5f5}
+  .box{border-color:#999;background:#f9f9f9;color:#111}
+  table.ref th{background:#eee;color:#333}
+  table.ref td{color:#111;border-bottom-color:#ddd}
+  p,h2.sec,h3.subsec{color:#111}
+  .portada-empresa,.portada-titulo{color:#111}
+  .portada-sub,.portada-desc{color:#555}
+  .role-badge,.portada-badge{border-color:#ccc;background:#f5f5f5;color:#333}
+  .step-num{background:#333;color:#fff}
+  .step-body b{color:#111}.step-body span{color:#444}
+  .chapter{page-break-inside:avoid}
+  @page{margin:1.5cm}
+}
+
+/* ── RESPONSIVE ── */
+@media(max-width:860px){
+  .sidebar{display:none}
+  .main{padding:24px 20px 60px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="tb-back" href="panalcor_inicio.html">⌂ Inicio</a>
+  <div class="tb-title">MANUAL DE MECÁNICOS — PANALCOR</div>
+  <div class="tb-role">👷 MECÁNICOS</div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sb-section">General</div>
+  <a class="sb-link" href="#portada">🏠 Portada</a>
+  <a class="sb-link" href="#cap1"><span class="sb-num">1</span>🔑 Entrar al sistema</a>
+  <a class="sb-link" href="#cap2"><span class="sb-num">2</span>📱 Instalar la app</a>
+  <a class="sb-link" href="#cap3"><span class="sb-num">3</span>🏠 Portal de inicio</a>
+
+  <div class="sb-section">Preventivo</div>
+  <a class="sb-link" href="#cap4"><span class="sb-num">4</span>📋 Mis Tareas</a>
+  <a class="sb-link" href="#cap5"><span class="sb-num">5</span>✅ Marcar tarea hecha</a>
+  <a class="sb-link" href="#cap6"><span class="sb-num">6</span>↩️ Desmarcar por error</a>
+
+  <div class="sb-section">Averías</div>
+  <a class="sb-link" href="#cap7"><span class="sb-num">7</span>📷 Avería con QR</a>
+  <a class="sb-link" href="#cap8"><span class="sb-num">8</span>⚠️ Avería sin QR</a>
+  <a class="sb-link" href="#cap9"><span class="sb-num">9</span>📝 Rellenar el parte</a>
+  <a class="sb-link" href="#cap10"><span class="sb-num">10</span>🔒 Cerrar una avería</a>
+  <a class="sb-link" href="#cap11"><span class="sb-num">11</span>🔍 Buscar averías pasadas</a>
+  <a class="sb-link" href="#cap12"><span class="sb-num">12</span>🔧 Mis Averías</a>
+
+  <div class="sb-section">Turno diario</div>
+  <a class="sb-link" href="#cap13"><span class="sb-num">13</span>📅 Mantenimiento Diario</a>
+  <a class="sb-link" href="#cap14"><span class="sb-num">14</span>🚪 Cerrar Turno</a>
+
+  <div class="sb-section">Extras</div>
+  <a class="sb-link" href="#cap15"><span class="sb-num">15</span>📦 Pedir repuesto</a>
+  <a class="sb-link" href="#cap16"><span class="sb-num">16</span>💬 Sugerencias</a>
+  <a class="sb-link" href="#cap17"><span class="sb-num">17</span>👷 Portal Rubiel</a>
+  <a class="sb-link" href="#cap18"><span class="sb-num">18</span>🔧 Portal Alberto</a>
+  <a class="sb-link" href="#cap19"><span class="sb-num">19</span>❓ Preguntas frecuentes</a>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- PORTADA -->
+<div class="portada" id="portada">
+  <div class="portada-ico">👷</div>
+  <div class="portada-empresa">PANALCOR S.L.</div>
+  <div class="portada-sub">Sistema de Gestión de Mantenimiento</div>
+  <div class="portada-titulo">Manual de Usuario<br>para Mecánicos</div>
+  <p class="portada-desc">Todo lo que necesitas saber para usar el sistema día a día: averías, preventivo, turno y más.</p>
+  <div class="portada-badge">👷 MECÁNICOS · RUBIEL · ALBERTO</div>
+</div>
+
+<!-- CAP 1 -->
+<div class="chapter" id="cap1">
+  <div class="ch-header">
+    <span class="ch-num">Capítulo 1</span>
+    <span class="ch-ico">🔑</span>
+    <h1 class="ch-title">Entrar al sistema</h1>
+  </div>
+  <span class="role-badge rb-all">👥 Para todo el mundo</span>
+
+  <p>El sistema funciona desde cualquier móvil, tablet o PC con navegador. No necesitas instalar nada para empezar. La dirección te la da <b>JAVIER H</b>.</p>
+
+  <h2 class="sec">Primer acceso</h2>
+  <ol class="steps">
+    <li><div class="step-num">1</div><div class="step-body"><b>Abre la dirección en Chrome (Android) o Safari (iPhone)</b><span>Panalcor.github.io/panalcor — o escanea el QR que hay en el taller.</span></div></li>
+    <li><div class="step-num">2</div><div class="step-body"><b>Elige tu nombre en el desplegable</b><span>Aparece la lista de todos. Si no estás, díselo a JAVIER H.</span></div></li>
+    <li><div class="step-num">3</div><div class="step-body"><b>Escribe tu contraseña</b><span>Te la ha dado JAVIER H. Si la perdiste, él te la resetea en 30 segundos.</span></div></li>
+    <li><div class="step-num">4</div><div class="step-body"><b>Marca "Es mi teléfono" si es tu móvil personal</b><span>Muy importante: así la sesión no caduca y no tendrás que volver a entrar.</span></div></li>
+    <li><div class="step-num">5</div><div class="step-body"><b>Pulsa ENTRAR</b><span>Ya estás dentro. Te lleva directamente al portal de inicio.</span></div></li>
+  </ol>
+
+  <!-- MOCKUP LOGIN -->
+  <div class="mockup-wrap">
+    <div class="mockup-label">Pantalla de login</div>
+    <svg viewBox="0 0 500 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:500px;display:block;margin:0 auto">
+      <rect width="500" height="280" rx="8" fill="#0d1b2a"/>
+      <rect x="140" y="20" width="220" height="40" rx="6" fill="#1a2d42" stroke="#c9a227" stroke-width="1"/>
+      <text x="250" y="46" text-anchor="middle" fill="#f0c040" font-size="14" font-family="Arial" font-weight="bold">PANALCOR S.L.</text>
+      <text x="250" y="80" text-anchor="middle" fill="#8a9bb0" font-size="10" font-family="Arial">SISTEMA DE MANTENIMIENTO</text>
+      <rect x="100" y="100" width="300" height="36" rx="6" fill="#172233" stroke="#2a3d52" stroke-width="1"/>
+      <text x="120" y="123" fill="#8a9bb0" font-size="11" font-family="Arial">▾ Selecciona tu nombre...</text>
+      <rect x="100" y="148" width="300" height="36" rx="6" fill="#172233" stroke="#2a3d52" stroke-width="1"/>
+      <text x="120" y="171" fill="#8a9bb0" font-size="11" font-family="Arial">🔒 Contraseña</text>
+      <rect x="100" y="197" width="16" height="16" rx="3" fill="#c9a227"/>
+      <text x="122" y="210" fill="#8a9bb0" font-size="11" font-family="Arial">Es mi teléfono (no volver a pedir contraseña)</text>
+      <rect x="160" y="222" width="180" height="36" rx="6" fill="#c9a227"/>
+      <text x="250" y="245" text-anchor="middle" fill="#0d1b2a" font-size="13" font-family="Arial" font-weight="bold">ENTRAR</text>
+    </svg>
+  </div>
+
+  <div class="box tip"><b>💡 Marca siempre "Es mi teléfono"</b>Si no lo marcas, cada vez que escanees un QR de máquina tendrás que volver a poner la contraseña. En mitad de una avería, eso tiene mucha gracia.</div>
+  <div class="box warn"><b>⚠️ ¿Olvidaste la contraseña?</b>Habla con JAVIER H. La resetea desde el panel en 30 segundos. Sin preguntas raras ni correos de recuperación.</div>
+</div>
+
+<!-- CAP 2 -->
+<div class="chapter" id="cap2">
+  <div class="ch-header">
+    <span class="ch-num">Capítulo 2</span>
+    <span class="ch-ico">📱</span>
+    <h1 class="ch-title">Instalar la app en el móvil</h1>
+  </div>
+  <span class="role-badge rb-all">👥 Para todo el mundo</span>
+
+  <p>La app no está en ninguna tienda. Se instala directamente desde el navegador y luego funciona como cualquier otra app, incluso <b>sin internet</b> (guarda los datos y los sincroniza cuando vuelve la conexión).</p>
+
+  <h2 class="sec">En Android — Chrome</h2>
+  <ol class="steps">
+    <li><div class="step-num">1</div><div class="step-body"><b>Abre la página en Chrome</b><span>Tiene que ser Chrome, no Samsung Browser ni Firefox.</span></div></li>
+    <li><div class="step-num">2</div><div class="step-body"><b>Pulsa el menú ⋮ (tres puntos arriba a la derecha)</b><span>A veces aparece directamente un banner "Instalar app" — mejor aún, pulsa ahí.</span></div></li>
+    <li><div class="step-num">3</div><div class="step-body"><b>Elige "Añadir a pantalla de inicio" o "Instalar aplicación"</b><span>Cualquiera de las dos vale.</span></div></li>
+    <li><div class="step-num">4</div><div class="step-body"><b>Confirma</b><span>Aparece el icono PANALCOR en tu pantalla como una app normal.</span></div></li>
+  </ol>
+
+  <h2 class="sec">En iPhone — Safari</h2>
+  <ol class="steps">
+    <li><div class="step-num">1</div><div class="step-body"><b>Abre la página en Safari</b><span>Solo funciona con Safari en iPhone. Chrome en iOS no permite esto (cosas de Apple).</span></div></li>
+    <li><div class="step-num">2</div><div class="step-body"><b>Pulsa el icono de compartir</b><span>La flecha hacia arriba en la barra inferior de Safari.</span></div></li>
+    <li><div class="step-num">3</div><div class="step-body"><b>Baja hasta "Añadir a pantalla de inicio"</b><span>Está un poco escondido en el menú, pero está.</span></div></li>
+    <li><div class="step-num">4</div><div class="step-body"><b>Pulsa "Añadir"</b><span>Icono PANALCOR en tu pantalla de inicio.</span></div></li>
+  </ol>
+
+  <div class="box ok"><b>✅ Por qué merece la pena instalarlo</b>Se abre en pantalla completa sin barras del navegador. Funciona sin internet. Es más rápido al escanear QR de máquina. Y queda más profesional, que tampoco está mal.</div>
+</div>
+
+<!-- CAP 3 -->
+<div class="chapter" id="cap3">
+  <div class="ch-header">
+    <span class="ch-num">Capítulo 3</span>
+    <span class="ch-ico">🏠</span>
+    <h1 class="ch-title">El portal de inicio</h1>
+  </div>
+  <span class="role-badge rb-mec">👷 Mecánicos</span>
+
+  <p>Después del login aparece tu portal personal. Arriba ves tu nombre y tu rol. Debajo, los botones a los que tienes acceso.</p>
+
+  <!-- MOCKUP PORTAL -->
+  <div class="mockup-wrap">
+    <div class="mockup-label">Portal de inicio — Mecánico</div>
+    <svg viewBox="0 0 460 340" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:460px;display:block;margin:0 auto">
+      <rect width="460" height="340" rx="8" fill="#0d1b2a"/>
+      <rect x="0" y="0" width="460" height="48" fill="#111f30"/>
+      <text x="20" y="30" fill="#f0c040" font-size="13" font-family="Arial" font-weight="bold">PANALCOR S.L.</text>
+      <text x="340" y="30" fill="#c9a227" font-size="11" font-family="Arial">v1.0.309</text>
+      <!-- nombre -->
+      <text x="230" y="78" text-anchor="middle" fill="#f0c040" font-size="18" font-family="Arial" font-weight="bold">RAFA</text>
+      <text x="230" y="96" text-anchor="middle" fill="#8a9bb0" font-size="10" font-family="Arial">MECÁNICO</text>
+      <!-- botones -->
+      <rect x="20" y="110" width="420" height="44" rx="7" fill="#172233" stroke="#2a3d52" stroke-width="1"/>
+      <text x="50" y="138" fill="#e8dcc8" font-size="12" font-family="Arial">🔧  Menú Mecánicos</text>
+      <text x="380" y="138" fill="#8a9bb0" font-size="11" font-family="Arial">›</text>
+      <rect x="20" y="162" width="420" height="44" rx="7" fill="#172233" stroke="#2a3d52" stroke-width="1"/>
+      <text x="50" y="190" fill="#74b9ff" font-size="12" font-family="Arial">📋  Mis Tareas</text>
+      <rect x="20" y="214" width="420" height="44" rx="7" fill="#172233" stroke="#2a3d52" stroke-width="1"/>
+      <text x="50" y="242" fill="#5dde95" font-size="12" font-family="Arial">📅  Mantenimiento Diario</text>
+      <rect x="20" y="266" width="420" height="44" rx="7" fill="#172233" stroke="#2a3d52" stroke-width="1"/>
+      <text x="50" y="294" fill="#ff8a80" font-size="12" font-family="Arial">🚪  Cerrar Turno</text>
+      <rect x="20" y="318" width="200" height="16" rx="3" fill="#172233"/>
+      <rect x="240" y="318" width="200" height="16" rx="3" fill="#172233"/>
+    </svg>
+  </div>
+
+  <table class="ref">
+    <thead><tr><th>Botón</th><th>Para qué sirve</th></tr></thead>
+    <tbody>
+      <tr><td>🔧 Menú Mecánicos</td><td>Acceso al centro de operaciones: buscar averías, historial, formación, pedidos, sugerencias</td></tr>
+      <tr><td>📋 Mis Tareas</td><td>Ver y marcar las tareas preventivas del mes que te ha asignado el admin</td></tr>
+      <tr><td>📅 Mantenimiento Diario</td><td>Checklist de revisiones diarias de la línea</td></tr>
+      <tr><td>🚪 Cerrar Turno</td><td>Escribir la nota para el relevo y ver averías abiertas</td></tr>
+      <tr><td>⚠️ Averías</td><td>Registrar una nueva avería o ver las activas</td></tr>
+      <tr><td>🔩 Otros Trabajos</td><td>Registrar trabajos no planificados (instalaciones, mejoras...)</td></tr>
+      <tr><td>❄️ Frío</td><td>Solo para Gregorio y Jose — lecturas de equipos de frío</td></tr>
+      <tr><td>💬 Sugerencias</td><td>Enviar un mensaje al admin</td></tr>
+      <tr><td>📦 Pedir repuesto</td><td>Solicitar material al admin con referencia y urgencia</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- CAP 4 -->
+<div class="chapter" id="cap4">
+  <div class="ch-header">
+    <span class="ch-num">Capítulo 4</span>
+    <span class="ch-ico">📋</span>
+    <h1 class="ch-title">Mis Tareas — el preventivo mensual</h1>
+  </div>
+  <span class="role-badge rb-mec">👷 Mecánicos</span>
+
+  <p>Aquí vive tu mantenimiento preventivo del mes: engrases, revisiones, limpiezas y ajustes. Todo lo que hay que hacer aunque la máquina no dé guerra. Cada tarea tiene su semana asignada para no acumularse al final.</p>
+
+  <!-- MOCKUP MIS TAREAS -->
+  <div class="mockup-wrap">
+    <div class="mockup-label">Pantalla Mis Tareas</div>
+    <svg viewBox="0 0 460 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:460px;display:block;margin:0 auto">
+      <rect width="460" height="320" rx="8" fill="#0d1b2a"/>
+      <rect x="0" y="0" width="460" height="44" fill="#111f30"/>
+      <text x="20" y="28" fill="#f0c040" font-size="12" font-family="Arial" font-weight="bold">👷 RAFA · Agosto 2026</text>
+      <!-- barra progreso -->
+      <rect x="20" y="54" width="420" height="10" rx="5" fill="#172233"/>
+      <rect x="20" y="54" width="252" height="10" rx="5" fill="#27ae60"/>
+      <text x="450" y="64" text-anchor="end" fill="#2ecc71" font-size="10" font-family="Arial" font-weight="bold">60%</text>
+      <!-- tarjeta maquina 1 -->
+      <rect x="20" y="76" width="420" height="60" rx="7" fill="#172233" stroke="#2a4a2a" stroke-width="1"/>
+      <text x="40" y="102" fill="#e8dcc8" font-size="12" font-family="Arial" font-weight="bold">PABAT 1</text>
+      <text x="40" y="120" fill="#8a9bb0" font-size="10" font-family="Arial">3 tareas pendientes esta semana</text>
+      <rect x="370" y="88" width="52" height="22" rx="5" fill="rgba(231,76,60,0.2)"/>
+      <text x="396" y="104" text-anchor="middle" fill="#e74c3c" font-size="10" font-family="Arial" font-weight="bold">URGENTE</text>
+      <!-- tarjeta maquina 2 -->
+      <rect x="20" y="146" width="420" height="60" rx="7" fill="#172233" stroke="#2a3d52" stroke-width="1"/>
+      <text x="40" y="172" fill="#e8dcc8" font-size="12" font-family="Arial" font-weight="bold">ADITIVOS</text>
+      <text x="40" y="190" fill="#8a9bb0" font-size="10" font-family="Arial">1 tarea · QUINCENAL</text>
+      <text x="430" y="182" text-anchor="end" fill="#2ecc71" font-size="18" font-family="Arial">✓</text>
+      <!-- tarjeta maquina 3 -->
+      <rect x="20" y="216" width="420" height="60" rx="7" fill="#172233" stroke="#2a3d52" stroke-width="1"/>
+      <text x="40" y="242" fill="#e8dcc8" font-size="12" font-family="Arial" font-weight="bold">BASCULA CAJAS</text>
+      <text x="40" y="260" fill="#8a9bb0" font-size="10" font-family="Arial">2 tareas · SEMANAL</text>
+    </svg>
+  </div>
+
+  <p>La pantalla muestra todas las máquinas que tienes asignadas este mes. Las que tienen tareas pendientes aparecen primero. La barra verde de arriba indica tu progreso global del mes.</p>
+
+  <table class="ref">
+    <thead><tr><th>Color / icono</th><th>Significado</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tag" style="background:rgba(231,76,60,.15);color:#e74c3c">URGENTE</span></td><td>La tarea tiene fecha pasada — hay que hacerla ya</td></tr>
+      <tr><td><span class="tag" style="background:rgba(39,174,96,.15);color:#2ecc71">✓ Verde</span></td><td>Todas las tareas de esa máquina están hechas</td></tr>
+      <tr><td><span class="tag" style="background:rgba(243,156,18,.15);color:#f0c040">PENDIENTE</span></td><td>Quedan tareas sin hacer pero aún dentro del plazo</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box tip"><b>💡 Cambia de mes</b>Puedes ver el mes anterior con el selector de mes en la parte superior. Útil para revisar si dejaste algo sin marcar.</div>
+</div>
+
+<!-- CAP 5 -->
+<div class="chapter" id="cap5">
+  <div class="ch-header">
+    <span class="ch-num">Capítulo 5</span>
+    <span class="ch-ico">✅</span>
+    <h1 class="ch-title">Marcar una tarea como hecha</h1>
+  </div>
+  <span class="role-badge rb-mec">👷 Mecánicos</span>
+
+  <ol class="steps">
+    <li><div class="step-num">1</div><div class="step-body"><b>Pulsa sobre la tarjeta de la máquina</b><span>Se despliega la lista de tareas pendientes de esa máquina con sus fechas previstas.</span></div></li>
+    <li><div class="step-num">2</div><div class="step-body"><b>Pulsa la tarea que has completado</b><span>Se abre el diálogo de confirmación.</span></div></li>
+    <li><div class="step-num">3</div><div class="step-body"><b>Selecciona el turno en el que la hiciste</b><span>Mañana, Tarde o Noche.</span></div></li>
+    <li><div class="step-num">4</div><div class="step-body"><b>Añade notas si viste algo raro</b><span>Campo opcional pero muy útil. Si detectaste desgaste, holgura o ruido, escríbelo aquí. El admin lo verá.</span></div></li>
+    <li><div class="step-num">5</div><div class="step-body"><b>Pulsa "✅ Guardar"</b><span>La tarea se pone en verde. La barra de progreso sube. JAVIER H lo ve en tiempo real en el panel de seguimiento.</span></div></li>
+  </ol>
+
+  <div class="box ok"><b>✅ Funciona sin internet</b>Si te quedas sin cobertura (salas de compresores, cámaras...) no pasa nada. Guarda igualmente en local y sincroniza solo cuando vuelve la red. No pierdas lo que has hecho.</div>
+  <div class="box tip"><b>💡 Las notas importan</b>Si escribes "ruido extraño en el rodamiento" hoy, la próxima avería de esa máquina tendrá contexto. Ayuda mucho al compañero que la atienda.</div>
+</div>
+
+<!-- CAP 6 -->
+<div class="chapter" id="cap6">
+  <div class="ch-header">
+    <span class="ch-num">Capítulo 6</span>
+    <span class="ch-ico">↩️</span>
+    <h1 class="ch-title">Desmarcar una tarea marcada por error</h1>
+  </div>
+  <span class="role-badge rb-mec">👷 Mecánicos</span>
+
+  <p>Pasa. Marcaste la tarea equivocada, o pulsaste sin querer. No hay problema.</p>
+
+  <ol class="steps">
+    <li><div class="step-num">1</div><div class="step-body"><b>Vuelve a pulsar sobre la máquina</b><span>Las tareas ya hechas también aparecen, en verde.</span></div></li>
+    <li><div class="step-num">2</div><div class="step-body"><b>Pulsa sobre la tarea que quieres desmarcar</b><span>Si ya estaba marcada, aparece el botón "↩️ Desmarcar tarea".</span></div></li>
+    <li><div class="step-num">3</div><div class="step-body"><b>Confirma</b><span>La tarea vuelve a estado pendiente. Sin drama.</span></div></li>
+  </ol>
+
+  <div class="box warn"><b>⚠️ Solo puedes desmarcar las tuyas</b>No puedes desmarcar tareas que marcó otro compañero. Si hay un error así, habla con JAVIER H.</div>
+</div>
+
+<!-- CAP 7 -->
+<div class="chapter" id="cap7">
+  <div class="ch-header">
+    <span class="ch-num">Capítulo 7</span>
+    <span class="ch-ico">📷</span>
+    <h1 class="ch-title">Declarar una avería con el QR</h1>
+  </div>
+  <span class="role-badge rb-mec">👷 Mecánicos</span>
+
+  <p>Cada máquina tiene un código QR pegado en un sitio visible. Escanearlo es la forma más rápida de registrar una avería: sin buscar la máquina en listas, sin escribir el nombre. Directo al formulario con la máquina ya seleccionada.</p>
+
+  <!-- MOCKUP QR -->
+  <div class="mockup-wrap">
+    <div class="mockup-label">Flujo de avería con QR</div>
+    <svg viewBox="0 0 500 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:500px;display:block;margin:0 auto">
+      <rect width="500" height="120" rx="8" fill="#111f30"/>
+      <!-- paso 1 -->
+      <rect x="20" y="20" width="100" height="80" rx="8" fill="#172233" stroke="#c9a227" stroke-width="1.5"/>
+      <text x="70" y="52" text-anchor="middle" fill="#f0c040" font-size="22" font-family="Arial">📷</text>
+      <text x="70" y="72" text-anchor="middle" fill="#8a9bb0" font-size="9" font-family="Arial">Escanear</text>
+      <text x="70" y="84" text-anchor="middle" fill="#8a9bb0" font-size="9" font-family="Arial">QR máquina</text>
+      <!-- flecha -->
+      <text x="140" y="65" fill="#c9a227" font-size="18" font-family="Arial">→</text>
+      <!-- paso 2 -->
+      <rect x="160" y="20" width="130" height="80" rx="8" fill="#172233" stroke="#3498db" stroke-width="1.5"/>
+      <text x="225" y="52" text-anchor="middle" fill="#74b9ff" font-size="20" font-family="Arial">📝</text>
+      <text x="225" y="68" text-anchor="middle" fill="#8a9bb0" font-size="9" font-family="Arial">Formulario con</text>
+      <text x="225" y="80" text-anchor="middle" fill="#74b9ff" font-size="9" font-family="Arial">máquina pre-rellena</text>
+      <!-- flecha -->
+      <text x="300" y="65" fill="#c9a227" font-size="18" font-family="Arial">→</text>
+      <!-- paso 3 -->
+      <rect x="320" y="20" width="150" height="80" rx="8" fill="#172233" stroke="#27ae60" stroke-width="1.5"/>
+      <text x="395" y="52" text-anchor="middle" fill="#2ecc71" font-size="20" font-family="Arial">☁️</text>
+      <text x="395" y="68" text-anchor="middle" fill="#8a9bb0" font-size="9" font-family="Arial">Avería guardada en</text>
+      <text x="395" y="80" text-anchor="middle" fill="#2ecc71" font-size="9" font-family="Arial">Firebase · Admin lo ve</text>
+    </svg>
+  </div>
+
+  <ol class="steps">
+    <li><div class="step-num">1</div><div class="step-body"><b>Abre la cámara del móvil o la app de QR</b><span>En la mayoría de móviles modernos la cámara ya lee QR directamente.</span></div></li>
+    <li><div class="step-num">2</div><div class="step-body"><b>Apunta al QR de la máquina</b><span>Aparece una notificación con el enlace. Pulsa para abrirlo.</span></div></li>
+    <li><div class="step-num">3</div><div class="step-body"><b>Si te pide login, entra con tus datos</b><span>Solo la primera vez si no marcaste "Es mi teléfono".</span></div></li>
+    <li><div class="step-num">4</div><div class="step-body"><b>Se abre el formulario de avería con la máquina ya seleccionada</b><span>Solo tienes que rellenar qué ha pasado.</span></div></li>
+    <li><div class="step-num">5</div><div class="step-body"><b>Rellena los campos y guarda</b><span>Ver capítulo 9 para los campos en detalle.</span></div></li>
+  </ol>
+
+  <div class="box tip"><b>💡 El QR más útil</b>Hay un QR general para mecánicos en el taller donde puedes elegir cualquier máquina de la lista. Úsalo si el QR de la máquina está dañado o no lo encuentras.</div>
+</div>
+
+<!-- CAP 8 -->
+<div class="chapter" id="cap8">
+  <div class="ch-header">
+    <span class="ch-num">Capítulo 8</span>
+    <span class="ch-ico">⚠️</span>
+    <h1 class="ch-title">Declarar una avería sin QR</h1>
+  </div>
+  <span class="role-badge rb-mec">👷 Mecánicos</span>
+
+  <ol class="steps">
+    <li><div class="step-num">1</div><div class="step-body"><b>Desde el portal de inicio, pulsa "⚠️ Averías"</b><span>O entra en Menú Mecánicos → Averías.</span></div></li>
+    <li><div class="step-num">2</div><div class="step-body"><b>Pulsa el botón "+ Nueva Avería"</b><span>Aparece en la parte superior de la lista.</span></div></li>
+    <li><div class="step-num">3</div><div class="step-body"><b>Busca la máquina en el buscador</b><span>Escribe parte del nombre — por ejemplo "pabat" o "aditivos". Selecciona de la lista desplegable.</span></div></li>
+    <li><div class="step-num">4</div><div class="step-body"><b>Rellena los campos del parte</b><span>Ver capítulo 9.</span></div></li>
+    <li><div class="step-num">5</div><div class="step-body"><b>Guarda</b><span>La avería queda registrada y el admin la ve al momento.</span></div></li>
+  </ol>
+</div>
+
+<!-- CAP 9 -->
+<div class="chapter" id="cap9">
+  <div class="ch-header">
+    <span class="ch-num">Capítulo 9</span>
+    <span class="ch-ico">📝</span>
+    <h1 class="ch-title">Rellenar el parte de avería — campo por campo</h1>
+  </div>
+  <span class="role-badge rb-mec">👷 Mecánicos</span>
+
+  <p>Un parte bien rellenado vale oro. El admin puede priorizar mejor, el histórico tiene más valor y cuando vuelva a fallar la misma parte se sabe exactamente qué se hizo.</p>
+
+  <div class="campo"><div class="campo-nombre">🏭 Máquina</div><div class="campo-desc">Ya viene rellena si entraste con QR. Si no, busca por nombre. <b>Obligatorio.</b></div></div>
+  <div class="campo"><div class="campo-nombre">🔩 Parte afectada</div><div class="campo-desc">Qué componente específico ha fallado: "cadena transportadora", "motor principal", "variador de frecuencia", "electroválvula". Cuanto más concreto, mejor.</div></div>
+  <div class="campo"><div class="campo-nombre">📄 Descripción</div><div class="campo-desc">Qué pasa exactamente. "No arranca", "hace ruido extraño en el rodamiento izquierdo", "pierde aceite por la junta del cilindro". Sé específico.</div></div>
+  <div class="campo"><div class="campo-nombre">🏷️ Tipo de avería</div><div class="campo-desc">
+    <b>Mecánica</b> — roturas, desgaste, atasco físico<br>
+    <b>Eléctrica</b> — fusibles, contactores, bobinas, sensores<br>
+    <b>Neumática</b> — presión, cilindros, electroválvulas<br>
+    <b>Hidráulica</b> — aceite, bombas, válvulas hidráulicas<br>
+    <b>Electrónica</b> — variadores, PLCs, pantallas HMI<br>
+    <b>Proceso</b> — relacionado con el producto, no con la máquina
+  </div></div>
+  <div class="campo"><div class="campo-nombre">🔴 Gravedad</div><div class="campo-desc">
+    <b>Leve</b> — la máquina sigue funcionando con limitación<br>
+    <b>Moderada</b> — rendimiento reducido significativamente<br>
+    <b>Grave</b> — máquina parada, producción afectada
+  </div></div>
+  <div class="campo"><div class="campo-nombre">🚨 Prioridad</div><div class="campo-desc">
+    <b>Urgente</b> — hay que atenderlo ahora mismo<br>
+    <b>Importante</b> — en el turno, no puede esperar al día siguiente<br>
+    <b>Programable</b> — puede planificarse para un momento de menor actividad
+  </div></div>
+  <div class="campo"><div class="campo-nombre">⏱️ Tiempo estimado</div><div class="campo-desc">Tu estimación de cuánto va a tardar la reparación. En minutos.</div></div>
+  <div class="campo"><div class="campo-nombre">👷 Mecánico asignado</div><div class="campo-desc">Quién va a atenderla. Puedes asignártela a ti mismo o a otro.</div></div>
+
+  <div class="box danger"><b>🚨 Prioridad URGENTE</b>Si marcas Urgente, el admin recibe una notificación en el navegador en menos de 1 hora. No lo uses para averías que pueden esperar — el sistema perderá efectividad si se abusa.</div>
+  <div class="box tip"><b>💡 Descripción + Solución</b>Al cerrar la avería (capítulo 10) añadirás la solución aplicada. Así queda el historial completo: problema → solución → tiempo → materiales.</div>
+</div>
+
+<!-- CAP 10 -->
+<div class="chapter" id="cap10">
+  <div class="ch-header">
+    <span class="ch-num">Capítulo 10</span>
+    <span class="ch-ico">🔒</span>
+    <h1 class="ch-title">Cerrar una avería en curso</h1>
+  </div>
+  <span class="role-badge rb-mec">👷 Mecánicos</span>
+
+  <p>Una avería abierta que ya está resuelta contamina el panel del admin y los KPIs. Ciérrala en cuanto la termines, aunque sea en el móvil antes de salir del taller.</p>
+
+  <ol class="steps">
+    <li><div class="step-num">1</div><div class="step-body"><b>Ve a "⚠️ Averías" o a "🔧 Mis Averías"</b><span>Busca la avería EN CURSO que has resuelto.</span></div></li>
+    <li><div class="step-num">2</div><div class="step-body"><b>Pulsa sobre la tarjeta de la avería</b><span>Se abre el detalle completo.</span></div></li>
+    <li><div class="step-num">3</div><div class="step-body"><b>Pulsa "✏️ Editar"</b><span>Se abre el formulario de edición.</span></div></li>
+    <li><div class="step-num">4</div><div class="step-body"><b>Cambia el estado a "RESUELTA"</b><span>O a "PENDIENTE REPUESTO" si está estabilizada pero esperando material.</span></div></li>
+    <li><div class="step-num">5</div><div class="step-body"><b>Rellena la solución aplicada</b><span>Qué hiciste exactamente: "Cambiado rodamiento 6205", "Ajustado sensor inductivo", "Limpiada electroválvula Y3".</span></div></li>
+    <li><div class="step-num">6</div><div class="step-body"><b>Añade el tiempo real empleado</b><span>En minutos. Importante para el cálculo de MTTR.</span></div></li>
+    <li><div class="step-num">7</div><div class="step-body"><b>Anota materiales usados si los hubo</b><span>Referencia y cantidad. Impacta en el coste por máquina.</span></div></li>
+    <li><div class="step-num">8</div><div class="step-body"><b>Guarda</b><span>La avería desaparece de la lista de activas y queda en el historial.</span></div></li>
+  </ol>
+
+  <table class="ref">
+    <thead><tr><th>Estado</th><th>Cuándo usarlo</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tag" style="background:rgba(231,76,60,.15);color:#e74c3c">EN CURSO</span></td><td>Avería activa, máquina afectada, alguien trabajando en ello</td></tr>
+      <tr><td><span class="tag" style="background:rgba(243,156,18,.15);color:#f0c040">PEND. REPUESTO</span></td><td>Estabilizada provisionalmente, esperando material para la reparación definitiva</td></tr>
+      <tr><td><span class="tag" style="background:rgba(39,174,96,.15);color:#2ecc71">RESUELTA</span></td><td>Reparación completa, máquina funcionando con normalidad</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- CAP 11 -->
+<div class="chapter" id="cap11">
+  <div class="ch-header">
+    <span class="ch-num">Capítulo 11</span>
+    <span class="ch-ico">🔍</span>
+    <h1 class="ch-title">Buscar averías anteriores</h1>
+  </div>
+  <span class="role-badge rb-mec">👷 Mecánicos</span>
+
+  <p>¿Te encuentras una máquina que lleva tiempo sin dar guerra y no sabes cómo la dejó el compañero la última vez? El historial de averías resueltas es tu memoria colectiva del taller.</p>
+
+  <ol class="steps">
+    <li><div class="step-num">1</div><div class="step-body"><b>Menú Mecánicos → pestaña "🔍 Buscar Averías"</b><span>O desde el portal de inicio directamente.</span></div></li>
+    <li><div class="step-num">2</div><div class="step-body"><b>Escribe en el buscador</b><span>Nombre de máquina, parte ("cadena", "variador"), o describe el síntoma. Busca en tiempo real.</span></div></li>
+    <li><div class="step-num">3</div><div class="step-body"><b>Usa los filtros si quieres acotar</b><span>Por máquina específica, tipo de avería o período de tiempo.</span></div></li>
+    <li><div class="step-num">4</div><div class="step-body"><b>Lee la tarjeta de resultado</b><span>Verás: problema original, solución aplicada, quién lo hizo, cuánto tardó.</span></div></li>
+  </ol>
+
+  <div class="box fun"><b>💡 El truco del oficio</b>Si buscas una máquina y ves que el mismo componente ha fallado 3 veces en el mismo año con la misma solución... igual hay que revisar el preventivo de esa parte. Díselo a JAVIER H.</div>
+</div>
+
+<!-- CAP 12 -->
+<div class="chapter" id="cap12">
+  <div class="ch-header">
+    <span class="ch-num">Capítulo 12</span>
+    <span class="ch-ico">🔧</span>
+    <h1 class="ch-title">Mis Averías — tu historial personal</h1>
+  </div>
+  <span class="role-badge rb-mec">👷 Mecánicos</span>
+
+  <p>En <b>Mis Averías</b> ves solo las averías en las que has participado tú: las que abriste, cerraste o en las que te asignaron. Nada de las de los demás.</p>
+
+  <table class="ref">
+    <thead><tr><th>Filtro</th><th>Lo que ves</th></tr></thead>
+    <tbody>
+      <tr><td>Todos los estados</td><td>Todo tu historial completo</td></tr>
+      <tr><td>🔴 En curso</td><td>Las que tienes abiertas ahora mismo</td></tr>
+      <tr><td>🟡 Pendiente repuesto</td><td>Estabilizadas, esperando material</td></tr>
+      <tr><td>🟢 Resuelta</td><td>Tu palmarés de averías cerradas</td></tr>
+    </tbody>
+  </table>
+
+  <p>Pulsa sobre cualquier tarjeta para ver el detalle completo: descripción, solución, tiempo empleado, materiales usados.</p>
+</div>
+
+<!-- CAP 13 -->
+<div class="chapter" id="cap13">
+  <div class="ch-header">
+    <span class="ch-num">Capítulo 13</span>
+    <span class="ch-ico">📅</span>
+    <h1 class="ch-title">Mantenimiento Diario</h1>
+  </div>
+  <span class="role-badge rb-mec">👷 Mecánicos</span>
+
+  <p>El checklist diario de revisiones de la línea. Niveles de aceite, presiones, temperaturas, estado de seguridades. Se hace al inicio del turno.</p>
+
+  <ol class="steps">
+    <li><div class="step-num">1</div><div class="step-body"><b>Portal de inicio → "📅 Mantenimiento Diario"</b><span>O Menú Mecánicos → pestaña Mantenimiento Diario.</span></div></li>
+    <li><div class="step-num">2</div><div class="step-body"><b>Revisa cada punto de la lista</b><span>Marca los que están correctos. Si algo no está bien, anota la observación.</span></div></li>
+    <li><div class="step-num">3</div><div class="step-body"><b>Guarda el checklist</b><span>Queda registrado con fecha, hora y tu nombre.</span></div></li>
+  </ol>
+
+  <div class="box warn"><b>⚠️ Si encuentras algo fuera de rango</b>No solo lo marques en el checklist — abre también una avería si la situación lo requiere. El checklist es una revisión, no un ticket de reparación.</div>
+</div>
+
+<!-- CAP 14 -->
+<div class="chapter" id="cap14">
+  <div class="ch-header">
+    <span class="ch-num">Capítulo 14</span>
+    <span class="ch-ico">🚪</span>
+    <h1 class="ch-title">Cerrar Turno</h1>
+  </div>
+  <span class="role-badge rb-mec">👷 Mecánicos</span>
+
+  <p>Antes de irte, deja al compañero del siguiente turno un resumen de lo que ha pasado. No le hagas descubrir las sorpresas solo.</p>
+
+  <ol class="steps">
+    <li><div class="step-num">1</div><div class="step-body"><b>Portal de inicio → "🚪 Cerrar Turno"</b><span>O Menú Mecánicos → pestaña Cerrar Turno.</span></div></li>
+    <li><div class="step-num">2</div><div class="step-body"><b>Escribe tu nota para el relevo</b><span>"La PABAT 2 lleva haciendo ruido en el reductor desde las 10h, hay que vigilarla", "Se ha cambiado la cadena de la talladora, queda ajuste fino pendiente"...</span></div></li>
+    <li><div class="step-num">3</div><div class="step-body"><b>Revisa el resumen de averías abiertas</b><span>El sistema te muestra automáticamente las averías EN CURSO que quedan sin resolver al cerrar el turno.</span></div></li>
+    <li><div class="step-num">4</div><div class="step-body"><b>Guarda</b><span>El siguiente turno lo verá en cuanto entre.</span></div></li>
+  </ol>
+
+  <div class="box tip"><b>💡 Una nota corta es mejor que ninguna</b>No hace falta escribir una novela. "Todo correcto, pendiente cambio de aceite PABAT 1 mañana" es suficiente.</div>
+</div>
+
+<!-- CAP 15 -->
+<div class="chapter" id="cap15">
+  <div class="ch-header">
+    <span class="ch-num">Capítulo 15</span>
+    <span class="ch-ico">📦</span>
+    <h1 class="ch-title">Pedir un repuesto al admin</h1>
+  </div>
+  <span class="role-badge rb-mec">👷 Mecánicos</span>
+
+  <ol class="steps">
+    <li><div class="step-num">1</div><div class="step-body"><b>Menú Mecánicos → "📦 Pedir repuesto"</b><span>O botón Pedir Repuesto desde el portal de inicio.</span></div></li>
+    <li><div class="step-num">2</div><div class="step-body"><b>Rellena la referencia del material</b><span>Si la tienes: referencia del fabricante, número de catálogo. Si no, describe lo mejor posible qué es.</span></div></li>
+    <li><div class="step-num">3</div><div class="step-body"><b>Añade descripción y cantidad</b><span>"Rodamiento 6205 2RS, 2 unidades", "Correa B-42, 1 unidad".</span></div></li>
+    <li><div class="step-num">4</div><div class="step-body"><b>Indica urgencia</b><span>Si la máquina está parada esperando ese repuesto, márcalo como urgente.</span></div></li>
+    <li><div class="step-num">5</div><div class="step-body"><b>Envía</b><span>JAVIER H lo recibe en su panel de repuestos y puede marcarlo como en pedido o disponible.</span></div></li>
+  </ol>
+</div>
+
+<!-- CAP 16 -->
+<div class="chapter" id="cap16">
+  <div class="ch-header">
+    <span class="ch-num">Capítulo 16</span>
+    <span class="ch-ico">💬</span>
+    <h1 class="ch-title">Enviar una sugerencia</h1>
+  </div>
+  <span class="role-badge rb-mec">👷 Mecánicos</span>
+
+  <p>Tienes una idea para mejorar algo, o quieres comunicar algo al admin que no es una avería. El sistema tiene un canal directo para eso.</p>
+
+  <ol class="steps">
+    <li><div class="step-num">1</div><div class="step-body"><b>Menú Mecánicos → "💬 Sugerencias"</b><span>O botón Sugerencias desde el portal de inicio.</span></div></li>
+    <li><div class="step-num">2</div><div class="step-body"><b>Escribe tu mensaje</b><span>Sin filtros. Si hay algo que no funciona bien en el proceso de mantenimiento, es el sitio correcto para decirlo.</span></div></li>
+    <li><div class="step-num">3</div><div class="step-body"><b>Envía</b><span>JAVIER H lo ve en su panel. Si es urgente, díselo también en persona.</span></div></li>
+  </ol>
+</div>
+
+<!-- CAP 17 -->
+<div class="chapter" id="cap17">
+  <div class="ch-header">
+    <span class="ch-num">Capítulo 17</span>
+    <span class="ch-ico">👷</span>
+    <h1 class="ch-title">Portal Rubiel — Mantenimiento Obrador</h1>
+  </div>
+  <span class="role-badge rb-special">👷 Solo RUBIEL</span>
+
+  <p>Rubiel tiene su propio portal adaptado al mantenimiento del obrador: un checklist específico de sus tareas y registro de turnos trabajados en el obrador.</p>
+
+  <h2 class="sec">Cómo entrar</h2>
+  <ol class="steps">
+    <li><div class="step-num">1</div><div class="step-body"><b>Desde panalcor_inicio.html, pulsa "👷 Rubiel"</b><span>O accede directamente a rubiel.html con tu contraseña.</span></div></li>
+    <li><div class="step-num">2</div><div class="step-body"><b>Si ya tienes sesión activa, entra directo sin contraseña</b><span>La sesión dura 30 días en el mismo dispositivo.</span></div></li>
+  </ol>
+
+  <h2 class="sec">El checklist de tareas</h2>
+  <p>El checklist tiene tareas agrupadas por frecuencia (Diarias, Semanales, Quincenales, Mensuales...). Para cada tarea:</p>
+  <ol class="steps">
+    <li><div class="step-num">1</div><div class="step-body"><b>Pulsa la tarea que has completado</b><span>Se marca con ✅ y registra la fecha.</span></div></li>
+    <li><div class="step-num">2</div><div class="step-body"><b>Las tareas diarias se reinician cada día</b><span>Las semanales y mensuales se reinician en el período correspondiente.</span></div></li>
+  </ol>
+
+  <h2 class="sec">Registro de turnos en obrador</h2>
+  <ol class="steps">
+    <li><div class="step-num">1</div><div class="step-body"><b>Ve a la pestaña "Obrador"</b><span>Dentro del portal Rubiel.</span></div></li>
+    <li><div class="step-num">2</div><div class="step-body"><b>Selecciona fecha y anota las horas trabajadas</b><span>Campo de horas con decimales (ej: 4.5 = 4 horas y media).</span></div></li>
+    <li><div class="step-num">3</div><div class="step-body"><b>Añade observaciones si las hay</b><span>Qué se hizo en ese turno de obrador.</span></div></li>
+    <li><div class="step-num">4</div><div class="step-body"><b>Guarda</b><span>Queda registrado en el historial mensual que ve JAVIER H en el informe especial.</span></div></li>
+  </ol>
+
+  <div class="box tip"><b>💡 El informe mensual</b>JAVIER H puede generar un informe completo de tu actividad mensual (tareas hechas, % cumplimiento, turnos en obrador, horas totales) desde el portal de admin → Informe Rubiel/Alberto.</div>
+</div>
+
+<!-- CAP 18 -->
+<div class="chapter" id="cap18">
+  <div class="ch-header">
+    <span class="ch-num">Capítulo 18</span>
+    <span class="ch-ico">🔧</span>
+    <h1 class="ch-title">Portal Alberto — Fontanería e Instalaciones</h1>
+  </div>
+  <span class="role-badge rb-special">🔧 Solo ALBERTO</span>
+
+  <p>Alberto tiene su portal propio para registrar todos los trabajos de fontanería, climatización, soldadura, estructuras y otros que realiza.</p>
+
+  <h2 class="sec">Cómo entrar</h2>
+  <ol class="steps">
+    <li><div class="step-num">1</div><div class="step-body"><b>Desde panalcor_inicio.html, pulsa "🔧 Alberto"</b><span>O accede directamente a alberto.html.</span></div></li>
+    <li><div class="step-num">2</div><div class="step-body"><b>Si ya tienes sesión activa, entra directo</b><span>La sesión dura 30 días.</span></div></li>
+  </ol>
+
+  <h2 class="sec">Registrar un trabajo</h2>
+  <ol class="steps">
+    <li><div class="step-num">1</div><div class="step-body"><b>Pulsa "+ Nuevo Trabajo"</b><span>Formulario de registro de trabajo.</span></div></li>
+    <li><div class="step-num">2</div><div class="step-body"><b>Selecciona la fecha</b><span>Por defecto hoy. Puedes cambiarla si registras con retraso.</span></div></li>
+    <li><div class="step-num">3</div><div class="step-body"><b>Elige la categoría</b><span>Fontanería · Aire/Climatización · Soldadura · Estructuras · Bandejas/Carros · Apoyo Mecánicos · Otros.</span></div></li>
+    <li><div class="step-num">4</div><div class="step-body"><b>Escribe la descripción</b><span>Qué has hecho exactamente: "Cambiado grifo vestuarios hombres", "Soldada rotura en bastidor formadora".</span></div></li>
+    <li><div class="step-num">5</div><div class="step-body"><b>Anota las horas si procede</b><span>Tiempo dedicado a ese trabajo. Útil para el informe mensual.</span></div></li>
+    <li><div class="step-num">6</div><div class="step-body"><b>Guarda</b><span>Aparece en la lista del mes con su categoría.</span></div></li>
+  </ol>
+
+  <table class="ref">
+    <thead><tr><th>Categoría</th><th>Qué incluye</th></tr></thead>
+    <tbody>
+      <tr><td>🔧 Fontanería</td><td>Tuberías, grifos, desagües, instalaciones de agua</td></tr>
+      <tr><td>❄️ Aire/Climatización</td><td>Splits, conductos, ventilación, sistemas de frío industrial</td></tr>
+      <tr><td>🔥 Soldadura</td><td>Reparaciones y fabricaciones metálicas</td></tr>
+      <tr><td>🏗️ Estructuras</td><td>Bastidores, soportes, anclajes, obra civil menor</td></tr>
+      <tr><td>🍽️ Bandejas/Carros</td><td>Mantenimiento de bandejas y carros de producción</td></tr>
+      <tr><td>🛠️ Apoyo Mecánicos</td><td>Colaboración en tareas de mecánicos</td></tr>
+      <tr><td>📋 Otros</td><td>Trabajos que no encajan en las categorías anteriores</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box tip"><b>💡 El informe mensual</b>JAVIER H puede ver un informe detallado de tu actividad: trabajos por categoría, horas totales, resumen del mes. Cuanto más detallado registres, más útil es el informe.</div>
+</div>
+
+<!-- CAP 19 -->
+<div class="chapter" id="cap19">
+  <div class="ch-header">
+    <span class="ch-num">Capítulo 19</span>
+    <span class="ch-ico">❓</span>
+    <h1 class="ch-title">Preguntas frecuentes</h1>
+  </div>
+  <span class="role-badge rb-all">👥 Para todo el mundo</span>
+
+  <h3 class="subsec">¿Por qué no me aparecen tareas en Mis Tareas?</h3>
+  <p>El admin tiene que publicar el plan del mes. Si aún no lo ha hecho, no aparece nada. Díselo a JAVIER H.</p>
+
+  <h3 class="subsec">Marqué una tarea y luego desapareció</h3>
+  <p>Si estabas sin internet cuando la marcaste, puede que no se sincronizara. Comprueba la conexión y vuelve a entrar. Si el problema persiste, habla con JAVIER H.</p>
+
+  <h3 class="subsec">¿Puedo usar el sistema desde el ordenador del taller?</h3>
+  <p>Sí, funciona en cualquier navegador moderno. Chrome recomendado. La sesión en el ordenador sí caduca (no es "tu teléfono"), así que tendrás que entrar cada vez.</p>
+
+  <h3 class="subsec">¿Cómo sé si una avería la está mirando alguien?</h3>
+  <p>El estado EN CURSO indica que está asignada. En la tarjeta aparece el mecánico asignado. Si no tiene mecánico asignado, es que el admin la ha visto pero no la ha asignado todavía.</p>
+
+  <h3 class="subsec">¿Puedo editar una avería que no abrí yo?</h3>
+  <p>Solo si estás asignado a ella o si eres admin. Si necesitas cambiar algo en una avería de otro, habla con JAVIER H.</p>
+
+  <h3 class="subsec">La app no carga / pantalla en blanco</h3>
+  <p>1) Comprueba la conexión a internet. 2) Cierra el navegador y vuelve a abrir. 3) Borra la caché del navegador. 4) Si nada funciona, llama a JAVIER H.</p>
+
+  <h3 class="subsec">¿Funciona sin WiFi / con datos móviles?</h3>
+  <p>Sí, funciona con cualquier conexión. Si no hay cobertura, las acciones quedan guardadas en local y se sincronizan automáticamente cuando vuelve la red.</p>
+
+  <h3 class="subsec">Puse la contraseña mal varias veces y no me deja entrar</h3>
+  <p>El sistema no bloquea por intentos fallidos. Si no recuerdas la contraseña, JAVIER H te la resetea.</p>
+
+  <div class="box ok" style="margin-top:32px"><b>✅ ¿Algo que no está en este manual?</b>Usa el botón "💬 Sugerencias" en el portal para enviárselo a JAVIER H, o díselo en persona. El sistema mejora con vuestro uso y vuestros comentarios.</div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<script>
+// Marcar enlace activo en sidebar al hacer scroll
+const links = document.querySelectorAll('.sb-link[href^="#"]');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(e.isIntersecting){
+      links.forEach(l => l.classList.remove('active'));
+      const active = document.querySelector('.sb-link[href="#'+e.target.id+'"]');
+      if(active) active.classList.add('active');
+    }
+  });
+}, {rootMargin:'-20% 0px -70% 0px'});
+document.querySelectorAll('.chapter,[id="portada"]').forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
