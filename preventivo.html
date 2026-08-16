@@ -883,6 +883,21 @@ if('serviceWorker' in navigator){
       </select>
       <button type="button" class="seg-load-btn" onclick="cargarSeguimiento()">Cargar</button>
       <button type="button" class="seg-load-btn" onclick="imprimirInformeSeguimiento()" style="background:rgba(201,162,39,0.15);border-color:rgba(201,162,39,0.4);color:var(--gold)">🖨️ Imprimir</button>
+      <button type="button" class="seg-load-btn" onclick="abrirModalParte()" style="background:rgba(116,185,255,0.12);border-color:rgba(116,185,255,0.35);color:#74b9ff">📋 Parte de trabajo</button>
+    </div>
+
+    <!-- Modal selección mecánico para parte -->
+    <div id="parteModalBg" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;align-items:center;justify-content:center">
+      <div style="background:var(--navy-mid);border-radius:14px;padding:28px 28px 22px;width:min(400px,92vw);border:1px solid rgba(255,255,255,.15)">
+        <div style="font-family:'Oswald',sans-serif;font-size:1.1rem;color:var(--gold);margin-bottom:6px">📋 Parte de trabajo</div>
+        <div style="font-size:0.78rem;color:var(--text-dim);margin-bottom:18px">Selecciona el mecánico para generar su parte mensual</div>
+        <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px">Mecánico</div>
+        <div id="parteMecList" style="display:flex;flex-direction:column;gap:7px;max-height:280px;overflow-y:auto;margin-bottom:20px"></div>
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+          <button onclick="cerrarModalParte()" style="padding:9px 20px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:transparent;color:var(--text-dim);font-family:'Barlow',sans-serif;font-size:0.88rem;cursor:pointer">Cancelar</button>
+          <button onclick="generarParteMecanico()" style="padding:9px 22px;border-radius:8px;border:1px solid rgba(116,185,255,.4);background:rgba(116,185,255,.12);color:#74b9ff;font-family:'Barlow',sans-serif;font-size:0.88rem;font-weight:700;cursor:pointer">Generar parte</button>
+        </div>
+      </div>
     </div>
     <div class="seg-resumen" id="segResumen"></div>
     <div class="prog-wrap" id="segProgWrap" style="display:none">
@@ -4145,6 +4160,194 @@ function imprimirInformeSeguimiento() {
   <thead><tr><th>Máquina</th><th>Tarea</th><th style="text-align:center">Frec.</th><th style="text-align:center">Mecánico</th><th style="text-align:center">Fecha plan</th><th style="text-align:center">Estado</th><th style="text-align:center">Fecha real</th></tr></thead>
   <tbody>${tareasRows}</tbody>
 </table>
+<script>window.onload=function(){window.print();}<\/script>
+</body></html>`);
+  w.document.close();
+}
+
+/* ════ PARTE DE TRABAJO POR MECÁNICO ════ */
+function abrirModalParte() {
+  if(!_segData) { alert('Carga un mes primero.'); return; }
+  const meqs = [...new Set(_segData.tareas.map(t => t.mecanico).filter(Boolean))].sort();
+  const list = document.getElementById('parteMecList');
+  list.innerHTML = meqs.map(m => `
+    <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;
+      border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);cursor:pointer;
+      font-size:0.9rem;color:var(--cream);font-weight:600;transition:background .15s"
+      onmouseover="this.style.background='rgba(116,185,255,.08)'" onmouseout="this.style.background='rgba(255,255,255,.03)'">
+      <input type="radio" name="parteMec" value="${escHtml(m)}"
+        style="accent-color:#74b9ff;width:16px;height:16px;flex-shrink:0">
+      👷 ${escHtml(m)}
+    </label>`).join('');
+  if(meqs.length) list.querySelector('input[type=radio]').checked = true;
+  document.getElementById('parteModalBg').style.display = 'flex';
+}
+function cerrarModalParte() {
+  document.getElementById('parteModalBg').style.display = 'none';
+}
+function generarParteMecanico() {
+  const sel = document.querySelector('input[name="parteMec"]:checked');
+  if(!sel) { alert('Selecciona un mecánico.'); return; }
+  const mec = sel.value;
+  cerrarModalParte();
+
+  const mk = document.getElementById('segMes').value;
+  const [y, m] = mk.split('-');
+  const nombreMes = _MESES_NOMBRE[parseInt(m,10)-1] + ' ' + y;
+  const { tareas, compData } = _segData;
+
+  // Tareas del mecánico, agrupadas por máquina, ordenadas por frecuencia
+  const FREQ_ORD = {DIARIO:0,ARRANQUE:1,CIERRE:2,SEMANAL:3,QUINCENAL:4,MENSUAL:5,BIMESTRAL:6,TRIMESTRAL:7,SEMESTRAL:8,ANUAL:9};
+  const misTareas = tareas
+    .filter(t => t.mecanico === mec)
+    .sort((a,b) => {
+      if(a.maquina !== b.maquina) return a.maquina.localeCompare(b.maquina);
+      return (FREQ_ORD[a.frecuencia]??99) - (FREQ_ORD[b.frecuencia]??99);
+    });
+
+  if(!misTareas.length) { alert(`No hay tareas asignadas a ${mec} este mes.`); return; }
+
+  // Expandir slots para saber fechas planificadas y estado
+  const slotsMap = {};
+  misTareas.forEach(t => {
+    const frecs = Object.keys(t.fechas || {});
+    if(t.frecuencia === 'DIARIO') {
+      slotsMap[t.id] = [{fechaPlan:'Cada día', slotKey: t.id+'_diario'}];
+    } else if(!frecs.length) {
+      slotsMap[t.id] = [{fechaPlan:'', slotKey: t.id+'_0'}];
+    } else {
+      slotsMap[t.id] = frecs.map(wi => ({fechaPlan: t.fechas[wi]||'', slotKey: t.id+'_'+wi}));
+    }
+  });
+
+  const totalT = misTareas.reduce((s,t) => s + (slotsMap[t.id]?.length||1), 0);
+  const hechasT = misTareas.reduce((s,t) => s + (slotsMap[t.id]||[]).filter(sl => compData[sl.slotKey]).length, 0);
+
+  // Agrupar por máquina para el layout
+  const grupos = {};
+  misTareas.forEach(t => { if(!grupos[t.maquina]) grupos[t.maquina] = []; grupos[t.maquina].push(t); });
+
+  const FREQ_COL = {DIARIO:'#1abc9c',ARRANQUE:'#3498db',CIERRE:'#9b59b6',SEMANAL:'#27ae60',QUINCENAL:'#2980b9',MENSUAL:'#c0392b',BIMESTRAL:'#8e44ad',TRIMESTRAL:'#d35400',SEMESTRAL:'#7f8c8d',ANUAL:'#2c3e50'};
+
+  let filasHtml = '';
+  Object.entries(grupos).forEach(([maq, ts]) => {
+    filasHtml += `<tr><td colspan="5" style="background:#f5f5f5;font-weight:800;font-size:11px;
+      letter-spacing:.08em;text-transform:uppercase;padding:6px 10px;color:#333;
+      border-top:2px solid #ddd">${maq}</td></tr>`;
+    ts.forEach(t => {
+      const slots = slotsMap[t.id] || [];
+      const fColor = FREQ_COL[t.frecuencia] || '#555';
+      slots.forEach((sl, si) => {
+        const comp = compData[sl.slotKey];
+        const fechaPlanFmt = sl.fechaPlan && sl.fechaPlan !== 'Cada día'
+          ? sl.fechaPlan.slice(8)+'/'+sl.fechaPlan.slice(5,7) : (sl.fechaPlan||'');
+        const isHecha = !!comp;
+        filasHtml += `<tr style="${isHecha?'background:#f0faf4':''}">
+          <td style="text-align:center;width:36px;padding:8px 4px">
+            <div style="width:18px;height:18px;border:2px solid ${isHecha?'#27ae60':'#bbb'};border-radius:4px;
+              display:inline-flex;align-items:center;justify-content:center;background:${isHecha?'#27ae60':'#fff'}">
+              ${isHecha?'<span style="color:#fff;font-size:13px;line-height:1">✓</span>':''}
+            </div>
+          </td>
+          ${si===0?`<td style="font-size:11.5px;padding:7px 8px;vertical-align:top" rowspan="${slots.length}">${t.tarea||''}</td>`:''}
+          <td style="text-align:center;width:70px">
+            <span style="font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+              padding:2px 7px;border-radius:10px;border:1px solid ${fColor}44;background:${fColor}18;color:${fColor}">
+              ${t.frecuencia||''}</span>
+          </td>
+          <td style="text-align:center;width:80px;font-size:11px;color:#555">${fechaPlanFmt}</td>
+          <td style="width:110px;padding:4px 8px">
+            <div style="border-bottom:1px solid #ccc;margin:4px 2px;height:18px;font-size:11px;color:#27ae60">
+              ${comp&&comp.fechaReal?comp.fechaReal.slice(8)+'/'+comp.fechaReal.slice(5,7):''}
+            </div>
+          </td>
+        </tr>`;
+      });
+    });
+  });
+
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Parte de Trabajo — ${mec} — ${nombreMes}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,sans-serif;font-size:12px;color:#111;padding:20px 24px;max-width:780px;margin:0 auto}
+  .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;padding-bottom:12px;border-bottom:3px solid #c9a227}
+  .logo{font-size:22px;font-weight:900;letter-spacing:.06em;color:#111}
+  .logo span{color:#c9a227}
+  .doc-title{font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:#777;margin-top:2px}
+  .meta-box{border:1px solid #ddd;border-radius:8px;padding:12px 16px;margin-bottom:16px;
+    display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .meta-item label{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#999;display:block;margin-bottom:3px}
+  .meta-item .val{font-size:13px;font-weight:700;color:#111}
+  .meta-item .val.mec{font-size:15px;color:#1a5276}
+  .meta-item .line{border-bottom:1.5px solid #333;height:22px;margin-top:2px}
+  .kpi-row{display:flex;gap:12px;margin-bottom:16px}
+  .kpi{border:1px solid #e0e0e0;border-radius:6px;padding:8px 16px;text-align:center;flex:1}
+  .kpi-n{font-size:20px;font-weight:800}
+  .kpi-l{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-top:1px}
+  table{width:100%;border-collapse:collapse}
+  thead th{background:#2c3e50;color:#fff;font-size:10px;text-transform:uppercase;
+    letter-spacing:.08em;padding:8px 8px;text-align:left;border:1px solid #1a252f}
+  tbody td{border:1px solid #e0e0e0;vertical-align:middle}
+  tbody tr:hover{background:#fafafa}
+  .firma-row{margin-top:28px;display:flex;gap:40px}
+  .firma-box{flex:1;border-top:1.5px solid #333;padding-top:6px;font-size:10px;color:#555;text-align:center}
+  .nota{font-size:9.5px;color:#999;margin-top:14px;text-align:center;font-style:italic}
+  @media print{body{padding:10px} .no-print{display:none} @page{margin:1.2cm;size:A4}}
+</style></head><body>
+
+<div class="header">
+  <div>
+    <div class="logo">PAN<span>AL</span>COR <span style="font-size:13px;color:#777;font-weight:400">S.L.</span></div>
+    <div class="doc-title">Mantenimiento preventivo · Parte de trabajo</div>
+  </div>
+  <div style="text-align:right;font-size:10px;color:#999">
+    Generado: ${new Date().toLocaleDateString('es-ES')}<br>
+    Mes de referencia: <b>${nombreMes}</b>
+  </div>
+</div>
+
+<div class="meta-box">
+  <div class="meta-item">
+    <label>Mecánico</label>
+    <div class="val mec">👷 ${mec}</div>
+  </div>
+  <div class="meta-item">
+    <label>Fecha de ejecución</label>
+    <div class="line"></div>
+  </div>
+  <div class="meta-item">
+    <label>Turno</label>
+    <div class="line"></div>
+  </div>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="kpi-n" style="color:#1a5276">${totalT}</div><div class="kpi-l">Tareas asignadas</div></div>
+  <div class="kpi"><div class="kpi-n" style="color:#27ae60">${hechasT}</div><div class="kpi-l">Realizadas</div></div>
+  <div class="kpi"><div class="kpi-n" style="color:#c0392b">${totalT-hechasT}</div><div class="kpi-l">Pendientes</div></div>
+  <div class="kpi"><div class="kpi-n" style="color:${hechasT/totalT>=.9?'#27ae60':hechasT/totalT>=.7?'#e67e22':'#c0392b'}">${totalT?Math.round(hechasT/totalT*100):0}%</div><div class="kpi-l">Cumplimiento</div></div>
+</div>
+
+<table>
+  <thead><tr>
+    <th style="width:36px;text-align:center">✓</th>
+    <th>Tarea</th>
+    <th style="width:80px;text-align:center">Frecuencia</th>
+    <th style="width:80px;text-align:center">Fecha plan</th>
+    <th style="width:110px">Fecha real</th>
+  </tr></thead>
+  <tbody>${filasHtml}</tbody>
+</table>
+
+<div class="firma-row">
+  <div class="firma-box">Firma mecánico</div>
+  <div class="firma-box">Firma encargado</div>
+  <div class="firma-box">Vº Bº jefe de mantenimiento</div>
+</div>
+<div class="nota">Este parte debe entregarse firmado al encargado al finalizar las tareas del mes.</div>
+
 <script>window.onload=function(){window.print();}<\/script>
 </body></html>`);
   w.document.close();
