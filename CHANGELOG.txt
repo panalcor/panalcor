@@ -6,6 +6,10 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.0.259 — 2026-08-16
+  - rubiel.html y alberto.html: actualizan panalcor_session también al restaurar sesión existente
+    · Corrección: si ya tenían sesión guardada no llamaban a guardarSesion(), dejando rol incorrecto
+
 v1.0.249 — 2026-08-16
   - panalcor_inicio.html: Rubiel y Alberto ven también botón "Mis Tareas"
     · mis_tareas.html filtra por panalcor_session.nombre, ya funciona con RUBIEL/ALBERTO
