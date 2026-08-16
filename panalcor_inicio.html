@@ -718,6 +718,10 @@ function mostrarPortal(s){
   document.getElementById('loginBox').style.display  = 'none';
   document.getElementById('portalBox').style.display = 'block';
   document.getElementById('portalNombre').textContent = s.nombre;
+  // Forzar rol correcto para usuarios con página propia
+  var n = (s.nombre||'').toUpperCase();
+  if(n === 'RUBIEL') s.rol = 'rubiel';
+  if(n === 'ALBERTO') s.rol = 'alberto';
   var roles = {mecanico:'Mecanico',encargado:'Encargado',admin:'Administrador',compras:'Compras',rubiel:'Mantenimiento Obrador',alberto:'Fontanería & Instalaciones'};
   document.getElementById('portalRol').textContent = roles[s.rol] || s.rol;
   document.getElementById('portalBtns').innerHTML = _buildBtns(s.rol, s.nombre);

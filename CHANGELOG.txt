@@ -6,6 +6,9 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.0.269 — 2026-08-16
+  - panalcor_inicio.html: fuerza rol 'rubiel'/'alberto' por nombre, sin depender de sesión previa
+
 v1.0.259 — 2026-08-16
   - rubiel.html y alberto.html: actualizan panalcor_session también al restaurar sesión existente
     · Corrección: si ya tenían sesión guardada no llamaban a guardarSesion(), dejando rol incorrecto
