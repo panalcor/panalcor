@@ -6,6 +6,15 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.0.229 — 2026-08-16
+  - Todas las páginas llevan al inicio (panalcor_inicio.html) sin cerrar sesión
+    · historial_maquina.html: btn-back apuntaba a history.back()
+    · turnos.html: back-btn apuntaba a history.back()
+    · parte_trabajo.html: botón volver apuntaba a admin.html
+    · calendario.html: botón volver apuntaba a admin.html
+    · manual.html: botón volver apuntaba a landing.html
+    · ayuda.html: botón volver apuntaba a admin.html
+
 v1.0.219 — 2026-08-16
   - alberto.html: botón Salir lleva a panalcor_inicio.html sin cerrar sesión
   - rubiel.html: botón Salir lleva a panalcor_inicio.html sin cerrar sesión
