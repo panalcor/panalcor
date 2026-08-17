@@ -6,6 +6,20 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.2.359 — 2026-08-17
+  - preventivo.html: Seguimiento refresca el nombre de máquina desde el
+    catálogo actual (por id) en vez de quedarse con la foto guardada al
+    publicar el plan del mes. Antes, meses publicados con el catálogo
+    antiguo (nombres genéricos tipo "LEVADURA" o "LINEAS FORMADORAS")
+    se quedaban así para siempre en Seguimiento, aunque el catálogo ya
+    se hubiera refinado a máquinas concretas (LINEA 1, PABAT 1, etc.)
+    · La exportación a Excel del plan ya recalculaba siempre desde el
+      catálogo actual, por eso ahí los nombres salían bien
+    · Meses publicados antes de que el catálogo se dividiera en máquinas
+      individuales no se pueden corregir automáticamente (los ids de
+      tarea no coinciden 1 a 1) sin perder el histórico de marcadas
+      como hechas — se dejan tal cual quedaron a propósito
+
 v1.2.349 — 2026-08-17
   - legionela.html: auto-rellenar en un solo paso, sin sobrescribir datos
     · Nuevo selector de mes propio en la pestaña Config (sin ir antes a cada pestaña)

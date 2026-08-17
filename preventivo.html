@@ -4034,7 +4034,16 @@ async function cargarSeguimiento(mkOverride) {
     ]);
     const planData  = snapPlan.val()  || {};
     const compData  = snapComp.val()  || {};
-    const tareas    = planData.tareas || [];
+    // El nombre de la máquina puede haberse afinado en el catálogo desde que se
+    // publicó el plan (p.ej. "LINEAS FORMADORAS" -> "LINEA 1"). Se refresca con
+    // el catálogo actual por id para que el seguimiento muestre siempre la
+    // máquina concreta, no el nombre genérico que tenía al publicarse.
+    const catalogMap = {};
+    getCatalogoEffectivo().forEach(c => { catalogMap[c.id] = c; });
+    const tareas = (planData.tareas || []).map(t => {
+      const cat = catalogMap[t.id];
+      return cat ? Object.assign({}, t, { maquina: cat.maquina }) : t;
+    });
 
     if(!tareas.length) {
       document.getElementById('segTabla').innerHTML = '';
