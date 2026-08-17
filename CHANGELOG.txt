@@ -6,6 +6,13 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.2.349 — 2026-08-17
+  - legionela.html: auto-rellenar en un solo paso, sin sobrescribir datos
+    · Nuevo selector de mes propio en la pestaña Config (sin ir antes a cada pestaña)
+    · Mes en curso: rellena solo hasta el día de hoy; mes anterior: rellena el mes entero
+    · Solo completa fechas/campos vacíos, nunca sobrescribe datos ya guardados
+    · Sigue excluyendo sábados, domingos y festivos; bloquea intento de rellenar mes futuro
+
 v1.0.339 — 2026-08-16
   - manual_mecanicos.html: nuevo manual completo para mecánicos (19 capítulos)
     · Login, instalación app, portal de inicio, Mis Tareas, marcar/desmarcar tareas

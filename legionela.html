@@ -341,9 +341,13 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
     ════════════════════════════════════════════════════════════════ -->
     <div id="panel-config" class="panel">
       <div class="sec-title">⚙️ CONFIGURACIÓN — AUTO-RELLENAR</div>
-      <p style="color:var(--gray);font-size:0.85rem;margin-bottom:24px">
-        Genera datos de ejemplo para el mes seleccionado en cada registro. Selecciona el mes en la pestaña correspondiente antes de usar estos botones.
+      <p style="color:var(--gray);font-size:0.85rem;margin-bottom:14px">
+        Genera datos de ejemplo para el mes elegido. Si es el mes en curso, rellena solo hasta el día de hoy; si es un mes anterior, rellena el mes entero. En ambos casos solo se completan las fechas vacías (no se sobreescriben datos ya guardados) y se excluyen sábados, domingos y festivos.
       </p>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+        <label style="color:var(--gray);font-size:0.85rem">📅 Mes a rellenar:</label>
+        <input type="month" id="mesAutoRellenar">
+      </div>
       <div style="display:flex;flex-direction:column;gap:14px;max-width:420px">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px">
           <div>
@@ -749,52 +753,94 @@ function borrarMes(tipo){
 // ══════════════════════════════════════════════════════════════════════════════
 // AUTO-RELLENAR
 // ══════════════════════════════════════════════════════════════════════════════
-function autoRellenar(tipo){
-  const mesEl = {depositos:'mesDepositos','afchacs':'mesAfchAcs',termos:'mesTermos'}[tipo];
-  const mes = document.getElementById(mesEl).value;
-  if(!mes){ showToast('⚠️ Selecciona un mes'); return; }
-  if(!confirm(`¿AUTO-RELLENAR ${tipo.toUpperCase()} para ${mes}?\nSe sobreescribirán los datos existentes.`)) return;
+function diaTieneDatos(tipo, row){
+  if(!row) return false;
+  if(tipo==='depositos'){
+    return DEPOSITOS.some(dep=> row[dep] && (row[dep].ph || row[dep].cloro || row[dep].temp || row[dep].turb)) || !!row.tecnico || !!row.obs;
+  }
+  if(tipo==='afchacs'){
+    return !!(row.punto || row.tafch || row.tacs || row.ph || row.cloro || row.turb || row.grifo || row.tecnico || row.obs);
+  }
+  if(tipo==='termos'){
+    return TERMOS.some(k=>row[k]) || !!row.tecnico || !!row.obs;
+  }
+  return false;
+}
 
-  const [y,m] = mes.split('-').map(Number);
+function sincronizarMesTab(tipo, mes){
+  const mesEl = {depositos:'mesDepositos',afchacs:'mesAfchAcs',termos:'mesTermos'}[tipo];
+  const el = document.getElementById(mesEl);
+  if(el) el.value = mes;
+}
+
+function autoRellenar(tipo){
+  const mesInput = document.getElementById('mesAutoRellenar');
+  const mes = mesInput ? mesInput.value : '';
+  if(!mes){ showToast('⚠️ Selecciona un mes'); return; }
+  if(mes > mesActual()){ showToast('⚠️ No se puede autorellenar un mes futuro'); return; }
+
+  const esActual = mes === mesActual();
+  const msg = esActual
+    ? `¿AUTO-RELLENAR ${tipo.toUpperCase()} para ${mes} hasta hoy?\nSolo se completarán las fechas vacías (no se sobreescriben datos ya guardados).`
+    : `¿AUTO-RELLENAR ${tipo.toUpperCase()} para ${mes} (mes completo)?\nSolo se completarán las fechas vacías (no se sobreescriben datos ya guardados).`;
+  if(!confirm(msg)) return;
+
+  DB.ref(fbPath(tipo,mes)).once('value').then(snap=>{
+    ejecutarAutoRellenar(tipo, mes, snap.val()||{});
+  }).catch(e=>showToast('❌ Error al leer datos: '+e.message));
+}
+
+function ejecutarAutoRellenar(tipo, mes, existente){
+  const hoyISO = new Date().toISOString().slice(0,10);
   const diasTodos = diasDelMes(mes);
-  const diasTrabajo = diasTodos.filter(x=>!x.blocked);
-  const diasSemanalBase = diasTrabajo.filter(x=>esPrimerDiaTrabajoDeSemana(x.ds));
+  let diasTrabajo = diasTodos.filter(x=>!x.blocked);
+  if(mes === mesActual()) diasTrabajo = diasTrabajo.filter(x=>x.ds <= hoyISO);
+
+  const data = {};
+  diasTodos.forEach(({ds})=>{ data[ds] = existente[ds] ? JSON.parse(JSON.stringify(existente[ds])) : {}; });
 
   if(tipo==='depositos'){
-    const data = {};
     const diasSemanal = diasTrabajo.filter(x=>esPrimerDiaTrabajoDeSemana(x.ds));
-    // pH y Cloro: todos los días laborables
+    // pH y Cloro: todos los días laborables que falten
     diasTrabajo.forEach(({ds})=>{
-      const bPh=rand(7.9,8.4,1), bCloro=rand(0.18,0.35,2);
-      data[ds]={};
-      DEPOSITOS.forEach(dep=>{
-        data[ds][dep]={
-          ph:   String(Math.min(8.4,Math.max(7.9,+(bPh+(Math.random()-.5)*.1).toFixed(1)))),
-          cloro:String(Math.min(0.35,Math.max(0.18,+(bCloro+(Math.random()-.5)*.02).toFixed(2))))
-        };
-      });
-      data[ds].tecnico='JAVI'; data[ds].obs='';
+      const row = data[ds];
+      const faltaPhCloro = DEPOSITOS.some(dep=> !(row[dep]&&row[dep].ph) || !(row[dep]&&row[dep].cloro));
+      if(faltaPhCloro){
+        const bPh=rand(7.9,8.4,1), bCloro=rand(0.18,0.35,2);
+        DEPOSITOS.forEach(dep=>{
+          row[dep] = row[dep] || {};
+          if(!row[dep].ph) row[dep].ph = String(Math.min(8.4,Math.max(7.9,+(bPh+(Math.random()-.5)*.1).toFixed(1))));
+          if(!row[dep].cloro) row[dep].cloro = String(Math.min(0.35,Math.max(0.18,+(bCloro+(Math.random()-.5)*.02).toFixed(2))));
+        });
+      }
+      if(!row.tecnico) row.tecnico='JAVI';
+      if(row.obs===undefined) row.obs='';
     });
-    // Tª y Turb: solo primer día laborable de cada semana
+    // Tª y Turb: solo primer día laborable de cada semana que falte
     diasSemanal.forEach(({ds})=>{
-      const bTemp=rand(4,7,1), bTurb=rand(1.8,2.7,1);
-      DEPOSITOS.forEach(dep=>{
-        data[ds][dep].temp =String(+(bTemp+(Math.random()-.5)*.4).toFixed(1));
-        data[ds][dep].turb =String(Math.min(2.7,Math.max(1.8,+(bTurb+(Math.random()-.5)*.1).toFixed(1))));
-      });
+      const row = data[ds];
+      const faltaTempTurb = DEPOSITOS.some(dep=> !(row[dep]&&row[dep].temp) || !(row[dep]&&row[dep].turb));
+      if(faltaTempTurb){
+        const bTemp=rand(4,7,1), bTurb=rand(1.8,2.7,1);
+        DEPOSITOS.forEach(dep=>{
+          row[dep] = row[dep] || {};
+          if(!row[dep].temp) row[dep].temp = String(+(bTemp+(Math.random()-.5)*.4).toFixed(1));
+          if(!row[dep].turb) row[dep].turb = String(Math.min(2.7,Math.max(1.8,+(bTurb+(Math.random()-.5)*.1).toFixed(1))));
+        });
+      }
     });
-    cache['depositos/'+mes]=data;
-    guardar('depositos',mes,data,()=>renderDepositos());
+    guardar('depositos',mes,data,()=>{ sincronizarMesTab('depositos',mes); renderDepositos(); });
 
   } else if(tipo==='afchacs'){
-    // Ciclo de puntos sin repetir
+    // Ciclo de puntos sin repetir, solo para días que faltan
     const puntos=[...PUNTOS_MUESTREO].sort(()=>Math.random()-.5);
     let pi=0;
-    const data={};
     diasTrabajo.forEach(({ds})=>{
+      const row = data[ds];
+      if(diaTieneDatos('afchacs', row)) return;
       if(pi>=puntos.length){ puntos.sort(()=>Math.random()-.5); pi=0; }
       const tafch=rand(3,6,1), ph=rand(7.9,8.4,1), cloro=rand(0.18,0.35,2), turb=rand(1.8,2.7,1);
-      data[ds]={
+      data[ds] = {
         punto:puntos[pi++],
         tafch:String(tafch),
         tacs:String(rand(51,58,1)),
@@ -802,20 +848,19 @@ function autoRellenar(tipo){
         grifo:'Correcto', tecnico:'JAVI', obs:''
       };
     });
-    cache['afchacs/'+mes]=data;
-    guardar('afchacs',mes,data,()=>renderAfchAcs());
+    guardar('afchacs',mes,data,()=>{ sincronizarMesTab('afchacs',mes); renderAfchAcs(); });
 
   } else if(tipo==='termos'){
-    // Entre 1 y 4 errores aleatorios (día + termo distintos)
-    const nLow = 1 + Math.floor(Math.random()*4);
+    // Entre 1 y 4 errores aleatorios (día + termo distintos), solo entre días que faltan
+    const diasFaltantes = diasTrabajo.filter(({ds})=>!diaTieneDatos('termos', data[ds]));
+    const nLow = diasFaltantes.length ? 1 + Math.floor(Math.random()*Math.min(4,diasFaltantes.length)) : 0;
     const lowCombos = new Set();
     while(lowCombos.size < nLow){
-      const d = diasTrabajo[Math.floor(Math.random()*diasTrabajo.length)].ds;
+      const d = diasFaltantes[Math.floor(Math.random()*diasFaltantes.length)].ds;
       const k = TERMOS[Math.floor(Math.random()*TERMOS.length)];
       lowCombos.add(d+'|'+k);
     }
-    const data={};
-    diasTrabajo.forEach(({ds})=>{
+    diasFaltantes.forEach(({ds})=>{
       const row={};
       let hayLow = false;
       TERMOS.forEach(k=>{
@@ -827,8 +872,7 @@ function autoRellenar(tipo){
       row.obs = hayLow ? 'SE SUBE LA TEMPERATURA' : '';
       data[ds]=row;
     });
-    cache['termos/'+mes]=data;
-    guardar('termos',mes,data,()=>renderTermos());
+    guardar('termos',mes,data,()=>{ sincronizarMesTab('termos',mes); renderTermos(); });
   }
 }
 
@@ -1524,7 +1568,7 @@ function initApp(){
   const hoy = new Date().toISOString().slice(0,10);
   const mes = mesActual();
   document.getElementById('topFecha').textContent = new Date().toLocaleDateString('es-ES',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  ['mesDepositos','mesAfchAcs','mesTermos','mesGrifos','mesIncidencias'].forEach(id=>{
+  ['mesDepositos','mesAfchAcs','mesTermos','mesGrifos','mesIncidencias','mesAutoRellenar'].forEach(id=>{
     document.getElementById(id).value = mes;
   });
   renderDepositos();
