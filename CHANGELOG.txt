@@ -6,6 +6,28 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.4.379 — 2026-08-18
+  - Nuevo módulo "Partes de Limpieza", conectado a Firebase en tiempo real:
+    · partes_limpieza.html: panel de administración (requiere login, o
+      auto-login si ya hay sesión de admin activa desde panalcor_inicio).
+      Gestión del equipo (alta/baja de personal), selector de los 10
+      partes de limpieza (Zona Trueno, Obrador, Hornos, Envasado, Otras
+      Zonas, Oficinas, Turno Tarde, Turno Noche, Aspirado Trimestral
+      Relámpago y Aspirado Trueno), marcado por persona con selector al
+      pulsar la casilla, domingos/festivos resaltados sin bloquear, y
+      botón de informe imprimible (apaisado, letra reducida, con leyenda
+      de equipo y resumen de tareas por persona en una fila horizontal).
+    · limpieza_equipo.html: acceso directo para el equipo de limpieza,
+      SIN login. Mismas fichas y marcado, sin gestión de personal.
+    · panalcor_inicio.html: nuevo tile "🧹 Partes de Limpieza" en el
+      panel de admin, junto a Legionela.
+    · Datos guardados bajo config/limpieza_equipo y config/limpieza_checks
+      en Firebase (la ruta limpieza/ no está permitida por las reglas de
+      seguridad actuales, así que se reutilizó una ruta ya abierta).
+    · Equipo real dado de alta: NILSA, MARIOLA, BLANCA, ANDRES,
+      MARIANGELES (ETT).
+  - MINOR +2 por 2 páginas nuevas → v1.4.379
+
 v1.2.369 — 2026-08-17
   - legionela.html y turnos.html: añadido 14 de agosto de 2026 como festivo
     al calendario (faltaba junto al 15 de agosto). En legionela.html esto

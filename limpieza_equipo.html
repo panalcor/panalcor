@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PANALCOR S.L. — Equipo de Limpieza</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy:       #0d1b2a;
+  --navy-mid:   #1a2d42;
+  --navy-card:  #1e3550;
+  --gold:       #c9a227;
+  --gold-light: #e8c14e;
+  --green:      #27ae60;
+  --red:        #e74c3c;
+  --cream:      #f4efe6;
+  --white:      #ffffff;
+  --text:       #d0dce8;
+  --text-dim:   #7a9ab5;
+  --border:     rgba(255,255,255,0.08);
+}
+
+html, body { height: 100%; font-family: 'Barlow', sans-serif; }
+body { background: var(--navy); color: var(--text); min-height: 100vh; padding-bottom: 3rem; }
+
+.stripe { position: fixed; left: 0; right: 0; height: 4px; z-index: 100;
+  background: linear-gradient(90deg, var(--navy), var(--gold), var(--gold-light), var(--gold), var(--navy)); }
+.stripe-top { top: 0; }
+.stripe-bot { bottom: 0; }
+
+/* ── HEADER ── */
+header {
+  background: var(--navy-mid); border-bottom: 1px solid var(--border); padding: 1rem 1.5rem;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+}
+.brand { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 1.15rem; color: var(--cream); letter-spacing: 0.02em; }
+.brand span { color: var(--gold); }
+.brand small { display: block; font-family: 'Barlow', sans-serif; font-weight: 400; font-size: 0.68rem; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px; }
+
+main { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+
+/* ── EQUIPO (solo lectura) ── */
+.equipo-strip { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.2rem; }
+.worker-chip { display: flex; align-items: center; gap: 7px; background: var(--navy-mid); border: 1px solid var(--border);
+  border-radius: 20px; padding: 6px 12px 6px 6px; font-size: 0.85rem; color: var(--cream); font-weight: 600; }
+.worker-chip .dot { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.64rem; font-weight: 800; color: #fff; }
+
+/* ── CONTROLS ── */
+.controls { display: flex; align-items: flex-end; gap: 18px; flex-wrap: wrap;
+  background: var(--navy-mid); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; margin-bottom: 1.2rem; }
+.ctrl-group { display: flex; flex-direction: column; gap: 5px; }
+.ctrl-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); font-weight: 600; }
+.ctrl-select, .ctrl-input { background: var(--navy-card); border: 1px solid var(--border); color: var(--cream);
+  border-radius: 6px; padding: 8px 12px; font-size: 0.88rem; font-family: 'Barlow', sans-serif; min-width: 200px; }
+.ctrl-select:focus, .ctrl-input:focus { outline: none; border-color: var(--gold); }
+.btn { background: rgba(201,162,39,0.12); border: 1px solid rgba(201,162,39,0.4); color: var(--gold);
+  border-radius: 6px; padding: 8px 16px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+  font-family: 'Barlow', sans-serif; white-space: nowrap; transition: background .15s; }
+.btn:hover { background: rgba(201,162,39,0.22); }
+
+/* ── FICHA CARD ── */
+.ficha-card { background: var(--navy-mid); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 1.2rem; }
+.ficha-head { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+.ficha-title { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 1.05rem; color: var(--cream); letter-spacing: 0.02em; }
+.ficha-code { font-size: 0.72rem; color: var(--text-dim); }
+.ficha-intro { font-size: 0.78rem; color: var(--text-dim); margin: 6px 0 14px; }
+
+.sec-title { font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 0.78rem; letter-spacing: 0.1em;
+  color: var(--gold); text-transform: uppercase; margin: 18px 0 8px; }
+.sec-title:first-child { margin-top: 0; }
+
+.grid-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+table.grid { border-collapse: collapse; width: 100%; font-size: 0.76rem; }
+table.grid th, table.grid td { border: 1px solid var(--border); padding: 0; }
+table.grid th { background: var(--navy-card); color: var(--text-dim); font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.04em; font-size: 0.66rem; padding: 6px 4px; white-space: nowrap; }
+table.grid td.lbl { text-align: left; color: var(--cream); padding: 6px 10px; white-space: nowrap; background: rgba(255,255,255,0.02); font-size: 0.78rem; }
+table.grid td.met { text-align: left; color: var(--text-dim); padding: 6px 10px; white-space: pre-line; font-size: 0.72rem; min-width: 110px; }
+table.grid td.cell { width: 30px; text-align: center; padding: 0; }
+table.grid th.col-especial { background: rgba(231,76,60,0.28); color: #ff9d8a; }
+table.grid td.cell.col-especial { background: rgba(231,76,60,0.12); }
+
+.chk { width: 30px; height: 30px; margin: 3px auto; border-radius: 7px; border: 1.5px solid rgba(255,255,255,0.18);
+  background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 0.66rem; font-weight: 800; color: #fff; transition: transform .1s; position: relative; }
+.chk:hover { border-color: var(--gold); transform: scale(1.08); }
+.chk.done { border: none; }
+
+.foot-note { font-size: 0.72rem; color: var(--text-dim); font-style: italic; margin-top: 6px; }
+.nota-final { font-size: 0.72rem; color: var(--gold-light); font-style: italic; margin-top: 16px; padding-top: 10px; border-top: 1px dashed var(--border); }
+
+.empty-equipo { background: rgba(231,76,60,0.1); border: 1px solid rgba(231,76,60,0.3); border-radius: 8px;
+  padding: 14px 16px; font-size: 0.85rem; color: #ff9d8a; margin-bottom: 1.2rem; }
+
+/* ── POPOVER SELECTOR TRABAJADOR ── */
+.popover { position: fixed; z-index: 500; background: var(--navy-card); border: 1px solid rgba(201,162,39,0.4);
+  border-radius: 10px; box-shadow: 0 12px 40px rgba(0,0,0,0.6); padding: 10px; min-width: 200px; display: none; }
+.popover.open { display: block; }
+.popover-title { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); padding: 2px 6px 8px; }
+.popover-worker { display: flex; align-items: center; gap: 9px; padding: 10px 8px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; color: var(--cream); font-weight: 600; }
+.popover-worker:hover { background: rgba(255,255,255,0.06); }
+.popover-dot { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.62rem; font-weight: 800; color: #fff; flex-shrink: 0; }
+.popover-empty { font-size: 0.78rem; color: var(--text-dim); padding: 6px 8px; }
+.popover-actions { border-top: 1px solid var(--border); margin-top: 6px; padding-top: 6px; }
+.popover-unmark { color: var(--red); font-size: 0.85rem; padding: 9px 8px; cursor: pointer; border-radius: 6px; font-weight: 600; }
+.popover-unmark:hover { background: rgba(231,76,60,0.12); }
+
+.overlay { position: fixed; inset: 0; z-index: 400; display: none; }
+.overlay.open { display: block; }
+</style>
+</head>
+<body>
+<div class="stripe stripe-top"></div>
+<div class="stripe stripe-bot"></div>
+
+<header>
+  <div class="brand">PANALCOR <span>LIMPIEZA</span><small>Marca las tareas que hayas hecho</small></div>
+</header>
+
+<main>
+
+  <div class="equipo-strip" id="workerList"></div>
+  <div class="empty-equipo" id="equipoVacio" style="display:none">
+    ⚠️ Todavía no hay nadie dado de alta en el equipo. Pide al administrador que os añada desde el panel de administración.
+  </div>
+
+  <!-- ── SELECTOR DE PARTE ── -->
+  <div class="controls">
+    <div class="ctrl-group">
+      <span class="ctrl-label">Parte a rellenar</span>
+      <select class="ctrl-select" id="selParte" onchange="cambiarParte()"></select>
+    </div>
+    <div class="ctrl-group" id="grpMes">
+      <span class="ctrl-label">Mes</span>
+      <input class="ctrl-input" type="month" id="selMes" onchange="attachChecksListener()">
+    </div>
+    <div class="ctrl-group" id="grpAnio" style="display:none">
+      <span class="ctrl-label">Año</span>
+      <input class="ctrl-input" type="number" id="selAnio" style="width:110px" onchange="attachChecksListener()">
+    </div>
+    <button class="btn" onclick="imprimirInforme()">🖨️ Imprimir informe</button>
+  </div>
+
+  <!-- ── FICHA ── -->
+  <div class="ficha-card" id="fichaCard"></div>
+
+</main>
+
+<div class="overlay" id="overlay" onclick="cerrarPopover()"></div>
+<div class="popover" id="popover"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════════
+   FIREBASE
+   ══════════════════════════════════════════════════════════════════════ */
+const FB_CFG = {
+  apiKey:"AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU",
+  authDomain:"panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:"https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"panalcor-mantenimiento",
+  storageBucket:"panalcor-mantenimiento.firebasestorage.app",
+  messagingSenderId:"67593058609",
+  appId:"1:67593058609:web:c33fa1fa4fce2932485810"
+};
+if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
+const DB = firebase.database();
+
+/* ══════════════════════════════════════════════════════════════════════
+   DATOS DE LOS PARTES (mismo contenido que las fichas en papel/Excel)
+   ══════════════════════════════════════════════════════════════════════ */
+const MESES_ABR = ["ENE","FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEP","OCT","NOV","DIC"];
+
+/* Festivos (mismo calendario que Legionela) — domingos y festivos se resaltan
+   pero NO se bloquean: rara vez se trabaja esos días, pero puede pasar. */
+const FESTIVOS = new Set([
+  '2026-01-01','2026-01-06','2026-04-02','2026-04-03',
+  '2026-05-01','2026-08-14','2026-08-15','2026-10-12',
+  '2026-11-02','2026-12-08','2026-12-25'
+]);
+function esDomingoOFestivo(mesISO, d) {
+  const [y,m] = mesISO.split('-').map(Number);
+  const ds = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  if (new Date(ds+'T12:00:00').getDay() === 0) return true;
+  return FESTIVOS.has(ds);
+}
+
+const PARTES = {
+
+  zona_trueno: {
+    titulo: "ZONA TRUENO", codigo: "F1-ML/2", modo: "dias",
+    secciones: [
+      { titulo:"DIARIO", filas:[
+        ["Túneles","Fregar y secar"],["Fermentadora","Aspirar/ fregar"],
+        ["Suelo Completo (Hornos, envasado y muelle)","Aspirar/ fregar"],
+        ["Línea","Aspirar"],["Vestuario","Barrer y fregar"],["Baños","Barrer y fregar"],
+        ["Jabón y papel","Reponer"]]},
+      { titulo:"SEMANAL", filas:[
+        ["Paredes Almacén","Fregar"],["Paredes Obrador","Fregar"],["Paredes Cám. Ferme","Fregar"],
+        ["Paredes Sala Hornos","Fregar"],["Paredes Enfriamiento","Fregar"],["Paredes Envasado","Fregar"],
+        ["Paredes Muelle","Fregar"],["Paredes Vestuario","Fregar"],["Paredes Aseos","Fregar"],
+        ["Suelo Exterior","Barrer y fregar"]]},
+      { titulo:"MENSUAL", filas:[
+        ["Techo Almacén","Fregar"],["Techo Vestuario","Fregar"],["Techo Aseos","Fregar"]]},
+    ],
+    nota: "BARRIDO HÚMEDO O ASPIRADO. PROHIBIDO BARRER EN SECO",
+  },
+
+  zona_obrador: {
+    titulo: "ZONA OBRADOR", codigo: "F1-ML/1", modo: "dias",
+    secciones: [
+      { titulo:"DIARIO", filas:[
+        ["Baños Relámpago (primera hora)","Limpiar\nDesinfectar"],
+        ["Suelo Obrador","Aspirar y fregar"],["Suelo Túnel secado","Aspirar y fregar"],
+        ["Líneas Obrador","Aspirar y fregar"],["Suelo Silos","Barrer y fregar"],
+        ["Lavamanos","Fregar"],["Zona silos de levadura","Aspirar y fregar"],
+        ["Jabón y papel","Reponer"],["Retirar masa","Tirar cuezos*"]],
+        nota:"*Poner el número en cada casilla"},
+      { titulo:"SEMANAL", filas:[
+        ["Paredes Obrador","Fregar"],["Paredes Silos","Aspirar/Fregar"]]},
+    ],
+    nota: "PROHIBIDO BARRER EN SECO, SE BARRE EN HÚMEDO",
+  },
+
+  zona_hornos: {
+    titulo: "ZONA HORNOS/FERMENTADORA", codigo: "F1-ML/1", modo: "dias",
+    secciones: [
+      { titulo:"DIARIO", filas:[
+        ["Baños Relámpago (Tercera hora)","Limpiar\nDesinfectar"],
+        ["Suelo Sala Hornos","Barrer y fregar"],["Suelo Tallado","Barrer y fregar"],
+        ["Suelo fermentadora","Barrer y fregar"],["Cortinas (parte baja)","Limpiar"],
+        ["Vestuarios Relámpago","Limpiar\nDesinfectar"],["Escalera vestuarios","Fregar"],
+        ["Jabón y papel","Reponer"]]},
+      { titulo:"SEMANAL", filas:[
+        ["Paredes Tallado","Fregar"],["Pared entrada hornos","Limpiar y\nFregar"],
+        ["Comedor","Mensual"]]},
+    ],
+    nota: "BARRIDO HÚMEDO O ASPIRADO. PROHIBIDO BARRER EN SECO",
+  },
+
+  zona_envasado: {
+    titulo: "ZONA ENVASADO", codigo: "F1-ML/1", modo: "dias",
+    secciones: [
+      { titulo:"DIARIO", filas:[
+        ["Suelo Envasado","Barrer y fregar"],["Suelo Pasillo Túneles","Barrer y fregar"],
+        ["Aspirar túneles","Desescarches"],["Limpieza exterior maquinaria","Aspirar y paño húmedo"],
+        ["Retirar Pan","Tirar cuezos"]]},
+      { titulo:"SEMANAL", filas:[
+        ["Paredes Envasado","Fregar"],["Paredes pasillo Túnel","Fregar"],
+        ["Hornos clientes","Fregar"],["Limpieza exterior camino de rodillos","Aspirar y paño húmedo"]]},
+    ],
+    nota: "BARRIDO HÚMEDO O ASPIRADO. PROHIBIDO BARRER EN SECO",
+  },
+
+  otras_zonas: {
+    titulo: "OTRAS ZONAS", codigo: "F1-ML/1", modo: "dias",
+    secciones: [
+      { filas:[
+        ["Almacén cartón","Semanal"],["Entradas cámaras -20","Semanal"],["Nave de toros","Semanal"],
+        ["Almacén materias primas","Barrer y fregar\n(2 veces/semana)"],
+        ["Vestuarios camaristas","Limpiar y desinfectar\n(2 veces/semana)"],
+        ["Baños camaristas","Limpiar y desinfectar\n(diario)"],
+        ["Baño muelle","Limpiar y desinfectar\n(diario)"]]},
+    ],
+    nota: "BARRIDO HÚMEDO O ASPIRADO. PROHIBIDO BARRER EN SECO",
+  },
+
+  oficinas: {
+    titulo: "OFICINAS", codigo: "F1-ML/3", modo: "dias", metodoHeader:"FRECUENCIA",
+    secciones: [
+      { filas:[
+        ["Oficina Contabilidad","SEMANAL"],["Oficina Personal","SEMANAL"],
+        ["Oficina Administración","SEMANAL"],["Oficina Dirección","SEMANAL"],
+        ["Entrada Oficinas","2 veces/semana"],["Oficina Reparto","L, X y V"],
+        ["Baños Oficina*","L y J"],["Baños Encargados*","SEMANAL"],
+        ["Baño Taller*","L, X y V"],["Jabón y papel","REPONER"]],
+        nota:"*A diario se desinfectarán los inodoros y suelo de alrededores y se vaciarán las papeleras"},
+    ],
+  },
+
+  turno_tarde: {
+    titulo: "TURNO DE TARDE", codigo: "F1-ML/1", modo: "dias",
+    secciones: [
+      { titulo:"DIARIO", filas:[
+        ["Baños Obrador (primera hora)","Barrer y fregar\nDesinfectar"],
+        ["Aspirar túneles","Desescarches"],["Suelo Obrador","Aspirar y fregar"],
+        ["Retirar masa","Tirar cuezos*"],["Suelo Envasado","Aspirar y fregar"],
+        ["Retirar masa","Tirar cuezos*"],["Jabón y papel","Reponer"]],
+        nota:"*Poner el número en cada casilla"},
+      { titulo:"SEMANAL", filas:[
+        ["Muelle (suelo, partes bajas y rincones)","Barrer y fregar"]]},
+      { titulo:"CIERRE", filas:[
+        ["Carruseles","Rascar y fregar"],["Rejillas Túnel Secado","Aspirar\n(túnel parado)"]]},
+    ],
+    nota: "BARRIDO HÚMEDO O ASPIRADO. PROHIBIDO BARRER Y CEPILLAR EN SECO",
+  },
+
+  turno_noche: {
+    titulo: "TURNO DE NOCHE", codigo: "F1-ML/1", modo: "dias",
+    secciones: [
+      { titulo:"DIARIO", filas:[
+        ["Baños Relámpago (primera hora)","Limpiar\nDesinfectar"],
+        ["Aspirar túneles","Desescarches"],["Suelo Obrador","Aspirar"],
+        ["Retirar masa","Tirar cuezos*"],["Suelo Envasado","Aspirar"],
+        ["Suelo Hornos","Aspirar"],["Jabón y papel","Reponer"],
+        ["Repaso general**",""]],
+        nota:"** Limpiar zonas despejadas que necesiten limpieza: suelo carruseles obrador, suelos silos…"},
+    ],
+    nota: "BARRIDO HÚMEDO O ASPIRADO. PROHIBIDO BARRER EN SECO",
+  },
+
+  aspirado_relampago: {
+    titulo: "ASPIRADO TRIMESTRAL MÁQUINAS RELÁMPAGO", codigo: "F1-ML/1", modo: "meses",
+    intro: "El aspirado interior conlleva el desmontaje de la máquina",
+    secciones: [
+      { filas: [
+        ...["1","2","3","4","5","6"].map(n=>[`Carrusel ${n}*`,null]),
+        ...["1","2","3","4","5","6"].map(n=>[`Amasadora ${n}**`,null]),
+        ...["1","2","3","4","5","6"].map(n=>[`Máquina de bolas ${n}`,null]),
+        ...["1","2","3","4","5","6"].map(n=>[`Línea ${n}`,null]),
+        ["Travesaños silos",null],
+      ], nota:"* Limpiar parte baja y parte alta y cables"},
+    ],
+    sinMetodo: true,
+  },
+
+  aspirado_trueno: {
+    titulo: "ASPIRADO MÁQUINAS TRUENO", codigo: "F1-ML/1", modo: "meses",
+    intro: "El aspirado interior conlleva el desmontaje de la máquina",
+    secciones: [
+      { filas: [
+        ["Amasadora 1","Aspirado interior"],["Amasadora 2","Aspirado interior"],
+        ["Amasadora 3","Aspirado interior"],["Máquina de bolas","Aspirado interior"],
+        ["Linea","Aspirado interior"],["Exterior y hueco silos","Aspirar"],
+        ["Volcador","Aspirar"],["Elevadores tallado","Aspirar"],["Talladora","Aspirar"],
+        ["Partes altas y cables","Aspirar"],["Formadora de cajas","Aspirar"],
+        ["Cerradora de cajas (rodillos)","Aspirar"]]},
+    ],
+  },
+};
+
+/* ══════════════════════════════════════════════════════════════════════
+   EQUIPO (Firebase: limpieza/equipo) — solo lectura en esta página
+   ══════════════════════════════════════════════════════════════════════ */
+let _WORKERS = [];
+
+function initWorkersListener() {
+  DB.ref('config/limpieza_equipo').on('value', snap => {
+    const val = snap.val() || {};
+    _WORKERS = Object.values(val).sort((a,b) => (a.orden||0) - (b.orden||0));
+    recalcularIniciales(_WORKERS);
+    renderWorkers();
+    render();
+  });
+}
+
+let _initialsMap = {};
+
+function candidatosIniciales(nombre) {
+  const clean = nombre.replace(/\(.*?\)/g,'').trim();
+  const parts = clean.split(/\s+/).filter(Boolean);
+  const cands = [];
+  if (parts.length >= 2) {
+    cands.push(parts[0][0] + parts[1][0]);
+    for (let i=1; i<parts[0].length; i++) cands.push(parts[0][0] + parts[0][i]);
+  } else {
+    const p = parts[0] || nombre;
+    for (let i=1; i<p.length; i++) cands.push(p[0] + p[i]);
+    cands.push(p.slice(0,2));
+  }
+  return cands.map(c => c.toUpperCase());
+}
+
+function recalcularIniciales(workers) {
+  const used = new Set();
+  const map = {};
+  workers.forEach(w => {
+    const cands = candidatosIniciales(w.nombre);
+    const chosen = cands.find(c => !used.has(c)) || cands[0] || '??';
+    used.add(chosen);
+    map[w.nombre] = chosen;
+  });
+  _initialsMap = map;
+}
+
+function initials(nombre) {
+  if (_initialsMap[nombre]) return _initialsMap[nombre];
+  const parts = nombre.replace(/\(.*?\)/g,'').trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0,2).toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+}
+
+function renderWorkers() {
+  document.getElementById('equipoVacio').style.display = _WORKERS.length ? 'none' : 'block';
+  document.getElementById('workerList').innerHTML = _WORKERS.map(w => `
+    <span class="worker-chip">
+      <span class="dot" style="background:${w.color}">${initials(w.nombre)}</span>
+      ${escHtml(w.nombre)}
+    </span>`).join('');
+}
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escAttr(s){ return String(s).replace(/'/g,"\\'"); }
+
+/* ══════════════════════════════════════════════════════════════════════
+   MARCAS (Firebase: limpieza/checks/{parte}/{periodo}/{cellKey})
+   ══════════════════════════════════════════════════════════════════════ */
+let _CHECKS = {};
+let _checksRef = null;
+
+function periodoActual() {
+  const parte = PARTES[document.getElementById('selParte').value];
+  return parte.modo === 'meses' ? document.getElementById('selAnio').value : document.getElementById('selMes').value;
+}
+
+function attachChecksListener() {
+  if (_checksRef) _checksRef.off();
+  const parteKey = document.getElementById('selParte').value;
+  const periodo = periodoActual();
+  if (!periodo) return;
+  _checksRef = DB.ref('config/limpieza_checks/'+parteKey+'/'+periodo);
+  _checksRef.on('value', snap => { _CHECKS = snap.val() || {}; render(); });
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   RENDER
+   ══════════════════════════════════════════════════════════════════════ */
+function poblarSelectorPartes() {
+  const sel = document.getElementById('selParte');
+  sel.innerHTML = Object.entries(PARTES).map(([k,p]) => `<option value="${k}">${p.titulo}</option>`).join('');
+}
+
+function cambiarParte() {
+  const parte = PARTES[document.getElementById('selParte').value];
+  document.getElementById('grpMes').style.display = parte.modo === 'meses' ? 'none' : '';
+  document.getElementById('grpAnio').style.display = parte.modo === 'meses' ? '' : 'none';
+  attachChecksListener();
+}
+
+function render() {
+  const parteKey = document.getElementById('selParte').value;
+  const parte = PARTES[parteKey];
+  if (!parte) return;
+  const checks = _CHECKS;
+  const workerMap = {}; _WORKERS.forEach(w => workerMap[w.nombre] = w);
+  const mesISO = document.getElementById('selMes').value;
+
+  let html = `<div class="ficha-head">
+      <div class="ficha-title">${escHtml(parte.titulo)}</div>
+      <div class="ficha-code">FICHA DE LIMPIEZA – ${parte.codigo}</div>
+    </div>`;
+  if (parte.intro) html += `<div class="ficha-intro">${escHtml(parte.intro)}</div>`;
+
+  parte.secciones.forEach((sec, secIdx) => {
+    if (sec.titulo) html += `<div class="sec-title">${escHtml(sec.titulo)}</div>`;
+
+    const metodoHeader = parte.sinMetodo ? null : (parte.metodoHeader || 'Método');
+    html += `<div class="grid-wrap"><table class="grid"><thead><tr>
+      <th style="text-align:left;min-width:180px">&nbsp;</th>`;
+    if (metodoHeader) html += `<th style="text-align:left;min-width:110px">${metodoHeader}</th>`;
+
+    if (parte.modo === 'dias') {
+      for (let d=1; d<=31; d++) {
+        const especial = esDomingoOFestivo(mesISO, d);
+        html += `<th class="${especial?'col-especial':''}" title="${especial?'Domingo/festivo — normalmente no se trabaja':''}">${d}</th>`;
+      }
+    } else {
+      for (let m=0; m<12; m++) html += `<th>${MESES_ABR[m]}</th>`;
+    }
+    html += `</tr></thead><tbody>`;
+
+    sec.filas.forEach((fila, filaIdx) => {
+      const [label, metodo] = fila;
+      html += `<tr><td class="lbl">${escHtml(label)}</td>`;
+      if (metodoHeader) html += `<td class="met">${escHtml(metodo||'')}</td>`;
+      const nCols = parte.modo === 'dias' ? 31 : 12;
+      for (let i=0; i<nCols; i++) {
+        const cellKey = `${secIdx}_${filaIdx}_${i}`;
+        const mark = checks[cellKey];
+        const especial = parte.modo === 'dias' && esDomingoOFestivo(mesISO, i+1);
+        const cellClass = `cell${especial?' col-especial':''}`;
+        if (mark && workerMap[mark.trabajador]) {
+          const w = workerMap[mark.trabajador];
+          html += `<td class="${cellClass}"><div class="chk done" style="background:${w.color}"
+            title="${escAttr(mark.trabajador)}"
+            onclick="abrirPopover(event,'${parteKey}','${cellKey}')">${initials(mark.trabajador)}</div></td>`;
+        } else if (mark) {
+          html += `<td class="${cellClass}"><div class="chk done" style="background:#555"
+            title="${escAttr(mark.trabajador)} (ya no está en el equipo)"
+            onclick="abrirPopover(event,'${parteKey}','${cellKey}')">?</div></td>`;
+        } else {
+          html += `<td class="${cellClass}"><div class="chk" onclick="abrirPopover(event,'${parteKey}','${cellKey}')"></div></td>`;
+        }
+      }
+      html += `</tr>`;
+    });
+    html += `</tbody></table></div>`;
+    if (sec.nota) html += `<div class="foot-note">${escHtml(sec.nota)}</div>`;
+  });
+
+  if (parte.nota) html += `<div class="nota-final">NOTA: ${escHtml(parte.nota)}</div>`;
+
+  document.getElementById('fichaCard').innerHTML = html;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   POPOVER: elegir quién ha hecho la tarea
+   ══════════════════════════════════════════════════════════════════════ */
+let _popCtx = null;
+
+function abrirPopover(ev, parteKey, cellKey) {
+  ev.stopPropagation();
+  if (!_WORKERS.length) { return; }
+  _popCtx = { parteKey, cellKey };
+  const actual = _CHECKS[cellKey];
+
+  const pop = document.getElementById('popover');
+  let html = `<div class="popover-title">${actual ? 'Cambiar a…' : '¿Quién lo ha hecho?'}</div>`;
+  html += _WORKERS.map(w => `
+    <div class="popover-worker" onclick="marcar('${escAttr(w.nombre)}')">
+      <span class="popover-dot" style="background:${w.color}">${initials(w.nombre)}</span>
+      ${escHtml(w.nombre)}
+    </div>`).join('');
+  if (actual) {
+    html += `<div class="popover-actions"><div class="popover-unmark" onclick="desmarcar()">✕ Desmarcar</div></div>`;
+  }
+  pop.innerHTML = html;
+
+  const rect = ev.currentTarget.getBoundingClientRect();
+  pop.style.left = Math.min(rect.left, window.innerWidth - 230) + 'px';
+  pop.style.top = (rect.bottom + 6) + 'px';
+  pop.classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+
+function cerrarPopover() {
+  document.getElementById('popover').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+  _popCtx = null;
+}
+
+function marcar(trabajador) {
+  if (!_popCtx) return;
+  const { parteKey, cellKey } = _popCtx;
+  DB.ref('config/limpieza_checks/'+parteKey+'/'+periodoActual()+'/'+cellKey).set({ trabajador, ts: Date.now() });
+  cerrarPopover();
+}
+
+function desmarcar() {
+  if (!_popCtx) return;
+  const { parteKey, cellKey } = _popCtx;
+  DB.ref('config/limpieza_checks/'+parteKey+'/'+periodoActual()+'/'+cellKey).remove();
+  cerrarPopover();
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   IMPRIMIR INFORME DEL MES/PERIODO VISUALIZADO
+   ══════════════════════════════════════════════════════════════════════ */
+function imprimirInforme() {
+  const parteKey = document.getElementById('selParte').value;
+  const parte = PARTES[parteKey];
+  const checks = _CHECKS;
+  const workerMap = {}; _WORKERS.forEach(w => workerMap[w.nombre] = w);
+  const mesISO = document.getElementById('selMes').value;
+  const nCols = parte.modo === 'dias' ? 31 : 12;
+
+  const periodoLbl = parte.modo === 'meses'
+    ? `Año ${document.getElementById('selAnio').value}`
+    : (() => {
+        const [y,m] = mesISO.split('-').map(Number);
+        const MESES_LARGO = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+        return `${MESES_LARGO[m-1]} de ${y}`;
+      })();
+
+  const resumen = {};
+  _WORKERS.forEach(w => resumen[w.nombre] = 0);
+  let totalMarcadas = 0, totalCasillas = 0;
+
+  let filasHtml = '';
+  parte.secciones.forEach((sec, secIdx) => {
+    const metodoHeader = parte.sinMetodo ? null : (parte.metodoHeader || 'Método');
+    if (sec.titulo) {
+      filasHtml += `<tr><td colspan="${(metodoHeader?2:1) + nCols}" class="sec-row">${escHtml(sec.titulo)}</td></tr>`;
+    }
+    filasHtml += `<tr class="head-row"><th class="th-lbl">&nbsp;</th>`;
+    if (metodoHeader) filasHtml += `<th class="th-met">${escHtml(metodoHeader)}</th>`;
+    if (parte.modo === 'dias') {
+      for (let d=1; d<=31; d++) {
+        const esp = esDomingoOFestivo(mesISO, d);
+        filasHtml += `<th class="${esp?'col-esp':''}">${d}</th>`;
+      }
+    } else {
+      for (let m=0; m<12; m++) filasHtml += `<th>${MESES_ABR[m]}</th>`;
+    }
+    filasHtml += `</tr>`;
+
+    sec.filas.forEach((fila, filaIdx) => {
+      const [label, metodo] = fila;
+      filasHtml += `<tr><td class="td-lbl">${escHtml(label)}</td>`;
+      if (metodoHeader) filasHtml += `<td class="td-met">${escHtml((metodo||'').replace(/\n/g,' — '))}</td>`;
+      for (let i=0; i<nCols; i++) {
+        const cellKey = `${secIdx}_${filaIdx}_${i}`;
+        const mark = checks[cellKey];
+        const esp = parte.modo === 'dias' && esDomingoOFestivo(mesISO, i+1);
+        totalCasillas++;
+        if (mark) {
+          totalMarcadas++;
+          if (resumen[mark.trabajador] !== undefined) resumen[mark.trabajador]++;
+          const w = workerMap[mark.trabajador];
+          const color = w ? w.color : '#999';
+          filasHtml += `<td class="td-cell${esp?' col-esp':''}"><span class="badge" style="background:${color}" title="${escAttr(mark.trabajador)}">${initials(mark.trabajador)}</span></td>`;
+        } else {
+          filasHtml += `<td class="td-cell${esp?' col-esp':''}"></td>`;
+        }
+      }
+      filasHtml += `</tr>`;
+    });
+    if (sec.nota) filasHtml += `<tr><td colspan="${(metodoHeader?2:1) + nCols}" class="foot-row">${escHtml(sec.nota)}</td></tr>`;
+  });
+
+  const equipoHtml = _WORKERS.map(w => `
+    <div class="eq-chip">
+      <span class="eq-dot" style="background:${w.color}">${initials(w.nombre)}</span>
+      <span class="eq-name">${escHtml(w.nombre)}</span>
+      <span class="eq-count">${resumen[w.nombre]}</span>
+    </div>`).join('');
+
+  const pctCumpl = totalCasillas ? Math.round(totalMarcadas/totalCasillas*100) : 0;
+  const fechaGen = new Date().toLocaleDateString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' +
+    new Date().toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit'});
+
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Informe Limpieza — ${escHtml(parte.titulo)} — ${escHtml(periodoLbl)}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{font-family:Arial,Helvetica,sans-serif;font-size:9.5px;color:#1a1a1a;padding:16px 20px;max-width:1150px;margin:0 auto}
+  .header{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #c9a227;padding-bottom:8px;margin-bottom:14px}
+  .brand{font-size:16px;font-weight:800;letter-spacing:.04em;color:#111}
+  .brand span{color:#c9a227}
+  .doc-title{font-size:7.5px;text-transform:uppercase;letter-spacing:.14em;color:#888;margin-top:1px}
+  .meta{text-align:right;font-size:8.5px;color:#555;line-height:1.5}
+  .meta b{color:#111;font-size:11px}
+  .ficha-title{font-size:13px;font-weight:800;color:#111;margin-bottom:2px}
+  .ficha-sub{font-size:8.5px;color:#777;margin-bottom:14px}
+
+  .kpis{display:flex;gap:14px;margin-bottom:14px}
+  .kpi{border:1px solid #ddd;border-radius:6px;padding:7px 14px;text-align:center;min-width:80px}
+  .kpi-n{font-size:15px;font-weight:800;color:#111}
+  .kpi-l{font-size:6.5px;text-transform:uppercase;letter-spacing:.06em;color:#888;margin-top:1px}
+
+  table.grid{width:100%;border-collapse:collapse;margin-bottom:4px}
+  table.grid th, table.grid td{border:1px solid #ddd;text-align:center}
+  tr.head-row th{background:#f2f2f2;font-size:7px;text-transform:uppercase;letter-spacing:.03em;color:#555;padding:3px 1px;font-weight:700}
+  th.th-lbl{text-align:left;padding-left:6px;min-width:140px}
+  th.th-met{text-align:left;padding-left:6px;min-width:80px}
+  td.td-lbl{text-align:left;padding:3px 6px;font-size:8px;color:#222;white-space:nowrap;background:#fafafa}
+  td.td-met{text-align:left;padding:3px 6px;font-size:7.2px;color:#666;white-space:nowrap}
+  td.td-cell{width:19px;height:16px;padding:0}
+  td.col-esp, th.col-esp{background:#fdeceb}
+  tr.sec-row td{background:#1a2d42;color:#e8c14e;font-weight:800;font-size:7.5px;text-transform:uppercase;letter-spacing:.08em;padding:4px 6px;border:none}
+  tr.foot-row td{font-size:7px;font-style:italic;color:#888;padding:3px 6px;border:none}
+
+  .badge{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;
+    color:#fff;font-size:5.6px;font-weight:800;line-height:1}
+
+  .equipo-resumen{margin-top:10px}
+  .equipo-resumen h3{font-size:8.5px;text-transform:uppercase;letter-spacing:.08em;color:#c9a227;margin-bottom:6px}
+  .equipo-row{display:flex;flex-wrap:wrap;gap:8px}
+  .eq-chip{display:flex;align-items:center;gap:6px;border:1px solid #e2e2e2;border-radius:16px;
+    padding:3px 10px 3px 4px;background:#fafafa}
+  .eq-dot{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;
+    color:#fff;font-size:6px;font-weight:800;flex-shrink:0}
+  .eq-name{font-size:8px;font-weight:700;color:#333;white-space:nowrap}
+  .eq-count{font-size:8px;font-weight:800;color:#111;background:#fff;border:1px solid #ddd;border-radius:9px;
+    padding:0 6px;min-width:16px;text-align:center}
+
+  .nota-final{margin-top:16px;padding-top:8px;border-top:1px dashed #ccc;font-size:7.5px;font-style:italic;color:#777}
+  .print-footer{margin-top:20px;font-size:7px;color:#aaa;text-align:center}
+
+  @media print{
+    body{padding:0}
+    @page{size:A4 landscape;margin:9mm}
+  }
+</style></head><body>
+
+<div class="header">
+  <div>
+    <div class="brand">PANALCOR <span>S.L.</span></div>
+    <div class="doc-title">Equipo de limpieza — informe de registro</div>
+  </div>
+  <div class="meta">
+    <div><b>${escHtml(periodoLbl)}</b></div>
+    <div>Generado: ${fechaGen}</div>
+  </div>
+</div>
+
+<div class="ficha-title">${escHtml(parte.titulo)}</div>
+<div class="ficha-sub">Ficha de limpieza — ${escHtml(parte.codigo)}${parte.intro ? ' · ' + escHtml(parte.intro) : ''}</div>
+
+<div class="kpis">
+  <div class="kpi"><div class="kpi-n">${totalMarcadas}</div><div class="kpi-l">Tareas marcadas</div></div>
+  <div class="kpi"><div class="kpi-n">${totalCasillas-totalMarcadas}</div><div class="kpi-l">Sin marcar</div></div>
+  <div class="kpi"><div class="kpi-n">${pctCumpl}%</div><div class="kpi-l">Registrado</div></div>
+  <div class="kpi"><div class="kpi-n">${_WORKERS.length}</div><div class="kpi-l">Personas en el equipo</div></div>
+</div>
+
+<table class="grid"><tbody>
+${filasHtml}
+</tbody></table>
+
+<div class="equipo-resumen">
+  <h3>Equipo — tareas registradas este periodo</h3>
+  <div class="equipo-row">${equipoHtml || '<span style="font-size:8px;color:#999">Sin personal registrado.</span>'}</div>
+</div>
+
+${parte.nota ? `<div class="nota-final">NOTA: ${escHtml(parte.nota)}</div>` : ''}
+
+<div class="print-footer">PANALCOR S.L. — Informe generado automáticamente desde Partes de Limpieza</div>
+
+<script>window.onload=function(){window.print();}<\/script>
+</body></html>`);
+  w.document.close();
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   INIT (sin login)
+   ══════════════════════════════════════════════════════════════════════ */
+initWorkersListener();
+poblarSelectorPartes();
+document.getElementById('selMes').value = new Date().toISOString().slice(0,7);
+document.getElementById('selAnio').value = new Date().getFullYear();
+cambiarParte();
+</script>
+</body>
+</html>
