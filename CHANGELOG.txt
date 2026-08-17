@@ -6,6 +6,12 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.2.369 — 2026-08-17
+  - legionela.html y turnos.html: añadido 14 de agosto de 2026 como festivo
+    al calendario (faltaba junto al 15 de agosto). En legionela.html esto
+    afecta directamente a qué días quedan bloqueados/desbloqueados para
+    el registro diario.
+
 v1.2.359 — 2026-08-17
   - preventivo.html: Seguimiento refresca el nombre de máquina desde el
     catálogo actual (por id) en vez de quedarse con la foto guardada al
