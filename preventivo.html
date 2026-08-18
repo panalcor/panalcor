@@ -907,6 +907,7 @@ if('serviceWorker' in navigator){
       </select>
       <button type="button" class="seg-load-btn" onclick="cargarSeguimiento()">Cargar</button>
       <button type="button" class="seg-load-btn" onclick="imprimirInformeSeguimiento()" style="background:rgba(201,162,39,0.15);border-color:rgba(201,162,39,0.4);color:var(--gold)">🖨️ Imprimir</button>
+      <button type="button" class="seg-load-btn" onclick="imprimirInformeSeguimiento(true)" style="background:rgba(155,89,182,0.14);border-color:rgba(155,89,182,0.4);color:#c39bd3">⛈️ Informe Trueno</button>
       <button type="button" class="seg-load-btn" onclick="abrirModalParte()" style="background:rgba(116,185,255,0.12);border-color:rgba(116,185,255,0.35);color:#74b9ff">📋 Parte de trabajo</button>
     </div>
 
@@ -4199,12 +4200,27 @@ function renderSeguimiento(tareas, compData, filtMec, filtEst) {
   document.getElementById('segTabla').innerHTML = html;
 }
 
-function imprimirInformeSeguimiento() {
+// Maquinaria de Trueno: nombre contiene "TRUENO" o pertenece al área TRUENO
+// del catálogo (algunas, como REVOLVER o ESCARCHADORA 1/2, no llevan
+// "Trueno" en el nombre pero son de esa línea).
+const TRUENO_MACHINES = new Set([
+  'COMPRESOR TRUENO 1','CUADRO SILOS TRUENO','ENFARDADORA TRUENO','ESCARCHADORA 1',
+  'ESCARCHADORA 2','FERMENTADORA TRUENO','FORMADORA CAJAS TRUENO','HORNO 16 (1TRUENO)',
+  'HORNO 17 (2TRUENO)','HORNO 18 (3TRUENO)','HORNO 19 (4TRUENO)','IMPRESORA TRUENO',
+  'PRECINTADORA TRUENO','REVOLVER','SILO 1 TRUENO','SILO 2 TRUENO','TALLADORA TRUENO',
+  'TOLVA 7 (TRUENO)','TUNEL 10 (2 TRUENO)','TUNEL 9 (1 TRUENO)'
+]);
+
+function imprimirInformeSeguimiento(soloTrueno) {
   if(!_segData) { alert('Carga un mes primero.'); return; }
   const mk = document.getElementById('segMes').value;
   const [y, m] = mk.split('-');
   const nombreMes = _MESES_NOMBRE[parseInt(m,10)-1] + ' ' + y;
-  const { tareas, compData } = _segData;
+  const { tareas: tareasTodas, compData } = _segData;
+  const tareas = soloTrueno ? tareasTodas.filter(t => TRUENO_MACHINES.has(t.maquina)) : tareasTodas;
+  const tituloInforme = soloTrueno ? 'PANALCOR S.L. — Informe Preventivo · Trueno' : 'PANALCOR S.L. — Informe Plan Preventivo';
+
+  if(soloTrueno && !tareas.length) { alert('No hay tareas de maquinaria de Trueno en el plan de este mes.'); return; }
 
   // Construir slots igual que renderSeguimiento
   const slots = [];
@@ -4255,7 +4271,7 @@ function imprimirInformeSeguimiento() {
 
   const w = window.open('', '_blank');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
-<title>Informe Preventivo — ${nombreMes}</title>
+<title>${soloTrueno ? 'Informe Trueno' : 'Informe Preventivo'} — ${nombreMes}</title>
 <style>
   body{font-family:Arial,sans-serif;font-size:12px;color:#111;padding:24px;max-width:1000px;margin:0 auto}
   h1{font-size:18px;margin-bottom:2px}
@@ -4271,7 +4287,7 @@ function imprimirInformeSeguimiento() {
   .sec{font-size:13px;font-weight:700;margin:20px 0 8px;padding-bottom:4px;border-bottom:2px solid #c9a227;color:#333}
   @media print{body{padding:0} button{display:none}}
 </style></head><body>
-<h1>PANALCOR S.L. — Informe Plan Preventivo</h1>
+<h1>${tituloInforme}</h1>
 <h2>${nombreMes}</h2>
 
 <div class="kpis">

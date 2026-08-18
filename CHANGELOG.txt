@@ -6,6 +6,15 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.429 — 2026-08-18
+  - preventivo.html: nuevo botón "⛈️ Informe Trueno" en Seguimiento, junto
+    a "🖨️ Imprimir". Genera el mismo informe (KPIs, cumplimiento por
+    mecánico, detalle de tareas) filtrado solo a la maquinaria de la
+    línea Trueno (20 máquinas: las que llevan "Trueno" en el nombre más
+    Revólver y las 2 Escarchadoras, que pertenecen a esa área del
+    catálogo aunque no lo lleven en el nombre). El informe general sin
+    filtrar no cambia.
+
 v1.5.419 — 2026-08-18
   - Nuevo logo PANALCOR diseñado a partir del original de pannatural.es:
     emblema circular con sol, espigas de trigo y cinta "PANALCOR", más
