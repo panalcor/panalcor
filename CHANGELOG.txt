@@ -6,6 +6,19 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.419 — 2026-08-18
+  - Nuevo logo PANALCOR diseñado a partir del original de pannatural.es:
+    emblema circular con sol, espigas de trigo y cinta "PANALCOR", más
+    "PAN NATURAL" arqueado arriba (logo_panalcor_nuevo.png/.svg).
+  - Segunda variante para el Sistema de Mantenimiento: mismo emblema,
+    pero con engranaje y las 4 herramientas (llave, pistola neumática,
+    rayo, enchufe) en el centro en vez del sol, y "SISTEMA DE
+    MANTENIMIENTO" arqueado arriba (logo_panalcor_mantenimiento.png/.svg).
+  - panalcor_inicio.html: sustituido el logo dibujado a mano por la
+    variante de mantenimiento en la portada.
+  - partes_limpieza.html y limpieza_equipo.html: logo nuevo (variante
+    genérica) en el header de ambas páginas, sustituyendo el emoji 🧹.
+
 v1.5.409 — 2026-08-18
   - partes_limpieza.html y limpieza_equipo.html: "modo rápido" de marcado.
     · Tras marcar la primera casilla, pregunta si vas a marcar más como

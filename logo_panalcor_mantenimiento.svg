@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+<defs>
+  <radialGradient id="sky" cx="50%" cy="38%" r="72%">
+    <stop offset="0%"  stop-color="#fff6df"/>
+    <stop offset="28%" stop-color="#ffd77a"/>
+    <stop offset="52%" stop-color="#e8a23d"/>
+    <stop offset="75%" stop-color="#1a2d42"/>
+    <stop offset="100%" stop-color="#0d1b2a"/>
+  </radialGradient>
+
+  <radialGradient id="gearGrad" cx="42%" cy="38%" r="65%">
+    <stop offset="0%"  stop-color="#aebccb"/>
+    <stop offset="45%" stop-color="#6c7f92"/>
+    <stop offset="100%" stop-color="#293a4d"/>
+  </radialGradient>
+
+  <linearGradient id="ribbonGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%"  stop-color="#e8503f"/>
+    <stop offset="45%" stop-color="#c0392b"/>
+    <stop offset="100%" stop-color="#7c1f16"/>
+  </linearGradient>
+
+  <linearGradient id="ribbonShine" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%"  stop-color="#ff9c86" stop-opacity="0.85"/>
+    <stop offset="100%" stop-color="#ff9c86" stop-opacity="0"/>
+  </linearGradient>
+
+  <linearGradient id="textGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%"  stop-color="#fdf0c8"/>
+    <stop offset="55%" stop-color="#f7d060"/>
+    <stop offset="100%" stop-color="#c9a227"/>
+  </linearGradient>
+
+  <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%"   stop-color="#8a6a16"/>
+    <stop offset="25%"  stop-color="#f7d060"/>
+    <stop offset="50%"  stop-color="#c9a227"/>
+    <stop offset="75%"  stop-color="#fdf0c8"/>
+    <stop offset="100%" stop-color="#a67f1e"/>
+  </linearGradient>
+
+  <linearGradient id="boltGrad" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%"  stop-color="#fdf0c8"/>
+    <stop offset="100%" stop-color="#c9a227"/>
+  </linearGradient>
+
+  <linearGradient id="gunGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%"  stop-color="#7fb2e8"/>
+    <stop offset="100%" stop-color="#2f6094"/>
+  </linearGradient>
+
+  <filter id="softShadow" x="-40%" y="-40%" width="180%" height="180%">
+    <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#3a0f0a" flood-opacity="0.45"/>
+  </filter>
+  <filter id="gearShadow" x="-40%" y="-40%" width="180%" height="180%">
+    <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#0a1420" flood-opacity="0.55"/>
+  </filter>
+
+  <path id="arcTop" d="M83.9,221.3 A230,230 0 0,1 516.1,221.3" fill="none"/>
+</defs>
+
+<!-- Aro exterior dorado -->
+<circle cx="300" cy="300" r="272" fill="none" stroke="url(#ringGrad)" stroke-width="6"/>
+<circle cx="300" cy="300" r="258" fill="none" stroke="url(#ringGrad)" stroke-width="1.6" opacity="0.65"/>
+
+<!-- Cielo / fondo -->
+<clipPath id="skyClip"><circle cx="300" cy="300" r="255"/></clipPath>
+<g clip-path="url(#skyClip)">
+  <circle cx="300" cy="300" r="255" fill="url(#sky)"/>
+
+  <!-- Engranaje -->
+  <g filter="url(#gearShadow)">
+    <path d="M408.0,244.0 L427.4,256.0 L422.3,281.6 L399.8,285.3 L413.1,303.9 L398.6,325.6 L376.4,320.4 L381.6,342.6 L359.9,357.1 L341.3,343.8 L337.6,366.3 L312.0,371.4 L300.0,352.0 L288.0,371.4 L262.4,366.3 L258.7,343.8 L240.1,357.1 L218.4,342.6 L223.6,320.4 L201.4,325.6 L186.9,303.9 L200.2,285.3 L177.7,281.6 L172.6,256.0 L192.0,244.0 L172.6,232.0 L177.7,206.4 L200.2,202.7 L186.9,184.1 L201.4,162.4 L223.6,167.6 L218.4,145.4 L240.1,130.9 L258.7,144.2 L262.4,121.7 L288.0,116.6 L300.0,136.0 L312.0,116.6 L337.6,121.7 L341.3,144.2 L359.9,130.9 L381.6,145.4 L376.4,167.6 L398.6,162.4 L413.1,184.1 L399.8,202.7 L422.3,206.4 L427.4,232.0 L408.0,244.0 Z"
+          fill="url(#gearGrad)" stroke="#1c2733" stroke-width="1.5"/>
+  </g>
+
+  <!-- Disco interior -->
+  <circle cx="300" cy="244" r="95" fill="#f4efe6"/>
+  <circle cx="300" cy="244" r="95" fill="none" stroke="#c9a227" stroke-width="2" opacity="0.5"/>
+  <line x1="300" y1="152" x2="300" y2="336" stroke="#2d3f54" stroke-width="1.2" opacity="0.18"/>
+  <line x1="208" y1="244" x2="392" y2="244" stroke="#2d3f54" stroke-width="1.2" opacity="0.18"/>
+
+  <!-- Llave inglesa -->
+  <g transform="translate(258,202) rotate(-45)">
+    <rect x="-6" y="-32" width="12" height="54" rx="3" fill="#2d3f54"/>
+    <ellipse cx="0" cy="-32" rx="14" ry="11" fill="none" stroke="#2d3f54" stroke-width="4.5"/>
+  </g>
+
+  <!-- Pistola neumatica -->
+  <g transform="translate(345,208)">
+    <rect x="-15" y="-9" width="27" height="12" rx="4" fill="url(#gunGrad)"/>
+    <rect x="9" y="-18" width="9" height="15" rx="3" fill="url(#gunGrad)"/>
+    <path d="M-15,3 Q-21,12 -12,18" fill="none" stroke="url(#gunGrad)" stroke-width="4" stroke-linecap="round"/>
+  </g>
+
+  <!-- Rayo -->
+  <g transform="translate(263,278)">
+    <polygon points="9,-27 -1,0 10,0 1,27 21,-6 10,-6" fill="url(#boltGrad)" stroke="#8a6a16" stroke-width="0.8"/>
+  </g>
+
+  <!-- Enchufe -->
+  <g transform="translate(337,278)">
+    <path d="M0,-18 Q12,-18 12,0 Q12,15 0,21 Q-12,15 -12,0 Q-12,-18 0,-18Z" fill="none" stroke="#2d3f54" stroke-width="4"/>
+    <rect x="-3" y="-12" width="6" height="10" rx="1.5" fill="#2d3f54"/>
+    <rect x="9" y="-12" width="6" height="10" rx="1.5" fill="#2d3f54"/>
+    <path d="M0,21 L0,33" stroke="#2d3f54" stroke-width="4" stroke-linecap="round"/>
+    <path d="M-6,33 Q0,39 6,33" fill="none" stroke="#2d3f54" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</g>
+
+<!-- Tagline arqueada -->
+<text font-family="'Oswald', Arial Narrow, sans-serif" font-size="19" font-weight="700" letter-spacing="4.5" fill="#fdf0c8" opacity="0.92">
+  <textPath href="#arcTop" startOffset="50%" text-anchor="middle">SISTEMA DE MANTENIMIENTO</textPath>
+</text>
+
+<!-- Cinta -->
+<g filter="url(#softShadow)">
+  <path d="M100,335 L500,335 L546,346 L524,365 L546,384 L500,395 L100,395 L54,384 L76,365 L54,346 Z"
+        fill="url(#ribbonGrad)" stroke="#f7d060" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M100,340 L500,340 L540,349" fill="none" stroke="url(#ribbonShine)" stroke-width="7" stroke-linecap="round" opacity="0.8"/>
+</g>
+
+<text x="300" y="374" text-anchor="middle" font-family="'Oswald', 'Arial Narrow', sans-serif"
+      font-size="56" font-weight="800" letter-spacing="3" fill="url(#textGrad)"
+      stroke="#5b1710" stroke-width="1.4" paint-order="stroke">PANALCOR</text>
+
+<rect x="163" y="358" width="9" height="9" fill="#f7d060" opacity="0.85" transform="rotate(45 167.5 362.5)"/>
+<rect x="428" y="358" width="9" height="9" fill="#f7d060" opacity="0.85" transform="rotate(45 432.5 362.5)"/>
+
+</svg>

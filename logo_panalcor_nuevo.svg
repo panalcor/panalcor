@@ -1,0 +1,157 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+<defs>
+  <radialGradient id="sky" cx="50%" cy="38%" r="72%">
+    <stop offset="0%"  stop-color="#fff6df"/>
+    <stop offset="28%" stop-color="#ffd77a"/>
+    <stop offset="52%" stop-color="#e8a23d"/>
+    <stop offset="75%" stop-color="#1a2d42"/>
+    <stop offset="100%" stop-color="#0d1b2a"/>
+  </radialGradient>
+
+  <radialGradient id="sunGrad" cx="50%" cy="42%" r="60%">
+    <stop offset="0%"  stop-color="#fffdf3"/>
+    <stop offset="45%" stop-color="#ffe28a"/>
+    <stop offset="80%" stop-color="#f3b93d"/>
+    <stop offset="100%" stop-color="#d98f1f"/>
+  </radialGradient>
+
+  <linearGradient id="rayGrad" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%"  stop-color="#ffe9a8" stop-opacity="0.95"/>
+    <stop offset="100%" stop-color="#ffe9a8" stop-opacity="0"/>
+  </linearGradient>
+
+  <linearGradient id="grainGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%"  stop-color="#fdf0c8"/>
+    <stop offset="55%" stop-color="#e8b23d"/>
+    <stop offset="100%" stop-color="#b9791d"/>
+  </linearGradient>
+
+  <linearGradient id="stemGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%"  stop-color="#d4a017"/>
+    <stop offset="100%" stop-color="#8a5a12"/>
+  </linearGradient>
+
+  <linearGradient id="ribbonGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%"  stop-color="#e8503f"/>
+    <stop offset="45%" stop-color="#c0392b"/>
+    <stop offset="100%" stop-color="#7c1f16"/>
+  </linearGradient>
+
+  <linearGradient id="ribbonShine" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%"  stop-color="#ff9c86" stop-opacity="0.85"/>
+    <stop offset="100%" stop-color="#ff9c86" stop-opacity="0"/>
+  </linearGradient>
+
+  <linearGradient id="textGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%"  stop-color="#fdf0c8"/>
+    <stop offset="55%" stop-color="#f7d060"/>
+    <stop offset="100%" stop-color="#c9a227"/>
+  </linearGradient>
+
+  <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%"   stop-color="#8a6a16"/>
+    <stop offset="25%"  stop-color="#f7d060"/>
+    <stop offset="50%"  stop-color="#c9a227"/>
+    <stop offset="75%"  stop-color="#fdf0c8"/>
+    <stop offset="100%" stop-color="#a67f1e"/>
+  </linearGradient>
+
+  <filter id="softShadow" x="-40%" y="-40%" width="180%" height="180%">
+    <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#3a0f0a" flood-opacity="0.45"/>
+  </filter>
+  <filter id="sunGlow" x="-80%" y="-80%" width="260%" height="260%">
+    <feGaussianBlur stdDeviation="10" result="blur"/>
+    <feMerge>
+      <feMergeNode in="blur"/>
+      <feMergeNode in="SourceGraphic"/>
+    </feMerge>
+  </filter>
+
+  <path id="arcTop" d="M83.9,221.3 A230,230 0 0,1 516.1,221.3" fill="none"/>
+
+  <g id="wheatSpike">
+    <path d="M0.0,0.0 C-8.0,-55.0 -22.0,-105.0 -34.0,-158.0" fill="none" stroke="url(#stemGrad)" stroke-width="3.2" stroke-linecap="round"/>
+    <ellipse cx="2.6" cy="-17.2" rx="6.4" ry="13.5" transform="rotate(-65.6 2.6 -17.2)" fill="url(#grainGrad)" stroke="#8a5a12" stroke-width="0.6" opacity="0.97"/>
+    <ellipse cx="-7.7" cy="-15.5" rx="6.4" ry="13.5" transform="rotate(-133.6 -7.7 -15.5)" fill="url(#grainGrad)" stroke="#8a5a12" stroke-width="0.6" opacity="0.97"/>
+    <ellipse cx="-2.2" cy="-40.3" rx="5.7" ry="12.1" transform="rotate(-67.1 -2.2 -40.3)" fill="url(#grainGrad)" stroke="#8a5a12" stroke-width="0.6" opacity="0.97"/>
+    <ellipse cx="-11.4" cy="-38.5" rx="5.7" ry="12.1" transform="rotate(-135.1 -11.4 -38.5)" fill="url(#grainGrad)" stroke="#8a5a12" stroke-width="0.6" opacity="0.97"/>
+    <ellipse cx="-7.5" cy="-62.9" rx="5.1" ry="10.7" transform="rotate(-68.3 -7.5 -62.9)" fill="url(#grainGrad)" stroke="#8a5a12" stroke-width="0.6" opacity="0.97"/>
+    <ellipse cx="-15.5" cy="-61.1" rx="5.1" ry="10.7" transform="rotate(-136.3 -15.5 -61.1)" fill="url(#grainGrad)" stroke="#8a5a12" stroke-width="0.6" opacity="0.97"/>
+    <ellipse cx="-13.1" cy="-85.2" rx="4.4" ry="9.3" transform="rotate(-69.1 -13.1 -85.2)" fill="url(#grainGrad)" stroke="#8a5a12" stroke-width="0.6" opacity="0.97"/>
+    <ellipse cx="-20.1" cy="-83.6" rx="4.4" ry="9.3" transform="rotate(-137.1 -20.1 -83.6)" fill="url(#grainGrad)" stroke="#8a5a12" stroke-width="0.6" opacity="0.97"/>
+    <ellipse cx="-18.9" cy="-107.5" rx="3.8" ry="7.9" transform="rotate(-69.5 -18.9 -107.5)" fill="url(#grainGrad)" stroke="#8a5a12" stroke-width="0.6" opacity="0.97"/>
+    <ellipse cx="-24.8" cy="-106.0" rx="3.8" ry="7.9" transform="rotate(-137.5 -24.8 -106.0)" fill="url(#grainGrad)" stroke="#8a5a12" stroke-width="0.6" opacity="0.97"/>
+    <ellipse cx="-24.8" cy="-129.7" rx="3.1" ry="6.5" transform="rotate(-69.4 -24.8 -129.7)" fill="url(#grainGrad)" stroke="#8a5a12" stroke-width="0.6" opacity="0.97"/>
+    <ellipse cx="-29.7" cy="-128.5" rx="3.1" ry="6.5" transform="rotate(-137.4 -29.7 -128.5)" fill="url(#grainGrad)" stroke="#8a5a12" stroke-width="0.6" opacity="0.97"/>
+    <ellipse cx="-30.6" cy="-152.1" rx="2.4" ry="5.1" transform="rotate(-69.0 -30.6 -152.1)" fill="url(#grainGrad)" stroke="#8a5a12" stroke-width="0.6" opacity="0.97"/>
+    <ellipse cx="-34.5" cy="-151.2" rx="2.4" ry="5.1" transform="rotate(-137.0 -34.5 -151.2)" fill="url(#grainGrad)" stroke="#8a5a12" stroke-width="0.6" opacity="0.97"/>
+    <ellipse cx="-34.0" cy="-164.0" rx="3.6" ry="9" transform="rotate(-102.8 -34.0 -164.0)" fill="url(#grainGrad)" stroke="#8a5a12" stroke-width="0.6"/>
+  </g>
+</defs>
+
+<!-- Aro exterior dorado -->
+<circle cx="300" cy="300" r="272" fill="none" stroke="url(#ringGrad)" stroke-width="6"/>
+<circle cx="300" cy="300" r="258" fill="none" stroke="url(#ringGrad)" stroke-width="1.6" opacity="0.65"/>
+
+<!-- Cielo / fondo -->
+<clipPath id="skyClip"><circle cx="300" cy="300" r="255"/></clipPath>
+<g clip-path="url(#skyClip)">
+  <circle cx="300" cy="300" r="255" fill="url(#sky)"/>
+
+  <!-- Rayos -->
+  <g filter="url(#sunGlow)">
+    <path d="M297.8,162.0 L300.0,76.0 L302.2,162.0 Z" fill="url(#rayGrad)" opacity="0.95"/>
+    <path d="M319.7,164.4 L335.2,112.6 L322.7,165.2 Z" fill="url(#rayGrad)" opacity="0.75"/>
+    <path d="M339.1,171.9 L384.0,98.5 L342.9,174.1 Z" fill="url(#rayGrad)" opacity="0.95"/>
+    <path d="M356.9,184.9 L396.2,147.8 L359.1,187.1 Z" fill="url(#rayGrad)" opacity="0.75"/>
+    <path d="M369.9,201.1 L445.5,160.0 L372.1,204.9 Z" fill="url(#rayGrad)" opacity="0.95"/>
+    <path d="M378.8,221.3 L431.4,208.8 L379.6,224.3 Z" fill="url(#rayGrad)" opacity="0.75"/>
+    <path d="M382.0,241.8 L468.0,244.0 L382.0,246.2 Z" fill="url(#rayGrad)" opacity="0.95"/>
+    <path d="M379.6,263.7 L431.4,279.2 L378.8,266.7 Z" fill="url(#rayGrad)" opacity="0.75"/>
+    <path d="M372.1,283.1 L445.5,328.0 L369.9,286.9 Z" fill="url(#rayGrad)" opacity="0.95"/>
+    <path d="M359.1,300.9 L396.2,340.2 L356.9,303.1 Z" fill="url(#rayGrad)" opacity="0.75"/>
+    <path d="M342.9,313.9 L384.0,389.5 L339.1,316.1 Z" fill="url(#rayGrad)" opacity="0.95"/>
+    <path d="M322.7,322.8 L335.2,375.4 L319.7,323.6 Z" fill="url(#rayGrad)" opacity="0.75"/>
+    <path d="M302.2,326.0 L300.0,412.0 L297.8,326.0 Z" fill="url(#rayGrad)" opacity="0.95"/>
+    <path d="M280.3,323.6 L264.8,375.4 L277.3,322.8 Z" fill="url(#rayGrad)" opacity="0.75"/>
+    <path d="M260.9,316.1 L216.0,389.5 L257.1,313.9 Z" fill="url(#rayGrad)" opacity="0.95"/>
+    <path d="M243.1,303.1 L203.8,340.2 L240.9,300.9 Z" fill="url(#rayGrad)" opacity="0.75"/>
+    <path d="M230.1,286.9 L154.5,328.0 L227.9,283.1 Z" fill="url(#rayGrad)" opacity="0.95"/>
+    <path d="M221.2,266.7 L168.6,279.2 L220.4,263.7 Z" fill="url(#rayGrad)" opacity="0.75"/>
+    <path d="M218.0,246.2 L132.0,244.0 L218.0,241.8 Z" fill="url(#rayGrad)" opacity="0.95"/>
+    <path d="M220.4,224.3 L168.6,208.8 L221.2,221.3 Z" fill="url(#rayGrad)" opacity="0.75"/>
+    <path d="M227.9,204.9 L154.5,160.0 L230.1,201.1 Z" fill="url(#rayGrad)" opacity="0.95"/>
+    <path d="M240.9,187.1 L203.8,147.8 L243.1,184.9 Z" fill="url(#rayGrad)" opacity="0.75"/>
+    <path d="M257.1,174.1 L216.0,98.5 L260.9,171.9 Z" fill="url(#rayGrad)" opacity="0.95"/>
+    <path d="M277.3,165.2 L264.8,112.6 L280.3,164.4 Z" fill="url(#rayGrad)" opacity="0.75"/>
+  </g>
+
+  <!-- Sol -->
+  <circle cx="300" cy="244" r="82" fill="url(#sunGrad)" filter="url(#sunGlow)"/>
+  <circle cx="300" cy="244" r="82" fill="none" stroke="#fff6df" stroke-width="1.5" opacity="0.6"/>
+
+  <!-- Espigas de trigo -->
+  <use href="#wheatSpike" transform="translate(232,344)"/>
+  <use href="#wheatSpike" transform="translate(368,344) scale(-1,1)"/>
+</g>
+
+<!-- Tagline arqueada -->
+<text font-family="'Oswald', Arial Narrow, sans-serif" font-size="21" font-weight="700" letter-spacing="6" fill="#fdf0c8" opacity="0.92">
+  <textPath href="#arcTop" startOffset="50%" text-anchor="middle">PAN NATURAL</textPath>
+</text>
+
+<!-- Cinta -->
+<g filter="url(#softShadow)">
+  <path d="M100,335 L500,335 L546,346 L524,365 L546,384 L500,395 L100,395 L54,384 L76,365 L54,346 Z"
+        fill="url(#ribbonGrad)" stroke="#f7d060" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M100,340 L500,340 L540,349" fill="none" stroke="url(#ribbonShine)" stroke-width="7" stroke-linecap="round" opacity="0.8"/>
+</g>
+
+<text x="300" y="374" text-anchor="middle" font-family="'Oswald', 'Arial Narrow', sans-serif"
+      font-size="56" font-weight="800" letter-spacing="3" fill="url(#textGrad)"
+      stroke="#5b1710" stroke-width="1.4" paint-order="stroke">PANALCOR</text>
+
+<rect x="163" y="358" width="9" height="9" fill="#f7d060" opacity="0.85" transform="rotate(45 167.5 362.5)"/>
+<rect x="428" y="358" width="9" height="9" fill="#f7d060" opacity="0.85" transform="rotate(45 432.5 362.5)"/>
+
+</svg>
