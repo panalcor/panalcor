@@ -190,9 +190,11 @@ table.grid td.cell.col-especial { background: rgba(231,76,60,0.12); }
   <div class="admin-panel">
     <div class="admin-title">👥 Equipo de limpieza</div>
     <div class="worker-chip-list" id="workerList"></div>
+    <div id="ausenciaBanner" style="display:none;margin-bottom:12px;padding:10px 14px;background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);border-radius:8px;font-size:0.85rem;color:#ff9d8a"></div>
     <div class="add-worker-row">
       <input class="ctrl-input" type="text" id="newWorkerName" placeholder="Nombre del trabajador o trabajadora..." onkeydown="if(event.key==='Enter')addWorker()">
       <button class="btn" onclick="addWorker()">➕ Añadir</button>
+      <a class="btn" href="limpieza_ausencias.html" style="text-decoration:none;background:rgba(255,107,91,0.12);border-color:rgba(255,107,91,0.4);color:#ff8a75">🌴 Ausencias</a>
     </div>
   </div>
 
@@ -247,13 +249,22 @@ function fbKey(s) { return String(s).toUpperCase().trim().replace(/[.#$\/\[\]]/g
    ══════════════════════════════════════════════════════════════════════ */
 const MESES_ABR = ["ENE","FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEP","OCT","NOV","DIC"];
 
-/* Festivos (mismo calendario que Legionela) — domingos y festivos se resaltan
-   pero NO se bloquean: rara vez se trabaja esos días, pero puede pasar. */
-const FESTIVOS = new Set([
+/* Festivos — se leen en vivo de turnos/festivos (mismo calendario que usan
+   los mecánicos en Turnos). Domingos y festivos se resaltan pero NO se
+   bloquean: rara vez se trabaja esos días, pero puede pasar. */
+let FESTIVOS = new Set([
   '2026-01-01','2026-01-06','2026-04-02','2026-04-03',
   '2026-05-01','2026-08-14','2026-08-15','2026-10-12',
   '2026-11-02','2026-12-08','2026-12-25'
 ]);
+function initFestivosListener() {
+  DB.ref('turnos/festivos').on('value', snap => {
+    const val = snap.val() || {};
+    const oficiales = Object.keys(val).filter(f => val[f]?.oficial);
+    if (oficiales.length) FESTIVOS = new Set(oficiales);
+    render();
+  });
+}
 function esDomingoOFestivo(mesISO, d) {
   const [y,m] = mesISO.split('-').map(Number);
   const ds = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
@@ -856,8 +867,23 @@ function cerrarSesion() {
   document.getElementById('loginPwd').value = '';
 }
 
+function initAusenciasBanner() {
+  DB.ref('config/limpieza_ausencias').on('value', snap => {
+    const val = snap.val() || {};
+    const hoy = new Date().toISOString().slice(0,10);
+    const ausentesHoy = Object.values(val).filter(a => hoy >= a.desde && hoy <= a.hasta);
+    const banner = document.getElementById('ausenciaBanner');
+    if (!ausentesHoy.length) { banner.style.display = 'none'; return; }
+    const nombres = ausentesHoy.map(a => escHtml(a.trabajador)).join(', ');
+    banner.innerHTML = `🌴 Ausente${ausentesHoy.length>1?'s':''} hoy: <b>${nombres}</b> — <a href="limpieza_ausencias.html" style="color:inherit">ver detalle</a>`;
+    banner.style.display = 'block';
+  });
+}
+
 function iniciarApp() {
   initWorkersListener();
+  initFestivosListener();
+  initAusenciasBanner();
   poblarSelectorPartes();
   document.getElementById('selMes').value = new Date().toISOString().slice(0,7);
   document.getElementById('selAnio').value = new Date().getFullYear();

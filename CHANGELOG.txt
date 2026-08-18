@@ -6,6 +6,25 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.389 — 2026-08-18
+  - Nueva página limpieza_ausencias.html: gestión de ausencias del equipo
+    de limpieza (vacaciones, bajas, asuntos propios), con estilo propio
+    (coral + turquesa, tipografía Baloo 2/Nunito) distinto del resto de
+    la app pero manteniendo la marca PANALCOR. Mismo login que
+    partes_limpieza.html (comparten contraseña, o auto-login con sesión
+    admin activa).
+    · Los festivos oficiales se leen y editan desde turnos/festivos, la
+      MISMA fuente que usa el módulo Turnos de mecánicos — un festivo
+      añadido aquí también aparece allí y viceversa.
+    · Las ausencias se guardan en config/limpieza_ausencias (persona,
+      motivo, rango de fechas, nota).
+  - partes_limpieza.html: nuevo botón "🌴 Ausencias" junto a "➕ Añadir";
+    aviso automático de quién está ausente hoy; festivos ya no van
+    hardcodeados, se leen en vivo de turnos/festivos.
+  - limpieza_equipo.html: mismo aviso de ausencias del día y festivos en
+    vivo desde turnos/festivos.
+  - MINOR +1 por 1 página nueva → v1.5.389
+
 v1.4.379 — 2026-08-18
   - Nuevo módulo "Partes de Limpieza", conectado a Firebase en tiempo real:
     · partes_limpieza.html: panel de administración (requiere login, o

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PANALCOR — Ausencias Limpieza</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --coral:      #ff6b5b;
+  --coral-dark: #e8503f;
+  --coral-soft: #ffe4de;
+  --turq:       #1fbfad;
+  --turq-dark:  #159485;
+  --turq-soft:  #d8f7f0;
+  --cream:      #fffaf5;
+  --paper:      #ffffff;
+  --ink:        #3a332e;
+  --ink-dim:    #8a8078;
+  --line:       #f0e6dc;
+  --grad: linear-gradient(120deg, var(--coral), #ff9166 45%, var(--turq));
+}
+
+html, body { height: 100%; }
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  min-height: 100vh;
+  padding-bottom: 4rem;
+}
+
+h1, h2, h3, .heading { font-family: 'Baloo 2', sans-serif; }
+
+/* ── decorative blobs ── */
+.blob { position: fixed; border-radius: 50%; filter: blur(60px); opacity: 0.35; z-index: 0; pointer-events: none; }
+.blob-1 { width: 340px; height: 340px; background: var(--coral); top: -120px; right: -100px; }
+.blob-2 { width: 300px; height: 300px; background: var(--turq); bottom: -100px; left: -100px; }
+
+/* ── LOGIN ── */
+#loginScreen { min-height: 100vh; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 2rem; position: relative; z-index: 1; }
+.login-box {
+  background: var(--paper); border-radius: 28px; padding: 2.6rem 2.2rem; width: 100%; max-width: 400px;
+  box-shadow: 0 24px 60px rgba(255,107,91,0.18), 0 4px 16px rgba(31,191,173,0.1);
+  animation: popIn 0.5s cubic-bezier(.34,1.56,.64,1) both; text-align: center;
+}
+@keyframes popIn { from { opacity: 0; transform: translateY(20px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.logo-badge {
+  width: 72px; height: 72px; border-radius: 24px; background: var(--grad); display: flex; align-items: center;
+  justify-content: center; font-size: 2.1rem; margin: 0 auto 1rem; box-shadow: 0 10px 24px rgba(255,107,91,0.35);
+  transform: rotate(-6deg);
+}
+.login-brand-name { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 1.5rem; color: var(--ink); }
+.login-brand-sub { font-size: 0.8rem; color: var(--ink-dim); font-weight: 600; margin-top: 2px; margin-bottom: 1.8rem; }
+.login-label { font-size: 0.78rem; font-weight: 700; color: var(--ink-dim); margin-bottom: 6px; display: block; text-align: left; }
+.login-input {
+  width: 100%; background: #fdf3ee; border: 2px solid var(--line); border-radius: 14px; color: var(--ink);
+  font-family: 'Nunito', sans-serif; font-size: 1.05rem; padding: 12px 16px; outline: none;
+  transition: border-color 0.2s; margin-bottom: 1.1rem;
+}
+.login-input:focus { border-color: var(--turq); }
+.login-btn {
+  width: 100%; padding: 13px; background: var(--grad); background-size: 160% 160%; border: none; border-radius: 14px;
+  color: #fff; font-family: 'Baloo 2', sans-serif; font-size: 1.05rem; font-weight: 700; cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.2s; box-shadow: 0 8px 20px rgba(255,107,91,0.3);
+}
+.login-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(255,107,91,0.4); }
+#loginError { display: none; margin-top: 0.9rem; padding: 10px 14px; background: var(--coral-soft); border-radius: 10px; color: var(--coral-dark); font-size: 0.85rem; font-weight: 700; }
+.back-link { margin-top: 1.4rem; font-size: 0.82rem; color: var(--ink-dim); text-decoration: none; font-weight: 700; display: block; }
+.back-link:hover { color: var(--turq-dark); }
+
+/* ── HEADER ── */
+header {
+  background: var(--grad); padding: 1.3rem 1.7rem; display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px; position: relative; z-index: 1; border-radius: 0 0 28px 28px;
+  box-shadow: 0 8px 24px rgba(255,107,91,0.25);
+}
+.hdr-brand { display: flex; align-items: center; gap: 12px; }
+.hdr-logo { width: 46px; height: 46px; border-radius: 15px; background: rgba(255,255,255,0.25); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center; font-size: 1.4rem; transform: rotate(-6deg); }
+.hdr-title { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 1.25rem; color: #fff; }
+.hdr-sub { font-size: 0.76rem; color: rgba(255,255,255,0.85); font-weight: 700; margin-top: 1px; }
+.hdr-links { display: flex; align-items: center; gap: 14px; }
+.hdr-link {
+  color: #fff; font-size: 0.82rem; font-weight: 700; text-decoration: none; background: rgba(255,255,255,0.2);
+  padding: 8px 14px; border-radius: 20px; transition: background 0.15s;
+}
+.hdr-link:hover { background: rgba(255,255,255,0.32); }
+
+main { max-width: 1100px; margin: 0 auto; padding: 1.8rem 1.5rem; position: relative; z-index: 1; }
+
+/* ── CARD ── */
+.card { background: var(--paper); border-radius: 24px; padding: 1.6rem 1.8rem; margin-bottom: 1.5rem;
+  box-shadow: 0 6px 24px rgba(58,51,46,0.06); }
+.card-title { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 1.15rem; color: var(--ink);
+  display: flex; align-items: center; gap: 9px; margin-bottom: 4px; }
+.card-note { font-size: 0.83rem; color: var(--ink-dim); margin-bottom: 1.1rem; font-weight: 500; }
+
+/* ── FORM ── */
+.form-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 6px; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 0.72rem; font-weight: 800; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.03em; }
+.field select, .field input {
+  background: #fdf6f0; border: 2px solid var(--line); border-radius: 12px; color: var(--ink);
+  font-family: 'Nunito', sans-serif; font-weight: 600; padding: 9px 13px; font-size: 0.9rem; min-width: 150px;
+}
+.field select:focus, .field input:focus { outline: none; border-color: var(--turq); }
+.field.grow input { min-width: 200px; width: 100%; }
+.field.grow { flex: 1; }
+
+.btn {
+  font-family: 'Baloo 2', sans-serif; font-weight: 700; border: none; border-radius: 12px; padding: 10px 20px;
+  font-size: 0.9rem; cursor: pointer; white-space: nowrap; transition: transform 0.12s, box-shadow 0.15s;
+}
+.btn-coral { background: var(--coral); color: #fff; box-shadow: 0 6px 16px rgba(255,107,91,0.3); }
+.btn-coral:hover { transform: translateY(-1px); box-shadow: 0 9px 20px rgba(255,107,91,0.4); }
+.btn-turq { background: var(--turq); color: #fff; box-shadow: 0 6px 16px rgba(31,191,173,0.3); }
+.btn-turq:hover { transform: translateY(-1px); box-shadow: 0 9px 20px rgba(31,191,173,0.4); }
+.btn-ghost { background: #fdf6f0; color: var(--ink-dim); border: 2px solid var(--line); box-shadow: none; }
+.btn-ghost:hover { border-color: var(--turq); color: var(--turq-dark); }
+
+/* ── FESTIVOS CHIPS ── */
+.chip-row { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 12px; }
+.festivo-chip {
+  display: inline-flex; align-items: center; gap: 8px; background: var(--turq-soft); border: 2px solid rgba(31,191,173,0.25);
+  border-radius: 16px; padding: 7px 8px 7px 14px; font-size: 0.85rem; font-weight: 700; color: var(--turq-dark);
+}
+.festivo-chip .del { cursor: pointer; color: var(--turq-dark); opacity: 0.6; font-weight: 800; padding: 2px 6px; border-radius: 50%; }
+.festivo-chip .del:hover { opacity: 1; background: rgba(31,191,173,0.18); }
+
+/* ── AUSENCIAS LIST ── */
+.aus-list { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+.aus-item {
+  display: flex; align-items: center; gap: 14px; background: #fffdfb; border: 2px solid var(--line); border-radius: 16px;
+  padding: 12px 16px; flex-wrap: wrap;
+}
+.aus-tipo-badge { font-size: 1.3rem; flex-shrink: 0; }
+.aus-info { flex: 1; min-width: 180px; }
+.aus-nombre { font-weight: 800; font-size: 0.95rem; color: var(--ink); }
+.aus-detalle { font-size: 0.8rem; color: var(--ink-dim); font-weight: 600; margin-top: 1px; }
+.aus-nota { font-size: 0.78rem; color: var(--ink-dim); font-style: italic; margin-top: 2px; }
+.aus-del { cursor: pointer; color: var(--coral); font-weight: 800; font-size: 1.2rem; padding: 4px 10px; border-radius: 50%; transition: background 0.15s; }
+.aus-del:hover { background: var(--coral-soft); }
+.empty-note { font-size: 0.85rem; color: var(--ink-dim); font-weight: 600; padding: 8px 0; }
+
+/* ── BANNER PENDING (equipo vacío) ── */
+.equipo-warn { background: var(--coral-soft); border: 2px solid rgba(255,107,91,0.3); border-radius: 16px;
+  padding: 14px 18px; font-size: 0.85rem; color: var(--coral-dark); font-weight: 700; margin-bottom: 1.5rem; }
+</style>
+</head>
+<body>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<!-- ══════════ LOGIN ══════════ -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="logo-badge">🌴</div>
+    <div class="login-brand-name">PANALCOR</div>
+    <div class="login-brand-sub">Ausencias del equipo de limpieza</div>
+    <form onsubmit="intentarLogin(event)">
+      <label class="login-label" for="loginPwd">Contraseña de acceso</label>
+      <input class="login-input" type="password" id="loginPwd" autocomplete="off" placeholder="••••••••" autofocus>
+      <button class="login-btn" type="submit">Entrar ✨</button>
+    </form>
+    <div id="loginError">Contraseña incorrecta, inténtalo de nuevo</div>
+    <a href="partes_limpieza.html" class="back-link">← Volver a Partes de Limpieza</a>
+  </div>
+</div>
+
+<!-- ══════════ APP ══════════ -->
+<div id="appScreen" style="display:none">
+
+<header>
+  <div class="hdr-brand">
+    <div class="hdr-logo">🌴</div>
+    <div>
+      <div class="hdr-title">Ausencias · Limpieza</div>
+      <div class="hdr-sub">Vacaciones, bajas y festivos del equipo</div>
+    </div>
+  </div>
+  <div class="hdr-links">
+    <a class="hdr-link" href="partes_limpieza.html">← Partes de Limpieza</a>
+    <a class="hdr-link" href="#" onclick="cerrarSesion();return false;">Salir</a>
+  </div>
+</header>
+
+<main>
+
+  <div class="equipo-warn" id="equipoWarn" style="display:none">
+    ⚠️ Todavía no hay nadie en el equipo de limpieza. Añádelos primero desde Partes de Limpieza.
+  </div>
+
+  <!-- ── FESTIVOS ── -->
+  <div class="card">
+    <div class="card-title">📅 Festivos oficiales</div>
+    <div class="card-note">Se comparten con Turnos — si añades uno aquí, también lo verán los mecánicos, y viceversa.</div>
+    <div class="form-row">
+      <div class="field">
+        <label>Nueva fecha festiva</label>
+        <input type="date" id="nuevoFestivo">
+      </div>
+      <button class="btn btn-turq" onclick="addFestivoOficial()">➕ Añadir festivo</button>
+    </div>
+    <div class="chip-row" id="festivosList"></div>
+  </div>
+
+  <!-- ── AUSENCIAS ── -->
+  <div class="card">
+    <div class="card-title">🌴 Registrar ausencia</div>
+    <div class="card-note">Vacaciones, bajas o cualquier motivo por el que alguien del equipo no vaya a estar.</div>
+    <div class="form-row">
+      <div class="field">
+        <label>Persona</label>
+        <select id="ausPersona"></select>
+      </div>
+      <div class="field">
+        <label>Motivo</label>
+        <select id="ausTipo">
+          <option value="vacaciones">🌴 Vacaciones</option>
+          <option value="baja">🤒 Baja / enfermedad</option>
+          <option value="asunto">📋 Asunto propio</option>
+          <option value="otro">💬 Otro</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Desde</label>
+        <input type="date" id="ausDesde">
+      </div>
+      <div class="field">
+        <label>Hasta</label>
+        <input type="date" id="ausHasta">
+      </div>
+      <div class="field grow">
+        <label>Nota (opcional)</label>
+        <input type="text" id="ausNota" placeholder="Algo que quieras apuntar...">
+      </div>
+      <button class="btn btn-coral" onclick="addAusencia()">➕ Añadir</button>
+    </div>
+    <div class="aus-list" id="ausenciasList"></div>
+  </div>
+
+</main>
+
+</div><!-- /appScreen -->
+
+<script>
+/* ══════════════════════════════════════════════════════════════════════
+   FIREBASE
+   ══════════════════════════════════════════════════════════════════════ */
+const FB_CFG = {
+  apiKey:"AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU",
+  authDomain:"panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:"https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"panalcor-mantenimiento",
+  storageBucket:"panalcor-mantenimiento.firebasestorage.app",
+  messagingSenderId:"67593058609",
+  appId:"1:67593058609:web:c33fa1fa4fce2932485810"
+};
+if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
+const DB = firebase.database();
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+const TIPO_CFG = {
+  vacaciones: { icon:'🌴', label:'Vacaciones' },
+  baja:       { icon:'🤒', label:'Baja / enfermedad' },
+  asunto:     { icon:'📋', label:'Asunto propio' },
+  otro:       { icon:'💬', label:'Otro' },
+};
+
+const FESTIVOS_NOMBRE = {
+  '01-01':'Año Nuevo','01-06':'Reyes','04-02':'Jue. Santo','04-03':'Vie. Santo',
+  '05-01':'Día Trabajo','06-24':'San Juan','08-14':'Local','08-15':'Asunción','10-12':'Fiesta Nacional',
+  '11-02':'Todos los Santos','12-08':'Inmaculada','12-25':'Navidad'
+};
+
+/* ══════════════════════════════════════════════════════════════════════
+   EQUIPO (solo lectura, para el selector de persona)
+   ══════════════════════════════════════════════════════════════════════ */
+let _WORKERS = [];
+function initWorkersListener() {
+  DB.ref('config/limpieza_equipo').on('value', snap => {
+    const val = snap.val() || {};
+    _WORKERS = Object.values(val).sort((a,b) => (a.orden||0) - (b.orden||0));
+    document.getElementById('equipoWarn').style.display = _WORKERS.length ? 'none' : 'block';
+    const sel = document.getElementById('ausPersona');
+    const prev = sel.value;
+    sel.innerHTML = _WORKERS.map(w => `<option value="${escHtml(w.nombre)}">${escHtml(w.nombre)}</option>`).join('')
+      || '<option value="">— sin personal —</option>';
+    if (_WORKERS.some(w => w.nombre === prev)) sel.value = prev;
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   FESTIVOS — compartidos con Turnos (turnos/festivos)
+   ══════════════════════════════════════════════════════════════════════ */
+let _FESTIVOS = {};
+function initFestivosListener() {
+  DB.ref('turnos/festivos').on('value', snap => {
+    _FESTIVOS = snap.val() || {};
+    renderFestivos();
+  });
+}
+
+function renderFestivos() {
+  const lista = Object.keys(_FESTIVOS).filter(f => _FESTIVOS[f]?.oficial).sort();
+  const el = document.getElementById('festivosList');
+  if (!lista.length) { el.innerHTML = '<span class="empty-note">Sin festivos registrados todavía.</span>'; return; }
+  el.innerHTML = lista.map(f => {
+    const d = new Date(f+'T12:00:00');
+    const mmdd = f.slice(5);
+    const nombre = FESTIVOS_NOMBRE[mmdd] || '';
+    const lbl = d.toLocaleDateString('es-ES', {day:'numeric', month:'short', year:'numeric'});
+    return `<span class="festivo-chip">📅 ${lbl}${nombre?' · '+escHtml(nombre):''}
+      <span class="del" onclick="deleteFestivoOficial('${f}')" title="Quitar">✕</span></span>`;
+  }).join('');
+}
+
+function addFestivoOficial() {
+  const fecha = document.getElementById('nuevoFestivo').value;
+  if (!fecha) { alert('Selecciona una fecha.'); return; }
+  const path = 'turnos/festivos/'+fecha;
+  DB.ref(path+'/oficial').set(true).then(() => {
+    document.getElementById('nuevoFestivo').value = '';
+  });
+}
+
+function deleteFestivoOficial(fecha) {
+  DB.ref('turnos/festivos/'+fecha+'/oficial').remove().then(() => {
+    // si no queda nada más en ese nodo, lo limpiamos entero
+    DB.ref('turnos/festivos/'+fecha).once('value').then(s => {
+      if (!s.exists() || (s.val() && Object.keys(s.val()).length === 0)) {
+        DB.ref('turnos/festivos/'+fecha).remove();
+      }
+    });
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   AUSENCIAS (config/limpieza_ausencias)
+   ══════════════════════════════════════════════════════════════════════ */
+let _AUSENCIAS = {};
+function initAusenciasListener() {
+  DB.ref('config/limpieza_ausencias').on('value', snap => {
+    _AUSENCIAS = snap.val() || {};
+    renderAusencias();
+  });
+}
+
+function fmtFecha(f) {
+  return new Date(f+'T12:00:00').toLocaleDateString('es-ES', {day:'numeric', month:'short'});
+}
+
+function renderAusencias() {
+  const hoy = new Date().toISOString().slice(0,10);
+  const entries = Object.entries(_AUSENCIAS).sort((a,b) => (b[1].desde||'').localeCompare(a[1].desde||''));
+  const el = document.getElementById('ausenciasList');
+  if (!entries.length) { el.innerHTML = '<div class="empty-note">Todavía no hay ausencias registradas.</div>'; return; }
+  el.innerHTML = entries.map(([id, a]) => {
+    const cfg = TIPO_CFG[a.tipo] || TIPO_CFG.otro;
+    const rango = a.desde === a.hasta ? fmtFecha(a.desde) : `${fmtFecha(a.desde)} → ${fmtFecha(a.hasta)}`;
+    const activa = hoy >= a.desde && hoy <= a.hasta;
+    return `<div class="aus-item" style="${activa?'border-color:rgba(255,107,91,0.4);background:var(--coral-soft)':''}">
+      <span class="aus-tipo-badge">${cfg.icon}</span>
+      <div class="aus-info">
+        <div class="aus-nombre">${escHtml(a.trabajador)} ${activa?'· <span style="color:var(--coral-dark)">ausente ahora</span>':''}</div>
+        <div class="aus-detalle">${cfg.label} · ${rango}</div>
+        ${a.nota ? `<div class="aus-nota">"${escHtml(a.nota)}"</div>` : ''}
+      </div>
+      <span class="aus-del" onclick="deleteAusencia('${id}')" title="Eliminar">✕</span>
+    </div>`;
+  }).join('');
+}
+
+function addAusencia() {
+  const trabajador = document.getElementById('ausPersona').value;
+  const tipo = document.getElementById('ausTipo').value;
+  const desde = document.getElementById('ausDesde').value;
+  const hastaRaw = document.getElementById('ausHasta').value;
+  const nota = document.getElementById('ausNota').value.trim();
+
+  if (!trabajador) { alert('Selecciona una persona.'); return; }
+  if (!desde) { alert('Selecciona la fecha de inicio.'); return; }
+  const hasta = hastaRaw || desde;
+  if (hasta < desde) { alert('La fecha de fin debe ser igual o posterior a la de inicio.'); return; }
+
+  const id = 'aus_' + Date.now();
+  DB.ref('config/limpieza_ausencias/'+id).set({ trabajador, tipo, desde, hasta, nota, ts: Date.now() });
+
+  document.getElementById('ausDesde').value = '';
+  document.getElementById('ausHasta').value = '';
+  document.getElementById('ausNota').value = '';
+}
+
+function deleteAusencia(id) {
+  const a = _AUSENCIAS[id];
+  if (!a) return;
+  if (!confirm(`¿Eliminar la ausencia de ${a.trabajador}?`)) return;
+  DB.ref('config/limpieza_ausencias/'+id).remove();
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   LOGIN / APP INIT — misma contraseña que el panel de admin de limpieza
+   ══════════════════════════════════════════════════════════════════════ */
+const PWD_KEY = 'limpiezaPwd';
+
+function intentarLogin(e) {
+  e.preventDefault();
+  const pwd = document.getElementById('loginPwd').value;
+  const stored = localStorage.getItem(PWD_KEY) || 'admin';
+  if (pwd === stored) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appScreen').style.display = 'block';
+    iniciarApp();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+    document.getElementById('loginPwd').value = '';
+    document.getElementById('loginPwd').focus();
+    setTimeout(() => { document.getElementById('loginError').style.display = 'none'; }, 3000);
+  }
+}
+
+function cerrarSesion() {
+  document.getElementById('appScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginPwd').value = '';
+}
+
+function iniciarApp() {
+  initWorkersListener();
+  initFestivosListener();
+  initAusenciasListener();
+  document.getElementById('ausDesde').value = new Date().toISOString().slice(0,10);
+  document.getElementById('nuevoFestivo').value = new Date().toISOString().slice(0,10);
+}
+
+/* Auto-login si hay sesión admin activa de panalcor_inicio */
+(function(){
+  try {
+    const s = JSON.parse(localStorage.getItem('panalcor_session') || 'null');
+    if (s && s.rol === 'admin' && (!s.expires || Date.now() < s.expires)) {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('appScreen').style.display = 'block';
+      iniciarApp();
+    }
+  } catch(e) {}
+})();
+</script>
+</body>
+</html>
