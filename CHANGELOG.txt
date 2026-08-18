@@ -6,6 +6,13 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.399 — 2026-08-18
+  - partes_limpieza.html y limpieza_equipo.html: mismo estilo coral +
+    turquesa que limpieza_ausencias.html (tipografía Baloo 2/Nunito,
+    tarjetas redondeadas, logo propio), para que las tres páginas del
+    módulo de limpieza tengan una identidad visual coherente entre sí y
+    distinta del resto de la app. Sin cambios funcionales.
+
 v1.5.389 — 2026-08-18
   - Nueva página limpieza_ausencias.html: gestión de ausencias del equipo
     de limpieza (vacaciones, bajas, asuntos propios), con estilo propio
