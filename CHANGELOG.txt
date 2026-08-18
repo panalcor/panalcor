@@ -6,6 +6,21 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.409 — 2026-08-18
+  - partes_limpieza.html y limpieza_equipo.html: "modo rápido" de marcado.
+    · Tras marcar la primera casilla, pregunta si vas a marcar más como
+      esa persona. Si aceptas, aparece un aviso flotante ("Marcando como
+      NOMBRE" + botón "Fin de marcado") y las siguientes casillas vacías
+      se marcan directo, sin volver a preguntar quién.
+    · Se apaga al pulsar "Fin de marcado" o solo, por inactividad
+      (por defecto 60s sin marcar nada).
+    · Las casillas ya marcadas siempre abren el selector normal (para
+      reasignar o desmarcar) — el modo rápido solo afecta a las vacías.
+    · El administrador puede cambiar el tiempo de inactividad desde el
+      panel de Equipo en partes_limpieza.html (guardado en
+      config/limpieza_config/modoRapidoSeg, compartido entre ambas
+      páginas).
+
 v1.5.399 — 2026-08-18
   - partes_limpieza.html y limpieza_equipo.html: mismo estilo coral +
     turquesa que limpieza_ausencias.html (tipografía Baloo 2/Nunito,

@@ -145,6 +145,27 @@ table.grid td.cell.col-especial { background: rgba(255,107,91,0.08); }
 
 .overlay { position: fixed; inset: 0; z-index: 400; display: none; }
 .overlay.open { display: block; }
+
+/* ── MODO RÁPIDO ── */
+.qm-prompt { position: fixed; left: 50%; bottom: 100px; transform: translateX(-50%) translateY(20px); z-index: 600;
+  background: var(--paper); border: 2px solid var(--turq-soft); border-radius: 18px; box-shadow: 0 16px 40px rgba(58,51,46,0.18);
+  padding: 14px 18px; display: flex; flex-direction: column; gap: 10px; align-items: center; font-size: 0.88rem;
+  font-weight: 700; color: var(--ink); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s;
+  max-width: 320px; text-align: center; }
+.qm-prompt.open { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+.qm-actions { display: flex; gap: 10px; }
+.qm-btn { font-family: 'Baloo 2', sans-serif; border: none; border-radius: 10px; padding: 8px 14px; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
+.qm-yes { background: var(--turq); color: #fff; }
+.qm-no { background: #f0e6dc; color: var(--ink-dim); }
+
+.mr-banner { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); z-index: 600;
+  background: var(--grad); color: #fff; border-radius: 30px; padding: 10px 10px 10px 18px; display: flex;
+  align-items: center; gap: 12px; font-size: 0.88rem; font-weight: 700; box-shadow: 0 12px 30px rgba(255,107,91,0.35);
+  opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
+.mr-banner.open { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+.mr-end { font-family: 'Baloo 2', sans-serif; background: rgba(255,255,255,0.25); border: none; border-radius: 20px;
+  color: #fff; padding: 7px 14px; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
+.mr-end:hover { background: rgba(255,255,255,0.4); }
 </style>
 </head>
 <body>
@@ -196,6 +217,12 @@ table.grid td.cell.col-especial { background: rgba(255,107,91,0.08); }
       <button class="btn" onclick="addWorker()">➕ Añadir</button>
       <a class="btn" href="limpieza_ausencias.html" style="text-decoration:none">🌴 Ausencias</a>
     </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:12px;border-top:2px dashed var(--line)">
+      <label style="font-size:0.78rem;font-weight:800;color:var(--ink-dim)">⏱️ Modo rápido: fin tras</label>
+      <input type="number" id="modoRapidoSegInput" min="5" max="600" style="width:70px;min-width:70px" class="ctrl-input">
+      <span style="font-size:0.78rem;color:var(--ink-dim);font-weight:700">segundos sin marcar</span>
+      <button class="btn" onclick="guardarModoRapidoSeg()">Guardar</button>
+    </div>
   </div>
 
   <!-- ── SELECTOR DE PARTE ── -->
@@ -225,6 +252,19 @@ table.grid td.cell.col-especial { background: rgba(255,107,91,0.08); }
 
 <div class="overlay" id="overlay" onclick="cerrarPopover()"></div>
 <div class="popover" id="popover"></div>
+
+<div class="qm-prompt" id="qmPrompt">
+  <span>¿Vas a marcar más casillas como <b id="qmPromptName"></b>?</span>
+  <div class="qm-actions">
+    <button class="qm-btn qm-yes" onclick="aceptarModoRapido()">Sí, modo rápido</button>
+    <button class="qm-btn qm-no" onclick="cerrarPreguntaModoRapido()">No, gracias</button>
+  </div>
+</div>
+
+<div class="mr-banner" id="modoRapidoBanner">
+  🖊️ Marcando como <b id="modoRapidoNombre"></b>
+  <button class="mr-end" onclick="finModoRapido()">✅ Fin de marcado</button>
+</div>
 
 <script>
 /* ══════════════════════════════════════════════════════════════════════
@@ -621,12 +661,40 @@ function render() {
    POPOVER: elegir quién ha hecho la tarea
    ══════════════════════════════════════════════════════════════════════ */
 let _popCtx = null;
+let _modoRapido = null;       // nombre de la persona activa en modo rápido, o null
+let _modoRapidoTimer = null;
+let _MODO_RAPIDO_MS = 60000;  // por defecto 60s; configurable abajo
+
+function initModoRapidoConfigAdmin() {
+  DB.ref('config/limpieza_config/modoRapidoSeg').on('value', snap => {
+    const seg = snap.val() || 60;
+    _MODO_RAPIDO_MS = seg * 1000;
+    const input = document.getElementById('modoRapidoSegInput');
+    if (input && document.activeElement !== input) input.value = seg;
+  });
+}
+function guardarModoRapidoSeg() {
+  const seg = parseInt(document.getElementById('modoRapidoSegInput').value, 10);
+  if (!seg || seg < 5) { alert('Pon un número de segundos válido (mínimo 5).'); return; }
+  DB.ref('config/limpieza_config/modoRapidoSeg').set(seg);
+}
+
+function marcarCelda(parteKey, cellKey, trabajador) {
+  DB.ref('config/limpieza_checks/'+parteKey+'/'+periodoActual()+'/'+cellKey).set({ trabajador, ts: Date.now() });
+}
 
 function abrirPopover(ev, parteKey, cellKey) {
   ev.stopPropagation();
-  _popCtx = { parteKey, cellKey };
   const actual = _CHECKS[cellKey];
 
+  // Modo rápido activo + casilla vacía → marcar directo, sin preguntar quién
+  if (_modoRapido && !actual) {
+    marcarCelda(parteKey, cellKey, _modoRapido);
+    reiniciarTimerModoRapido();
+    return;
+  }
+
+  _popCtx = { parteKey, cellKey };
   const pop = document.getElementById('popover');
   let html = `<div class="popover-title">${actual ? 'Cambiar a…' : '¿Quién lo ha hecho?'}</div>`;
   if (!_WORKERS.length) {
@@ -659,8 +727,10 @@ function cerrarPopover() {
 function marcar(trabajador) {
   if (!_popCtx) return;
   const { parteKey, cellKey } = _popCtx;
-  DB.ref('config/limpieza_checks/'+parteKey+'/'+periodoActual()+'/'+cellKey).set({ trabajador, ts: Date.now() });
+  const eraVacia = !_CHECKS[cellKey];
+  marcarCelda(parteKey, cellKey, trabajador);
   cerrarPopover();
+  if (eraVacia && !_modoRapido) mostrarPreguntaModoRapido(trabajador);
 }
 
 function desmarcar() {
@@ -668,6 +738,39 @@ function desmarcar() {
   const { parteKey, cellKey } = _popCtx;
   DB.ref('config/limpieza_checks/'+parteKey+'/'+periodoActual()+'/'+cellKey).remove();
   cerrarPopover();
+}
+
+/* ── Modo rápido: tras la primera marca, pregunta si va a marcar más ── */
+function mostrarPreguntaModoRapido(trabajador) {
+  const el = document.getElementById('qmPrompt');
+  document.getElementById('qmPromptName').textContent = trabajador;
+  el.dataset.trabajador = trabajador;
+  el.classList.add('open');
+  clearTimeout(el._autoHide);
+  el._autoHide = setTimeout(cerrarPreguntaModoRapido, 6000);
+}
+function cerrarPreguntaModoRapido() {
+  document.getElementById('qmPrompt').classList.remove('open');
+}
+function aceptarModoRapido() {
+  const trabajador = document.getElementById('qmPrompt').dataset.trabajador;
+  cerrarPreguntaModoRapido();
+  activarModoRapido(trabajador);
+}
+function activarModoRapido(trabajador) {
+  _modoRapido = trabajador;
+  document.getElementById('modoRapidoNombre').textContent = trabajador;
+  document.getElementById('modoRapidoBanner').classList.add('open');
+  reiniciarTimerModoRapido();
+}
+function reiniciarTimerModoRapido() {
+  clearTimeout(_modoRapidoTimer);
+  _modoRapidoTimer = setTimeout(finModoRapido, _MODO_RAPIDO_MS);
+}
+function finModoRapido() {
+  _modoRapido = null;
+  clearTimeout(_modoRapidoTimer);
+  document.getElementById('modoRapidoBanner').classList.remove('open');
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -884,6 +987,7 @@ function iniciarApp() {
   initWorkersListener();
   initFestivosListener();
   initAusenciasBanner();
+  initModoRapidoConfigAdmin();
   poblarSelectorPartes();
   document.getElementById('selMes').value = new Date().toISOString().slice(0,7);
   document.getElementById('selAnio').value = new Date().getFullYear();
