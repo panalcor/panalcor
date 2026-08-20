@@ -421,6 +421,10 @@ if('serviceWorker' in navigator){
 <!-- ══════════ PANEL HISTORIAL ══════════ -->
 <div class="panel" id="panel-historial">
   <div style="font-family:'Oswald',sans-serif;font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:12px">📋 Registros guardados</div>
+  <button type="button" onclick="recuperarPartesLocales()"
+    style="margin-bottom:14px;padding:9px 16px;border-radius:8px;background:rgba(52,152,219,0.12);border:1px solid rgba(52,152,219,0.4);color:#74b9ff;font-family:'Barlow',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer">
+    🔄 Sincronizar partes de este dispositivo a Firebase
+  </button>
   <div id="historialContent"></div>
 </div>
 
@@ -946,6 +950,42 @@ function guardarChecks(){
   renderTasks();
 
   checkTurnoWarning();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RECUPERAR PARTES LOCALES A FIREBASE (uso puntual)
+   guardarChecks() llevaba tiempo fallando al sincronizar (usaba
+   firebase.database() en vez de _DB_MEC) — los partes se guardaron
+   bien en este dispositivo pero nunca llegaron a Firebase. Esta
+   función sube todo lo que haya en localStorage de este navegador.
+   Ejecutar una vez desde la consola: recuperarPartesLocales()
+═══════════════════════════════════════════════════════════════ */
+async function recuperarPartesLocales(){
+  const keys = Object.keys(localStorage).filter(k=>k.startsWith('turno_'));
+  if(!keys.length){ console.log('No hay partes locales en este navegador.'); return; }
+
+  const updates = {};
+  let n = 0;
+  keys.forEach(k=>{
+    let registro;
+    try{ registro = JSON.parse(localStorage.getItem(k)); }catch(e){ return; }
+    if(!registro || !registro.fecha || !registro.turno) return;
+    const ts = k.split('_').pop();
+    const fbKey = registro.fecha+'_'+registro.turno.replace(/[^A-Z0-9]/g,'_')+'_'+(registro.mecanico||'').replace(/[^A-Za-z0-9]/g,'_')+'_'+ts;
+    updates[fbKey] = Object.assign({}, registro, { fecha_turno: registro.fecha+'|'+registro.turno });
+    n++;
+  });
+
+  if(!n){ console.log('Ningún parte local con formato válido.'); return; }
+
+  try{
+    await _DB_MEC.ref('registros_turno').update(updates);
+    console.log('✅ Recuperados '+n+' partes locales a Firebase.');
+    alert('✅ Recuperados '+n+' partes de mantenimiento diario a Firebase.');
+  }catch(e){
+    console.error(e);
+    alert('⚠️ Error al recuperar: '+e.message);
+  }
 }
 
 function renderHistorial(){

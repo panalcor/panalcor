@@ -6,6 +6,14 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.479 — 2026-08-20
+  - mecanicos.html → pestaña Historial: nuevo botón "🔄 Sincronizar
+    partes de este dispositivo a Firebase". Sube todos los partes de
+    mantenimiento diario guardados en localStorage de ese navegador
+    (los que nunca llegaron a Firebase por el bug de guardarChecks())
+    a registros_turno. Recupera el histórico real de cada dispositivo
+    donde se pulse — no hace falta tocar nada más.
+
 v1.5.469 — 2026-08-20
   - calendario.html: junto al número de cada día (ya pasado) se muestra
     "(NMT)" — Noche/Mañana/Tarde del mantenimiento diario, en verde si
