@@ -6,6 +6,15 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.449 — 2026-08-20
+  - calendario.html: corregido, no mostraba nada. Leía de "asignaciones/{mes}",
+    una ruta de Firebase que ya no escribe nadie en el sistema actual. Ahora
+    lee de preventivo_plan/{mes} + preventivo_completado/{mes} (las rutas
+    reales que usan preventivo.html y mis_tareas.html), agrupando cada tarea
+    por su fecha prevista u ocurrida en vez de la heurística antigua por
+    frecuencia. También distingue las tareas "No disponible" (ausencia) con
+    su propio punto morado, excluidas del % de cumplimiento.
+
 v1.5.439 — 2026-08-20
   - Cambio de política de reparto en el plan preventivo: las máquinas ya
     no se reparten proporcionalmente a los días disponibles de cada

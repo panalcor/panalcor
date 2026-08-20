@@ -76,6 +76,7 @@ body{background:var(--navy);color:var(--white);font-family:'Barlow',sans-serif;m
 .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .dot-done{background:var(--green)}
 .dot-pend{background:rgba(243,156,18,.7)}
+.dot-ausente{background:#9b59b6}
 .day-count{font-size:.62rem;color:rgba(255,255,255,.32);margin-top:4px;line-height:1.2}
 
 /* ── PANEL LATERAL / DETALLE ── */
@@ -212,6 +213,7 @@ if('serviceWorker' in navigator){
     <div class="legend">
       <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div> Tarea completada</div>
       <div class="leg-item"><div class="leg-dot" style="background:rgba(243,156,18,.7)"></div> Tarea pendiente</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#9b59b6"></div> No disponible (ausencia)</div>
       <div class="leg-item"><div class="leg-dot" style="background:rgba(201,162,39,.6);border:1px solid var(--gold)"></div> Hoy</div>
     </div>
 
@@ -290,7 +292,11 @@ function cargarMecanicos(){
   });
 }
 
-/* ══ CARGAR MES ══ */
+/* ══ CARGAR MES ══
+   El plan y lo realizado viven en preventivo_plan/{mes} (tareas con sus
+   fechas previstas por ocurrencia) y preventivo_completado/{mes} (una
+   entrada por tarea+ocurrencia ya marcada). "asignaciones/{mes}" es una
+   ruta antigua que ya no escribe nadie en el sistema actual. */
 function cargarMes(){
   var parts = _mesActual.split('-');
   document.getElementById('navLabel').textContent = _MESES[parseInt(parts[1])-1]+' '+parts[0];
@@ -298,11 +304,36 @@ function cargarMes(){
   document.getElementById('calGrid').innerHTML =
     '<div class="loading" style="grid-column:1/-1"><div class="ico">⏳</div><p>Cargando tareas...</p></div>';
 
-  DB.ref('asignaciones/'+_mesActual).once('value').then(function(snap){
-    var val = snap.val() || {};
-    _tareasRaw = Object.keys(val).map(function(k){
-      return Object.assign({_id:k}, val[k]);
+  Promise.all([
+    DB.ref('preventivo_plan/'+_mesActual).once('value'),
+    DB.ref('preventivo_completado/'+_mesActual).once('value')
+  ]).then(function(snaps){
+    var planTareas = (snaps[0].val()||{}).tareas || [];
+    var compData   = snaps[1].val() || {};
+    var out = [];
+    planTareas.forEach(function(t){
+      if(t.frecuencia === 'DIARIO') return; // gestionado aparte, en Mantenimiento diario
+      var fechas = t.fechas || {};
+      Object.keys(fechas).forEach(function(wi){
+        var fechaPlan = fechas[wi];
+        if(typeof fechaPlan !== 'string') return;
+        var comp = compData[t.id+'_'+wi] || null;
+        var hora = comp && comp.ts ? new Date(comp.ts).toTimeString().substring(0,5) : '';
+        out.push({
+          _id: t.id+'_'+wi,
+          maquina: t.maquina||'',
+          tarea: t.tarea||'',
+          frecuencia: t.frecuencia||'',
+          mecanico: t.mecanico||'',
+          fechaPlan: fechaPlan,
+          hecho: !!(comp && !comp.noDisponible),
+          noDisponible: !!(comp && comp.noDisponible),
+          retraso: !!(comp && comp.retraso),
+          hechoEn: (comp && !comp.noDisponible) ? (comp.fechaReal||fechaPlan)+'T'+(hora||'00:00') : null
+        });
+      });
     });
+    _tareasRaw = out;
     aplicarFiltro();
   }).catch(function(){
     document.getElementById('calGrid').innerHTML =
@@ -327,7 +358,9 @@ function aplicarFiltro(){
 
 /* ══ STATS ══ */
 function actualizarStats(){
-  var total  = _tareas.length;
+  // "No disponible" (ausencia) se excluye del total para no distorsionar el % de cumplimiento
+  var ausentes = _tareas.filter(function(t){ return t.noDisponible; }).length;
+  var total  = _tareas.length - ausentes;
   var hechas = _tareas.filter(function(t){ return t.hecho; }).length;
   var pend   = total - hechas;
   var pct    = total ? Math.round(hechas/total*100) : 0;
@@ -349,26 +382,19 @@ function renderCalendario(){
   var hoy     = new Date();
   var hoyISO  = isoDate(hoy);
 
-  // Agrupar tareas por día en que se hicieron
+  // Agrupar tareas por su fecha real (hechas) o prevista (pendientes/no disponibles)
   var donePorDia  = {}; // {ISO: [tareas]}
-  var pendPorDia  = {}; // por frecuencia distribuidas
+  var pendPorDia  = {}; // pendientes + no disponibles
 
   _tareas.forEach(function(t){
     if(t.hecho && t.hechoEn){
       var d = t.hechoEn.substring(0,10); // YYYY-MM-DD
       if(!donePorDia[d]) donePorDia[d] = [];
       donePorDia[d].push(t);
+    } else if(t.fechaPlan){
+      if(!pendPorDia[t.fechaPlan]) pendPorDia[t.fechaPlan] = [];
+      pendPorDia[t.fechaPlan].push(t);
     }
-  });
-
-  // Distribuir pendientes por días según frecuencia
-  var pendientes = _tareas.filter(function(t){ return !t.hecho; });
-  pendientes.forEach(function(t){
-    var dias = diasPorFrecuencia(t.frecuencia, yr, mo);
-    dias.forEach(function(iso){
-      if(!pendPorDia[iso]) pendPorDia[iso] = [];
-      pendPorDia[iso].push(t);
-    });
   });
 
   // Generar celdas
@@ -386,26 +412,30 @@ function renderCalendario(){
     var isWE = (dow===0||dow===6);
     var isHoy = iso===hoyISO;
     var done  = donePorDia[iso]||[];
-    var pend  = pendPorDia[iso]||[];
-    var total = done.length+pend.length;
+    var pendAll = pendPorDia[iso]||[];
+    var ausente = pendAll.filter(function(t){ return t.noDisponible; });
+    var pend    = pendAll.filter(function(t){ return !t.noDisponible; });
+    var total = done.length+pend.length+ausente.length;
 
     var cls = 'day-cell';
     if(isWE) cls += ' weekend';
     if(isHoy) cls += ' today';
     if(total>0) cls += ' has-tasks';
     if(done.length>0) cls += ' has-done';
-    if(done.length>0 && pend.length===0 && total>0) cls += ' all-done';
+    if(done.length>0 && pend.length===0 && ausente.length===0 && total>0) cls += ' all-done';
 
     // Puntos (máx 8)
     var dots = '';
     var shown = 0;
     done.slice(0,5).forEach(function(){ if(shown<8){dots+='<div class="dot dot-done"></div>';shown++;} });
     pend.slice(0,5).forEach(function(){ if(shown<8){dots+='<div class="dot dot-pend"></div>';shown++;} });
+    ausente.slice(0,3).forEach(function(){ if(shown<8){dots+='<div class="dot dot-ausente"></div>';shown++;} });
     var extra = total-shown;
 
     var countTxt = '';
     if(done.length) countTxt += done.length+' ✓ ';
-    if(pend.length) countTxt += pend.length+' pendiente'+(pend.length>1?'s':'');
+    if(pend.length) countTxt += pend.length+' pendiente'+(pend.length>1?'s':'')+' ';
+    if(ausente.length) countTxt += ausente.length+' 🏖️';
 
     cells += '<div class="'+cls+'" onclick="mostrarDia(\''+iso+'\',this)">'
       +'<div class="day-num'+(isHoy?' today-label':'')+'">'+d+(isHoy?' ●':'')+'</div>'
@@ -420,46 +450,6 @@ function renderCalendario(){
   for(var i=0; i<rem; i++) cells += '<div class="day-cell other-month"></div>';
 
   document.getElementById('calGrid').innerHTML = cells;
-}
-
-/* ══ FRECUENCIA → DÍAS ══
-   Devuelve array de ISO dates dentro del mes dadas para esa frecuencia */
-function diasPorFrecuencia(freq, yr, mo){
-  var ultimo = new Date(yr, mo, 0).getDate();
-  var days   = [];
-
-  if(freq === 'DIARIO'){
-    for(var d=1; d<=ultimo; d++){
-      var dow = new Date(yr,mo-1,d).getDay();
-      // Solo días laborables (lun-sab)
-      if(dow!==0) days.push(mkISO(yr,mo,d));
-    }
-  } else if(freq === 'SEMANAL'){
-    // Primer lunes de cada semana del mes
-    for(var d=1; d<=ultimo; d++){
-      var dow = new Date(yr,mo-1,d).getDay();
-      if(dow===1) days.push(mkISO(yr,mo,d)); // cada lunes
-    }
-    if(!days.length) days.push(mkISO(yr,mo,1)); // fallback
-  } else if(freq === 'QUINCENAL'){
-    days.push(mkISO(yr,mo,1));
-    days.push(mkISO(yr,mo,Math.min(16,ultimo)));
-  } else if(freq === 'MENSUAL'){
-    // Primer día laborable del mes
-    for(var d=1; d<=ultimo; d++){
-      var dow = new Date(yr,mo-1,d).getDay();
-      if(dow!==0&&dow!==6){ days.push(mkISO(yr,mo,d)); break; }
-    }
-    if(!days.length) days.push(mkISO(yr,mo,1));
-  } else {
-    // TRIMESTRAL, SEMESTRAL, ANUAL → primer día del mes
-    days.push(mkISO(yr,mo,1));
-  }
-  return days;
-}
-
-function mkISO(yr,mo,d){
-  return yr+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0');
 }
 
 /* ══ MOSTRAR DÍA ══ */
@@ -479,16 +469,16 @@ function mostrarDia(iso, cellEl){
   var fecha = parts[2]+'/'+parts[1]+'/'+parts[0];
   document.getElementById('detailHeader').textContent = '📅 '+fecha;
 
-  // Tareas completadas ese día
+  // Tareas completadas ese día (fecha real)
   var done = _tareas.filter(function(t){
     return t.hecho && t.hechoEn && t.hechoEn.substring(0,10)===iso;
   });
-  // Tareas pendientes cuya frecuencia cae en ese día
-  var yr = parseInt(parts[0]), mo = parseInt(parts[1]);
-  var pend = _tareas.filter(function(t){
-    if(t.hecho) return false;
-    return diasPorFrecuencia(t.frecuencia, yr, mo).indexOf(iso)!==-1;
+  // Tareas previstas ese día (fecha planificada) que aún no están hechas
+  var pendTodas = _tareas.filter(function(t){
+    return !t.hecho && t.fechaPlan===iso;
   });
+  var ausente = pendTodas.filter(function(t){ return t.noDisponible; });
+  var pend    = pendTodas.filter(function(t){ return !t.noDisponible; });
 
   var html = '';
 
@@ -496,18 +486,16 @@ function mostrarDia(iso, cellEl){
     html += '<div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--green);margin-bottom:8px">✅ Completadas ('+done.length+')</div>';
     html += done.map(function(t){
       var hora = t.hechoEn ? t.hechoEn.substring(11,16) : '';
-      var turnoIco = {MANANA:'🌅',TARDE:'🌇',NOCHE:'🌙'}[t.turno]||'';
       return '<div class="task-item">'
         +'<div class="task-top">'
           +'<div class="task-dot" style="background:var(--green)"></div>'
           +'<div class="task-info">'
-            +'<div class="task-name">'+esc(t.instancia||t.maquina||'—')+'</div>'
+            +'<div class="task-name">'+esc(t.maquina||'—')+'</div>'
             +'<div class="task-meta">'+esc(t.tarea||'—')+'</div>'
-            +'<div class="task-done-info">'+turnoIco+' '+esc(t.turno||'')+(hora?' · '+hora:'')+(t.mecanico?' · '+esc(t.mecanico):'')+'</div>'
+            +'<div class="task-done-info">'+(hora?hora:'')+(t.mecanico?(hora?' · ':'')+esc(t.mecanico):'')+(t.retraso?' · retraso':'')+'</div>'
           +'</div>'
           +'<span class="freq-badge">'+esc(_DIAS_FREQ[t.frecuencia]||t.frecuencia||'')+'</span>'
         +'</div>'
-        +(t.notas?'<div style="font-size:.72rem;color:rgba(255,255,255,.35);margin-top:4px;padding-left:17px">📝 '+esc(t.notas)+'</div>':'')
       +'</div>';
     }).join('');
   }
@@ -519,7 +507,7 @@ function mostrarDia(iso, cellEl){
         +'<div class="task-top">'
           +'<div class="task-dot" style="background:rgba(243,156,18,.7)"></div>'
           +'<div class="task-info">'
-            +'<div class="task-name">'+esc(t.instancia||t.maquina||'—')+'</div>'
+            +'<div class="task-name">'+esc(t.maquina||'—')+'</div>'
             +'<div class="task-meta">'+esc(t.tarea||'—')+(t.mecanico?' · 👷 '+esc(t.mecanico):'')+'</div>'
           +'</div>'
           +'<span class="freq-badge">'+esc(_DIAS_FREQ[t.frecuencia]||t.frecuencia||'')+'</span>'
@@ -528,7 +516,23 @@ function mostrarDia(iso, cellEl){
     }).join('');
   }
 
-  if(!done.length && !pend.length){
+  if(ausente.length){
+    html += '<div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#c39bd3;margin-top:12px;margin-bottom:8px">🏖️ No disponible ('+ausente.length+')</div>';
+    html += ausente.map(function(t){
+      return '<div class="task-item">'
+        +'<div class="task-top">'
+          +'<div class="task-dot" style="background:#9b59b6"></div>'
+          +'<div class="task-info">'
+            +'<div class="task-name">'+esc(t.maquina||'—')+'</div>'
+            +'<div class="task-meta">'+esc(t.tarea||'—')+(t.mecanico?' · 👷 '+esc(t.mecanico):'')+'</div>'
+          +'</div>'
+          +'<span class="freq-badge">'+esc(_DIAS_FREQ[t.frecuencia]||t.frecuencia||'')+'</span>'
+        +'</div>'
+      +'</div>';
+    }).join('');
+  }
+
+  if(!done.length && !pend.length && !ausente.length){
     html = '<div class="det-empty">Sin tareas este día.</div>';
   }
 
@@ -537,7 +541,8 @@ function mostrarDia(iso, cellEl){
 
 /* ══ PENDIENTES ══ */
 function renderPendientes(){
-  var pend = _tareas.filter(function(t){ return !t.hecho; });
+  // "No disponible" (ausencia) no se lista aquí como pendiente real
+  var pend = _tareas.filter(function(t){ return !t.hecho && !t.noDisponible; });
   document.getElementById('pendCount').textContent = pend.length;
   if(!pend.length){ document.getElementById('pendGrid').innerHTML=''; return; }
 
@@ -546,17 +551,16 @@ function renderPendientes(){
   pend.sort(function(a,b){
     return (orden[a.frecuencia]||9)-(orden[b.frecuencia]||9)
         || (a.mecanico||'').localeCompare(b.mecanico||'')
-        || (a.instancia||a.maquina||'').localeCompare(b.instancia||b.maquina||'');
+        || (a.maquina||'').localeCompare(b.maquina||'');
   });
 
   document.getElementById('pendGrid').innerHTML = pend.map(function(t){
     return '<div class="pend-card">'
-      +'<div class="pc-maq">'+esc(t.instancia||t.maquina||'—')+'</div>'
+      +'<div class="pc-maq">'+esc(t.maquina||'—')+'</div>'
       +'<div class="pc-tarea">'+esc(t.tarea||'—')+'</div>'
       +'<div class="pc-meta">'
         +'<span class="freq-badge">'+esc(_DIAS_FREQ[t.frecuencia]||t.frecuencia||'')+'</span>'
         +(t.mecanico?'<span class="pc-mec">👷 '+esc(t.mecanico)+'</span>':'')
-        +(t.subtipo?'<span class="pc-mec">'+esc(t.subtipo)+'</span>':'')
       +'</div>'
     +'</div>';
   }).join('');
