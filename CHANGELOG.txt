@@ -6,6 +6,16 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.489 — 2026-08-20
+  - calendario.html: las tareas marcadas por "Rellenar mes vencido" u
+    otros rellenados automáticos (autoRelleno:true) ya no muestran la
+    hora en el detalle del día — esa hora era la del clic del admin al
+    rellenar, no la real, y podía verse algo absurdo como "0:14" en
+    tareas de hace semanas. Ahora se muestra "automático" en su lugar.
+    Las tareas marcadas hechas de verdad por un mecánico siguen
+    mostrando su hora real sin cambios. El dato se sigue guardando en
+    Firebase tal cual, solo se deja de mostrar cuando no es fiable.
+
 v1.5.479 — 2026-08-20
   - mecanicos.html → pestaña Historial: nuevo botón "🔄 Sincronizar
     partes de este dispositivo a Firebase". Sube todos los partes de

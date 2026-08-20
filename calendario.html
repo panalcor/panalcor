@@ -401,7 +401,10 @@ function cargarMes(){
         var fechaReal = fechas[wi];
         var tieneFecha = typeof fechaReal === 'string';
         var comp = compData[t.id+'_'+wi] || null;
-        var hora = comp && comp.ts ? new Date(comp.ts).toTimeString().substring(0,5) : '';
+        // La hora de un autorrelleno/rellenado a posteriori es la del clic, no la real
+        // del turno — no es fiable, así que no se muestra (se sigue guardando en Firebase).
+        var esAutoRelleno = !!(comp && comp.autoRelleno);
+        var hora = (comp && comp.ts && !esAutoRelleno) ? new Date(comp.ts).toTimeString().substring(0,5) : '';
         var hecho = !!(comp && !comp.noDisponible);
 
         var diasPrevistos;
@@ -425,7 +428,8 @@ function cargarMes(){
           hecho: hecho,
           noDisponible: !!(comp && comp.noDisponible),
           retraso: !!(comp && comp.retraso),
-          hechoEn: hecho ? (comp.fechaReal||fechaReal)+'T'+(hora||'00:00') : null
+          autoRelleno: esAutoRelleno,
+          hechoEn: hecho ? (comp.fechaReal||fechaReal)+(hora?'T'+hora:'') : null
         });
       }
     });
@@ -590,7 +594,7 @@ function mostrarDia(iso, cellEl){
           +'<div class="task-info">'
             +'<div class="task-name">'+esc(t.maquina||'—')+'</div>'
             +'<div class="task-meta">'+esc(t.tarea||'—')+'</div>'
-            +'<div class="task-done-info">'+(hora?hora:'')+(t.mecanico?(hora?' · ':'')+esc(t.mecanico):'')+(t.retraso?' · retraso':'')+'</div>'
+            +'<div class="task-done-info">'+(hora?hora:(t.autoRelleno?'<i>automático</i>':''))+(t.mecanico?((hora||t.autoRelleno)?' · ':'')+esc(t.mecanico):'')+(t.retraso?' · retraso':'')+'</div>'
           +'</div>'
           +'<span class="freq-badge">'+esc(_DIAS_FREQ[t.frecuencia]||t.frecuencia||'')+'</span>'
         +'</div>'
