@@ -155,8 +155,11 @@ header {
 .btn-mark-pend { background:rgba(0,184,148,.12); border-color:rgba(0,184,148,.4); color:var(--green); }
 .btn-mark-done { background:rgba(0,184,148,.06); border-color:rgba(0,184,148,.2); color:rgba(0,184,148,.6); font-size:.72rem; }
 .btn-mark-auto { background:rgba(116,185,255,.1); border-color:rgba(116,185,255,.3); color:var(--blue); }
+.btn-mark-ausente { background:rgba(155,89,182,.12); border-color:rgba(155,89,182,.4); color:#c39bd3; }
+.btn-mark-ausente-done { background:rgba(155,89,182,.06); border-color:rgba(155,89,182,.2); color:rgba(195,155,211,.7); font-size:.72rem; }
 .done-tag   { font-size:.72rem; color:var(--green); font-weight:700; }
 .fuera-tag  { font-size:.7rem; background:var(--orange); color:#fff; border-radius:4px; padding:1px 6px; font-weight:700; }
+.ausente-tag { font-size:.7rem; background:#9b59b6; color:#fff; border-radius:4px; padding:1px 6px; font-weight:700; }
 
 /* ══ MODO TAREA ══ */
 .tarea-list { display:flex; flex-direction:column; gap:6px; padding:0 12px; }
@@ -563,7 +566,11 @@ function renderPorTarea(tareas, shared, mk){
         const lbl=slotLabel(t,wi,slots.length);
         const maqLbl=escH(t.maquina)+(lbl?` <span style="color:var(--text-dim);font-size:.72rem">(${lbl})</span>`:'');
         let btnHtml='';
-        if(hecha){
+        if(comp&&comp.noDisponible){
+          btnHtml=`<span class="ausente-tag">🏖️ NO DISPONIBLE</span><button class="btn-mark btn-mark-done"
+            onclick="marcarHecha(${t.id},'${wi}','${mesKey(curMes.year,curMes.month)}',this,document.getElementById('${inputId}').value)">
+            ✓</button>`;
+        } else if(hecha){
           const tag=comp.retraso?`<span class="fuera-tag">RETRASO</span>`:`<span class="done-tag">✅</span>`;
           btnHtml=`${tag}<button class="btn-mark btn-mark-done"
             onclick="marcarHecha(${t.id},'${wi}','${mesKey(curMes.year,curMes.month)}',this,document.getElementById('${inputId}').value)">
@@ -571,7 +578,10 @@ function renderPorTarea(tareas, shared, mk){
         } else {
           btnHtml=`<button class="btn-mark btn-mark-pend"
             onclick="marcarHecha(${t.id},'${wi}','${mesKey(curMes.year,curMes.month)}',this,document.getElementById('${inputId}').value)">
-            ✓ Hecha</button>`;
+            ✓ Hecha</button>
+            <button class="btn-mark btn-mark-ausente"
+            onclick="marcarNoDisponible(${t.id},'${wi}','${mesKey(curMes.year,curMes.month)}',this)">
+            🏖️ No disponible</button>`;
         }
         maqRows+=`<div class="tarea-maq-row${hecha?' done':''}">
           <span class="tarea-maq-nm">${maqLbl}</span>
@@ -652,16 +662,22 @@ function taskRowHtml(t, mk){
     const inputId=`r_${t.id}_${wi}`;
     const lbl=slotLabel(t,wi,slots.length);
     let btnHtml='';
-    if(comp){
+    if(comp&&comp.noDisponible){
+      btnHtml=`<span class="ausente-tag">🏖️ NO DISPONIBLE</span><button class="btn-mark btn-mark-done"
+        onclick="marcarHecha(${t.id},'${wi}','${mk}',this,document.getElementById('${inputId}').value)">
+        ✓</button>`;
+    } else if(comp){
       const tag=comp.retraso?`<span class="fuera-tag">RETRASO</span>`:`<span class="done-tag">✅</span>`;
       btnHtml=`${tag}<button class="btn-mark btn-mark-done"
         onclick="marcarHecha(${t.id},'${wi}','${mk}',this,document.getElementById('${inputId}').value)">
         ✏️</button>`;
-    } else if(false){ // espacio para autoRelleno si aplica
     } else {
       btnHtml=`<button class="btn-mark btn-mark-pend"
         onclick="marcarHecha(${t.id},'${wi}','${mk}',this,document.getElementById('${inputId}').value)">
-        ✓ Hecha</button>`;
+        ✓ Hecha</button>
+        <button class="btn-mark btn-mark-ausente"
+        onclick="marcarNoDisponible(${t.id},'${wi}','${mk}',this)">
+        🏖️ No disponible</button>`;
     }
     slotsHtml+=`<div class="slot-line">
       ${lbl?`<span class="slot-lbl">${lbl}</span>`:''}
@@ -691,14 +707,21 @@ function sharedCardHtml(t, mk){
     const comp=_comp[clave];
     const inputId=`sh_${t.id}_${wi}`;
     const hecha=!!(comp&&!comp.autoRelleno);
+    let accionHtml;
+    if(comp&&comp.noDisponible){
+      accionHtml=`<span class="ausente-tag">🏖️ NO DISPONIBLE</span>
+        <button class="btn-mark btn-mark-done" onclick="marcarHecha(${t.id},'${wi}','${mk}',this,document.getElementById('${inputId}').value)">✓</button>`;
+    } else if(hecha){
+      accionHtml=`<span class="done-tag">✅ Hecha</span>
+        <button class="btn-mark btn-mark-done" onclick="marcarHecha(${t.id},'${wi}','${mk}',this,document.getElementById('${inputId}').value)">✏️</button>`;
+    } else {
+      accionHtml=`<button class="btn-mark btn-mark-pend" onclick="marcarHecha(${t.id},'${wi}','${mk}',this,document.getElementById('${inputId}').value)">✓ La hice yo</button>
+        <button class="btn-mark btn-mark-ausente" onclick="marcarNoDisponible(${t.id},'${wi}','${mk}',this)">🏖️ No disponible</button>`;
+    }
     slotsHtml+=`<div class="slot-line" style="margin-top:5px">
       <span class="slot-fecha">📅 ${fmtDs(fechaPlan)}</span>
       <input type="date" id="${inputId}" value="${comp?comp.fechaReal||fechaPlan:fechaPlan}" class="inp-fecha">
-      ${hecha
-        ?`<span class="done-tag">✅ Hecha</span>
-           <button class="btn-mark btn-mark-done" onclick="marcarHecha(${t.id},'${wi}','${mk}',this,document.getElementById('${inputId}').value)">✏️</button>`
-        :`<button class="btn-mark btn-mark-pend" onclick="marcarHecha(${t.id},'${wi}','${mk}',this,document.getElementById('${inputId}').value)">✓ La hice yo</button>`
-      }
+      ${accionHtml}
     </div>`;
   });
   if(!slots.length) slotsHtml=`<div style="font-size:.75rem;color:var(--text-dim);margin-top:4px">Sin fecha asignada</div>`;
@@ -723,6 +746,24 @@ async function marcarHecha(taskId, wi, mk, btn, fechaElegida){
     });
   } catch(e){
     btn.disabled=false; btn.textContent='✓ Hecha';
+    alert('⚠️ Error: '+e.message);
+  }
+}
+
+/* ═══════════════════════════════════
+   MARCAR NO DISPONIBLE (ausencia)
+   No cuenta como hecha ni como incumplida en las estadísticas de
+   cumplimiento — queda como bloque aparte para no penalizar al
+   mecánico ausente ni desvirtuar el % del resto del equipo.
+═══════════════════════════════════ */
+async function marcarNoDisponible(taskId, wi, mk, btn){
+  btn.disabled=true; btn.textContent='⏳';
+  try {
+    await _DB.ref(`preventivo_completado/${mk}/${taskId}_${wi}`).set({
+      hecho:false, noDisponible:true, motivo:'ausencia', mecanico:mecNombre, ts:Date.now()
+    });
+  } catch(e){
+    btn.disabled=false; btn.textContent='🏖️ No disponible';
     alert('⚠️ Error: '+e.message);
   }
 }

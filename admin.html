@@ -3419,6 +3419,7 @@ function _abrirInformePrev(mes, mesLabel, year, month, tareas, compData, secs){
   }
   function estadoBadge(comp){
     if(!comp) return '<span style="color:#aaa">— PENDIENTE</span>';
+    if(comp.noDisponible) return '<span style="color:#9b59b6">🏖 NO DISPONIBLE</span>';
     if(comp.autoRelleno){
       return comp.retraso
         ? '<span style="color:#e67e22">⚠ AUTO·RETRASO '+fmtD(comp.fechaReal)+'</span>'
@@ -3429,17 +3430,23 @@ function _abrirInformePrev(mes, mesLabel, year, month, tareas, compData, secs){
 
   // ── construir slots planos ─────────────────────────────────
   // cada slot = { tarea, maquina, frecuencia, mecanico, wi, fechaPlan, comp }
+  // Las tareas marcadas "No disponible" (ausencia) se excluyen aquí mismo, así
+  // ningún desglose posterior (mecánico/máquina/semana/día) las cuenta como
+  // pendientes ni penaliza el % de cumplimiento de nadie.
   var slots = [];
+  var noDisponibleCount = 0;
   tareas.forEach(function(t){
     var fechas = t.fechas || {};
     Object.keys(fechas).forEach(function(wi){
       var fp = fechas[wi];
       if(typeof fp !== 'string') return;
       var clave = t.id+'_'+wi;
+      var comp = compData[clave]||null;
+      if(comp && comp.noDisponible){ noDisponibleCount++; return; }
       slots.push({
         id: t.id, wi: wi, tarea: t.tarea||'', maquina: t.maquina||'SIN MÁQUINA',
         frecuencia: (t.frecuencia||'').toUpperCase(), mecanico: t.mecanico||'SIN ASIGNAR',
-        fechaPlan: fp, comp: compData[clave]||null
+        fechaPlan: fp, comp: comp
       });
     });
   });
@@ -3461,7 +3468,7 @@ function _abrirInformePrev(mes, mesLabel, year, month, tareas, compData, secs){
     +'.co{font-size:17px;font-weight:900;color:#0d1b2a;letter-spacing:.04em}'
     +'.ct{font-size:11px;font-weight:700;color:#555;margin-top:2px}'
     +'.dm{text-align:right;font-size:9px;color:#888;line-height:1.8}'
-    +'.kg{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px}'
+    +'.kg{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:12px}'
     +'.kb{border:1px solid #ddd;border-radius:6px;padding:8px;text-align:center}'
     +'.kn{font-size:20px;font-weight:900;line-height:1}'
     +'.kl{font-size:8px;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-top:2px}'
@@ -3488,6 +3495,7 @@ function _abrirInformePrev(mes, mesLabel, year, month, tareas, compData, secs){
       +'<div class="kb"><div class="kn" style="color:#1e8449">'+hechos+'</div><div class="kl">Realizados</div></div>'
       +'<div class="kb"><div class="kn" style="color:#c0392b">'+pendientes+'</div><div class="kl">Pendientes</div></div>'
       +'<div class="kb"><div class="kn" style="color:#e67e22">'+retrasos+'</div><div class="kl">Con retraso</div></div>'
+      +'<div class="kb"><div class="kn" style="color:#9b59b6">'+noDisponibleCount+'</div><div class="kl">No disponible</div></div>'
       +'<div class="kb"><div class="kn" style="color:'+pctColor(pctGen)+'">'+pctGen+'%</div><div class="kl">Cumplimiento</div></div>'
       +'</div>';
   }

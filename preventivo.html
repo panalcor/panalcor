@@ -688,6 +688,7 @@ tbody td:last-child  { border-radius: 0 8px 8px 0; }
 .seg-estado-hecha   { display:inline-block;padding:3px 10px;border-radius:5px;font-size:0.78rem;font-weight:700;background:rgba(39,174,96,0.2);color:#27ae60;border:1px solid rgba(39,174,96,0.3); }
 .seg-estado-auto    { display:inline-block;padding:3px 10px;border-radius:5px;font-size:0.78rem;font-weight:700;background:rgba(230,126,34,0.15);color:#e67e22;border:1px solid rgba(230,126,34,0.3); }
 .seg-estado-pend    { display:inline-block;padding:3px 10px;border-radius:5px;font-size:0.78rem;font-weight:700;background:rgba(231,76,60,0.15);color:#e74c3c;border:1px solid rgba(231,76,60,0.3); }
+.seg-estado-ausente { display:inline-block;padding:3px 10px;border-radius:5px;font-size:0.78rem;font-weight:700;background:rgba(155,89,182,0.15);color:#c39bd3;border:1px solid rgba(155,89,182,0.3); }
 
 /* ══ ALARMAS ══ */
 .al-wrap { padding:1rem 1.5rem 5rem; }
@@ -904,6 +905,7 @@ if('serviceWorker' in navigator){
         <option value="">Todos los estados</option>
         <option value="hecha">✓ Hechas</option>
         <option value="pendiente">— Pendientes</option>
+        <option value="ausente">🏖️ No disponible</option>
       </select>
       <button type="button" class="seg-load-btn" onclick="cargarSeguimiento()">Cargar</button>
       <button type="button" class="seg-load-btn" onclick="imprimirInformeSeguimiento()" style="background:rgba(201,162,39,0.15);border-color:rgba(201,162,39,0.4);color:var(--gold)">🖨️ Imprimir</button>
@@ -3359,17 +3361,38 @@ async function rellenarMesVencido() {
 
   if(!confirm(`¿Rellenar mes vencido ${mesesN[month]} ${year}?\n\nLas tareas sin marcar por el mecánico se completarán automáticamente con su fecha planificada.`)) return;
 
-  // Leer plan publicado y completados de Firebase
-  let planTareas = [], completados = {};
+  // Leer plan publicado, completados y turnos (para saber quién estaba ausente) de Firebase
+  let planTareas = [], completados = {}, diasFB = {}, ausenciasFB = {}, mecNombreAId = {};
   try {
-    const [snapPlan, snapComp] = await Promise.all([
+    const [snapPlan, snapComp, snapTurnos] = await Promise.all([
       _DB.ref(`preventivo_plan/${mk}`).once('value'),
-      _DB.ref(`preventivo_completado/${mk}`).once('value')
+      _DB.ref(`preventivo_completado/${mk}`).once('value'),
+      _DB.ref('turnos').once('value')
     ]);
     planTareas = (snapPlan.val() || {}).tareas || [];
     completados = snapComp.val() || {};
+    const td = snapTurnos.val() || {};
+    diasFB = td.dias || {};
+    ausenciasFB = td.ausencias || {};
+    Object.entries(td.mecanicos || {}).forEach(([id, m]) => { if(m && m.nombre) mecNombreAId[m.nombre] = id; });
   } catch(e) {
     alert('⚠️ Error al leer Firebase: ' + e.message); return;
+  }
+
+  const AUSENTES_ESTADO = ['vacaciones','baja','sancion','asunto','guardia'];
+  function _mecAusenteEn(nombreMec, ds) {
+    const mecId = mecNombreAId[nombreMec];
+    if(!mecId) return false;
+    const dayEntry = diasFB[ds]?.[mecId];
+    if(dayEntry) {
+      if(AUSENTES_ESTADO.includes(dayEntry.estado)) return true;
+      if(dayEntry.turno === 'st') return true;
+    }
+    for(const aus of Object.values(ausenciasFB)) {
+      if(String(aus.mecId) !== String(mecId)) continue;
+      if(ds >= aus.desde && ds <= aus.hasta) return true;
+    }
+    return false;
   }
 
   // Si no hay plan publicado, avisar
@@ -3415,7 +3438,7 @@ async function rellenarMesVencido() {
   }
 
   const updates = {};
-  let rellenas = 0;
+  let rellenas = 0, noDisponibles = 0;
   let slotIdx = 0;
 
   tareasFiltradas.forEach(t => {
@@ -3426,6 +3449,12 @@ async function rellenarMesVencido() {
       const clave = `${t.id}_${wi}`;
       if(completados[clave]) return; // ya marcada por el mecánico, no tocar
       const idx = slotIdx++;
+      // Si el mecánico estaba ausente ese día, no se da por hecha: se marca "no disponible"
+      if(_mecAusenteEn(mecanico, fechaPlan)) {
+        updates[clave] = { hecho:false, noDisponible:true, motivo:'ausencia', mecanico, autoRelleno:true, ts:Date.now() };
+        noDisponibles++;
+        return;
+      }
       if(sinRellenarSet.has(idx)) return; // dejar pendiente intencionalmente
       const esRetraso = retrasosSet.has(idx);
       const diasExtra = esRetraso ? (1 + Math.floor(Math.random() * 4)) : 0;
@@ -3435,7 +3464,7 @@ async function rellenarMesVencido() {
     });
   });
 
-  if(!rellenas) {
+  if(!rellenas && !noDisponibles) {
     alert(`✅ Todas las tareas de ${mesesN[month]} ${year} ya estaban completadas. Nada que rellenar.`); return;
   }
 
@@ -3443,7 +3472,7 @@ async function rellenarMesVencido() {
     await _DB.ref(`preventivo_completado/${mk}`).update(updates);
     const nRetr = Object.values(updates).filter(u=>u.retraso).length;
     const nPend = sinRellenarSet.size;
-    alert(`✅ Mes vencido ${mesesN[month]} ${year} procesado.\n\n• EN FECHA: ${rellenas-nRetr}\n• RETRASO (1-4 días): ${nRetr}\n• Sin rellenar (pendientes): ${nPend}`);
+    alert(`✅ Mes vencido ${mesesN[month]} ${year} procesado.\n\n• EN FECHA: ${rellenas-nRetr}\n• RETRASO (1-4 días): ${nRetr}\n• Sin rellenar (pendientes): ${nPend}\n• No disponible (ausencia): ${noDisponibles}`);
   } catch(e) {
     alert('⚠️ Error al guardar en Firebase: ' + e.message);
   }
@@ -3812,7 +3841,10 @@ async function calcularAutoAsig(){
   const mecIds = ['1','2','3','4','5'];
   const AUSENTES = ['vacaciones','baja','sancion'];
 
-  // Contar días disponibles por mecánico
+  // Días de ausencia por mecánico — ya solo es informativo (se muestra en la tabla),
+  // NO se usa para repartir máquinas: el reparto se hace como si todos trabajasen el
+  // mes completo. Las tareas concretas que caigan en un periodo de ausencia se marcan
+  // individualmente como "No disponible" desde Mis Tareas, sin tocar el reparto de nadie más.
   const disponibles = {};
   mecIds.forEach(k => {
     const nombre = mecanicos[k]?.nombre || 'Mecánico '+k;
@@ -3824,39 +3856,22 @@ async function calcularAutoAsig(){
     disponibles[k] = { nombre, dias: count };
   });
 
-  // Solo mecánicos con al menos 1 día disponible
-  const mecActivos = mecIds.filter(k => disponibles[k].dias > 0)
-    .sort((a,b) => disponibles[b].dias - disponibles[a].dias);
+  // Todos los mecánicos entran siempre en el reparto, ausentes o no
+  const mecActivos = [...mecIds];
 
-  // Repartir máquinas proporcionalmente a días disponibles
-  const totalDias = mecActivos.reduce((s,k) => s+disponibles[k].dias, 0);
   // Enero: excluir máquinas ya asignadas desde diciembre (vienen de pendiente)
   const maquinas = [...MAQUINAS].filter(m => !pendienteDic[m]);
   const totalMaq = maquinas.length;
 
-  // Calcular cuántas máquinas corresponden a cada mecánico
-  let reparto = {};
-  let resto = totalMaq;
-  mecActivos.forEach((k, i) => {
-    const prop = i < mecActivos.length-1
-      ? Math.round((disponibles[k].dias / totalDias) * totalMaq)
-      : resto;
-    reparto[k] = Math.max(1, prop);
-    resto -= reparto[k];
-  });
-
-  // Asignar máquinas en orden con rotación mensual
+  // Asignar máquinas en orden con rotación mensual, a partes iguales entre todos
   // El offset desplaza qué mecánico empieza el reparto, rotando mes a mes
   const rot = ST.rotOffset() % mecActivos.length;
   const mecRotados = [...mecActivos.slice(rot), ...mecActivos.slice(0, rot)];
+  const repartoBase = Math.floor(totalMaq / mecRotados.length);
+  const repartoExtra = totalMaq % mecRotados.length;
   const repartoRot = {};
-  let restoRot = totalMaq;
   mecRotados.forEach((k, i) => {
-    const prop = i < mecRotados.length-1
-      ? Math.round((disponibles[k].dias / totalDias) * totalMaq)
-      : restoRot;
-    repartoRot[k] = Math.max(1, prop);
-    restoRot -= repartoRot[k];
+    repartoRot[k] = repartoBase + (i < repartoExtra ? 1 : 0);
   });
 
   const asigNueva = {};
@@ -3921,7 +3936,7 @@ async function calcularAutoAsig(){
   html += `<table style="width:100%;border-collapse:collapse;font-size:0.82rem;margin-bottom:16px">
     <thead><tr style="background:rgba(255,255,255,0.05)">
       <th style="padding:7px 10px;text-align:left;color:rgba(255,255,255,0.5)">Mecánico</th>
-      <th style="padding:7px 10px;text-align:center;color:rgba(255,255,255,0.5)">Días disp.</th>
+      <th style="padding:7px 10px;text-align:center;color:rgba(255,255,255,0.5)" title="Informativo — ya no afecta al reparto de máquinas">Días ausente</th>
       <th style="padding:7px 10px;text-align:center;color:rgba(255,255,255,0.5)">${esDiciembre?'Dic':'Grupos'}</th>
       ${colExtra}
     </tr></thead><tbody>`;
@@ -3929,22 +3944,16 @@ async function calcularAutoAsig(){
     const nombre = disponibles[k].nombre;
     const nDic  = Object.entries(asigNueva).filter(([,v])=>v===nombre).length;
     const nEne  = esDiciembre ? Object.entries(window._pendienteEnero).filter(([,v])=>v===nombre).length : 0;
+    const diasAusente = diasMes.length - disponibles[k].dias;
     html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">
       <td style="padding:7px 10px;font-weight:600;color:#e8c14e">${nombre}</td>
-      <td style="padding:7px 10px;text-align:center">${disponibles[k].dias}</td>
+      <td style="padding:7px 10px;text-align:center${diasAusente>0?';color:#e74c3c':''}">${diasAusente || '—'}</td>
       <td style="padding:7px 10px;text-align:center;color:#2ecc71;font-weight:700">${nDic}</td>
       ${esDiciembre ? `<td style="padding:7px 10px;text-align:center;color:#fdcb6e;font-weight:700">${nEne}</td>` : ''}
     </tr>`;
   });
-  // Mecánicos ausentes todo el mes
-  mecIds.filter(k=>disponibles[k].dias===0).forEach(k=>{
-    html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.06);opacity:0.4">
-      <td style="padding:7px 10px">${disponibles[k].nombre}</td>
-      <td style="padding:7px 10px;text-align:center;color:#e74c3c">0 (ausente)</td>
-      <td style="padding:7px 10px;text-align:center">—</td>
-    </tr>`;
-  });
-  html += '</tbody></table>';
+  html += '</tbody></table>'
+    + '<div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin:-10px 0 14px">Las máquinas se reparten a partes iguales entre todos — la ausencia ya no reduce ni aumenta el reparto de nadie. Las tareas concretas afectadas se marcan como "No disponible" en Mis Tareas.</div>';
 
   // Detalle de asignación por mecánico (en orden rotado)
   mecRotados.forEach(k => {
@@ -4087,17 +4096,20 @@ function renderSeguimiento(tareas, compData, filtMec, filtEst) {
   // Aplicar filtros
   let visible = slots;
   if(filtMec) visible = visible.filter(s => s.t.mecanico === filtMec);
-  if(filtEst === 'hecha')     visible = visible.filter(s => compData[s.slotKey]);
-  if(filtEst === 'pendiente') visible = visible.filter(s => !compData[s.slotKey]);
+  if(filtEst === 'hecha')      visible = visible.filter(s => compData[s.slotKey] && !compData[s.slotKey].noDisponible);
+  if(filtEst === 'pendiente')  visible = visible.filter(s => !compData[s.slotKey]);
+  if(filtEst === 'ausente')    visible = visible.filter(s => compData[s.slotKey] && compData[s.slotKey].noDisponible);
 
-  // Resumen
-  const total   = slots.length;
-  const hechos  = slots.filter(s => compData[s.slotKey]).length;
+  // Resumen — "No disponible" (ausencia) se excluye del % de cumplimiento
+  const noDisp  = slots.filter(s => compData[s.slotKey] && compData[s.slotKey].noDisponible).length;
+  const total   = slots.length - noDisp;
+  const hechos  = slots.filter(s => compData[s.slotKey] && !compData[s.slotKey].noDisponible).length;
   const pend    = total - hechos;
   const pct     = total ? Math.round(hechos/total*100) : 0;
   document.getElementById('segResumen').innerHTML = `
     <span class="seg-chip" style="background:rgba(39,174,96,0.15);border-color:rgba(39,174,96,0.3);color:#27ae60">✓ Hechas <b>${hechos}</b></span>
     <span class="seg-chip" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.15);color:var(--text-dim)">— Pendientes <b>${pend}</b></span>
+    <span class="seg-chip" style="background:rgba(155,89,182,0.12);border-color:rgba(155,89,182,0.3);color:#c39bd3">🏖️ No disponible <b>${noDisp}</b></span>
     <span class="seg-chip" style="background:rgba(201,162,39,0.12);border-color:rgba(201,162,39,0.3);color:var(--gold)">Total <b>${total}</b></span>
     <span class="seg-chip" style="background:rgba(116,185,255,0.12);border-color:rgba(116,185,255,0.3);color:#74b9ff">% Cumplimiento <b>${pct}%</b></span>`;
 
@@ -4123,14 +4135,17 @@ function renderSeguimiento(tareas, compData, filtMec, filtEst) {
     const frq = t.frecuencia || 'OTRO';
     mecTareasUnicas[m][frq] = (mecTareasUnicas[m][frq] || 0) + 1;
   });
-  // Contar slots (para % cumplimiento)
+  // Contar slots (para % cumplimiento) — las tareas marcadas "No disponible" (ausencia)
+  // no cuentan ni como hechas ni como incumplidas, se excluyen del cálculo
   slots.forEach(s => {
+    const c = compData[s.slotKey];
+    if(c && c.noDisponible) return;
     const m = s.t.mecanico || '—';
     if(!mecStats[m]) mecStats[m] = {total:0, hechos:0};
     mecStats[m].total++;
-    if(compData[s.slotKey]) mecStats[m].hechos++;
+    if(c) mecStats[m].hechos++;
   });
-  const totalSlots = slots.length || 1;
+  const totalSlots = slots.filter(s => !(compData[s.slotKey] && compData[s.slotKey].noDisponible)).length || 1;
   const mecEntries = Object.entries(mecStats).sort((a,b) => a[0].localeCompare(b[0]));
   let progHtml = '', cargaHtml = '';
   mecEntries.forEach(([m, st]) => {
@@ -4177,7 +4192,9 @@ function renderSeguimiento(tareas, compData, filtMec, filtEst) {
     const comp = compData[slotKey];
     const cfg  = FREQ_CFG[t.frecuencia] || {color:'#fff',bg:'rgba(255,255,255,0.05)',border:'rgba(255,255,255,0.2)'};
     let estadoHtml, fechaReal = '';
-    if(comp) {
+    if(comp && comp.noDisponible) {
+      estadoHtml = `<span class="seg-estado-ausente">🏖️ NO DISPONIBLE</span>`;
+    } else if(comp) {
       if(comp.retraso) {
         estadoHtml = `<span class="seg-estado-auto">⏰ FUERA PLAZO</span>`;
       } else {
@@ -4235,13 +4252,15 @@ function imprimirInformeSeguimiento(soloTrueno) {
     }
   });
 
-  const total  = slots.length;
-  const hechos = slots.filter(s => compData[s.slotKey]).length;
+  // Las tareas marcadas "No disponible" (ausencia) se excluyen del % de cumplimiento
+  const slotsValidas = slots.filter(s => !(compData[s.slotKey] && compData[s.slotKey].noDisponible));
+  const total  = slotsValidas.length;
+  const hechos = slotsValidas.filter(s => compData[s.slotKey]).length;
   const pct    = total ? Math.round(hechos/total*100) : 0;
 
   // Progreso por mecánico
   const mecStats = {};
-  slots.forEach(s => {
+  slotsValidas.forEach(s => {
     const mn = s.t.mecanico || '—';
     if(!mecStats[mn]) mecStats[mn] = {total:0, hechos:0};
     mecStats[mn].total++;
@@ -4255,8 +4274,8 @@ function imprimirInformeSeguimiento(soloTrueno) {
 
   const tareasRows = slots.map(({t, slotKey, fechaPlan}) => {
     const comp = compData[slotKey];
-    const estado = comp ? (comp.retraso ? 'FUERA DE PLAZO' : 'HECHA') : 'PENDIENTE';
-    const estadoColor = comp ? (comp.retraso ? '#e67e22' : '#27ae60') : '#c0392b';
+    const estado = comp && comp.noDisponible ? 'NO DISPONIBLE' : comp ? (comp.retraso ? 'FUERA DE PLAZO' : 'HECHA') : 'PENDIENTE';
+    const estadoColor = comp && comp.noDisponible ? '#9b59b6' : comp ? (comp.retraso ? '#e67e22' : '#27ae60') : '#c0392b';
     const fechaReal = comp ? (comp.fechaReal || comp.fecha || '') : '';
     return `<tr>
       <td>${t.maquina||''}</td>
@@ -4295,6 +4314,7 @@ function imprimirInformeSeguimiento(soloTrueno) {
   <div class="kpi"><div class="kpi-num" style="color:#27ae60">${hechos}</div><div class="kpi-lbl">Realizadas</div></div>
   <div class="kpi"><div class="kpi-num" style="color:#c0392b">${total-hechos}</div><div class="kpi-lbl">Pendientes</div></div>
   <div class="kpi"><div class="kpi-num">${total}</div><div class="kpi-lbl">Total tareas</div></div>
+  <div class="kpi"><div class="kpi-num" style="color:#9b59b6">${slots.length-total}</div><div class="kpi-lbl">No disponible</div></div>
 </div>
 
 <div class="sec">Cumplimiento por mecánico</div>

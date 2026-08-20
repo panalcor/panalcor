@@ -6,6 +6,23 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.439 — 2026-08-20
+  - Cambio de política de reparto en el plan preventivo: las máquinas ya
+    no se reparten proporcionalmente a los días disponibles de cada
+    mecánico. Ahora se reparten a partes iguales entre todos, como si
+    todos trabajasen el mes completo — una ausencia larga ya no
+    sobrecarga al resto del equipo (preventivo.html, calcularAutoAsig).
+  - mis_tareas.html: nuevo botón "🏖️ No disponible" junto a "✓ Hecha"
+    para que el mecánico marque una tarea concreta como no realizada
+    por ausencia, sin que cuente como incumplida.
+  - Seguimiento (preventivo.html) e informe mensual (admin.html): las
+    tareas "No disponible" se excluyen del % de cumplimiento — no
+    penalizan a nadie ni distorsionan la media del equipo. Aparecen
+    aparte, contadas, en resumen, tabla, filtros e informes imprimibles.
+  - "Rellenar mes vencido" ya no da por hecha una tarea si el mecánico
+    asignado estaba de baja/vacaciones ese día — la marca como "No
+    disponible" en vez de auto-completarla con su fecha planificada.
+
 v1.5.429 — 2026-08-18
   - preventivo.html: nuevo botón "⛈️ Informe Trueno" en Seguimiento, junto
     a "🖨️ Imprimir". Genera el mismo informe (KPIs, cumplimiento por
