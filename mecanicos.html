@@ -917,8 +917,10 @@ function guardarChecks(){
   localStorage.setItem('turno_'+fecha+'_'+tsNow, JSON.stringify(registro));
 
   // Sync to Firebase so admin can generate reports from any device
+  // (usa _DB_MEC, la app real 'mec' — firebase.database() apunta a la app
+  // por defecto, que no existe aquí, y fallaba en silencio sin subir nada)
   try {
-    var DB2 = firebase.database();
+    var DB2 = _DB_MEC;
     var fbKey = fecha+'_'+turno.replace(/[^A-Z0-9]/g,'_')+'_'+mec.replace(/[^A-Za-z0-9]/g,'_')+'_'+tsNow;
     // If admin edit: remove previous Firebase record for same fecha+turno first
     if(adminUnlocked){

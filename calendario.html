@@ -263,6 +263,8 @@ var _selDay      = null; // ISO date seleccionado
 var _pendOpen    = false;
 var _MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 var _DIAS_FREQ   = {DIARIO:'Todos los días',SEMANAL:'Semanal',QUINCENAL:'Quincenal',MENSUAL:'Mensual',TRIMESTRAL:'Trimestral',SEMESTRAL:'Semestral',ANUAL:'Anual'};
+var _turnosPorDia = {}; // {ISO: {NOCHE:bool, MAÑANA:bool, TARDE:bool}} — true = algún mantenimiento diario hecho ese turno
+var _TURNOS_ORDEN = [['NOCHE','N'],['MAÑANA','M'],['TARDE','T']];
 
 /* ══ INIT ══ */
 (function init(){
@@ -321,6 +323,20 @@ function _diasLaborables(yr, mo, dFrom, dTo){
 function mkISO(yr,mo,d){
   return yr+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0');
 }
+// "(NMT)" junto al día: cada letra en verde si ese turno hizo algún
+// mantenimiento diario ese día (aunque sea parcial), en rojo si no hizo
+// ninguno (no guardó nada, o guardó 0 tareas). Solo se muestra en días
+// ya pasados (hoy incluido) — los futuros aún no tienen turnos que juzgar.
+function _turnosLabel(iso, hoyISO){
+  if(iso > hoyISO) return '';
+  var t = _turnosPorDia[iso] || {};
+  var out = '';
+  _TURNOS_ORDEN.forEach(function(par){
+    var ok = !!t[par[0]];
+    out += '<span style="color:'+(ok?'var(--green)':'var(--red)')+'">'+par[1]+'</span>';
+  });
+  return ' <span style="font-size:.68rem;font-weight:700;letter-spacing:.02em">('+out+')</span>';
+}
 // Días previstos (candidatos) de la ocurrencia wi de una tarea, cuando no
 // tiene fecha propia asignada todavía en el plan.
 function _diasSinFecha(freq, wi, yr, mo, semanas){
@@ -358,12 +374,23 @@ function cargarMes(){
 
   Promise.all([
     DB.ref('preventivo_plan/'+_mesActual).once('value'),
-    DB.ref('preventivo_completado/'+_mesActual).once('value')
+    DB.ref('preventivo_completado/'+_mesActual).once('value'),
+    DB.ref('registros_turno').once('value')
   ]).then(function(snaps){
     var planTareas = (snaps[0].val()||{}).tareas || [];
     var compData   = snaps[1].val() || {};
     var semanas    = _semanasDelMes(yr, mo);
     var out = [];
+
+    // Mantenimiento diario por turno (N/M/T) — verde si ese turno hizo algo, rojo si no
+    _turnosPorDia = {};
+    var registros = snaps[2].val() || {};
+    Object.values(registros).forEach(function(r){
+      if(!r || !r.fecha || r.fecha.substring(0,7)!==_mesActual) return;
+      if(!_turnosPorDia[r.fecha]) _turnosPorDia[r.fecha] = {};
+      var yaOk = _turnosPorDia[r.fecha][r.turno];
+      _turnosPorDia[r.fecha][r.turno] = !!yaOk || (r.done>0);
+    });
 
     planTareas.forEach(function(t){
       if(t.frecuencia === 'DIARIO') return; // gestionado aparte, en Mantenimiento diario
@@ -509,7 +536,7 @@ function renderCalendario(){
     if(ausente.length) countTxt += ausente.length+' 🏖️';
 
     cells += '<div class="'+cls+'" onclick="mostrarDia(\''+iso+'\',this)">'
-      +'<div class="day-num'+(isHoy?' today-label':'')+'">'+d+(isHoy?' ●':'')+'</div>'
+      +'<div class="day-num'+(isHoy?' today-label':'')+'">'+d+(isHoy?' ●':'')+_turnosLabel(iso,hoyISO)+'</div>'
       +'<div class="day-dots">'+dots+(extra>0?'<span style="font-size:.6rem;color:rgba(255,255,255,.3)">+'+extra+'</span>':'')+'</div>'
       +(total>0?'<div class="day-count">'+countTxt.trim()+'</div>':'')
       +'</div>';

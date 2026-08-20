@@ -6,6 +6,20 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.469 — 2026-08-20
+  - calendario.html: junto al número de cada día (ya pasado) se muestra
+    "(NMT)" — Noche/Mañana/Tarde del mantenimiento diario, en verde si
+    ese turno hizo algo ese día (aunque sea parcial) y en rojo si no
+    hizo ninguno. Lee de registros_turno.
+  - FIX importante: mecanicos.html → guardarChecks() usaba
+    firebase.database() (app por defecto, inexistente en esta página)
+    en vez de _DB_MEC (la app real 'mec'), igual que el bug de
+    cargarTareasDiarias() corregido antes. Fallaba en silencio: los
+    partes de mantenimiento diario solo se guardaban en el móvil de
+    cada mecánico (localStorage) y nunca llegaban a Firebase — por eso
+    registros_turno estaba vacío. A partir de ahora sí sincroniza. Los
+    partes ya guardados en cada dispositivo no se recuperan solos.
+
 v1.5.459 — 2026-08-20
   - calendario.html: las tareas sin fecha propia todavía (no se ha usado
     "Auto-rellenar fechas" ni se han marcado como hechas) ya no
