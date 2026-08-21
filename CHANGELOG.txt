@@ -6,6 +6,15 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.509 — 2026-08-20
+  - preventivo.html: desactivada la sustitución automática por suplente
+    al marcar un mecánico ausente — reasignaba toda la máquina al
+    suplente configurado durante la ausencia, contradiciendo la
+    política nueva de hoy (reparto igual entre todos + "No disponible"
+    tarea a tarea). Quitada también la columna "Suplente" de Ajustes
+    (ya no hacía nada) y actualizados los textos del modal/banner de
+    Ausencias, que seguían diciendo que reasignaban máquinas.
+
 v1.5.499 — 2026-08-20
   - Consolidados los 4 manuales en 2 (uno por rol, que es lo que hacía
     falta): se eliminan manual.html y manual_completo.html (redundantes,
