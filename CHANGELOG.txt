@@ -6,6 +6,14 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.499 — 2026-08-20
+  - Consolidados los 4 manuales en 2 (uno por rol, que es lo que hacía
+    falta): se eliminan manual.html y manual_completo.html (redundantes,
+    menos completos) y se enlazan en su lugar manual_mecanicos.html
+    (desde landing.html) y manual_admin.html (desde el tab del panel de
+    admin) — ambos ya existían pero estaban huérfanos, sin enlazar
+    desde ningún sitio.
+
 v1.5.489 — 2026-08-20
   - calendario.html: las tareas marcadas por "Rellenar mes vencido" u
     otros rellenados automáticos (autoRelleno:true) ya no muestran la
