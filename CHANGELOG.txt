@@ -6,6 +6,19 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.529 — 2026-08-20
+  - FORMADORA-EMBOLSADORA: corregidas las frecuencias de 12 de sus 19
+    tareas en el catálogo maestro (varias habían quedado con la
+    frecuencia antigua tras el cambio de contenido). Además, en los
+    planes ya publicados de agosto-noviembre 2026: actualizada la
+    frecuencia de las 8 tareas afectadas que ya estaban publicadas, y
+    añadidas 5 tareas que faltaban por completo en esos meses (4 que
+    antes eran semestral/anual y quedaban fuera del plan automático, y
+    la 1475 "Comprobación de seguridades" que faltaba en sep/oct/nov
+    desde antes de todo esto). Los 4 meses quedan con las 19 tareas
+    completas y correctas. Nada de esto afectó a asignaciones de
+    mecánico de otras máquinas ni a datos ya guardados.
+
 v1.5.519 — 2026-08-20
   - FORMADORA-EMBOLSADORA: corregidas sus 19 tareas de mantenimiento.
     Tenía tareas de "FORMADORA CAJAS" con pasos de pegamento/encolador
