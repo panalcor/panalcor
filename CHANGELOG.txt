@@ -6,6 +6,12 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.639 — 2026-08-23
+  - manual_admin.html nunca se había subido a GitHub Pages (existía en
+    local desde la consolidación de manuales, pero faltaba el git add)
+    — el enlace "📖 Manual" de admin.html daba 404 en la web publicada.
+    Corregido, ya está en el repositorio.
+
 v1.5.629 — 2026-08-22
   - Barra de pestañas de admin.html: en vez de una sola fila con
     scroll horizontal (22 pestañas), ahora se ajustan en 2 filas
