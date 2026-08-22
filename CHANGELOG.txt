@@ -6,6 +6,15 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.579 — 2026-08-20
+  - Plan mensual: los botones "Auto-asignar mes" y "Publicar a
+    mecánicos" se deshabilitan y cambian a "✅ Asignado"/"✅ Publicado"
+    en cuanto el mes ya tiene lo suyo hecho, para no repetir por error.
+    Nuevo botón "🗑️ Borrar asignación" — solo aparece si hay algo que
+    borrar Y no hay ningún mantenimiento registrado ese mes todavía
+    (comprobado contra preventivo_completado antes de mostrarlo y otra
+    vez antes de borrar, por seguridad).
+
 v1.5.569 — 2026-08-20
   - calcularAutoAsig(): las máquinas de FRIO/CLIMA ya no conservan
     ninguna asignación automática — quedan "Sin asignar" hasta que se

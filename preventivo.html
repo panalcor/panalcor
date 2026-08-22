@@ -864,8 +864,11 @@ if('serviceWorker' in navigator){
           <span style="font-size:0.68rem;letter-spacing:0.14em;color:var(--text-dim);text-transform:uppercase;display:block;margin-bottom:4px">Mecánico</span>
           <select class="ajuste-sel" id="planMecanico" onchange="renderPlan()" style="min-width:145px"></select>
         </div>
-        <button type="button" class="export-btn" onclick="abrirAutoAsignar()" style="padding:9px 16px;background:rgba(39,174,96,0.15);border-color:rgba(39,174,96,0.4);color:#2ecc71">
+        <button type="button" class="export-btn" onclick="abrirAutoAsignar()" style="padding:9px 16px;background:rgba(39,174,96,0.15);border-color:rgba(39,174,96,0.4);color:#2ecc71" id="btnAutoAsignar">
           🤖 Auto-asignar mes
+        </button>
+        <button type="button" class="export-btn" onclick="borrarAsignacionMes()" style="padding:9px 16px;background:rgba(231,76,60,0.12);border-color:rgba(231,76,60,0.35);color:#e74c3c;display:none" id="btnBorrarAsig">
+          🗑️ Borrar asignación
         </button>
         <button type="button" class="export-btn" onclick="abrirAusencias()" style="padding:9px 16px;background:rgba(231,76,60,0.12);border-color:rgba(231,76,60,0.35);color:#e74c3c" id="btnAusencias">
           🏥 Ausencias
@@ -3062,6 +3065,7 @@ function renderPlan() {
   const asig = ST.asig();
   const fechasMes = ST.fechasMes();
   const mkData = fechasMes[mk] || {};
+  _actualizarEstadoBotonesPlan(mk);
 
   // Header
   document.getElementById('monthTitle').textContent =
@@ -3280,6 +3284,77 @@ function exportPlan() {
   XLSX.writeFile(wb, `Plan_Preventivo_${mesesES2[month]}_${year}${meqFile}.xlsx`);
 }
 
+/* ════ ESTADO DE LOS BOTONES ASIGNAR / PUBLICAR / BORRAR ════
+   Evita confusiones: si el mes ya está asignado o publicado, el botón
+   correspondiente se deshabilita y cambia de texto. El botón de borrar
+   solo aparece si hay algo que borrar Y no se ha registrado ningún
+   mantenimiento real todavía (para no poder cargarse trabajo hecho). */
+async function _actualizarEstadoBotonesPlan(mk) {
+  const btnAsig = document.getElementById('btnAutoAsignar');
+  const btnPub  = document.getElementById('btnPublicar');
+  const btnDel  = document.getElementById('btnBorrarAsig');
+  if(!btnAsig || !btnPub || !btnDel) return;
+
+  const yaAsignado = Object.keys((ST.asigMes())[mk] || {}).length > 0;
+  btnAsig.disabled = yaAsignado;
+  btnAsig.style.opacity = yaAsignado ? '0.5' : '1';
+  btnAsig.style.cursor = yaAsignado ? 'default' : 'pointer';
+  btnAsig.textContent = yaAsignado ? '✅ Asignado' : '🤖 Auto-asignar mes';
+
+  let yaPublicado = false;
+  try {
+    const snap = await _DB.ref(`preventivo_plan/${mk}/publicado`).once('value');
+    yaPublicado = !!snap.val();
+  } catch(e) {}
+  btnPub.disabled = yaPublicado;
+  btnPub.style.opacity = yaPublicado ? '0.5' : '1';
+  btnPub.style.cursor = yaPublicado ? 'default' : 'pointer';
+  btnPub.textContent = yaPublicado ? '✅ Publicado' : '📤 Publicar a mecánicos';
+
+  let hayCompletado = false;
+  try {
+    const snapC = await _DB.ref(`preventivo_completado/${mk}`).once('value');
+    hayCompletado = snapC.exists();
+  } catch(e) {}
+  const hayAlgoQueBorrar = yaAsignado || yaPublicado;
+  btnDel.style.display = (hayAlgoQueBorrar && !hayCompletado) ? '' : 'none';
+}
+
+async function borrarAsignacionMes() {
+  const { year, month } = curMes;
+  const mk = mesKey(year, month);
+  const mesesN = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  // Comprobación de seguridad por si el estado cambió entre renders
+  try {
+    const snapC = await _DB.ref(`preventivo_completado/${mk}`).once('value');
+    if(snapC.exists()) {
+      alert('⚠️ No se puede borrar: ya hay mantenimientos registrados este mes.');
+      _actualizarEstadoBotonesPlan(mk);
+      return;
+    }
+  } catch(e) {}
+
+  if(!confirm(`¿Borrar la asignación y el plan publicado de ${mesesN[month]} ${year}?\n\nNo hay ningún mantenimiento registrado todavía, así que no se pierde nada.`)) return;
+
+  const mes = ST.asigMes();
+  delete mes[mk];
+  localStorage.setItem('preventivoAsigMes', JSON.stringify(mes));
+  const fechas = ST.fechasMes();
+  delete fechas[mk];
+  localStorage.setItem('preventivoFechasMes', JSON.stringify(fechas));
+
+  try {
+    await _DB.ref(`preventivo_plan/${mk}`).remove();
+  } catch(e) {
+    alert('⚠️ Error al borrar el plan publicado: ' + e.message);
+  }
+
+  renderAsigGrid();
+  renderPlan();
+  alert(`🗑️ Asignación de ${mesesN[month]} ${year} borrada.`);
+}
+
 /* ════ PUBLICAR PLAN A MECÁNICOS (Firebase) ════ */
 async function publicarPlan() {
   const { year, month } = curMes;
@@ -3324,7 +3399,7 @@ async function publicarPlan() {
       publicadoEn: Date.now()
     });
     btn.textContent = '✅ Publicado';
-    setTimeout(() => { btn.disabled = false; btn.textContent = '📤 Publicar a mecánicos'; }, 3000);
+    _actualizarEstadoBotonesPlan(mk);
     alert(`✅ Plan de ${mesesN[month]} ${year} publicado. Los mecánicos ya pueden ver sus tareas en "Mis Tareas".`);
     // Notificar a mecánicos asignados via FCM
     if(typeof fcmEnviar === 'function') {
