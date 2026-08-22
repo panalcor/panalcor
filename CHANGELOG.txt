@@ -6,6 +6,15 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.569 — 2026-08-20
+  - calcularAutoAsig(): las máquinas de FRIO/CLIMA ya no conservan
+    ninguna asignación automática — quedan "Sin asignar" hasta que se
+    repartan aparte entre José y Gregorio desde el módulo de Frío.
+  - José y Gregorio reciben un 20% menos de carga en el reparto general
+    de preventivos (peso 0.8 frente a 1.0 del resto), como hueco
+    reservado para cuando asuman las máquinas de Frío/Clima. Probado:
+    ~90 de carga los demás, ~72 José/Gregorio (exactamente el 80%).
+
 v1.5.559 — 2026-08-20
   - calcularAutoAsig() (Auto-asignar mes) rediseñado: en vez de repartir
     las máquinas a partes iguales por cantidad, ahora reparte por carga
