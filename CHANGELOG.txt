@@ -6,6 +6,12 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.659 — 2026-08-23
+  - MAQ-169 A/A TRANSFORMADOR: unificada su área a FRIO/CLIMA (como sus
+    4 hermanos A/A) en las 4 copias del registro de máquinas donde
+    todavía tenía la etiqueta antigua "FRIO" (maquinas_admin.html,
+    admin.html, averias.html, qr_maquinas.html).
+
 v1.5.649 — 2026-08-23
   - Catálogo preventivo: corregida la tarea "TOMA DE TIERRA A PARTE
     ALEATORIA METALICA" de TUNEL PREFRIO ARRASTRE, que tenía tipo
