@@ -1,0 +1,2186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manual de Administrador — PANALCOR S.L.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── TOKENS ── */
+:root {
+  --bg:          #0d1b2a;
+  --surface:     #0f2035;
+  --surface-2:   #152840;
+  --border:      #1a3a5c;
+  --border-2:    #254d72;
+  --gold:        #c9a227;
+  --gold-bright: #f0c040;
+  --gold-dim:    #8a6e18;
+  --text:        #e8dcc8;
+  --text-muted:  #7a90a8;
+  --text-faint:  #3f566e;
+  --danger:      #c94040;
+  --danger-bg:   #2a1010;
+  --warning:     #d4763a;
+  --warning-bg:  #261808;
+  --ok:          #2e9e60;
+  --ok-bg:       #081e12;
+  --info:        #3a7fc9;
+  --info-bg:     #080f20;
+  --sidebar-w:   240px;
+  --topbar-h:    48px;
+  --content-max: 800px;
+}
+
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Barlow', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  padding-top: var(--topbar-h);
+}
+
+/* ── TOPBAR ── */
+#topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--topbar-h);
+  background: #060f18;
+  border-bottom: 1px solid var(--gold-dim);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+  z-index: 200;
+}
+#topbar .logo {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--gold);
+  letter-spacing: 0.06em;
+  flex: 1;
+}
+#topbar .logo span { color: var(--text-muted); font-weight: 400; font-size: 13px; margin-left: 10px; letter-spacing: 0; }
+#topbar a.home-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  color: var(--text);
+  padding: 5px 14px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  transition: border-color .15s, color .15s;
+}
+#topbar a.home-btn:hover { border-color: var(--gold); color: var(--gold-bright); }
+#topbar .version {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px;
+  color: var(--text-faint);
+  letter-spacing: 0.04em;
+}
+
+/* ── LAYOUT ── */
+#shell { display: flex; min-height: calc(100vh - var(--topbar-h)); }
+
+/* ── SIDEBAR ── */
+#sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  position: sticky;
+  top: var(--topbar-h);
+  height: calc(100vh - var(--topbar-h));
+  overflow-y: auto;
+  background: #07121e;
+  border-right: 1px solid var(--border);
+  padding: 20px 0 40px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+#sidebar::-webkit-scrollbar { width: 4px; }
+#sidebar::-webkit-scrollbar-track { background: transparent; }
+#sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.sidebar-head {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  padding: 0 16px 10px;
+}
+.sidebar-section { margin-bottom: 4px; }
+.sidebar-section-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+  padding: 8px 16px 2px;
+}
+#sidebar a {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 16px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  transition: color .12s, background .12s;
+}
+#sidebar a:hover { color: var(--gold-bright); background: var(--surface); }
+#sidebar a .ch-num {
+  font-size: 10px;
+  color: var(--text-faint);
+  min-width: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── MAIN ── */
+#main {
+  flex: 1;
+  min-width: 0;
+  padding: 48px 48px 80px;
+}
+.content-inner { max-width: var(--content-max); }
+
+/* ── COVER ── */
+.cover {
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 56px;
+  padding-bottom: 40px;
+}
+.cover-eyebrow {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 12px;
+}
+.cover h1 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 42px;
+  line-height: 1.1;
+  color: var(--text);
+  text-wrap: balance;
+  margin-bottom: 14px;
+}
+.cover h1 em { font-style: normal; color: var(--gold-bright); }
+.cover-sub {
+  font-size: 16px;
+  color: var(--text-muted);
+  max-width: 560px;
+  margin-bottom: 24px;
+}
+.cover-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.cover-meta-item {
+  font-family: 'Barlow Semi Condensed', sans-serif;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+.cover-meta-item strong { color: var(--text-muted); font-weight: 500; }
+
+/* ── CHAPTER ── */
+.chapter {
+  margin-bottom: 64px;
+  scroll-margin-top: calc(var(--topbar-h) + 20px);
+}
+.chapter-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.ch-badge {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: 2px solid var(--gold-dim);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+.chapter-header-text {}
+.ch-eyebrow {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 4px;
+}
+.chapter h2 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 26px;
+  color: var(--text);
+  text-wrap: balance;
+  line-height: 1.15;
+}
+
+/* ── TYPOGRAPHY WITHIN CHAPTERS ── */
+.chapter h3 {
+  font-family: 'Barlow Semi Condensed', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--gold);
+  margin: 28px 0 10px;
+  letter-spacing: 0.01em;
+}
+.chapter h4 {
+  font-family: 'Barlow Semi Condensed', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 20px 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.chapter p { margin-bottom: 14px; max-width: 680px; }
+.chapter ul, .chapter ol {
+  padding-left: 20px;
+  margin-bottom: 14px;
+  max-width: 680px;
+}
+.chapter li { margin-bottom: 6px; }
+.chapter strong { color: var(--gold-bright); font-weight: 600; }
+.chapter code {
+  font-family: 'Courier New', monospace;
+  font-size: 12.5px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: #b0d4f0;
+}
+.chapter a { color: var(--gold); text-decoration: none; }
+.chapter a:hover { text-decoration: underline; }
+
+/* ── CALLOUT BOXES ── */
+.callout {
+  border-left: 3px solid;
+  padding: 12px 16px;
+  margin: 18px 0;
+  max-width: 680px;
+  border-radius: 0 4px 4px 0;
+}
+.callout-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.callout p { margin-bottom: 0; max-width: none; }
+.callout.tip    { border-color: var(--info);    background: var(--info-bg);    }
+.callout.tip    .callout-label { color: var(--info); }
+.callout.aviso  { border-color: var(--warning); background: var(--warning-bg); }
+.callout.aviso  .callout-label { color: var(--warning); }
+.callout.peligro{ border-color: var(--danger);  background: var(--danger-bg);  }
+.callout.peligro .callout-label { color: var(--danger); }
+.callout.ok     { border-color: var(--ok);      background: var(--ok-bg);      }
+.callout.ok     .callout-label { color: var(--ok); }
+
+/* ── TABLES ── */
+.table-wrap { overflow-x: auto; margin: 18px 0; }
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+}
+th {
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  text-align: left;
+  border-bottom: 2px solid var(--border-2);
+  white-space: nowrap;
+}
+td {
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--surface); }
+.badge {
+  display: inline-block;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 3px;
+}
+.badge-urg  { background: #3a0808; color: #f07070; border: 1px solid #6a1010; }
+.badge-imp  { background: #2a1a06; color: #e09040; border: 1px solid #5a3010; }
+.badge-prog { background: #082018; color: #50c080; border: 1px solid #104030; }
+.badge-a    { background: #3a0808; color: #f07070; border: 1px solid #6a1010; }
+.badge-b    { background: #2a1a06; color: #e09040; border: 1px solid #5a3010; }
+.badge-c    { background: #081828; color: #5090d0; border: 1px solid #103050; }
+
+/* ── MOCKUP CONTAINER ── */
+.mockup-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 24px 0;
+}
+.mockup-title {
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 14px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mockup-title::before {
+  content: '';
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--gold-dim);
+}
+.mockup-wrap svg { display: block; width: 100%; }
+
+/* ── STEP LIST ── */
+.steps { list-style: none; padding: 0; margin: 16px 0; max-width: 680px; counter-reset: step; }
+.steps li {
+  counter-increment: step;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.steps li:last-child { border-bottom: none; }
+.steps li::before {
+  content: counter(step);
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gold);
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── KPI GRID ── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--gold-dim);
+  padding: 14px 16px;
+  border-radius: 4px;
+}
+.kpi-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 6px;
+}
+.kpi-value {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 28px;
+  color: var(--gold-bright);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.kpi-unit { font-size: 14px; color: var(--text-muted); font-weight: 400; margin-left: 2px; }
+
+/* ── SECTION DIVIDER ── */
+.section-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 40px 0;
+}
+
+/* ── PRINT ── */
+@media print {
+  :root {
+    --bg: #fff;
+    --surface: #f6f6f6;
+    --surface-2: #ececec;
+    --border: #cccccc;
+    --border-2: #aaaaaa;
+    --gold: #7a5800;
+    --gold-bright: #5c4000;
+    --gold-dim: #a07c20;
+    --text: #111111;
+    --text-muted: #444444;
+    --text-faint: #888888;
+    --danger: #c00000;
+    --danger-bg: #fff0f0;
+    --warning: #b05000;
+    --warning-bg: #fff8f0;
+    --ok: #007040;
+    --ok-bg: #f0fff6;
+    --info: #003a80;
+    --info-bg: #f0f4ff;
+  }
+  body { font-size: 11pt; }
+  #topbar, #sidebar { display: none; }
+  #shell { display: block; }
+  #main { padding: 0; }
+  .chapter { page-break-inside: avoid; }
+  .mockup-wrap { page-break-inside: avoid; }
+  a { color: inherit; text-decoration: none; }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 860px) {
+  #sidebar { display: none; }
+  #main { padding: 24px 20px 60px; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header id="topbar">
+  <div class="logo">PANALCOR <span>Sistema de Gestión de Maquinaria</span></div>
+  <a href="panalcor_inicio.html" class="home-btn">⌂ Portal de inicio</a>
+  <div class="version">Manual Admin · v1.0</div>
+</header>
+
+<div id="shell">
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sidebar-head">Índice de contenidos</div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Inicio</div>
+    <a href="#ch1"><span class="ch-num">01</span>Acceso como admin</a>
+    <a href="#ch2"><span class="ch-num">02</span>Portal de inicio</a>
+    <a href="#ch3"><span class="ch-num">03</span>Notificaciones automáticas</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Panel principal</div>
+    <a href="#ch4"><span class="ch-num">04</span>Dashboard — KPIs</a>
+    <a href="#ch5"><span class="ch-num">05</span>Tabla de fiabilidad</a>
+    <a href="#ch6"><span class="ch-num">06</span>Gestión de averías</a>
+    <a href="#ch7"><span class="ch-num">07</span>Panel de mecánicos</a>
+    <a href="#ch8"><span class="ch-num">08</span>Repuestos e inventario</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Plan Preventivo</div>
+    <a href="#ch9"><span class="ch-num">09</span>Estructura del preventivo</a>
+    <a href="#ch10"><span class="ch-num">10</span>Asignación titular/suplente</a>
+    <a href="#ch11"><span class="ch-num">11</span>Gestión de ausencias</a>
+    <a href="#ch12"><span class="ch-num">12</span>Publicar el plan mensual</a>
+    <a href="#ch13"><span class="ch-num">13</span>Seguimiento — % realizadas</a>
+    <a href="#ch14"><span class="ch-num">14</span>Parte de trabajo</a>
+    <a href="#ch15"><span class="ch-num">15</span>Catálogo de tareas</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Módulos</div>
+    <a href="#ch16"><span class="ch-num">16</span>Historial por máquina</a>
+    <a href="#ch17"><span class="ch-num">17</span>Informe Rubiel/Alberto</a>
+    <a href="#ch18"><span class="ch-num">18</span>Turnos y bolsas de horas</a>
+    <a href="#ch19"><span class="ch-num">19</span>Preventivos externos</a>
+    <a href="#ch20"><span class="ch-num">20</span>Arrancada y Cierre</a>
+    <a href="#ch21"><span class="ch-num">21</span>Legionela</a>
+    <a href="#ch22"><span class="ch-num">22</span>Encargados</a>
+    <a href="#ch23"><span class="ch-num">23</span>Fichas de máquinas</a>
+    <a href="#ch24"><span class="ch-num">24</span>Sistema de versiones</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main id="main">
+<div class="content-inner">
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-eyebrow">Documentación interna · Uso exclusivo del administrador</div>
+  <h1>Manual de <em>Administrador</em><br>PANALCOR S.L.</h1>
+  <p class="cover-sub">Referencia completa del sistema de gestión de maquinaria. Cubre todas las páginas, funcionalidades y flujos de trabajo disponibles para el perfil Administrador.</p>
+  <div class="cover-meta">
+    <div class="cover-meta-item"><strong>Administrador:</strong> Javier H.</div>
+    <div class="cover-meta-item"><strong>Plataforma:</strong> GitHub Pages + Firebase RTDB</div>
+    <div class="cover-meta-item"><strong>Fecha:</strong> Agosto 2026</div>
+    <div class="cover-meta-item"><strong>Versión sistema:</strong> v1.0.309+</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     CAPÍTULO 1 — ACCESO AL SISTEMA
+═══════════════════════════════════════════════ -->
+<section class="chapter" id="ch1">
+  <div class="chapter-header">
+    <div class="ch-badge">1</div>
+    <div class="chapter-header-text">
+      <div class="ch-eyebrow">Primeros pasos</div>
+      <h2>Acceso al sistema como administrador</h2>
+    </div>
+  </div>
+
+  <p>El sistema PANALCOR es una aplicación web de página única (SPA) alojada en GitHub Pages y respaldada por Firebase Realtime Database. No requiere instalación: se accede desde cualquier navegador moderno con conexión a internet o a la red WiFi local de fábrica.</p>
+
+  <h3>URL de acceso</h3>
+  <p>La dirección del portal de inicio es la raíz del sitio GitHub Pages de la organización. Puedes crear un acceso directo en el escritorio del ordenador de oficina o guardarla como marcador en el navegador.</p>
+
+  <div class="callout tip">
+    <div class="callout-label">Consejo</div>
+    <p>Chrome y Edge permiten instalar la web como PWA (aplicación de escritorio). Busca el icono de instalación en la barra de direcciones. Así el sistema abre en ventana propia sin barras del navegador.</p>
+  </div>
+
+  <h3>Proceso de inicio de sesión</h3>
+  <ol class="steps">
+    <li>Abre el portal de inicio (<code>panalcor_inicio.html</code>). Si la página detecta que no hay sesión activa, muestra el diálogo de login.</li>
+    <li>Introduce el usuario <strong>admin</strong> y tu contraseña. Las credenciales se verifican contra Firebase Authentication.</li>
+    <li>Tras autenticarse, el sistema carga tu perfil desde Firebase RTDB y redirige al portal de inicio con todos los módulos disponibles.</li>
+    <li>El sistema solicita permiso para enviar notificaciones del navegador. <strong>Concede el permiso</strong>: es necesario para las alertas de averías urgentes (ver Capítulo 3).</li>
+  </ol>
+
+  <div class="callout peligro">
+    <div class="callout-label">Importante</div>
+    <p>Si rechazas el permiso de notificaciones, el sistema no podrá alertarte de averías urgentes ni de preventivos vencidos. Puedes reactivarlo en la configuración del navegador (icono de candado junto a la URL → Notificaciones → Permitir).</p>
+  </div>
+
+  <h3>Credenciales y seguridad</h3>
+  <p>El perfil admin tiene acceso de lectura y escritura completo a toda la base de datos. Protege la contraseña. Si sospechas que ha sido comprometida, cámbiala desde Firebase Console o desde la pestaña Mecánicos del panel admin (el proceso de reset también funciona para el propio admin).</p>
+
+  <h3>Perfiles disponibles en el sistema</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Perfil</th>
+          <th>Acceso</th>
+          <th>Módulos visibles</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>admin</strong></td>
+          <td>Lectura + escritura total</td>
+          <td>Todos los módulos sin restricción</td>
+        </tr>
+        <tr>
+          <td>mecánico</td>
+          <td>Lectura propia + escritura limitada</td>
+          <td>Sus averías, preventivos asignados, repuestos</td>
+        </tr>
+        <tr>
+          <td>encargado</td>
+          <td>Lectura amplia, escritura limitada</td>
+          <td>Panel encargados, turnos, averías (lectura)</td>
+        </tr>
+        <tr>
+          <td>rubiel / alberto</td>
+          <td>Perfiles especiales</td>
+          <td>Su módulo de informe, arrancada/cierre</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Cerrar sesión</h3>
+  <p>Pulsa el botón de avatar/perfil en la esquina superior derecha del portal de inicio y selecciona <strong>Cerrar sesión</strong>. No dejes la sesión abierta en ordenadores compartidos.</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CAPÍTULO 2 — PORTAL DE INICIO
+═══════════════════════════════════════════════ -->
+<section class="chapter" id="ch2">
+  <div class="chapter-header">
+    <div class="ch-badge">2</div>
+    <div class="chapter-header-text">
+      <div class="ch-eyebrow">Navegación</div>
+      <h2>El portal de inicio del administrador</h2>
+    </div>
+  </div>
+
+  <p>La página <code>panalcor_inicio.html</code> es el centro de navegación del sistema. El perfil admin ve todos los botones disponibles. Los demás perfiles solo ven los módulos que les corresponden.</p>
+
+  <h3>Botones del portal (admin)</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Botón / Módulo</th>
+          <th>Página destino</th>
+          <th>Para qué sirve</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Panel de control</strong></td><td><code>admin.html</code></td><td>Dashboard, averías, mecánicos, repuestos, informes</td></tr>
+        <tr><td><strong>Plan Preventivo</strong></td><td><code>preventivo.html</code></td><td>Planificación mensual, seguimiento, catálogo</td></tr>
+        <tr><td><strong>Turnos</strong></td><td><code>turnos.html</code></td><td>Gestión de turnos y bolsas de horas extra</td></tr>
+        <tr><td><strong>Encargados</strong></td><td><code>encargados.html</code></td><td>Panel de encargados de producción</td></tr>
+        <tr><td><strong>Legionela</strong></td><td><code>legionela.html</code></td><td>Registros de control de agua y legionela</td></tr>
+        <tr><td><strong>Preventivos externos</strong></td><td><code>preventivos_externos.html</code></td><td>Contratos y revisiones externas de empresa</td></tr>
+        <tr><td><strong>Máquinas</strong></td><td><code>maquinas_admin.html</code></td><td>Fichas técnicas de máquinas (criticidad, datos)</td></tr>
+        <tr><td><strong>Mecánicos</strong></td><td><code>mecanicos.html</code></td><td>Lista y estado de mecánicos (vista admin)</td></tr>
+        <tr><td><strong>Historial máquina</strong></td><td><code>historial_maquina.html</code></td><td>KPIs históricos y timeline por máquina</td></tr>
+        <tr><td><strong>Informe especial</strong></td><td><code>informe_especial.html</code></td><td>Informe mensual Rubiel / Alberto</td></tr>
+        <tr><td><strong>Arrancada y Cierre</strong></td><td><code>arrancada_cierre.html</code></td><td>Checklist diario de apertura y cierre de fábrica</td></tr>
+        <tr><td><strong>Calendario</strong></td><td><code>calendario.html</code></td><td>Vista calendario de preventivos programados</td></tr>
+        <tr><td><strong>Parte de trabajo</strong></td><td><code>parte_trabajo.html</code></td><td>Imprimible A4 apaisado por mecánico</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Chip de versión</h3>
+  <p>En la esquina superior del portal verás un chip pequeño con la versión actual del sistema (por ejemplo <code>v1.0.309</code>). Este número se actualiza automáticamente desde Firebase cada vez que se despliega una nueva versión. Si el chip no aparece o muestra <code>v0.0.0</code>, hay un problema de conexión con Firebase.</p>
+
+  <div class="callout tip">
+    <div class="callout-label">Consejo</div>
+    <p>Si el sistema muestra comportamientos inesperados, comprueba primero la versión. Si es antigua, fuerza la recarga con <strong>Ctrl + Shift + R</strong> (recarga sin caché) para obtener la última versión.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CAPÍTULO 3 — NOTIFICACIONES AUTOMÁTICAS
+═══════════════════════════════════════════════ -->
+<section class="chapter" id="ch3">
+  <div class="chapter-header">
+    <div class="ch-badge">3</div>
+    <div class="chapter-header-text">
+      <div class="ch-eyebrow">Alertas</div>
+      <h2>Notificaciones automáticas del sistema</h2>
+    </div>
+  </div>
+
+  <p>El sistema comprueba periódicamente el estado de las averías y preventivos y envía notificaciones push al navegador cuando se detectan situaciones que requieren atención. Estas notificaciones solo llegan al perfil administrador.</p>
+
+  <h3>Tipos de notificación</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Situación</th>
+          <th>Condición exacta</th>
+          <th>Cooldown</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-urg">URGENTE</span> abierta &gt;1h</td>
+          <td>Avería con prioridad "Urgente" cuya hora de apertura lleva más de 60 minutos sin cerrarse</td>
+          <td>4 horas</td>
+        </tr>
+        <tr>
+          <td>Cualquier avería abierta &gt;6h</td>
+          <td>Cualquier avería activa (cualquier prioridad) que lleve más de 6 horas sin resolverse</td>
+          <td>4 horas</td>
+        </tr>
+        <tr>
+          <td>Preventivo vencido</td>
+          <td>Tarea preventiva con fecha plan ya pasada y estado distinto de "completado"</td>
+          <td>4 horas</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>El <strong>cooldown de 4 horas</strong> significa que la misma alerta (misma avería o mismo preventivo) no volverá a notificarse hasta pasadas 4 horas desde la última vez. Esto evita el spam de notificaciones cuando hay una avería que se alarga.</p>
+
+  <h3>Cómo activar las notificaciones</h3>
+  <ol class="steps">
+    <li>Al iniciar sesión como admin, el sistema muestra una solicitud de permiso de notificaciones del navegador.</li>
+    <li>Haz clic en <strong>Permitir</strong> en el diálogo del navegador.</li>
+    <li>El sistema registra el permiso y activa el worker de comprobación periódica en segundo plano.</li>
+  </ol>
+
+  <div class="callout aviso">
+    <div class="callout-label">Atención</div>
+    <p>Las notificaciones solo funcionan mientras la pestaña del sistema está abierta en el navegador (o minimizada). Si cierras el navegador completamente, dejarás de recibir alertas hasta que vuelvas a abrir el sistema. Se recomienda dejar el portal de inicio abierto en una pestaña durante el horario de trabajo.</p>
+  </div>
+
+  <h3>Reactivar notificaciones si las rechazaste</h3>
+  <p>Si en su momento rechazaste el permiso, el navegador no vuelve a preguntar automáticamente. Para reactivarlo:</p>
+  <ul>
+    <li><strong>Chrome / Edge:</strong> Haz clic en el icono de candado (o de información) junto a la URL → Notificaciones → Permitir → Recarga la página.</li>
+    <li><strong>Firefox:</strong> Menú → Permisos del sitio → Notificaciones → Permitir.</li>
+    <li><strong>Safari (macOS):</strong> Preferencias → Sitios web → Notificaciones → selecciona el sitio → Permitir.</li>
+  </ul>
+
+  <h3>Contenido de las notificaciones</h3>
+  <p>Cada notificación muestra el nombre de la máquina afectada, el tipo de alerta y la hora de detección. Al hacer clic en la notificación, el navegador te lleva directamente a la pestaña del sistema donde puedes actuar sobre la avería o preventivo correspondiente.</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CAPÍTULO 4 — DASHBOARD
+═══════════════════════════════════════════════ -->
+<section class="chapter" id="ch4">
+  <div class="chapter-header">
+    <div class="ch-badge">4</div>
+    <div class="chapter-header-text">
+      <div class="ch-eyebrow">Panel principal · admin.html</div>
+      <h2>Dashboard — interpretar los KPIs globales</h2>
+    </div>
+  </div>
+
+  <p>La pestaña <strong>Dashboard</strong> de <code>admin.html</code> es la primera vista al entrar en el panel de control. Ofrece una lectura de la salud global del parque de maquinaria en tiempo real. El panel se auto-refresca cada <strong>3 minutos</strong>.</p>
+
+  <h3>Los cuatro KPIs principales</h3>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Averías abiertas</div>
+      <div class="kpi-value">3 <span class="kpi-unit">activas</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">MTBF medio</div>
+      <div class="kpi-value">312 <span class="kpi-unit">h</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">MTTR medio</div>
+      <div class="kpi-value">2.4 <span class="kpi-unit">h</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Disponibilidad media</div>
+      <div class="kpi-value">98.7 <span class="kpi-unit">%</span></div>
+    </div>
+  </div>
+
+  <h4>Qué mide cada KPI</h4>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>KPI</th><th>Definición</th><th>Referencia ideal</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Averías abiertas</strong></td>
+          <td>Número de averías con estado "abierta" en este momento. Incluye todas las prioridades.</td>
+          <td>0 (objetivo); &lt;3 aceptable en planta activa</td>
+        </tr>
+        <tr>
+          <td><strong>MTBF medio</strong> (Mean Time Between Failures)</td>
+          <td>Tiempo medio entre fallos, calculado como promedio de todas las máquinas en el período seleccionado. Expresado en horas.</td>
+          <td>Cuanto mayor, mejor. Maquinaria crítica A: &gt;200h</td>
+        </tr>
+        <tr>
+          <td><strong>MTTR medio</strong> (Mean Time To Repair)</td>
+          <td>Tiempo medio de reparación desde apertura hasta cierre de avería. Promedio de todas las máquinas.</td>
+          <td>Cuanto menor, mejor. Objetivo: &lt;4h para críticas A</td>
+        </tr>
+        <tr>
+          <td><strong>Disponibilidad media</strong></td>
+          <td>Calculada como MTBF / (MTBF + MTTR) × 100. Promedio ponderado del parque.</td>
+          <td>&gt;97% para parque industrial alimentario</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- MOCKUP DASHBOARD -->
+  <div class="mockup-wrap">
+    <div class="mockup-title">Mockup — Dashboard admin.html (pestaña Dashboard)</div>
+    <svg viewBox="0 0 760 380" xmlns="http://www.w3.org/2000/svg" style="background:#0d1b2a">
+      <!-- Tab bar -->
+      <rect x="0" y="0" width="760" height="36" fill="#07121e"/>
+      <rect x="0" y="0" width="1" height="36" fill="#1a3a5c"/>
+      <!-- Tabs -->
+      <rect x="8" y="6" width="90" height="24" rx="3" fill="#0f2035" stroke="#c9a227" stroke-width="1"/>
+      <text x="53" y="23" text-anchor="middle" fill="#f0c040" font-family="Barlow Condensed" font-size="11" font-weight="700">DASHBOARD</text>
+      <rect x="104" y="6" width="76" height="24" rx="3" fill="none"/>
+      <text x="142" y="23" text-anchor="middle" fill="#3f566e" font-family="Barlow Condensed" font-size="11">AVERÍAS</text>
+      <rect x="186" y="6" width="76" height="24" rx="3" fill="none"/>
+      <text x="224" y="23" text-anchor="middle" fill="#3f566e" font-family="Barlow Condensed" font-size="11">MECÁNICOS</text>
+      <rect x="268" y="6" width="76" height="24" rx="3" fill="none"/>
+      <text x="306" y="23" text-anchor="middle" fill="#3f566e" font-family="Barlow Condensed" font-size="11">REPUESTOS</text>
+      <!-- Divider -->
+      <line x1="0" y1="36" x2="760" y2="36" stroke="#1a3a5c" stroke-width="1"/>
+      <!-- KPI cards row -->
+      <rect x="12" y="48" width="168" height="72" rx="3" fill="#0f2035" stroke="#1a3a5c" stroke-width="1"/>
+      <rect x="12" y="48" width="168" height="2" fill="#8a6e18"/>
+      <text x="20" y="64" fill="#3f566e" font-family="Barlow Condensed" font-size="9" font-weight="600" letter-spacing="1">AVERÍAS ABIERTAS</text>
+      <text x="20" y="96" fill="#f0c040" font-family="Barlow Condensed" font-size="34" font-weight="700">3</text>
+      <text x="54" y="96" fill="#7a90a8" font-family="Barlow Condensed" font-size="14">activas</text>
+
+      <rect x="190" y="48" width="168" height="72" rx="3" fill="#0f2035" stroke="#1a3a5c" stroke-width="1"/>
+      <rect x="190" y="48" width="168" height="2" fill="#8a6e18"/>
+      <text x="198" y="64" fill="#3f566e" font-family="Barlow Condensed" font-size="9" font-weight="600" letter-spacing="1">MTBF MEDIO</text>
+      <text x="198" y="96" fill="#f0c040" font-family="Barlow Condensed" font-size="34" font-weight="700">312</text>
+      <text x="244" y="96" fill="#7a90a8" font-family="Barlow Condensed" font-size="14">h</text>
+
+      <rect x="368" y="48" width="168" height="72" rx="3" fill="#0f2035" stroke="#1a3a5c" stroke-width="1"/>
+      <rect x="368" y="48" width="168" height="2" fill="#8a6e18"/>
+      <text x="376" y="64" fill="#3f566e" font-family="Barlow Condensed" font-size="9" font-weight="600" letter-spacing="1">MTTR MEDIO</text>
+      <text x="376" y="96" fill="#f0c040" font-family="Barlow Condensed" font-size="34" font-weight="700">2.4</text>
+      <text x="414" y="96" fill="#7a90a8" font-family="Barlow Condensed" font-size="14">h</text>
+
+      <rect x="546" y="48" width="202" height="72" rx="3" fill="#0f2035" stroke="#1a3a5c" stroke-width="1"/>
+      <rect x="546" y="48" width="202" height="2" fill="#8a6e18"/>
+      <text x="554" y="64" fill="#3f566e" font-family="Barlow Condensed" font-size="9" font-weight="600" letter-spacing="1">DISPONIBILIDAD MEDIA</text>
+      <text x="554" y="96" fill="#f0c040" font-family="Barlow Condensed" font-size="34" font-weight="700">98.7</text>
+      <text x="608" y="96" fill="#7a90a8" font-family="Barlow Condensed" font-size="14">%</text>
+
+      <!-- Averías activas section -->
+      <text x="12" y="142" fill="#c9a227" font-family="Barlow Semi Condensed" font-size="12" font-weight="600">Averías activas</text>
+      <!-- Filter pills -->
+      <rect x="12" y="150" width="80" height="18" rx="9" fill="#1a3a5c"/>
+      <text x="52" y="163" text-anchor="middle" fill="#7a90a8" font-family="Barlow Condensed" font-size="10">Todas (3)</text>
+      <rect x="98" y="150" width="66" height="18" rx="9" fill="#3a0808"/>
+      <text x="131" y="163" text-anchor="middle" fill="#f07070" font-family="Barlow Condensed" font-size="10">Urgente (1)</text>
+      <rect x="170" y="150" width="76" height="18" rx="9" fill="#261808"/>
+      <text x="208" y="163" text-anchor="middle" fill="#e09040" font-family="Barlow Condensed" font-size="10">Importante (1)</text>
+      <rect x="252" y="150" width="86" height="18" rx="9" fill="#082018"/>
+      <text x="295" y="163" text-anchor="middle" fill="#50c080" font-family="Barlow Condensed" font-size="10">Programable (1)</text>
+
+      <!-- Table header -->
+      <rect x="12" y="174" width="736" height="20" fill="#152840"/>
+      <text x="20" y="188" fill="#7a90a8" font-family="Barlow Condensed" font-size="9" font-weight="600" letter-spacing="1">MÁQUINA</text>
+      <text x="200" y="188" fill="#7a90a8" font-family="Barlow Condensed" font-size="9" font-weight="600" letter-spacing="1">DESCRIPCIÓN</text>
+      <text x="440" y="188" fill="#7a90a8" font-family="Barlow Condensed" font-size="9" font-weight="600" letter-spacing="1">MECÁNICO</text>
+      <text x="570" y="188" fill="#7a90a8" font-family="Barlow Condensed" font-size="9" font-weight="600" letter-spacing="1">ABIERTA</text>
+      <text x="660" y="188" fill="#7a90a8" font-family="Barlow Condensed" font-size="9" font-weight="600" letter-spacing="1">PRIORIDAD</text>
+      <!-- Row 1 -->
+      <rect x="12" y="194" width="736" height="28" fill="#0f2035"/>
+      <text x="20" y="212" fill="#e8dcc8" font-family="Barlow" font-size="11">AMASA-03</text>
+      <text x="200" y="212" fill="#e8dcc8" font-family="Barlow" font-size="11">Variador frecuencia sin respuesta</text>
+      <text x="440" y="212" fill="#e8dcc8" font-family="Barlow" font-size="11">Carlos M.</text>
+      <text x="570" y="212" fill="#e8dcc8" font-family="Barlow" font-size="11">08:22</text>
+      <rect x="660" y="199" width="56" height="16" rx="2" fill="#3a0808" stroke="#6a1010" stroke-width="1"/>
+      <text x="688" y="211" text-anchor="middle" fill="#f07070" font-family="Barlow Condensed" font-size="10" font-weight="700">URGENTE</text>
+      <!-- Row 2 -->
+      <rect x="12" y="222" width="736" height="28" fill="#0d1b2a"/>
+      <text x="20" y="240" fill="#e8dcc8" font-family="Barlow" font-size="11">HOMO-01</text>
+      <text x="200" y="240" fill="#e8dcc8" font-family="Barlow" font-size="11">Fuga de vapor en junta colector</text>
+      <text x="440" y="240" fill="#e8dcc8" font-family="Barlow" font-size="11">Miguel A.</text>
+      <text x="570" y="240" fill="#e8dcc8" font-family="Barlow" font-size="11">09:47</text>
+      <rect x="660" y="227" width="68" height="16" rx="2" fill="#2a1a06" stroke="#5a3010" stroke-width="1"/>
+      <text x="694" y="239" text-anchor="middle" fill="#e09040" font-family="Barlow Condensed" font-size="10" font-weight="700">IMPORTANTE</text>
+      <!-- Row 3 -->
+      <rect x="12" y="250" width="736" height="28" fill="#0f2035"/>
+      <text x="20" y="268" fill="#e8dcc8" font-family="Barlow" font-size="11">ENFRIA-02</text>
+      <text x="200" y="268" fill="#e8dcc8" font-family="Barlow" font-size="11">Revisión ruido anómalo compresor</text>
+      <text x="440" y="268" fill="#e8dcc8" font-family="Barlow" font-size="11">Roberto P.</text>
+      <text x="570" y="268" fill="#e8dcc8" font-family="Barlow" font-size="11">Ayer 16:10</text>
+      <rect x="656" y="255" width="80" height="16" rx="2" fill="#082018" stroke="#104030" stroke-width="1"/>
+      <text x="696" y="267" text-anchor="middle" fill="#50c080" font-family="Barlow Condensed" font-size="10" font-weight="700">PROGRAMABLE</text>
+
+      <!-- Desglose type/gravedad row -->
+      <text x="12" y="308" fill="#c9a227" font-family="Barlow Semi Condensed" font-size="12" font-weight="600">Desglose tipo avería</text>
+      <rect x="12" y="316" width="80" height="46" rx="3" fill="#0f2035" stroke="#1a3a5c" stroke-width="1"/>
+      <text x="52" y="332" text-anchor="middle" fill="#7a90a8" font-family="Barlow Condensed" font-size="9">MECÁNICA</text>
+      <text x="52" y="352" text-anchor="middle" fill="#f0c040" font-family="Barlow Condensed" font-size="22" font-weight="700">2</text>
+      <rect x="100" y="316" width="80" height="46" rx="3" fill="#0f2035" stroke="#1a3a5c" stroke-width="1"/>
+      <text x="140" y="332" text-anchor="middle" fill="#7a90a8" font-family="Barlow Condensed" font-size="9">ELÉCTRICA</text>
+      <text x="140" y="352" text-anchor="middle" fill="#f0c040" font-family="Barlow Condensed" font-size="22" font-weight="700">1</text>
+      <rect x="188" y="316" width="80" height="46" rx="3" fill="#0f2035" stroke="#1a3a5c" stroke-width="1"/>
+      <text x="228" y="332" text-anchor="middle" fill="#7a90a8" font-family="Barlow Condensed" font-size="9">OTROS</text>
+      <text x="228" y="352" text-anchor="middle" fill="#f0c040" font-family="Barlow Condensed" font-size="22" font-weight="700">0</text>
+      <!-- Auto-refresh label -->
+      <text x="748" y="375" text-anchor="end" fill="#3f566e" font-family="Barlow Condensed" font-size="9">↻ Auto-refresco 3 min</text>
+    </svg>
+  </div>
+
+  <h3>Selector de período</h3>
+  <p>En la parte superior del dashboard hay un selector de período que afecta a los cálculos de MTBF, MTTR y disponibilidad. Las opciones son <strong>30 días</strong>, <strong>90 días</strong>, <strong>6 meses</strong> y <strong>1 año</strong>. Las averías activas siempre se muestran en tiempo real independientemente del período.</p>
+
+  <h3>Desglose por tipo y gravedad</h3>
+  <p>Debajo de la tabla de averías activas, el dashboard muestra dos grupos de contadores:</p>
+  <ul>
+    <li><strong>Por tipo:</strong> Mecánica, Eléctrica, Hidráulica/Neumática, Otros Trabajos. Estos tipos los elige el mecánico al abrir la avería.</li>
+    <li><strong>Por gravedad:</strong> Leve, Moderada, Grave. La gravedad se puede editar desde el detalle de la avería.</li>
+  </ul>
+
+  <h3>Auto-refresco</h3>
+  <p>El panel se refresca automáticamente cada 3 minutos consultando Firebase. Si necesitas ver el estado más reciente de inmediato, usa el botón de recarga manual que aparece en la esquina superior derecha del panel o recarga la página con F5.</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CAPÍTULO 5 — TABLA DE FIABILIDAD
+═══════════════════════════════════════════════ -->
+<section class="chapter" id="ch5">
+  <div class="chapter-header">
+    <div class="ch-badge">5</div>
+    <div class="chapter-header-text">
+      <div class="ch-eyebrow">Panel principal · admin.html</div>
+      <h2>Tabla de fiabilidad de máquinas</h2>
+    </div>
+  </div>
+
+  <p>Dentro del Dashboard, debajo de los KPIs globales, encontrarás la <strong>tabla de fiabilidad por máquina</strong>. Esta tabla desglosa los indicadores MTBF, MTTR y Disponibilidad para cada máquina del parque individualmente.</p>
+
+  <h3>Columnas de la tabla</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Columna</th><th>Descripción</th><th>Cómo interpretar</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Máquina</strong></td>
+          <td>Código y nombre de la máquina</td>
+          <td>Pinchar abre la ficha histórica (<code>historial_maquina.html</code>)</td>
+        </tr>
+        <tr>
+          <td><strong>Criticidad</strong></td>
+          <td>A (crítica), B (importante), C (auxiliar)</td>
+          <td>Define la urgencia de intervención y los objetivos de MTBF</td>
+        </tr>
+        <tr>
+          <td><strong>Averías (período)</strong></td>
+          <td>Número de averías cerradas en el período seleccionado</td>
+          <td>Permite detectar máquinas problemáticas</td>
+        </tr>
+        <tr>
+          <td><strong>MTBF</strong></td>
+          <td>Tiempo medio entre fallos en horas</td>
+          <td>Bajo MTBF = falla frecuentemente. Revisar plan preventivo</td>
+        </tr>
+        <tr>
+          <td><strong>MTTR</strong></td>
+          <td>Tiempo medio de reparación en horas</td>
+          <td>Alto MTTR = reparaciones largas. Revisar repuestos disponibles o formación</td>
+        </tr>
+        <tr>
+          <td><strong>Disponibilidad</strong></td>
+          <td>MTBF / (MTBF + MTTR) × 100</td>
+          <td>El objetivo principal. &lt;95% en máquina A es una señal de alerta</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Filtros y ordenación</h3>
+  <p>La tabla permite ordenar por cualquier columna pulsando su cabecera. También puedes filtrar por criticidad (A/B/C) usando los chips encima de la tabla. El período de cálculo se hereda del selector global del dashboard (30d/90d/6m/1año).</p>
+
+  <div class="callout tip">
+    <div class="callout-label">Cómo usarla en la práctica</div>
+    <p>Ordena por <strong>Disponibilidad</strong> ascendente cada mes. Las máquinas al principio de la lista son las que más horas de producción están perdiendo. Estas son las candidatas prioritarias para revisar el plan preventivo o revisar repuestos en stock.</p>
+  </div>
+
+  <h3>Acceso rápido al historial</h3>
+  <p>Pinchando en el nombre de cualquier máquina en esta tabla accedes directamente a su ficha en <code>historial_maquina.html</code>, con el gráfico de 12 meses y el timeline completo de intervenciones. Ver Capítulo 16 para más detalle.</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CAPÍTULO 6 — GESTIÓN DE AVERÍAS
+═══════════════════════════════════════════════ -->
+<section class="chapter" id="ch6">
+  <div class="chapter-header">
+    <div class="ch-badge">6</div>
+    <div class="chapter-header-text">
+      <div class="ch-eyebrow">Panel principal · admin.html → pestaña Averías</div>
+      <h2>Gestión de averías — ver, editar, cerrar</h2>
+    </div>
+  </div>
+
+  <p>La pestaña <strong>Averías</strong> de <code>admin.html</code> es el centro de gestión de incidencias correctivas. A diferencia de la vista de los mecánicos, el admin puede ver y editar cualquier avería de cualquier mecánico o máquina.</p>
+
+  <h3>Filtros disponibles</h3>
+  <p>La tabla de averías tiene los siguientes filtros combinables:</p>
+  <ul>
+    <li><strong>Estado:</strong> Abiertas / Cerradas / Todas</li>
+    <li><strong>Máquina:</strong> Desplegable con todas las máquinas del parque</li>
+    <li><strong>Mecánico:</strong> Desplegable con todos los mecánicos</li>
+    <li><strong>Período:</strong> Selector de fechas (desde/hasta)</li>
+    <li><strong>Tipo:</strong> Mecánica / Eléctrica / Hidráulica / Otros Trabajos</li>
+    <li><strong>Prioridad:</strong> Urgente / Importante / Programable</li>
+  </ul>
+
+  <h3>Ver el detalle de una avería</h3>
+  <p>Al pinchar en cualquier fila de la tabla se abre un panel lateral (o modal) con el detalle completo: historial de notas, fechas, mecánico asignado, tipo, fotos adjuntas y tiempo transcurrido.</p>
+
+  <h3>Editar una avería</h3>
+  <p>Desde el detalle, el admin puede modificar:</p>
+  <ul>
+    <li><strong>Mecánico asignado:</strong> Reasignar la avería a otro mecánico si el titular no está disponible.</li>
+    <li><strong>Prioridad:</strong> Escalar o desescalar la urgencia.</li>
+    <li><strong>Tipo de avería:</strong> Corregir si el mecánico lo clasificó incorrectamente.</li>
+    <li><strong>Notas internas del admin:</strong> Añadir contexto que no es visible para el mecánico.</li>
+    <li><strong>Fecha de inicio (corrección):</strong> Si la avería se abrió con retraso.</li>
+  </ul>
+
+  <div class="callout aviso">
+    <div class="callout-label">Atención</div>
+    <p>Modificar la fecha de inicio de una avería afecta al cálculo de MTTR y Disponibilidad. Edita solo cuando haya un error real en el registro, no para mejorar artificialmente los indicadores.</p>
+  </div>
+
+  <h3>Cerrar una avería desde el panel admin</h3>
+  <ol class="steps">
+    <li>Abre el detalle de la avería desde la tabla.</li>
+    <li>Revisa que el mecánico haya añadido el diagnóstico y la acción correctiva.</li>
+    <li>Pulsa el botón <strong>Cerrar avería</strong>. El sistema registra la hora de cierre, calcula el tiempo de resolución y actualiza los KPIs.</li>
+    <li>Opcionalmente, añade una nota de cierre del admin (causa raíz confirmada, acción preventiva recomendada).</li>
+  </ol>
+
+  <h3>Averías "Otros Trabajos"</h3>
+  <p>Los mecánicos pueden registrar trabajos no planificados que no son averías en sentido estricto (ajustes, limpieza técnica, trabajos de mejora) bajo el tipo <strong>Otros Trabajos</strong>. Estos registros aparecen en la tabla de averías filtrados por tipo, y también se incluyen en el informe especial de Alberto (ver Capítulo 17).</p>
+  <p>Los "Otros Trabajos" <strong>no cuentan</strong> para el cálculo de MTBF ni MTTR, pero sí suman horas trabajadas al mecánico.</p>
+
+  <h3>Exportar averías</h3>
+  <p>Desde la pestaña Averías, el botón <strong>Exportar</strong> genera una hoja Excel con todas las averías del período filtrado actualmente. Útil para informes a dirección o análisis externos.</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CAPÍTULO 7 — PANEL DE MECÁNICOS
+═══════════════════════════════════════════════ -->
+<section class="chapter" id="ch7">
+  <div class="chapter-header">
+    <div class="ch-badge">7</div>
+    <div class="chapter-header-text">
+      <div class="ch-eyebrow">Panel principal · admin.html → pestaña Mecánicos</div>
+      <h2>Panel de mecánicos — contraseñas y carga</h2>
+    </div>
+  </div>
+
+  <p>La pestaña <strong>Mecánicos</strong> de <code>admin.html</code> muestra el listado de todos los mecánicos dados de alta en el sistema con información de actividad y carga de trabajo.</p>
+
+  <h3>Información por mecánico</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Campo</th><th>Descripción</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Nombre</strong></td><td>Nombre completo del mecánico tal como está en Firebase</td></tr>
+        <tr><td><strong>Usuario</strong></td><td>Nombre de usuario de acceso al sistema</td></tr>
+        <tr><td><strong>Último acceso</strong></td><td>Fecha y hora del último inicio de sesión registrado</td></tr>
+        <tr><td><strong>Averías abiertas</strong></td><td>Número de averías activas asignadas actualmente</td></tr>
+        <tr><td><strong>Preventivos mes</strong></td><td>Número de tareas preventivas asignadas este mes</td></tr>
+        <tr><td><strong>% Cumplimiento</strong></td><td>Porcentaje de preventivos completados sobre los asignados</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Resetear contraseña de un mecánico</h3>
+  <ol class="steps">
+    <li>Localiza al mecánico en la tabla y pulsa el botón <strong>⋯ Opciones</strong> (o icono de llave) al final de su fila.</li>
+    <li>Selecciona <strong>Resetear contraseña</strong>.</li>
+    <li>Introduce la nueva contraseña provisional (mínimo 6 caracteres). El sistema la actualiza en Firebase Authentication.</li>
+    <li>Comunica la nueva contraseña al mecánico de forma segura. El mecánico puede cambiarla desde su perfil una vez dentro.</li>
+  </ol>
+
+  <div class="callout peligro">
+    <div class="callout-label">Seguridad</div>
+    <p>No uses contraseñas triviales al hacer el reset (ej: el nombre del mecánico, "1234"). Usa al menos 8 caracteres con letras y números. El sistema no impone complejidad mínima, pero es tu responsabilidad.</p>
+  </div>
+
+  <h3>Ver carga de trabajo por mecánico</h3>
+  <p>Al pinchar en el nombre de un mecánico se abre un panel de detalle con:</p>
+  <ul>
+    <li>Lista de averías activas asignadas (con tiempo transcurrido)</li>
+    <li>Plan preventivo del mes actual (tareas asignadas, completadas, pendientes)</li>
+    <li>Historial de averías cerradas en los últimos 30 días</li>
+    <li>Total de horas trabajadas registradas en el período</li>
+  </ul>
+  <p>Esta vista es idéntica a la que ve el mecánico desde su propio perfil, pero sin restricción de acceso: el admin puede ver todos los mecánicos.</p>
+
+  <h3>Dar de alta un mecánico nuevo</h3>
+  <p>El alta de nuevos usuarios se hace directamente en <strong>Firebase Console</strong> (Authentication + RTDB). No hay formulario en la interfaz web para esta operación. Una vez creado en Firebase, el mecánico aparece automáticamente en la lista de este panel.</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CAPÍTULO 8 — REPUESTOS E INVENTARIO
+═══════════════════════════════════════════════ -->
+<section class="chapter" id="ch8">
+  <div class="chapter-header">
+    <div class="ch-badge">8</div>
+    <div class="chapter-header-text">
+      <div class="ch-eyebrow">Panel principal · admin.html → pestaña Repuestos</div>
+      <h2>Gestión de repuestos e inventario</h2>
+    </div>
+  </div>
+
+  <p>La pestaña <strong>Repuestos</strong> de <code>admin.html</code> gestiona el inventario de piezas y consumibles del taller. El sistema avisa automáticamente cuando una referencia baja del stock mínimo configurado.</p>
+
+  <h3>Inventario de repuestos</h3>
+  <p>La tabla de inventario muestra todas las referencias dadas de alta con los siguientes campos:</p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Campo</th><th>Descripción</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Referencia</strong></td><td>Código interno o referencia del fabricante</td></tr>
+        <tr><td><strong>Descripción</strong></td><td>Nombre descriptivo del repuesto</td></tr>
+        <tr><td><strong>Máquina(s)</strong></td><td>Máquinas en las que se usa este repuesto</td></tr>
+        <tr><td><strong>Stock actual</strong></td><td>Unidades en almacén en este momento</td></tr>
+        <tr><td><strong>Stock mínimo</strong></td><td>Nivel mínimo configurado; si se supera, alerta roja</td></tr>
+        <tr><td><strong>Proveedor</strong></td><td>Proveedor habitual y referencia de pedido</td></tr>
+        <tr><td><strong>Última salida</strong></td><td>Fecha en que se consumió una unidad por última vez</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Alertas de stock bajo</h3>
+  <p>Las referencias con stock actual igual o inferior al mínimo aparecen destacadas en rojo en la tabla. También se muestran en un bloque de alertas en la parte superior de la pestaña. El admin debería revisar estas alertas al menos una vez por semana.</p>
+
+  <div class="callout aviso">
+    <div class="callout-label">Atención</div>
+    <p>Las alertas de stock bajo <strong>no generan pedidos automáticos</strong>. El sistema solo avisa; la gestión del pedido al proveedor sigue siendo manual. Una futura versión puede integrar correo de pedido automático.</p>
+  </div>
+
+  <h3>Pedidos pendientes de mecánicos</h3>
+  <p>Cuando un mecánico registra una avería y marca que ha necesitado un repuesto que no había en stock, queda registrado como <strong>pedido pendiente</strong>. El admin ve estos pedidos en un panel lateral dentro de la pestaña Repuestos. Desde allí puede:</p>
+  <ul>
+    <li>Marcar el pedido como "en curso" (ya se ha contactado al proveedor).</li>
+    <li>Marcar el pedido como "recibido" (actualiza el stock automáticamente).</li>
+    <li>Cancelar el pedido si ya no es necesario.</li>
+  </ul>
+
+  <h3>Dar de alta un repuesto nuevo</h3>
+  <ol class="steps">
+    <li>Pulsa el botón <strong>+ Nuevo repuesto</strong> en la parte superior de la tabla.</li>
+    <li>Rellena el formulario: referencia, descripción, máquina asociada, stock inicial, stock mínimo y proveedor.</li>
+    <li>Pulsa <strong>Guardar</strong>. El repuesto queda disponible para que los mecánicos lo seleccionen en sus averías.</li>
+  </ol>
+
+  <h3>Editar o dar de baja un repuesto</h3>
+  <p>Usa el botón de opciones (⋯) al final de cada fila para editar cualquier campo o marcar el repuesto como inactivo (no aparece en las listas de mecánicos pero conserva su historial de movimientos).</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CAPÍTULO 9 — PLAN PREVENTIVO: ESTRUCTURA
+═══════════════════════════════════════════════ -->
+<section class="chapter" id="ch9">
+  <div class="chapter-header">
+    <div class="ch-badge">9</div>
+    <div class="chapter-header-text">
+      <div class="ch-eyebrow">preventivo.html</div>
+      <h2>Plan Preventivo — navegación y estructura</h2>
+    </div>
+  </div>
+
+  <p>La página <code>preventivo.html</code> es el módulo más complejo del sistema. Gestiona toda la planificación del mantenimiento preventivo: qué se hace, quién lo hace, cuándo y si se ha completado. El acceso es exclusivo del admin; los mecánicos solo ven sus tareas asignadas desde su propia vista.</p>
+
+  <h3>Las cinco pestañas del módulo</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Pestaña</th><th>Función principal</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Plan Mensual</strong></td><td>Rejilla de asignación por máquina para el mes seleccionado. Aquí se define quién hace qué.</td></tr>
+        <tr><td><strong>Seguimiento</strong></td><td>Porcentaje de cumplimiento por mecánico y carga de trabajo. Vista operativa del mes en curso.</td></tr>
+        <tr><td><strong>Alarmas</strong></td><td>Lista de tareas vencidas o en riesgo de vencerse. Requiere atención inmediata.</td></tr>
+        <tr><td><strong>Historial</strong></td><td>Registro histórico de tareas completadas. Permite buscar por máquina, mecánico o período.</td></tr>
+        <tr><td><strong>Catálogo</strong></td><td>Biblioteca de tareas preventivas disponibles. El admin puede añadir, editar o desactivar tareas.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Navegación entre meses</h3>
+  <p>En la parte superior de la página hay un selector de mes con botones <strong>&lt;</strong> (mes anterior) y <strong>&gt;</strong> (mes siguiente). El mes actual se muestra en el centro. Puedes navegar libremente entre meses pasados (para consultar historial) y futuros (para preparar el plan por adelantado).</p>
+
+  <div class="callout tip">
+    <div class="callout-label">Buena práctica</div>
+    <p>Prepara el plan del mes siguiente durante la última semana del mes en curso. Así los mecánicos lo tienen disponible desde el día 1 y pueden planificarse.</p>
+  </div>
+
+  <h3>Frecuencias de tareas</h3>
+  <p>Cada tarea del catálogo tiene asignada una frecuencia. Las frecuencias determinan en qué meses aparece la tarea en el plan:</p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Código</th><th>Frecuencia</th><th>Aparece en el plan</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="badge badge-prog">SEM</span></td><td>Semanal</td><td>Cada semana del mes (×4 o ×5)</td></tr>
+        <tr><td><span class="badge badge-imp">QUI</span></td><td>Quincenal</td><td>Dos veces al mes</td></tr>
+        <tr><td><span class="badge badge-urg">MEN</span></td><td>Mensual</td><td>Una vez al mes</td></tr>
+        <tr><td><span class="badge badge-b">TRI</span></td><td>Trimestral</td><td>Una vez cada 3 meses</td></tr>
+        <tr><td><span class="badge badge-c">SEM-A</span></td><td>Semestral</td><td>Una vez cada 6 meses</td></tr>
+        <tr><td><span class="badge badge-c">ANU</span></td><td>Anual</td><td>Una vez al año</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CAPÍTULO 10 — ASIGNACIÓN TITULAR / SUPLENTE
+═══════════════════════════════════════════════ -->
+<section class="chapter" id="ch10">
+  <div class="chapter-header">
+    <div class="ch-badge">10</div>
+    <div class="chapter-header-text">
+      <div class="ch-eyebrow">preventivo.html → Plan Mensual</div>
+      <h2>Asignación de mecánicos por máquina</h2>
+    </div>
+  </div>
+
+  <p>La pestaña <strong>Plan Mensual</strong> muestra una rejilla donde las filas son las máquinas del parque y las columnas son las tareas preventivas aplicables a cada una. Cada celda tiene dos asignaciones: <strong>Titular</strong> y <strong>Suplente</strong>.</p>
+
+  <h3>Estructura de la rejilla</h3>
+  <ul>
+    <li><strong>Titular:</strong> El mecánico responsable principal de esa tarea en esa máquina ese mes.</li>
+    <li><strong>Suplente:</strong> El mecánico que asume la tarea si el titular está ausente.</li>
+  </ul>
+  <p>Ambas asignaciones se configuran pulsando en la celda correspondiente y seleccionando el mecánico en el desplegable. Las asignaciones se guardan en Firebase en tiempo real al seleccionarlas.</p>
+
+  <!-- MOCKUP PLAN MENSUAL -->
+  <div class="mockup-wrap">
+    <div class="mockup-title">Mockup — Plan Mensual (rejilla de asignación)</div>
+    <svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" style="background:#0d1b2a">
+      <!-- Header row -->
+      <rect x="0" y="0" width="760" height="32" fill="#07121e"/>
+      <text x="12" y="21" fill="#c9a227" font-family="Barlow Condensed" font-size="13" font-weight="700">AGOSTO 2026</text>
+      <!-- Nav buttons -->
+      <rect x="620" y="6" width="28" height="20" rx="3" fill="#152840" stroke="#1a3a5c" stroke-width="1"/>
+      <text x="634" y="20" text-anchor="middle" fill="#7a90a8" font-family="Barlow Condensed" font-size="13">&lt;</text>
+      <rect x="654" y="6" width="28" height="20" rx="3" fill="#152840" stroke="#1a3a5c" stroke-width="1"/>
+      <text x="668" y="20" text-anchor="middle" fill="#7a90a8" font-family="Barlow Condensed" font-size="13">&gt;</text>
+      <!-- Buttons -->
+      <rect x="690" y="5" width="64" height="22" rx="3" fill="#1a3a5c"/>
+      <text x="722" y="20" text-anchor="middle" fill="#e8dcc8" font-family="Barlow Condensed" font-size="10" font-weight="600">AUTO-ASIGNAR</text>
+      <line x1="0" y1="32" x2="760" y2="32" stroke="#1a3a5c" stroke-width="1"/>
+      <!-- Column headers -->
+      <rect x="0" y="32" width="140" height="28" fill="#0f2035"/>
+      <text x="12" y="50" fill="#7a90a8" font-family="Barlow Condensed" font-size="9" font-weight="600" letter-spacing="1">MÁQUINA</text>
+      <rect x="140" y="32" width="120" height="28" fill="#0f2035"/>
+      <text x="200" y="44" text-anchor="middle" fill="#7a90a8" font-family="Barlow Condensed" font-size="9" font-weight="600" letter-spacing="0.5">LUBRICACIÓN</text>
+      <text x="200" y="56" text-anchor="middle" fill="#3f566e" font-family="Barlow Condensed" font-size="8">MEN</text>
+      <rect x="260" y="32" width="120" height="28" fill="#0f2035"/>
+      <text x="320" y="44" text-anchor="middle" fill="#7a90a8" font-family="Barlow Condensed" font-size="9" font-weight="600" letter-spacing="0.5">AJUSTE TENSIÓN</text>
+      <text x="320" y="56" text-anchor="middle" fill="#3f566e" font-family="Barlow Condensed" font-size="8">QUI</text>
+      <rect x="380" y="32" width="120" height="28" fill="#0f2035"/>
+      <text x="440" y="44" text-anchor="middle" fill="#7a90a8" font-family="Barlow Condensed" font-size="9" font-weight="600" letter-spacing="0.5">FILTROS</text>
+      <text x="440" y="56" text-anchor="middle" fill="#3f566e" font-family="Barlow Condensed" font-size="8">TRI</text>
+      <rect x="500" y="32" width="120" height="28" fill="#0f2035"/>
+      <text x="560" y="44" text-anchor="middle" fill="#7a90a8" font-family="Barlow Condensed" font-size="9" font-weight="600" letter-spacing="0.5">INSPECCIÓN VISUAL</text>
+      <text x="560" y="56" text-anchor="middle" fill="#3f566e" font-family="Barlow Condensed" font-size="8">SEM</text>
+      <line x1="0" y1="60" x2="760" y2="60" stroke="#1a3a5c" stroke-width="1"/>
+      <!-- Row 1 -->
+      <rect x="0" y="60" width="140" height="48" fill="#0f2035"/>
+      <text x="12" y="80" fill="#e8dcc8" font-family="Barlow" font-size="11" font-weight="600">AMASA-01</text>
+      <text x="12" y="98" fill="#3f566e" font-family="Barlow Condensed" font-size="9">Amasadora principal</text>
+      <!-- Cell 1,1 -->
+      <rect x="140" y="60" width="120" height="48" fill="#0d1b2a" stroke="#1a3a5c" stroke-width="0.5"/>
+      <text x="150" y="76" fill="#3f566e" font-family="Barlow Condensed" font-size="8" font-weight="600">TITULAR</text>
+      <text x="150" y="90" fill="#e8dcc8" font-family="Barlow Condensed" font-size="11">Carlos M.</text>
+      <text x="150" y="102" fill="#3f566e" font-family="Barlow Condensed" font-size="8" font-weight="600">SUPLENTE</text>
+      <text x="215" y="102" fill="#7a90a8" font-family="Barlow Condensed" font-size="9">Miguel A.</text>
+      <!-- Cell 1,2 -->
+      <rect x="260" y="60" width="120" height="48" fill="#0d1b2a" stroke="#1a3a5c" stroke-width="0.5"/>
+      <text x="270" y="76" fill="#3f566e" font-family="Barlow Condensed" font-size="8" font-weight="600">TITULAR</text>
+      <text x="270" y="90" fill="#e8dcc8" font-family="Barlow Condensed" font-size="11">Carlos M.</text>
+      <text x="270" y="102" fill="#3f566e" font-family="Barlow Condensed" font-size="8" font-weight="600">SUPLENTE</text>
+      <text x="335" y="102" fill="#7a90a8" font-family="Barlow Condensed" font-size="9">Roberto P.</text>
+      <!-- Cell 1,3 – no aplica este trimestre -->
+      <rect x="380" y="60" width="120" height="48" fill="#091522" stroke="#1a3a5c" stroke-width="0.5"/>
+      <text x="440" y="88" text-anchor="middle" fill="#3f566e" font-family="Barlow Condensed" font-size="10">— no aplica —</text>
+      <!-- Cell 1,4 -->
+      <rect x="500" y="60" width="120" height="48" fill="#0d1b2a" stroke="#1a3a5c" stroke-width="0.5"/>
+      <text x="510" y="76" fill="#3f566e" font-family="Barlow Condensed" font-size="8" font-weight="600">TITULAR</text>
+      <text x="510" y="90" fill="#e8dcc8" font-family="Barlow Condensed" font-size="11">Carlos M.</text>
+      <text x="510" y="102" fill="#3f566e" font-family="Barlow Condensed" font-size="8" font-weight="600">SUPLENTE</text>
+      <text x="575" y="102" fill="#7a90a8" font-family="Barlow Condensed" font-size="9">Miguel A.</text>
+      <!-- Row divider -->
+      <line x1="0" y1="108" x2="760" y2="108" stroke="#1a3a5c" stroke-width="1"/>
+      <!-- Row 2 -->
+      <rect x="0" y="108" width="140" height="48" fill="#0d1b2a"/>
+      <text x="12" y="128" fill="#e8dcc8" font-family="Barlow" font-size="11" font-weight="600">HOMO-01</text>
+      <text x="12" y="146" fill="#3f566e" font-family="Barlow Condensed" font-size="9">Horno rotativo 1</text>
+      <rect x="140" y="108" width="120" height="48" fill="#0f2035" stroke="#1a3a5c" stroke-width="0.5"/>
+      <text x="150" y="124" fill="#3f566e" font-family="Barlow Condensed" font-size="8" font-weight="600">TITULAR</text>
+      <text x="150" y="138" fill="#e8dcc8" font-family="Barlow Condensed" font-size="11">Miguel A.</text>
+      <text x="150" y="150" fill="#3f566e" font-family="Barlow Condensed" font-size="8" font-weight="600">SUPLENTE</text>
+      <text x="215" y="150" fill="#7a90a8" font-family="Barlow Condensed" font-size="9">Carlos M.</text>
+      <rect x="260" y="108" width="120" height="48" fill="#0f2035" stroke="#1a3a5c" stroke-width="0.5"/>
+      <text x="270" y="124" fill="#3f566e" font-family="Barlow Condensed" font-size="8" font-weight="600">TITULAR</text>
+      <text x="270" y="138" fill="#e8dcc8" font-family="Barlow Condensed" font-size="11">Miguel A.</text>
+      <text x="270" y="150" fill="#3f566e" font-family="Barlow Condensed" font-size="8" font-weight="600">SUPLENTE</text>
+      <text x="335" y="150" fill="#7a90a8" font-family="Barlow Condensed" font-size="9">Roberto P.</text>
+      <rect x="380" y="108" width="120" height="48" fill="#0f2035" stroke="#1a3a5c" stroke-width="0.5"/>
+      <text x="390" y="124" fill="#3f566e" font-family="Barlow Condensed" font-size="8" font-weight="600">TITULAR</text>
+      <text x="390" y="138" fill="#e8dcc8" font-family="Barlow Condensed" font-size="11">Miguel A.</text>
+      <text x="390" y="150" fill="#3f566e" font-family="Barlow Condensed" font-size="8" font-weight="600">SUPLENTE</text>
+      <text x="455" y="150" fill="#7a90a8" font-family="Barlow Condensed" font-size="9">Carlos M.</text>
+      <rect x="500" y="108" width="120" height="48" fill="#0f2035" stroke="#1a3a5c" stroke-width="0.5"/>
+      <text x="510" y="124" fill="#3f566e" font-family="Barlow Condensed" font-size="8" font-weight="600">TITULAR</text>
+      <text x="510" y="138" fill="#e8dcc8" font-family="Barlow Condensed" font-size="11">Roberto P.</text>
+      <text x="510" y="150" fill="#3f566e" font-family="Barlow Condensed" font-size="8" font-weight="600">SUPLENTE</text>
+      <text x="575" y="150" fill="#7a90a8" font-family="Barlow Condensed" font-size="9">Miguel A.</text>
+      <line x1="0" y1="156" x2="760" y2="156" stroke="#1a3a5c" stroke-width="1"/>
+      <!-- Publish bar -->
+      <rect x="0" y="256" width="760" height="44" fill="#07121e"/>
+      <line x1="0" y1="256" x2="760" y2="256" stroke="#1a3a5c" stroke-width="1"/>
+      <rect x="12" y="268" width="110" height="22" rx="3" fill="#1a3a5c"/>
+      <text x="67" y="283" text-anchor="middle" fill="#e8dcc8" font-family="Barlow Condensed" font-size="11" font-weight="600">🏥 AUSENCIAS</text>
+      <rect x="130" y="268" width="100" height="22" rx="3" fill="#8a6e18"/>
+      <text x="180" y="283" text-anchor="middle" fill="#0d1b2a" font-family="Barlow Condensed" font-size="11" font-weight="700">PUBLICAR PLAN</text>
+      <text x="640" y="283" fill="#3f566e" font-family="Barlow Condensed" font-size="10">Ver por mecánico ▾</text>
+    </svg>
+  </div>
+
+  <h3>Función Auto-asignar</h3>
+  <p>El botón <strong>Auto-asignar</strong> ejecuta un algoritmo de distribución que asigna automáticamente las tareas del mes intentando equilibrar la carga entre los mecánicos disponibles. El algoritmo respeta las especializaciones configuradas en el catálogo (algunas tareas solo pueden ser realizadas por ciertos mecánicos) y las ausencias ya registradas.</p>
+
+  <div class="callout aviso">
+    <div class="callout-label">Atención</div>
+    <p>La auto-asignación <strong>sobreescribe</strong> cualquier asignación manual previa para ese mes. Úsala como punto de partida y luego ajusta manualmente si es necesario. No la uses si ya has publicado el plan y los mecánicos lo están siguiendo.</p>
+  </div>
+
+  <h3>Navegar por mecánico</h3>
+  <p>El desplegable <strong>Ver por mecánico</strong> cambia la vista de la rejilla para mostrar solo las tareas asignadas a un mecánico específico. Útil para comprobar si la carga está bien distribuida antes de publicar.</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CAPÍTULO 11 — GESTIÓN DE AUSENCIAS
+═══════════════════════════════════════════════ -->
+<section class="chapter" id="ch11">
+  <div class="chapter-header">
+    <div class="ch-badge">11</div>
+    <div class="chapter-header-text">
+      <div class="ch-eyebrow">preventivo.html → Plan Mensual</div>
+      <h2>Gestión de ausencias — sustitución automática</h2>
+    </div>
+  </div>
+
+  <p>El botón <strong>🏥 Ausencias</strong> de la pestaña Plan Mensual abre un diálogo para registrar qué mecánicos están ausentes durante ese mes (vacaciones, baja médica, formación externa). Este registro es la base del mecanismo de sustitución automática.</p>
+
+  <h3>Registrar una ausencia</h3>
+  <ol class="steps">
+    <li>Pulsa <strong>🏥 Ausencias</strong>. Se abre el diálogo de gestión de ausencias del mes visualizado.</li>
+    <li>Marca el checkbox del mecánico o mecánicos que estarán ausentes ese mes.</li>
+    <li>Opcionalmente, indica las fechas exactas de ausencia (si no es el mes completo).</li>
+    <li>Pulsa <strong>Guardar</strong>.</li>
+  </ol>
+
+  <h3>Qué ocurre cuando hay ausencias</h3>
+  <p>Una vez registrada la ausencia, el sistema actúa de la siguiente forma:</p>
+  <ul>
+    <li>Aparece un <strong>banner rojo</strong> en la parte superior de la pestaña Plan Mensual indicando qué mecánicos están ausentes ese mes.</li>
+    <li>En la rejilla, las celdas donde el mecánico ausente es Titular muestran un indicador visual de advertencia.</li>
+    <li>El <strong>suplente configurado</strong> en esa celda pasa a ser el responsable efectivo de la tarea durante la ausencia.</li>
+    <li>En la vista de seguimiento y en las notificaciones que reciben los mecánicos, las tareas aparecen ya reasignadas al suplente.</li>
+  </ul>
+
+  <div class="callout ok">
+    <div class="callout-label">Importante entender</div>
+    <p>La sustitución es automática y transparente: el suplente ve la tarea en su lista sin que el admin tenga que reasignarla manualmente celda a celda. Por eso es crucial que todas las celdas de la rejilla tengan siempre un <strong>suplente configurado</strong>. Una celda sin suplente queda sin cobertura ante una ausencia.</p>
+  </div>
+
+  <h3>Ausencias parciales (días concretos)</h3>
+  <p>Si el mecánico solo está ausente parte del mes, el sistema aplica la sustitución únicamente en las fechas de ausencia registradas. Las tareas cuya fecha planificada cae fuera del período de ausencia siguen asignadas al titular.</p>
+
+  <h3>Retirar una ausencia</h3>
+  <p>Si un mecánico vuelve antes de lo previsto (alta médica anticipada, cancelación de viaje), desmarca su ausencia en el diálogo. El sistema revierte la sustitución automáticamente para las tareas que aún no estén completadas.</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CAPÍTULO 12 — PUBLICAR EL PLAN
+═══════════════════════════════════════════════ -->
+<section class="chapter" id="ch12">
+  <div class="chapter-header">
+    <div class="ch-badge">12</div>
+    <div class="chapter-header-text">
+      <div class="ch-eyebrow">preventivo.html → Plan Mensual</div>
+      <h2>Publicar el plan mensual</h2>
+    </div>
+  </div>
+
+  <p>El plan preventivo existe en dos estados: <strong>borrador</strong> (solo visible para el admin) y <strong>publicado</strong> (visible para los mecánicos en sus dispositivos). El botón <strong>Publicar plan</strong> hace la transición de borrador a publicado.</p>
+
+  <h3>Diferencia entre borrador y publicado</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Estado</th><th>Visible para admin</th><th>Visible para mecánicos</th><th>Editable</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Borrador</strong></td>
+          <td>Sí, con indicador visual</td>
+          <td>No</td>
+          <td>Sí, sin restricciones</td>
+        </tr>
+        <tr>
+          <td><strong>Publicado</strong></td>
+          <td>Sí</td>
+          <td>Sí, en sus dispositivos</td>
+          <td>Sí, con confirmación previa</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Proceso de publicación</h3>
+  <ol class="steps">
+    <li>Revisa la rejilla de asignación. Comprueba que todas las máquinas activas tienen titular y suplente para cada tarea.</li>
+    <li>Comprueba las ausencias registradas y que la sustitución automática cubre todos los casos.</li>
+    <li>Pulsa <strong>Publicar plan</strong>. El sistema muestra un resumen de lo que se va a publicar (número de tareas, mecánicos implicados).</li>
+    <li>Confirma. Firebase actualiza el nodo del plan con el estado "publicado" y los mecánicos ven sus tareas inmediatamente en sus dispositivos.</li>
+  </ol>
+
+  <div class="callout tip">
+    <div class="callout-label">Consejo</div>
+    <p>Publica el plan antes de las 07:00 del primer día del mes. Los mecánicos acceden al sistema al comenzar su turno y esperan ver las tareas ya disponibles.</p>
+  </div>
+
+  <h3>Modificar un plan ya publicado</h3>
+  <p>Puedes editar el plan incluso después de publicarlo. Cualquier cambio en la rejilla tras la publicación se guarda como modificación en tiempo real (Firebase) y los mecánicos ven la actualización de inmediato. No es necesario volver a publicar para cada cambio individual: el plan publicado se mantiene sincronizado con los cambios que hagas.</p>
+
+  <div class="callout aviso">
+    <div class="callout-label">Atención</div>
+    <p>Si cambias la asignación de una tarea que ya está marcada como completada por el suplente anterior, la marca de completado permanece. No se resetean los estados al reasignar. Si necesitas que la tarea vuelva a estado "pendiente", edítala desde la pestaña Seguimiento.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CAPÍTULO 13 — SEGUIMIENTO
+═══════════════════════════════════════════════ -->
+<section class="chapter" id="ch13">
+  <div class="chapter-header">
+    <div class="ch-badge">13</div>
+    <div class="chapter-header-text">
+      <div class="ch-eyebrow">preventivo.html → Seguimiento</div>
+      <h2>Seguimiento del plan — % realizadas y % carga</h2>
+    </div>
+  </div>
+
+  <p>La pestaña <strong>Seguimiento</strong> es la vista operativa del mes en curso. Muestra de un vistazo quién va bien, quién está atrasado y cómo se distribuye la carga entre los mecánicos.</p>
+
+  <h3>Cajones de % realizadas por mecánico</h3>
+  <p>La parte superior muestra una caja por mecánico con:</p>
+  <ul>
+    <li><strong>Nombre del mecánico</strong></li>
+    <li><strong>Número de tareas completadas</strong> sobre el total asignado este mes</li>
+    <li><strong>Barra de progreso</strong> coloreada: verde (&gt;80%), naranja (50-80%), roja (&lt;50%)</li>
+    <li><strong>Porcentaje numérico</strong></li>
+  </ul>
+
+  <h3>Cajones de % carga asignada por mecánico</h3>
+  <p>Debajo del bloque de % realizadas, hay otro bloque con la <strong>carga asignada</strong> (cuántas tareas tiene cada mecánico este mes), desglosada por frecuencia con chips de color:</p>
+  <ul>
+    <li><span class="badge badge-prog">SEM</span> — número de tareas semanales asignadas</li>
+    <li><span class="badge badge-imp">QUI</span> — número de tareas quincenales</li>
+    <li><span class="badge badge-urg">MEN</span> — número de tareas mensuales</li>
+  </ul>
+  <p>El total de la carga se expresa también en horas estimadas (suma de duraciones del catálogo) para facilitar la comparación entre mecánicos.</p>
+
+  <!-- MOCKUP SEGUIMIENTO -->
+  <div class="mockup-wrap">
+    <div class="mockup-title">Mockup — Seguimiento (% realizadas + carga)</div>
+    <svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" style="background:#0d1b2a">
+      <text x="12" y="24" fill="#c9a227" font-family="Barlow Semi Condensed" font-size="13" font-weight="600">% Realizadas por mecánico — Agosto 2026</text>
+      <!-- Card Carlos -->
+      <rect x="12" y="34" width="220" height="90" rx="4" fill="#0f2035" stroke="#1a3a5c" stroke-width="1"/>
+      <text x="20" y="52" fill="#e8dcc8" font-family="Barlow" font-size="13" font-weight="600">Carlos M.</text>
+      <text x="218" y="52" text-anchor="end" fill="#2e9e60" font-family="Barlow Condensed" font-size="22" font-weight="700">87%</text>
+      <text x="20" y="68" fill="#7a90a8" font-family="Barlow Condensed" font-size="11">13 / 15 tareas completadas</text>
+      <rect x="20" y="76" width="192" height="8" rx="4" fill="#152840"/>
+      <rect x="20" y="76" width="167" height="8" rx="4" fill="#2e9e60"/>
+      <text x="20" y="104" fill="#3f566e" font-family="Barlow Condensed" font-size="9" font-weight="600">CARGA</text>
+      <rect x="46" y="94" width="32" height="16" rx="8" fill="#082018" stroke="#104030" stroke-width="1"/>
+      <text x="62" y="106" text-anchor="middle" fill="#50c080" font-family="Barlow Condensed" font-size="9" font-weight="600">SEM×4</text>
+      <rect x="84" y="94" width="32" height="16" rx="8" fill="#261808" stroke="#5a3010" stroke-width="1"/>
+      <text x="100" y="106" text-anchor="middle" fill="#e09040" font-family="Barlow Condensed" font-size="9" font-weight="600">QUI×2</text>
+      <rect x="122" y="94" width="32" height="16" rx="8" fill="#2a1010" stroke="#6a1010" stroke-width="1"/>
+      <text x="138" y="106" text-anchor="middle" fill="#f07070" font-family="Barlow Condensed" font-size="9" font-weight="600">MEN×9</text>
+      <!-- Card Miguel -->
+      <rect x="244" y="34" width="220" height="90" rx="4" fill="#0f2035" stroke="#1a3a5c" stroke-width="1"/>
+      <text x="252" y="52" fill="#e8dcc8" font-family="Barlow" font-size="13" font-weight="600">Miguel A.</text>
+      <text x="450" y="52" text-anchor="end" fill="#d4763a" font-family="Barlow Condensed" font-size="22" font-weight="700">61%</text>
+      <text x="252" y="68" fill="#7a90a8" font-family="Barlow Condensed" font-size="11">8 / 13 tareas completadas</text>
+      <rect x="252" y="76" width="192" height="8" rx="4" fill="#152840"/>
+      <rect x="252" y="76" width="117" height="8" rx="4" fill="#d4763a"/>
+      <text x="252" y="104" fill="#3f566e" font-family="Barlow Condensed" font-size="9" font-weight="600">CARGA</text>
+      <rect x="278" y="94" width="32" height="16" rx="8" fill="#082018" stroke="#104030" stroke-width="1"/>
+      <text x="294" y="106" text-anchor="middle" fill="#50c080" font-family="Barlow Condensed" font-size="9" font-weight="600">SEM×3</text>
+      <rect x="316" y="94" width="32" height="16" rx="8" fill="#261808" stroke="#5a3010" stroke-width="1"/>
+      <text x="332" y="106" text-anchor="middle" fill="#e09040" font-family="Barlow Condensed" font-size="9" font-weight="600">QUI×2</text>
+      <rect x="354" y="94" width="32" height="16" rx="8" fill="#2a1010" stroke="#6a1010" stroke-width="1"/>
+      <text x="370" y="106" text-anchor="middle" fill="#f07070" font-family="Barlow Condensed" font-size="9" font-weight="600">MEN×8</text>
+      <!-- Card Roberto -->
+      <rect x="476" y="34" width="220" height="90" rx="4" fill="#0f2035" stroke="#1a3a5c" stroke-width="1"/>
+      <text x="484" y="52" fill="#e8dcc8" font-family="Barlow" font-size="13" font-weight="600">Roberto P.</text>
+      <text x="682" y="52" text-anchor="end" fill="#c94040" font-family="Barlow Condensed" font-size="22" font-weight="700">40%</text>
+      <text x="484" y="68" fill="#7a90a8" font-family="Barlow Condensed" font-size="11">4 / 10 tareas completadas</text>
+      <rect x="484" y="76" width="192" height="8" rx="4" fill="#152840"/>
+      <rect x="484" y="76" width="77" height="8" rx="4" fill="#c94040"/>
+      <text x="484" y="104" fill="#3f566e" font-family="Barlow Condensed" font-size="9" font-weight="600">CARGA</text>
+      <rect x="510" y="94" width="32" height="16" rx="8" fill="#082018" stroke="#104030" stroke-width="1"/>
+      <text x="526" y="106" text-anchor="middle" fill="#50c080" font-family="Barlow Condensed" font-size="9" font-weight="600">SEM×2</text>
+      <rect x="548" y="94" width="32" height="16" rx="8" fill="#261808" stroke="#5a3010" stroke-width="1"/>
+      <text x="564" y="106" text-anchor="middle" fill="#e09040" font-family="Barlow Condensed" font-size="9" font-weight="600">QUI×1</text>
+      <rect x="586" y="94" width="32" height="16" rx="8" fill="#2a1010" stroke="#6a1010" stroke-width="1"/>
+      <text x="602" y="106" text-anchor="middle" fill="#f07070" font-family="Barlow Condensed" font-size="9" font-weight="600">MEN×7</text>
+      <!-- Parte de trabajo section -->
+      <line x1="0" y1="140" x2="760" y2="140" stroke="#1a3a5c" stroke-width="1"/>
+      <text x="12" y="162" fill="#c9a227" font-family="Barlow Semi Condensed" font-size="13" font-weight="600">Detalle de tareas — Carlos M.</text>
+      <!-- Table -->
+      <rect x="12" y="172" width="736" height="22" fill="#152840"/>
+      <text x="20" y="187" fill="#7a90a8" font-family="Barlow Condensed" font-size="9" font-weight="600" letter-spacing="1">TAREA</text>
+      <text x="380" y="187" fill="#7a90a8" font-family="Barlow Condensed" font-size="9" font-weight="600" letter-spacing="1">MÁQUINA</text>
+      <text x="520" y="187" fill="#7a90a8" font-family="Barlow Condensed" font-size="9" font-weight="600" letter-spacing="1">FECHA PLAN</text>
+      <text x="640" y="187" fill="#7a90a8" font-family="Barlow Condensed" font-size="9" font-weight="600" letter-spacing="1">ESTADO</text>
+      <rect x="12" y="194" width="736" height="24" fill="#0f2035"/>
+      <text x="20" y="210" fill="#e8dcc8" font-family="Barlow" font-size="11">Lubricación general cadenas transportadoras</text>
+      <text x="380" y="210" fill="#e8dcc8" font-family="Barlow" font-size="11">AMASA-01</text>
+      <text x="520" y="210" fill="#e8dcc8" font-family="Barlow" font-size="11">05/08/2026</text>
+      <rect x="640" y="198" width="54" height="16" rx="2" fill="#082018" stroke="#104030" stroke-width="1"/>
+      <text x="667" y="210" text-anchor="middle" fill="#50c080" font-family="Barlow Condensed" font-size="10" font-weight="700">✓ HECHO</text>
+      <rect x="12" y="218" width="736" height="24" fill="#0d1b2a"/>
+      <text x="20" y="234" fill="#e8dcc8" font-family="Barlow" font-size="11">Revisión tensión correas transmisión</text>
+      <text x="380" y="234" fill="#e8dcc8" font-family="Barlow" font-size="11">AMASA-01</text>
+      <text x="520" y="234" fill="#e8dcc8" font-family="Barlow" font-size="11">12/08/2026</text>
+      <rect x="640" y="222" width="68" height="16" rx="2" fill="#261808" stroke="#5a3010" stroke-width="1"/>
+      <text x="674" y="234" text-anchor="middle" fill="#e09040" font-family="Barlow Condensed" font-size="10" font-weight="700">PENDIENTE</text>
+      <!-- Parte btn -->
+      <rect x="12" y="286" width="140" height="24" rx="3" fill="#1a3a5c"/>
+      <text x="82" y="302" text-anchor="middle" fill="#e8dcc8" font-family="Barlow Condensed" font-size="11" font-weight="600">📋 PARTE DE TRABAJO</text>
+    </svg>
+  </div>
+
+  <h3>Interpretar el color de las barras de progreso</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Color</th><th>Rango</th><th>Interpretación</th></tr></thead>
+      <tbody>
+        <tr><td><span style="color:#2e9e60;font-weight:700">Verde</span></td><td>&gt; 80%</td><td>El mecánico va bien. Situación normal.</td></tr>
+        <tr><td><span style="color:#d4763a;font-weight:700">Naranja</span></td><td>50%–80%</td><td>Atención. Puede necesitar apoyo o tiene tareas bloqueadas por avería.</td></tr>
+        <tr><td><span style="color:#c94040;font-weight:700">Rojo</span></td><td>&lt; 50%</td><td>Situación crítica. Revisar causa: ausencia, carga excesiva, o tareas no registradas.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout aviso">
+    <div class="callout-label">Atención</div>
+    <p>Un mecánico en rojo no implica necesariamente que haya incumplido. Puede que las tareas estén hechas pero sin marcar en el sistema. Antes de tomar medidas, consulta con el mecánico para verificar si el registro está al día.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CAPÍTULO 14 — PARTE DE TRABAJO
+═══════════════════════════════════════════════ -->
+<section class="chapter" id="ch14">
+  <div class="chapter-header">
+    <div class="ch-badge">14</div>
+    <div class="chapter-header-text">
+      <div class="ch-eyebrow">preventivo.html → Seguimiento · parte_trabajo.html</div>
+      <h2>Parte de trabajo imprimible</h2>
+    </div>
+  </div>
+
+  <p>El parte de trabajo es un documento imprimible en formato A4 apaisado que resume todas las tareas preventivas asignadas a un mecánico en un mes. Se genera desde el botón <strong>📋 Parte de trabajo</strong> en la pestaña Seguimiento, o accediendo directamente a <code>parte_trabajo.html</code>.</p>
+
+  <h3>Contenido del parte</h3>
+  <ul>
+    <li><strong>Cabecera:</strong> Logo PANALCOR, nombre del mecánico, mes y año, número de tareas totales</li>
+    <li><strong>Tabla de tareas:</strong> Una fila por tarea con columnas: Checkbox de completado, Descripción de la tarea, Máquina, Frecuencia, Fecha planificada, Fecha realizada (para rellenar a mano)</li>
+    <li><strong>Espacio de observaciones</strong> al final de cada grupo de máquina</li>
+    <li><strong>Firma del mecánico</strong> y del responsable al pie</li>
+  </ul>
+
+  <h3>Cómo generar el parte</h3>
+  <ol class="steps">
+    <li>En la pestaña Seguimiento, selecciona el mecánico usando el desplegable o pincha en su tarjeta.</li>
+    <li>Pulsa <strong>📋 Parte de trabajo</strong>. El sistema abre <code>parte_trabajo.html</code> con los datos del mecánico y el mes precargados.</li>
+    <li>Usa <strong>Ctrl + P</strong> (o el botón Imprimir en pantalla) para imprimir. La página tiene estilos <code>@media print</code> optimizados para A4 apaisado.</li>
+    <li>Entrega el parte al mecánico para que lo use como guía física durante el mes.</li>
+  </ol>
+
+  <div class="callout tip">
+    <div class="callout-label">Consejo</div>
+    <p>Imprime los partes en los últimos dos días del mes anterior. Así cada mecánico comienza el nuevo mes con su parte en mano. Algunos mecánicos prefieren tenerlo en papel como checklist de seguimiento diario.</p>
+  </div>
+
+  <h3>Parte para mecánicos con tablet</h3>
+  <p>Los mecánicos con acceso a tablet o móvil pueden marcar sus tareas directamente en el sistema sin necesidad del parte impreso. El parte en papel es complementario, no obligatorio. Sin embargo, para el informe de Rubiel el parte impreso con firma sigue siendo el documento oficial de registro (ver Capítulo 17).</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CAPÍTULO 15 — CATÁLOGO DE TAREAS
+═══════════════════════════════════════════════ -->
+<section class="chapter" id="ch15">
+  <div class="chapter-header">
+    <div class="ch-badge">15</div>
+    <div class="chapter-header-text">
+      <div class="ch-eyebrow">preventivo.html → Catálogo</div>
+      <h2>Catálogo de tareas — ver y editar</h2>
+    </div>
+  </div>
+
+  <p>El <strong>Catálogo</strong> es la biblioteca maestra de todas las tareas preventivas disponibles en el sistema. Define qué se puede planificar, con qué frecuencia y durante cuánto tiempo. Solo el admin puede modificar el catálogo.</p>
+
+  <h3>Campos de cada tarea del catálogo</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Campo</th><th>Descripción</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Código</strong></td><td>Identificador único de la tarea (ej: <code>LUB-GEN-01</code>)</td></tr>
+        <tr><td><strong>Descripción</strong></td><td>Texto que describe la tarea de forma clara para el mecánico</td></tr>
+        <tr><td><strong>Tipo de máquina</strong></td><td>Grupo de máquinas al que aplica (Amasadora, Horno, Línea de frío…)</td></tr>
+        <tr><td><strong>Frecuencia</strong></td><td>SEM / QUI / MEN / TRI / SEM-A / ANU</td></tr>
+        <tr><td><strong>Duración estimada</strong></td><td>Tiempo estimado en minutos para completar la tarea</td></tr>
+        <tr><td><strong>Especialización</strong></td><td>Si aplica, perfil específico necesario (ej: solo mecánico eléctrico)</td></tr>
+        <tr><td><strong>Estado</strong></td><td>Activa / Inactiva. Las inactivas no aparecen en nuevos planes.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Añadir una tarea nueva</h3>
+  <ol class="steps">
+    <li>Pulsa <strong>+ Nueva tarea</strong> en la pestaña Catálogo.</li>
+    <li>Rellena todos los campos obligatorios (código, descripción, tipo de máquina, frecuencia).</li>
+    <li>Pulsa <strong>Guardar</strong>. La tarea queda disponible de inmediato para asignar en el Plan Mensual.</li>
+  </ol>
+
+  <div class="callout aviso">
+    <div class="callout-label">Atención</div>
+    <p>Añadir una tarea al catálogo <strong>no la añade automáticamente</strong> al plan del mes en curso ni de meses futuros. Debes ir a la rejilla de Plan Mensual y asignarla manualmente (o usar Auto-asignar en el siguiente mes).</p>
+  </div>
+
+  <h3>Editar o desactivar una tarea</h3>
+  <p>Usa el botón de edición (lápiz) de cada fila para modificar cualquier campo. Si una tarea ya no es aplicable (la máquina fue dada de baja, el procedimiento cambió), desactívala en lugar de eliminarla: así se conserva el historial de todos los meses en que se realizó.</p>
+
+  <h3>Importar tareas desde Excel</h3>
+  <p>El catálogo puede alimentarse desde un fichero Excel con la estructura de columnas predefinida. Usa el botón <strong>Importar Excel</strong> en la pestaña Catálogo. El sistema valida las columnas antes de importar y muestra un resumen de tareas nuevas, actualizadas e ignoradas (duplicados).</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CAPÍTULO 16 — HISTORIAL POR MÁQUINA
+═══════════════════════════════════════════════ -->
+<section class="chapter" id="ch16">
+  <div class="chapter-header">
+    <div class="ch-badge">16</div>
+    <div class="chapter-header-text">
+      <div class="ch-eyebrow">historial_maquina.html</div>
+      <h2>Historial por máquina — cómo interpretarlo</h2>
+    </div>
+  </div>
+
+  <p>La página <code>historial_maquina.html</code> muestra la ficha histórica completa de una máquina: sus indicadores de fiabilidad, la evolución mensual y todas las intervenciones registradas. Es la herramienta principal para analizar máquinas problemáticas y tomar decisiones de mantenimiento.</p>
+
+  <h3>Los 6 KPIs de la ficha</h3>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Disponibilidad</div>
+      <div class="kpi-value">97.2 <span class="kpi-unit">%</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">MTBF</div>
+      <div class="kpi-value">284 <span class="kpi-unit">h</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">MTTR</div>
+      <div class="kpi-value">3.1 <span class="kpi-unit">h</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Total averías</div>
+      <div class="kpi-value">8 <span class="kpi-unit">12m</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Horas parada</div>
+      <div class="kpi-value">24.8 <span class="kpi-unit">h</span></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Cumpl. prev.</div>
+      <div class="kpi-value">91 <span class="kpi-unit">%</span></div>
+    </div>
+  </div>
+
+  <h3>Gráfico de barras — últimos 12 meses</h3>
+  <p>El gráfico muestra la evolución mensual de averías y horas de parada durante los últimos 12 meses. Las barras de averías son azules; las de horas de parada son doradas. Un pico en horas de parada sin pico equivalente en número de averías indica una sola avería muy grave (alto MTTR); un pico en averías con pocas horas indica averías frecuentes pero rápidas de resolver.</p>
+
+  <h3>Timeline de intervenciones</h3>
+  <p>Debajo del gráfico, una línea cronológica muestra cada intervención registrada: averías (círculo rojo) y preventivos completados (círculo verde). Al pinchar en cualquier punto del timeline se despliega el detalle completo de esa intervención: qué se hizo, quién lo hizo, cuánto tardó y si se usaron repuestos.</p>
+
+  <h3>Tabla de preventivos con cumplimiento</h3>
+  <p>La parte inferior muestra una tabla con todas las tareas preventivas asociadas a esta máquina y su historial de cumplimiento mes a mes. Las celdas verdes indican que la tarea se completó en plazo; las amarillas indican que se completó con retraso; las rojas indican que no se completó.</p>
+
+  <h3>Acceder al historial desde diferentes puntos</h3>
+  <ul>
+    <li>Desde la tabla de fiabilidad del Dashboard (clic en nombre de máquina)</li>
+    <li>Desde las fichas de máquina en <code>maquinas_admin.html</code></li>
+    <li>Directamente navegando a <code>historial_maquina.html?id=CODIGO-MAQUINA</code></li>
+  </ul>
+
+  <h3>Imprimir la ficha histórica</h3>
+  <p>El botón <strong>Imprimir</strong> de la página genera una versión imprimible con los 6 KPIs, el gráfico de barras y la tabla de preventivos. Útil para incluir en informes de dirección o en reuniones de seguimiento de mantenimiento.</p>
+
+  <div class="callout tip">
+    <div class="callout-label">Cuándo revisar el historial</div>
+    <p>Revisa el historial de las máquinas de criticidad A mensualmente. Para las de criticidad B, trimestralmente. Para las de criticidad C, solo cuando su disponibilidad baje del 90% según la tabla del dashboard.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CAPÍTULO 17 — INFORME RUBIEL / ALBERTO
+═══════════════════════════════════════════════ -->
+<section class="chapter" id="ch17">
+  <div class="chapter-header">
+    <div class="ch-badge">17</div>
+    <div class="chapter-header-text">
+      <div class="ch-eyebrow">informe_especial.html</div>
+      <h2>Informe especial Rubiel / Alberto</h2>
+    </div>
+  </div>
+
+  <p>La página <code>informe_especial.html</code> genera informes mensuales personalizados para dos personas con roles distintos en la organización: <strong>Rubiel</strong> (responsable de mantenimiento preventivo obrador) y <strong>Alberto</strong> (jefe de mantenimiento general). Cada uno ve un formato de informe diferente.</p>
+
+  <h3>Navegar al informe</h3>
+  <ol class="steps">
+    <li>Abre <code>informe_especial.html</code> desde el portal de inicio.</li>
+    <li>Usa el selector de <strong>persona</strong> (Rubiel / Alberto) en la parte superior.</li>
+    <li>Usa el selector de <strong>mes</strong> para elegir el período del informe.</li>
+    <li>El informe se genera automáticamente con los datos de Firebase para esa persona y mes.</li>
+  </ol>
+
+  <h3>Informe de Rubiel</h3>
+  <p>El informe de Rubiel está orientado al preventivo del obrador. Incluye:</p>
+  <ul>
+    <li><strong>KPIs:</strong> Número de tareas asignadas, tareas completadas, porcentaje de cumplimiento</li>
+    <li><strong>Checklist mensual:</strong> Lista de todas sus tareas preventivas con estado (hecho / pendiente / con retraso)</li>
+    <li><strong>Turnos obrador:</strong> Resumen de los turnos trabajados ese mes con horas totales (datos de <code>turnos.html</code>)</li>
+    <li><strong>Incidencias:</strong> Averías registradas durante sus turnos</li>
+  </ul>
+
+  <h3>Informe de Alberto</h3>
+  <p>El informe de Alberto tiene un enfoque más directivo. Incluye:</p>
+  <ul>
+    <li><strong>KPIs:</strong> Total trabajos realizados, horas totales trabajadas, desglose por categoría</li>
+    <li><strong>Resumen por categoría:</strong> Cuántas horas se dedicaron a cada tipo de trabajo (Mecánica, Eléctrica, Otros Trabajos, Preventivo)</li>
+    <li><strong>Detalle de trabajos:</strong> Lista de todos los trabajos registrados a su nombre con fecha, descripción y duración</li>
+    <li><strong>Comparativa con mes anterior:</strong> Si el mes anterior también está disponible, muestra la variación en horas y número de trabajos</li>
+  </ul>
+
+  <div class="callout tip">
+    <div class="callout-label">Cuándo generar estos informes</div>
+    <p>Genera ambos informes en los primeros 3 días del mes siguiente. El de Rubiel sirve para la reunión de seguimiento de preventivo; el de Alberto como resumen para dirección técnica.</p>
+  </div>
+
+  <h3>Imprimir o exportar</h3>
+  <p>Cada informe tiene un botón de <strong>Imprimir</strong> que abre el diálogo de impresión del navegador con una versión limpia del informe (sin la interfaz del sistema). Los estilos de impresión usan fondo blanco y tipografía oscura para ahorrar tinta.</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CAPÍTULO 18 — TURNOS Y BOLSAS DE HORAS
+═══════════════════════════════════════════════ -->
+<section class="chapter" id="ch18">
+  <div class="chapter-header">
+    <div class="ch-badge">18</div>
+    <div class="chapter-header-text">
+      <div class="ch-eyebrow">turnos.html</div>
+      <h2>Turnos y bolsas de horas</h2>
+    </div>
+  </div>
+
+  <p>La página <code>turnos.html</code> gestiona la distribución de turnos y el control de bolsas de horas extra. Se usa principalmente para el obrador y para el seguimiento de horas de Rubiel, aunque el admin puede configurar turnos para cualquier mecánico o encargado.</p>
+
+  <h3>Estructura de turnos</h3>
+  <p>El sistema trabaja con turnos definidos (Mañana, Tarde, Noche, Partido) que el admin puede configurar con horarios de inicio y fin. Cada turno tiene asignados uno o varios trabajadores.</p>
+
+  <h3>Vista del mes</h3>
+  <p>La vista principal muestra un calendario mensual donde cada día tiene las celdas de turno rellenas con el nombre del trabajador asignado. El admin puede:</p>
+  <ul>
+    <li>Cambiar la asignación de un día pulsando la celda y seleccionando otro trabajador.</li>
+    <li>Copiar la distribución de la semana anterior (botón <strong>Copiar semana</strong>).</li>
+    <li>Ver el total de horas asignadas por trabajador al final de cada fila mensual.</li>
+  </ul>
+
+  <h3>Bolsas de horas extra</h3>
+  <p>El módulo de bolsas de horas registra las horas extra acumuladas por cada trabajador. El admin puede:</p>
+  <ul>
+    <li><strong>Añadir horas:</strong> Registrar horas extra trabajadas en un día concreto.</li>
+    <li><strong>Descontar horas:</strong> Registrar cuando el trabajador disfruta de esas horas como compensación.</li>
+    <li><strong>Ver saldo:</strong> Diferencia entre horas acumuladas y horas disfrutadas.</li>
+    <li><strong>Historial:</strong> Registro cronológico de todas las entradas y salidas de la bolsa.</li>
+  </ul>
+
+  <h3>Exportar turnos</h3>
+  <p>El botón <strong>Exportar mes</strong> genera un Excel con el cuadrante de turnos del mes seleccionado. Útil para el resumen de nóminas o para comunicarlo a RRHH.</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CAPÍTULO 19 — PREVENTIVOS EXTERNOS
+═══════════════════════════════════════════════ -->
+<section class="chapter" id="ch19">
+  <div class="chapter-header">
+    <div class="ch-badge">19</div>
+    <div class="chapter-header-text">
+      <div class="ch-eyebrow">preventivos_externos.html</div>
+      <h2>Preventivos externos — contratos y revisiones</h2>
+    </div>
+  </div>
+
+  <p>La página <code>preventivos_externos.html</code> gestiona las revisiones y mantenimientos que realizan empresas externas: servicio técnico oficial de fabricantes, contratos de mantenimiento de instalaciones (gas, electricidad, ascensores, climatización, etc.) y revisiones reglamentarias obligatorias.</p>
+
+  <h3>Registro de contratos externos</h3>
+  <p>Cada contrato externo tiene los siguientes campos:</p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Campo</th><th>Descripción</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Empresa</strong></td><td>Nombre de la empresa externa contratada</td></tr>
+        <tr><td><strong>Servicio</strong></td><td>Descripción del servicio (ej: "Revisión anual compresor central")</td></tr>
+        <tr><td><strong>Instalación / Máquina</strong></td><td>A qué equipo o instalación aplica</td></tr>
+        <tr><td><strong>Periodicidad</strong></td><td>Cada cuánto tiempo se realiza (anual, semestral, etc.)</td></tr>
+        <tr><td><strong>Próxima revisión</strong></td><td>Fecha de la siguiente revisión programada</td></tr>
+        <tr><td><strong>Última revisión</strong></td><td>Fecha y resultado de la última intervención realizada</td></tr>
+        <tr><td><strong>Contacto</strong></td><td>Persona de contacto en la empresa externa</td></tr>
+        <tr><td><strong>Contrato</strong></td><td>Número de contrato o referencia del servicio</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Alertas de revisiones próximas</h3>
+  <p>El sistema señala en color naranja las revisiones cuya fecha de próxima visita está dentro de los próximos 30 días, y en rojo las que ya han superado su fecha sin registrar como realizada. El admin debería revisar esta página mensualmente para coordinar las visitas con las empresas externas.</p>
+
+  <h3>Registrar una revisión realizada</h3>
+  <ol class="steps">
+    <li>Pulsa el botón <strong>Registrar visita</strong> junto al contrato correspondiente.</li>
+    <li>Introduce la fecha de la visita, el resultado (sin incidencias / con observaciones / con deficiencias) y cualquier nota relevante.</li>
+    <li>El sistema actualiza automáticamente la "Próxima revisión" sumando la periodicidad a la fecha registrada.</li>
+  </ol>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CAPÍTULO 20 — ARRANCADA Y CIERRE
+═══════════════════════════════════════════════ -->
+<section class="chapter" id="ch20">
+  <div class="chapter-header">
+    <div class="ch-badge">20</div>
+    <div class="chapter-header-text">
+      <div class="ch-eyebrow">arrancada_cierre.html</div>
+      <h2>Arrancada y Cierre de fábrica</h2>
+    </div>
+  </div>
+
+  <p>La página <code>arrancada_cierre.html</code> proporciona el checklist diario de apertura y cierre de la fábrica. Está diseñada para ser visible para todos los perfiles pero editable por los responsables designados. El admin puede ver el historial completo y configurar los ítems del checklist.</p>
+
+  <h3>Checklist de arrancada (14 ítems)</h3>
+  <p>El checklist de arrancada recorre las comprobaciones de inicio de jornada que garantizan que la planta arranca en condiciones seguras y operativas. Los 14 ítems incluyen (entre otros):</p>
+  <ul>
+    <li>Comprobación de presión de aire comprimido</li>
+    <li>Verificación de niveles de agua de limpieza</li>
+    <li>Revisión visual de líneas de producción</li>
+    <li>Estado de cámaras frigoríficas (temperaturas)</li>
+    <li>Comprobación de sistemas de seguridad activos</li>
+    <li>Revisión de alarmas pendientes del día anterior</li>
+  </ul>
+
+  <h3>Checklist de cierre (4 ítems)</h3>
+  <p>El checklist de cierre verifica que la planta queda en estado seguro al finalizar la jornada:</p>
+  <ul>
+    <li>Parada correcta de todas las líneas de producción</li>
+    <li>Verificación de temperaturas de cámaras frigoríficas</li>
+    <li>Cierre de suministros no esenciales</li>
+    <li>Registro de incidencias del día para turno siguiente</li>
+  </ul>
+
+  <h3>Vista del admin</h3>
+  <p>El admin ve el historial completo de checklists completados: qué días se completó arrancada y cierre, quién lo completó y si hubo ítems marcados como "con incidencia". Los días con incidencias aparecen destacados en naranja.</p>
+
+  <div class="callout tip">
+    <div class="callout-label">Integración con el informe mensual</div>
+    <p>Los datos de arrancada y cierre se integran en el informe mensual de administración. El sistema calcula automáticamente el porcentaje de días del mes con checklist completo vs. días sin registrar.</p>
+  </div>
+
+  <h3>Editar ítems del checklist</h3>
+  <p>El admin puede añadir, editar o desactivar ítems del checklist desde un panel de configuración en la misma página. Los cambios aplican a partir del día siguiente para no interferir con el registro en curso.</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CAPÍTULO 21 — LEGIONELA
+═══════════════════════════════════════════════ -->
+<section class="chapter" id="ch21">
+  <div class="chapter-header">
+    <div class="ch-badge">21</div>
+    <div class="chapter-header-text">
+      <div class="ch-eyebrow">legionela.html</div>
+      <h2>Control de agua y registros de legionela</h2>
+    </div>
+  </div>
+
+  <p>La página <code>legionela.html</code> gestiona los registros de control de instalaciones de agua, conforme a los requisitos del Real Decreto 865/2003 y la normativa de industria alimentaria. Es un módulo de cumplimiento legal: los registros aquí almacenados tienen valor documental ante inspecciones.</p>
+
+  <h3>Tipos de registros</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Tipo de control</th><th>Periodicidad</th><th>Parámetros registrados</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Temperatura red de agua caliente</td><td>Semanal</td><td>Temperatura en punto más alejado (&gt;50°C)</td></tr>
+        <tr><td>Temperatura red de agua fría</td><td>Semanal</td><td>Temperatura en punto más alejado (&lt;20°C)</td></tr>
+        <tr><td>Cloro residual libre</td><td>Semanal</td><td>Concentración (0.2–1.0 mg/L)</td></tr>
+        <tr><td>Limpieza y desinfección torres</td><td>Semestral</td><td>Empresa, protocolo aplicado, fecha</td></tr>
+        <tr><td>Análisis microbiológico</td><td>Anual (mínimo)</td><td>Laboratorio, resultados, fecha de muestreo</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Añadir un registro</h3>
+  <ol class="steps">
+    <li>Selecciona el tipo de control en el menú lateral.</li>
+    <li>Pulsa <strong>+ Nuevo registro</strong>.</li>
+    <li>Introduce la fecha, el valor medido y el responsable de la medición.</li>
+    <li>Si el valor está fuera de rango, el sistema lo marca automáticamente como "incidencia" y solicita una nota de acción correctiva.</li>
+    <li>Pulsa <strong>Guardar</strong>. El registro queda almacenado en Firebase con marca de tiempo.</li>
+  </ol>
+
+  <div class="callout peligro">
+    <div class="callout-label">Obligación legal</div>
+    <p>Los registros de legionela son documentos oficiales. No los modifiques ni elimines una vez guardados. Si hay un error en un registro, añade una nota de corrección en un nuevo registro posterior, no edites el original. Ante una inspección sanitaria, se puede requerir el histórico completo.</p>
+  </div>
+
+  <h3>Alertas de control vencido</h3>
+  <p>El sistema avisa cuando un tipo de control está próximo a vencer (en los próximos 7 días) o ya ha vencido. Estas alertas aparecen en la parte superior de la página y en un resumen en el panel de admin.</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CAPÍTULO 22 — ENCARGADOS
+═══════════════════════════════════════════════ -->
+<section class="chapter" id="ch22">
+  <div class="chapter-header">
+    <div class="ch-badge">22</div>
+    <div class="chapter-header-text">
+      <div class="ch-eyebrow">encargados.html</div>
+      <h2>Panel de encargados</h2>
+    </div>
+  </div>
+
+  <p>La página <code>encargados.html</code> es el panel de gestión orientado a los encargados de producción. Aunque el admin puede acceder, en el uso cotidiano son los propios encargados quienes lo utilizan. El admin gestiona desde aquí la configuración del módulo y supervisa la actividad.</p>
+
+  <h3>Qué pueden hacer los encargados</h3>
+  <ul>
+    <li>Ver el estado de las máquinas de su área (averías activas, último preventivo realizado)</li>
+    <li>Abrir una incidencia / avería desde producción (sin necesidad de esperar al mecánico)</li>
+    <li>Consultar el estado de un pedido de repuesto urgente</li>
+    <li>Ver el checklist de arrancada del día en curso</li>
+  </ul>
+
+  <h3>Lo que ve el admin en encargados.html</h3>
+  <p>El admin ve todas las incidencias abiertas por encargados, puede reasignarlas a mecánicos y tiene acceso al historial de incidencias por encargado. También puede configurar qué máquinas son visibles para cada encargado según su área de responsabilidad.</p>
+
+  <h3>Gestión de perfiles de encargado</h3>
+  <p>Al igual que los mecánicos, los encargados tienen usuario y contraseña gestionados desde Firebase. El reset de contraseña sigue el mismo proceso descrito en el Capítulo 7.</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CAPÍTULO 23 — FICHAS DE MÁQUINAS
+═══════════════════════════════════════════════ -->
+<section class="chapter" id="ch23">
+  <div class="chapter-header">
+    <div class="ch-badge">23</div>
+    <div class="chapter-header-text">
+      <div class="ch-eyebrow">maquinas_admin.html</div>
+      <h2>Fichas de máquinas — criticidad y datos técnicos</h2>
+    </div>
+  </div>
+
+  <p>La página <code>maquinas_admin.html</code> es el inventario maestro del parque de maquinaria. Cada máquina tiene una ficha técnica completa que es la referencia para el resto del sistema.</p>
+
+  <h3>Campos de la ficha técnica</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Campo</th><th>Descripción</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Código</strong></td><td>Código interno único (ej: <code>AMASA-01</code>). No editable tras la creación.</td></tr>
+        <tr><td><strong>Nombre</strong></td><td>Nombre descriptivo de la máquina</td></tr>
+        <tr><td><strong>Fabricante</strong></td><td>Nombre del fabricante</td></tr>
+        <tr><td><strong>Modelo</strong></td><td>Modelo exacto del fabricante</td></tr>
+        <tr><td><strong>N.º de serie</strong></td><td>Número de serie del equipo</td></tr>
+        <tr><td><strong>Año de fabricación</strong></td><td>Año de fabricación / instalación</td></tr>
+        <tr><td><strong>Área / Línea</strong></td><td>Zona de fábrica donde está ubicada</td></tr>
+        <tr><td><strong>Criticidad</strong></td><td>A (crítica), B (importante), C (auxiliar)</td></tr>
+        <tr><td><strong>Estado</strong></td><td>Activa / En mantenimiento / Baja</td></tr>
+        <tr><td><strong>Manual técnico</strong></td><td>Enlace al manual del fabricante (URL o referencia documental)</td></tr>
+        <tr><td><strong>Notas</strong></td><td>Observaciones técnicas, particularidades, historial de modificaciones</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Sistema de criticidad A / B / C</h3>
+  <p>La criticidad determina la prioridad de atención ante una avería y los objetivos de disponibilidad:</p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Nivel</th><th>Criterio</th><th>Objetivo disponibilidad</th><th>Tiempo máx. respuesta avería</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-a">A — Crítica</span></td>
+          <td>Su parada detiene total o parcialmente la producción</td>
+          <td>&gt; 98%</td>
+          <td>Inmediato (&lt; 30 min)</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-b">B — Importante</span></td>
+          <td>Su parada reduce capacidad pero no detiene producción</td>
+          <td>&gt; 95%</td>
+          <td>&lt; 2 horas</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-c">C — Auxiliar</span></td>
+          <td>Equipo de soporte; su parada no afecta a producción directamente</td>
+          <td>&gt; 90%</td>
+          <td>Siguiente turno disponible</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout tip">
+    <div class="callout-label">Revisar criticidades anualmente</div>
+    <p>La criticidad de una máquina puede cambiar si se modifican las líneas de producción, si se instala una máquina backup o si el equipo queda obsoleto. Revisa la asignación de criticidades al menos una vez al año.</p>
+  </div>
+
+  <h3>Dar de alta una máquina nueva</h3>
+  <ol class="steps">
+    <li>Pulsa <strong>+ Nueva máquina</strong> en la parte superior de la lista.</li>
+    <li>Asigna un código único siguiendo la nomenclatura establecida (prefijo de tipo + número correlativo).</li>
+    <li>Rellena todos los campos técnicos disponibles. Los campos marcados con * son obligatorios.</li>
+    <li>Asigna la criticidad y el área.</li>
+    <li>Pulsa <strong>Guardar</strong>. La máquina queda disponible en todo el sistema: plan preventivo, averías, repuestos e historial.</li>
+  </ol>
+
+  <h3>Dar de baja una máquina</h3>
+  <p>Cambia el estado de la máquina a <strong>Baja</strong>. La máquina desaparece de los formularios activos (plan preventivo, averías) pero su historial completo se conserva en Firebase. No elimines físicamente el registro de la máquina aunque sea retirada definitivamente.</p>
+
+  <h3>Acceso al historial desde la ficha</h3>
+  <p>Cada ficha tiene un botón <strong>Ver historial</strong> que abre directamente <code>historial_maquina.html</code> con esa máquina preseleccionada (Capítulo 16).</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     CAPÍTULO 24 — SISTEMA DE VERSIONES
+═══════════════════════════════════════════════ -->
+<section class="chapter" id="ch24">
+  <div class="chapter-header">
+    <div class="ch-badge">24</div>
+    <div class="chapter-header-text">
+      <div class="ch-eyebrow">panalcor_inicio.html · Firebase</div>
+      <h2>Cómo funciona el sistema de versiones</h2>
+    </div>
+  </div>
+
+  <p>El sistema de versiones de PANALCOR sigue el esquema <strong>v{mayor}.{menor}.{parche}</strong> (ej: <code>v1.0.309</code>). El número de versión es visible para el admin en el chip de la esquina superior del portal de inicio, y sirve para identificar qué conjunto de funcionalidades y correcciones está activo.</p>
+
+  <h3>Cómo se actualiza la versión</h3>
+  <p>El proceso es completamente automático y no requiere ninguna acción por parte del admin:</p>
+  <ol class="steps">
+    <li>Cuando se despliega una nueva versión, el número de versión se escribe en un nodo de Firebase RTDB (<code>/config/version</code>).</li>
+    <li>El portal de inicio lee ese nodo al arrancar y cada vez que se recarga.</li>
+    <li>El chip de versión se actualiza con el valor leído.</li>
+    <li>Si el navegador tiene una versión antigua en caché, se muestra la versión vieja hasta que el usuario recarga con Ctrl+Shift+R.</li>
+  </ol>
+
+  <h3>Qué significan los números</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Parte</th><th>Cuándo cambia</th><th>Ejemplo</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Mayor (1)</strong></td><td>Cambio de arquitectura, rediseño completo, migración de base de datos</td><td>v2.0.0</td></tr>
+        <tr><td><strong>Menor (0)</strong></td><td>Nueva funcionalidad importante añadida</td><td>v1.1.0</td></tr>
+        <tr><td><strong>Parche (309)</strong></td><td>Corrección de bug, mejora menor, ajuste visual</td><td>v1.0.310</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>El CHANGELOG</h3>
+  <p>Cada versión tiene una entrada en el fichero <code>CHANGELOG.md</code> del repositorio que describe qué ha cambiado. Si algo en el sistema no funciona como esperas después de una actualización, revisar las últimas entradas del CHANGELOG puede darte la respuesta.</p>
+
+  <h3>Forzar actualización si el sistema está desactualizado</h3>
+  <p>Si el chip muestra una versión antigua o el sistema presenta comportamientos extraños tras saber que se ha desplegado una nueva versión:</p>
+  <ol class="steps">
+    <li>Pulsa <strong>Ctrl + Shift + R</strong> (Windows/Linux) o <strong>Cmd + Shift + R</strong> (Mac) para forzar recarga sin caché.</li>
+    <li>Si el problema persiste, abre las Herramientas de desarrollador (F12), ve a la pestaña Application → Storage → Clear storage → Clear site data. Luego recarga.</li>
+    <li>Si el chip sigue sin actualizar, el problema es de conectividad con Firebase: comprueba la conexión a internet.</li>
+  </ol>
+
+  <div class="callout tip">
+    <div class="callout-label">Versión vs. caché</div>
+    <p>Los navegadores guardan en caché los ficheros del sitio para cargarlo más rápido. Esto significa que aunque se haya desplegado una versión nueva, el navegador puede seguir mostrando la antigua durante horas. La recarga sin caché (Ctrl+Shift+R) siempre soluciona esto.</p>
+  </div>
+
+  <h3>Notificar problemas de versión</h3>
+  <p>Si detectas un comportamiento incorrecto que parece un bug (no un error de uso), anota:</p>
+  <ul>
+    <li>El número de versión visible en el chip</li>
+    <li>El navegador y versión del navegador (menú Ayuda → Acerca de)</li>
+    <li>Los pasos exactos para reproducir el problema</li>
+    <li>Cualquier mensaje de error visible en pantalla</li>
+  </ul>
+  <p>Con esa información se puede investigar y corregir el problema en la siguiente actualización.</p>
+
+  <hr class="section-divider">
+
+  <div class="callout ok">
+    <div class="callout-label">Fin del manual</div>
+    <p>Este manual cubre la totalidad de las funcionalidades disponibles para el perfil Administrador en la versión actual del sistema PANALCOR. Para cuestiones no cubiertas aquí o para solicitar nuevas funcionalidades, contacta con el equipo de desarrollo.</p>
+  </div>
+
+  <p style="color: var(--text-faint); font-size:12px; font-family:'Barlow Condensed',sans-serif; margin-top:32px;">
+    Manual de Administrador · PANALCOR S.L. · Agosto 2026 · Generado internamente. Distribución restringida.
+  </p>
+</section>
+
+</div><!-- /content-inner -->
+</main>
+</div><!-- /shell -->
+</body>
+</html>
