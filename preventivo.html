@@ -2906,6 +2906,7 @@ const MESES_L  = ['enero','febrero','marzo','abril','mayo','junio','julio','agos
 const FREQS_AUTO = ['SEMANAL','QUINCENAL','MENSUAL'];
 
 let curMes = { year: new Date().getFullYear(), month: new Date().getMonth() };
+let _cargaMaquinas = {}; // {maquina_saneada: 1-5} — carga de trabajo relativa, cargada de config/carga_maquinas
 
 /* ── Storage helpers ── */
 /* ── Firebase (para leer turnos) ── */
@@ -3571,6 +3572,18 @@ function renderAjustes() {
   document.getElementById('ajRefDate').value = ST.ref();
   renderMecList();
   renderAsigGrid();
+  _cargarCargaMaquinas().then(renderAsigGrid);
+}
+
+// Carga de trabajo relativa (1-5) por máquina, para verla al asignar.
+// Es solo informativa por ahora — el reparto automático no la usa todavía.
+function _cargaKey(maq) {
+  return String(maq).replace(/[.#$/\[\]]/g, '_');
+}
+function _cargarCargaMaquinas() {
+  return _DB.ref('config/carga_maquinas').once('value').then(snap => {
+    _cargaMaquinas = snap.val() || {};
+  }).catch(() => {});
 }
 
 function guardarRefDate() {
@@ -3636,8 +3649,14 @@ function renderAsigGrid() {
   </div>`;
   MAQUINAS.forEach(maq => {
     const opts    = meqs.map(m => `<option value="${escHtml(m)}" ${asigBase[maq]===m?'selected':''}>${m||'— Sin asignar —'}</option>`).join('');
+    const carga   = _cargaMaquinas[_cargaKey(maq)];
+    const cargaHtml = carga
+      ? `<span title="Carga de trabajo relativa" style="font-size:0.68rem;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:6px;
+           background:${carga>=4?'rgba(231,76,60,0.15)':carga===3?'rgba(243,156,18,0.15)':'rgba(46,204,113,0.15)'};
+           color:${carga>=4?'#e74c3c':carga===3?'#f39c12':'#2ecc71'}">${'●'.repeat(carga)}</span>`
+      : '';
     html += `<div class="asig-row">
-      <span class="asig-maq">${escHtml(maq)}</span>
+      <span class="asig-maq">${escHtml(maq)}${cargaHtml}</span>
       <select class="asig-mec" data-maq="${escHtml(maq)}">${opts}</select>
     </div>`;
   });

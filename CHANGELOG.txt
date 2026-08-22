@@ -6,6 +6,14 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.549 — 2026-08-20
+  - Carga de trabajo relativa (1-5) por máquina subida a Firebase
+    (config/carga_maquinas, 140 máquinas — se excluyen las de
+    FRIO/CLIMA, que llevan Gregorio, José y el admin aparte). Se
+    muestra como puntos de color junto al nombre de cada máquina en
+    Ajustes → Asignación, para verla al asignar mecánicos. Por ahora es
+    solo informativa, el reparto automático todavía no la usa.
+
 v1.5.539 — 2026-08-20
   - Eliminadas 5 tareas fantasma con maquina="REVOLVER", tipo=
     "ESCARCHADORA", area="TRUENO" (ids 1265-1268 y 1514) que no
