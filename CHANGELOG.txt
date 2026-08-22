@@ -6,6 +6,17 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.519 — 2026-08-20
+  - FORMADORA-EMBOLSADORA: corregidas sus 19 tareas de mantenimiento.
+    Tenía tareas de "FORMADORA CAJAS" con pasos de pegamento/encolador
+    que no le correspondían (la máquina sella con precinto, no pega).
+    Ahora es tipo "FOR-EMB TRUENO" con tareas propias (pinzas, ventosas,
+    cadenas, precintadora, pistones palas...) que cubren su función
+    real de formado + embolsado + precinto. Actualizado en el catálogo
+    de tareas (preventivo.html), la ficha de máquina (maquinas_admin.html)
+    y el registro de admin.html — verificado 1:1 contra el Excel
+    BD_Catalogo_Tareas_PANALCOR.xlsx, sin tareas añadidas ni borradas.
+
 v1.5.509 — 2026-08-20
   - preventivo.html: desactivada la sustitución automática por suplente
     al marcar un mecánico ausente — reasignaba toda la máquina al
