@@ -6982,8 +6982,12 @@ function importarExcelRepuestos(input) {
         <div id="intModalTitle" style="font-size:1.05rem;font-weight:800;color:var(--gold)"></div>
         <div id="intModalSub" style="font-size:0.75rem;color:rgba(255,255,255,0.45);margin-top:3px"></div>
       </div>
-      <button onclick="cerrarIntModal()"
-        style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:1.1rem">✕</button>
+      <div style="display:flex;gap:8px;flex-shrink:0">
+        <button onclick="toggleEditInt()" title="Editar máquina, mes y descripción"
+          style="background:rgba(52,152,219,0.15);border:1px solid rgba(52,152,219,0.4);color:#3498db;width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:0.95rem">✏️</button>
+        <button onclick="cerrarIntModal()"
+          style="background:rgba(255,255,255,0.1);border:none;color:#fff;width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:1.1rem">✕</button>
+      </div>
     </div>
     <!-- Modal body -->
     <div style="padding:20px" id="intModalBody"></div>
@@ -7177,6 +7181,28 @@ function cerrarIntModal() {
   _intRepSearch = [];
 }
 
+function toggleEditInt(show) {
+  var el = document.getElementById('intEditForm');
+  if (!el) return;
+  var mostrar = (show === undefined) ? (el.style.display === 'none') : !!show;
+  el.style.display = mostrar ? 'block' : 'none';
+}
+
+function guardarEditInt(id) {
+  var sel = document.getElementById('intEditMaq');
+  var maqId = sel.value;
+  var maqNombre = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
+  var mesPrevisto = document.getElementById('intEditMes').value;
+  var descripcion = (document.getElementById('intEditDesc').value || '').trim();
+  if (!maqId || !mesPrevisto) { showToast('⚠️ Selecciona máquina y mes'); return; }
+  DB.ref('integrales/' + id).update({ maqId: maqId, maqNombre: maqNombre, mesPrevisto: mesPrevisto, descripcion: descripcion })
+    .then(function() {
+      showToast('✅ Datos actualizados');
+      toggleEditInt(false);
+    })
+    .catch(function() { showToast('❌ Error al guardar'); });
+}
+
 function renderIntModal(id) {
   var it = _intData[id];
   if (!it) return;
@@ -7188,6 +7214,23 @@ function renderIntModal(id) {
   var totalQty = comps.reduce(function(s,c){ return s+(c.qty||1); }, 0);
 
   var html = '';
+
+  // ── Editar datos básicos (máquina, mes previsto, descripción) ──
+  // Oculto por defecto; se muestra con el botón ✏️ de la cabecera del modal.
+  var todasMaqs = MAQUINAS_BASE_ADMIN.concat(maquinasExtra).sort(function(a,b){ return a.n.localeCompare(b.n); });
+  var maqOpts = todasMaqs.map(function(m){
+    return '<option value="'+m.id+'" '+(m.id===it.maqId?'selected':'')+'>'+escHtml(m.n)+'</option>';
+  }).join('');
+  html += '<div id="intEditForm" style="display:none;background:rgba(52,152,219,0.08);border:1px solid rgba(52,152,219,0.3);border-radius:10px;padding:14px;margin-bottom:18px">'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+    + '<div class="field" style="margin:0"><label>🏭 Máquina</label><select id="intEditMaq" style="width:100%">'+maqOpts+'</select></div>'
+    + '<div class="field" style="margin:0"><label>📅 Mes previsto</label><input type="month" id="intEditMes" value="'+escHtml(it.mesPrevisto||'')+'" style="width:100%;background:var(--navy-dark);color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:9px 12px;font-family:Barlow,sans-serif;font-size:0.9rem"></div>'
+    + '</div>'
+    + '<div class="field" style="margin-bottom:12px"><label>📝 Descripción / Título</label><input type="text" id="intEditDesc" value="'+escHtml(it.descripcion||'')+'" style="width:100%"></div>'
+    + '<div style="display:flex;gap:8px">'
+    + '<button onclick="guardarEditInt(\''+id+'\')" style="background:var(--green);color:#fff;border:none;border-radius:7px;padding:8px 18px;cursor:pointer;font-weight:700;font-size:0.85rem">💾 Guardar cambios</button>'
+    + '<button onclick="toggleEditInt(false)" style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:8px 16px;cursor:pointer;font-size:0.85rem">Cancelar</button>'
+    + '</div></div>';
 
   // ── Barra de estado ──
   html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">';

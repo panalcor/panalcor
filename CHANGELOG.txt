@@ -6,6 +6,12 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.589 — 2026-08-20
+  - Mantenimientos Integrales (admin.html): nuevo botón "✏️" en la
+    cabecera del modal de detalle para editar máquina, mes previsto y
+    descripción de una integral ya creada — antes solo se podía fijar
+    al crearla. Útil porque las integrales se van de fecha a menudo.
+
 v1.5.579 — 2026-08-20
   - Plan mensual: los botones "Auto-asignar mes" y "Publicar a
     mecánicos" se deshabilitan y cambian a "✅ Asignado"/"✅ Publicado"
