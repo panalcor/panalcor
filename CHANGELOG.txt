@@ -6,6 +6,13 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.649 — 2026-08-23
+  - Catálogo preventivo: corregida la tarea "TOMA DE TIERRA A PARTE
+    ALEATORIA METALICA" de TUNEL PREFRIO ARRASTRE, que tenía tipo
+    "PRECINTADORA" en vez de "TUNEL ARRASTRE" (copia mal pegada, mismo
+    tipo de bug que FOR-EMB TRUENO). Detectado cotejando el Excel
+    FRIO_CLIMA_Preventivos_y_Partes.xlsx contra el catálogo vivo.
+
 v1.5.639 — 2026-08-23
   - manual_admin.html nunca se había subido a GitHub Pages (existía en
     local desde la consolidación de manuales, pero faltaba el git add)
