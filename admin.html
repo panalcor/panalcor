@@ -11955,6 +11955,7 @@ function rubDivGuardar(linea){
 
 var _rubInfMes = '';
 var _rubInfComp = {};
+var _rubInfPeriodico = {};
 var _rubInfObr = {};
 var _rubInfDivs = {};
 
@@ -11975,11 +11976,13 @@ function rubInfGenerar(){
     DB.ref('rubiel_obrador/'+_rubInfMes).once('value'),
     DB.ref('rubiel_divisoras').once('value'),
     DB.ref('rubiel_catalogo').once('value'),
+    DB.ref('rubiel_comp_periodos').once('value'),
   ]).then(function(snaps){
-    _rubInfComp  = snaps[0].val() || {};
-    _rubInfObr   = snaps[1].val() || {};
-    _rubInfDivs  = snaps[2].val() || {};
-    var catData  = snaps[3].val() || {};
+    _rubInfComp      = snaps[0].val() || {};
+    _rubInfObr       = snaps[1].val() || {};
+    _rubInfDivs      = snaps[2].val() || {};
+    var catData      = snaps[3].val() || {};
+    _rubInfPeriodico = snaps[4].val() || {};
     var catFlat  = Object.values(catData).filter(function(t){return t.activa!==false;})
                          .sort(function(a,b){return (a.orden||99)-(b.orden||99);});
 
@@ -12007,7 +12010,7 @@ function rubInfGenerar(){
         totalInst++;
         freqStats[t.freq].total++;
         var key = t.id+'_'+ins.inst;
-        var comp = _rubInfComp[key];
+        var comp = ins.periodico ? _rubInfPeriodico[key] : _rubInfComp[key];
         var done = !!comp;
         if(done){ hechasInst++; freqStats[t.freq].hechas++; }
         freqStats[t.freq].tareas.push({t:t, ins:ins, comp:comp, done:done});

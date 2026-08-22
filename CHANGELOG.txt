@@ -6,6 +6,14 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.609 — 2026-08-22
+  - Informe de Rubiel (admin.html): corregido bug por el que las tareas
+    TRIMESTRALES/ANUALES (ej. limpieza condensadores tejados abril/mayo)
+    nunca aparecían como realizadas en el informe aunque estuvieran
+    marcadas — el generador solo miraba rubiel_completado/{mes} y estas
+    tareas se guardan aparte, en rubiel_comp_periodos (igual que ya
+    hacía correctamente la pestaña de Seguimiento).
+
 v1.5.599 — 2026-08-22
   - admin.html: eliminada la pestaña "📝 Reg. Pasados" (registro de
     averías pasadas) — duplicaba la función de registrar una avería
