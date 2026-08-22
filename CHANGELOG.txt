@@ -6,6 +6,14 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.619 — 2026-08-22
+  - Catálogo de Rubiel: las 3 tareas TRIMESTRALES (limpieza repartidores,
+    arquetas, aspirar revólver) solo se podían marcar 1 vez cada una
+    dentro del periodo consultado. Se sustituyen por 3 tareas ANUALES
+    independientes cada una — (ENE-ABR), (MAY-AGO), (SEP-DIC) — igual
+    que ya funcionaba con la limpieza de condensadores (cona/cons), así
+    cada una se marca 3 veces al año de forma independiente.
+
 v1.5.609 — 2026-08-22
   - Informe de Rubiel (admin.html): corregido bug por el que las tareas
     TRIMESTRALES/ANUALES (ej. limpieza condensadores tejados abril/mayo)
