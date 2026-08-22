@@ -6,6 +6,23 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.559 — 2026-08-20
+  - calcularAutoAsig() (Auto-asignar mes) rediseñado: en vez de repartir
+    las máquinas a partes iguales por cantidad, ahora reparte por carga
+    de trabajo (reparto voraz LPT) — cada máquina va al mecánico que en
+    ese momento lleve menos carga acumulada, así el total queda muy
+    parejo entre todos (probado: diferencia de solo 1 punto sobre ~82
+    de media). El orden de desempate rota cada mes, así quién se queda
+    con cada máquina concreta también va cambiando con el tiempo.
+    Las máquinas de FRIO/CLIMA (sin carga definida) quedan fuera del
+    reparto automático — antes se mezclaban con las demás pese a
+    llevarlas Gregorio/José/admin aparte; ahora conservan la asignación
+    que ya tuvieran. Vista previa con nueva columna "Carga total".
+  - Borrados y listos para reasignar con el algoritmo nuevo los planes
+    de septiembre, octubre y noviembre 2026 (estaban vacíos, sin
+    ninguna tarea marcada como hecha). Agosto se deja intacto — tiene
+    109 tareas reales ya completadas este mes.
+
 v1.5.549 — 2026-08-20
   - Carga de trabajo relativa (1-5) por máquina subida a Firebase
     (config/carga_maquinas, 140 máquinas — se excluyen las de

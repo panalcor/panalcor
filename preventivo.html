@@ -3848,26 +3848,37 @@ async function calcularAutoAsig(){
   const mecActivos = [...mecIds];
 
   // Enero: excluir máquinas ya asignadas desde diciembre (vienen de pendiente)
-  const maquinas = [...MAQUINAS].filter(m => !pendienteDic[m]);
-  const totalMaq = maquinas.length;
+  const maquinasTodas = [...MAQUINAS].filter(m => !pendienteDic[m]);
 
-  // Asignar máquinas en orden con rotación mensual, a partes iguales entre todos
+  // Solo se reparten automáticamente las máquinas con carga definida en
+  // config/carga_maquinas. Las que no la tienen (FRIO/CLIMA: las llevan
+  // Gregorio, José y el admin aparte) mantienen la asignación que ya
+  // tuvieran ese mes, sin entrar en el reparto ni en la rotación.
+  await _cargarCargaMaquinas();
+  const maquinas = maquinasTodas.filter(m => _cargaMaquinas[_cargaKey(m)] !== undefined);
+  const maquinasFijas = maquinasTodas.filter(m => _cargaMaquinas[_cargaKey(m)] === undefined);
+  const asigActualMes = (ST.asigMes())[mesVal] || {};
+
   // El offset desplaza qué mecánico empieza el reparto, rotando mes a mes
   const rot = ST.rotOffset() % mecActivos.length;
   const mecRotados = [...mecActivos.slice(rot), ...mecActivos.slice(0, rot)];
-  const repartoBase = Math.floor(totalMaq / mecRotados.length);
-  const repartoExtra = totalMaq % mecRotados.length;
-  const repartoRot = {};
-  mecRotados.forEach((k, i) => {
-    repartoRot[k] = repartoBase + (i < repartoExtra ? 1 : 0);
-  });
+
+  // Reparto voraz (LPT): las máquinas se ordenan de más a menos carga y cada
+  // una se da al mecánico que en ese momento lleve menos carga acumulada.
+  // Así el total de carga queda equilibrado entre todos, y como el orden de
+  // desempate (mecRotados) rota cada mes, quién se queda con cada máquina
+  // concreta también va cambiando mes a mes.
+  const cargaAcum = {};
+  mecRotados.forEach(k => { cargaAcum[k] = 0; });
+  const maquinasOrdenadas = [...maquinas].sort((a, b) =>
+    (_cargaMaquinas[_cargaKey(b)]||3) - (_cargaMaquinas[_cargaKey(a)]||3));
 
   const asigNueva = {};
-  let idx = 0;
-  mecRotados.forEach(k => {
-    for(let i=0; i<repartoRot[k] && idx<maquinas.length; i++, idx++){
-      asigNueva[maquinas[idx]] = disponibles[k].nombre;
-    }
+  maquinasOrdenadas.forEach(maq => {
+    let elegido = mecRotados[0];
+    mecRotados.forEach(k => { if(cargaAcum[k] < cargaAcum[elegido]) elegido = k; });
+    asigNueva[maq] = disponibles[elegido].nombre;
+    cargaAcum[elegido] += (_cargaMaquinas[_cargaKey(maq)] || 3);
   });
 
   // ── Diciembre: split 50/50 ────────────────────────────────────
@@ -3891,6 +3902,12 @@ async function calcularAutoAsig(){
   if(esEnero && Object.keys(pendienteDic).length){
     Object.assign(asigNueva, pendienteDic);
   }
+
+  // Máquinas sin carga (FRIO/CLIMA...) conservan su asignación actual tal cual,
+  // no entran en el reparto automático ni en la rotación
+  maquinasFijas.forEach(maq => {
+    if(asigActualMes[maq]) asigNueva[maq] = asigActualMes[maq];
+  });
 
   // Guardar propuesta para confirmar (incluye qué mecánico inicia la rotación y el mes)
   window._autoAsigPropuesta = asigNueva;
@@ -3926,22 +3943,26 @@ async function calcularAutoAsig(){
       <th style="padding:7px 10px;text-align:left;color:rgba(255,255,255,0.5)">Mecánico</th>
       <th style="padding:7px 10px;text-align:center;color:rgba(255,255,255,0.5)" title="Informativo — ya no afecta al reparto de máquinas">Días ausente</th>
       <th style="padding:7px 10px;text-align:center;color:rgba(255,255,255,0.5)">${esDiciembre?'Dic':'Grupos'}</th>
+      <th style="padding:7px 10px;text-align:center;color:rgba(255,255,255,0.5)" title="Suma de carga (1-5) de sus máquinas rotables">Carga total</th>
       ${colExtra}
     </tr></thead><tbody>`;
   mecRotados.forEach(k => {
     const nombre = disponibles[k].nombre;
-    const nDic  = Object.entries(asigNueva).filter(([,v])=>v===nombre).length;
+    const maqsDeK = Object.entries(asigNueva).filter(([,v])=>v===nombre).map(([m])=>m);
+    const nDic  = maqsDeK.length;
+    const cargaTotal = maqsDeK.reduce((s,m) => s + (_cargaMaquinas[_cargaKey(m)] || 0), 0);
     const nEne  = esDiciembre ? Object.entries(window._pendienteEnero).filter(([,v])=>v===nombre).length : 0;
     const diasAusente = diasMes.length - disponibles[k].dias;
     html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">
       <td style="padding:7px 10px;font-weight:600;color:#e8c14e">${nombre}</td>
       <td style="padding:7px 10px;text-align:center${diasAusente>0?';color:#e74c3c':''}">${diasAusente || '—'}</td>
       <td style="padding:7px 10px;text-align:center;color:#2ecc71;font-weight:700">${nDic}</td>
+      <td style="padding:7px 10px;text-align:center;color:#74b9ff;font-weight:700">${cargaTotal}</td>
       ${esDiciembre ? `<td style="padding:7px 10px;text-align:center;color:#fdcb6e;font-weight:700">${nEne}</td>` : ''}
     </tr>`;
   });
   html += '</tbody></table>'
-    + '<div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin:-10px 0 14px">Las máquinas se reparten a partes iguales entre todos — la ausencia ya no reduce ni aumenta el reparto de nadie. Las tareas concretas afectadas se marcan como "No disponible" en Mis Tareas.</div>';
+    + '<div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin:-10px 0 14px">Reparto voraz por carga (LPT): cada máquina va al mecánico que en ese momento lleve menos carga acumulada, para que la "Carga total" quede lo más pareja posible entre todos. El orden de desempate rota cada mes. Las máquinas de FRIO/CLIMA no entran aquí, conservan su asignación fija.</div>';
 
   // Detalle de asignación por mecánico (en orden rotado)
   mecRotados.forEach(k => {
