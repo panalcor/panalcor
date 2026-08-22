@@ -6,6 +6,13 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.599 — 2026-08-22
+  - admin.html: eliminada la pestaña "📝 Reg. Pasados" (registro de
+    averías pasadas) — duplicaba la función de registrar una avería
+    normal con fecha anterior. Retirados el botón de pestaña, el panel
+    completo y todo el JS asociado (initRegPasados, regGuardar,
+    regBorrar, regCargarHistorial, REG_PARTES, etc.).
+
 v1.5.589 — 2026-08-20
   - Mantenimientos Integrales (admin.html): nuevo botón "✏️" en la
     cabecera del modal de detalle para editar máquina, mes previsto y
