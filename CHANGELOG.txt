@@ -6,6 +6,17 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.539 — 2026-08-20
+  - Eliminadas 5 tareas fantasma con maquina="REVOLVER", tipo=
+    "ESCARCHADORA", area="TRUENO" (ids 1265-1268 y 1514) que no
+    correspondían a ninguna máquina real de Trueno — REVOLVER es en
+    realidad parte de ADITIVOS/OBRADOR en todo el resto del sistema
+    (ya existía correctamente la tarea "REVOLVER GIRO" bajo ADITIVOS).
+    Quitadas del catálogo maestro y de los 6 meses donde aparecían
+    publicadas (junio-noviembre 2026). Se conservan sin tocar 3
+    registros de "hecho" históricos de junio/julio/agosto ligados a la
+    tarea 1514, huérfanos pero intactos por si hace falta consultarlos.
+
 v1.5.529 — 2026-08-20
   - FORMADORA-EMBOLSADORA: corregidas las frecuencias de 12 de sus 19
     tareas en el catálogo maestro (varias habían quedado con la
