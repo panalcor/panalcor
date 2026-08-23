@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PANALCOR — Frío/Clima</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy-deep:#0a1520;
+    --navy-mid:#0f1e2e;
+    --navy-light:#162840;
+    --ice:#64d2ff;
+    --gold:#f0c040;
+    --gold-light:#f7d060;
+    --white:#e8f4ff;
+    --red:#e74c3c;
+    --green:#2ecc71;
+    --orange:#f39c12;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-serif;min-height:100vh}
+  .demo-banner{background:linear-gradient(90deg,rgba(240,192,64,.18),rgba(240,192,64,.06));border-bottom:1px solid rgba(240,192,64,.35);padding:10px 20px;font-size:.82rem;color:var(--gold-light);text-align:center}
+  .topbar{background:var(--navy-mid);border-bottom:1px solid rgba(100,210,255,.15);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:100}
+  .topbar-title{font-size:1.1rem;font-weight:900;color:var(--ice);letter-spacing:.02em}
+  .topbar-sub{font-size:.75rem;color:rgba(255,255,255,.45);margin-top:2px}
+  .topbar-right{display:flex;align-items:center;gap:10px}
+  .btn-sm{background:transparent;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.55);border-radius:8px;padding:7px 14px;font-family:'Barlow',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block;transition:all .2s}
+  .btn-sm:hover{border-color:rgba(100,210,255,.4);color:#64d2ff}
+  .btn-ice{border-color:rgba(100,210,255,.4);color:#64d2ff;background:rgba(100,210,255,.08)}
+  .container{max-width:900px;margin:0 auto;padding:20px 16px}
+  #loginPanel{display:flex;align-items:center;justify-content:center;min-height:80vh;padding:20px}
+  .login-card{background:var(--navy-mid);border:1px solid rgba(100,210,255,.2);border-radius:16px;padding:36px 32px;width:100%;max-width:380px;text-align:center}
+  .login-title{font-size:1.5rem;font-weight:900;color:var(--ice);margin-bottom:6px}
+  .login-sub{font-size:.85rem;color:rgba(255,255,255,.45);margin-bottom:28px}
+  .btn-main{width:100%;padding:13px;border-radius:10px;font-family:'Barlow',sans-serif;font-size:1rem;font-weight:800;cursor:pointer;border:none;background:var(--ice);color:#0a1520;letter-spacing:.03em;transition:opacity .2s;margin-top:6px}
+  .btn-main:hover{opacity:.85}
+  #appPanel{display:none}
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;text-align:left}
+  .field label{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45)}
+  select,input[type=text],input[type=number],input[type=date],input[type=time],textarea{
+    background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,.15);border-radius:8px;
+    padding:10px 12px;font-family:'Barlow',sans-serif;font-size:.9rem;width:100%;
+    outline:none;transition:border-color .2s}
+  select:focus,input:focus,textarea:focus{border-color:rgba(100,210,255,.5)}
+  textarea{resize:vertical;min-height:70px}
+  .subnav{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+  .tab-btn{background:transparent;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.45);border-radius:8px;padding:9px 16px;font-family:'Barlow',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .2s}
+  .tab-btn.active{background:rgba(100,210,255,.12);border-color:rgba(100,210,255,.4);color:#64d2ff}
+  .card{background:var(--navy-mid);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:20px;margin-bottom:16px}
+  .sec-title{font-size:1rem;font-weight:800;color:var(--white);margin-bottom:16px}
+  .frio-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:16px}
+  .frio-field{display:flex;flex-direction:column;gap:5px}
+  .frio-field label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4)}
+  table{width:100%;border-collapse:collapse;font-size:.83rem}
+  th{text-align:left;padding:8px 10px;font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.4);border-bottom:1px solid rgba(255,255,255,.07)}
+  td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+  tr:hover td{background:rgba(255,255,255,.02)}
+  .badge{display:inline-block;padding:3px 9px;border-radius:8px;font-size:.7rem;font-weight:700}
+  .badge-ok{background:rgba(46,204,113,.15);color:#2ecc71;border:1px solid rgba(46,204,113,.3)}
+  .badge-warn{background:rgba(243,156,18,.15);color:#f39c12;border:1px solid rgba(243,156,18,.3)}
+  .badge-red{background:rgba(231,76,60,.15);color:#e74c3c;border:1px solid rgba(231,76,60,.3)}
+  .badge-grey{background:rgba(149,165,166,.12);color:#95a5a6;border:1px solid rgba(149,165,166,.25)}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(20,35,55,.97);border:1px solid rgba(100,210,255,.3);color:var(--white);padding:12px 24px;border-radius:10px;font-size:.9rem;font-weight:700;z-index:9999;pointer-events:none;opacity:0;transition:opacity .3s;max-width:90vw;text-align:center}
+  .toast.show{opacity:1}
+  .compare{background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.15);border-radius:12px;padding:16px 18px;margin-bottom:16px;font-size:.85rem;line-height:1.6}
+  .compare b{color:var(--gold-light)}
+  .compare .out{color:rgba(231,76,60,.85);text-decoration:line-through;opacity:.7}
+  .compare .in{color:#2ecc71}
+  .freq-badge{display:inline-block;padding:2px 9px;border-radius:8px;font-size:.68rem;font-weight:700;letter-spacing:.04em;margin-bottom:10px}
+  .fb-SEMANAL{background:rgba(174,214,241,.15);color:#aed6f1;border:1px solid rgba(174,214,241,.35)}
+  .fb-QUINCENAL{background:rgba(169,223,191,.15);color:#a9dfbf;border:1px solid rgba(169,223,191,.35)}
+  .fb-MENSUAL{background:rgba(240,192,64,.15);color:var(--gold-light);border:1px solid rgba(240,192,64,.35)}
+  .fb-TRIMESTRAL{background:rgba(237,187,153,.15);color:#edbb99;border:1px solid rgba(237,187,153,.35)}
+  .fb-SEMESTRAL{background:rgba(203,180,212,.15);color:#cbb4d4;border:1px solid rgba(203,180,212,.35)}
+  .fb-ANUAL{background:rgba(213,216,220,.15);color:#d5d8dc;border:1px solid rgba(213,216,220,.35)}
+  .tarea-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;background:rgba(255,255,255,.03);margin-bottom:6px;flex-wrap:wrap}
+  .tarea-row.hecha-periodo{background:rgba(46,204,113,.06);border:1px solid rgba(46,204,113,.2)}
+  .tarea-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--ice);flex-shrink:0}
+  .tarea-nombre{flex:1;min-width:160px;font-size:.87rem}
+  .tarea-hecha-label{font-size:.76rem;color:var(--green);white-space:nowrap}
+  .tarea-row input[type=date]{width:auto;min-width:150px;padding:7px 10px;font-size:.82rem}
+  .btn-editar-fecha{background:transparent;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.45);border-radius:6px;padding:5px 9px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:.72rem}
+  .sin-tareas{color:rgba(255,255,255,.3);font-size:.85rem;padding:10px 0}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:900;align-items:center;justify-content:center;padding:20px}
+  .modal-overlay.show{display:flex}
+  .modal-box{background:var(--navy-mid);border:1px solid rgba(100,210,255,.35);border-radius:14px;padding:24px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
+  .estado-card{background:var(--navy-mid);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:14px 16px;margin-bottom:16px}
+  .estado-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+  .estado-head label{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45)}
+  .estado-head input[type=month]{width:auto;min-width:150px}
+  .estado-grid{display:flex;flex-wrap:wrap;gap:5px 14px;max-height:150px;overflow-y:auto}
+  .estado-item{font-size:.78rem;white-space:nowrap;color:#fff}
+  .estado-item.verde{color:var(--green)}
+  .estado-item.naranja{color:var(--orange)}
+  .estado-item.rojo{color:var(--red)}
+  @media(max-width:500px){.frio-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="demo-banner">
+  🧊 <b>BOCETO — no conectado a datos reales.</b> Es solo para verlo y comentarlo; nos metemos a fondo con esto en septiembre.
+</div>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div>
+    <div class="topbar-title">❄️ PANALCOR — Frío/Clima</div>
+    <div class="topbar-sub" id="topbarSub">Boceto — revisión sin temperaturas</div>
+  </div>
+  <div class="topbar-right">
+    <a href="panalcor_inicio.html" class="btn-sm">← Inicio</a>
+    <button onclick="cerrarSesion()" class="btn-sm" id="btnCerrarSesion" style="display:none">Cerrar sesión</button>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="loginPanel">
+  <div class="login-card">
+    <div class="login-title">❄️ Frío/Clima</div>
+    <div class="login-sub">Acceso restringido — boceto en revisión</div>
+    <div class="field">
+      <label>Tu nombre</label>
+      <select id="loginNombre">
+        <option value="">— Selecciona —</option>
+        <option>GREGORIO</option>
+        <option>JOSE</option>
+        <option>JAVIER H</option>
+        <option>ADMIN</option>
+      </select>
+    </div>
+    <button class="btn-main" onclick="entrar()">Entrar</button>
+  </div>
+</div>
+
+<div id="appPanel">
+<div class="container">
+
+  <div class="compare">
+    <b>Qué cambia respecto a la versión anterior de este boceto:</b><br>
+    <span class="out">✕ Tipo de revisión</span> · <span class="out">✕ Presiones (baja / alta)</span> ·
+    <span class="out">✕ Desescarche</span><br>
+    <span class="in">✓ Checklist propio de cada equipo (36 equipos, sacado del Excel FRIO/CLIMA)</span> · <span class="in">✓ Tareas semanales/quincenales con su fecha de realización</span> ·
+    <span class="in">✓ El admin puede añadir, editar y borrar tareas de cada equipo</span><br>
+    Al elegir el equipo sale su lista de tareas concreta — cada uno tiene la suya, no son todos iguales.
+  </div>
+
+  <div class="estado-card">
+    <div class="estado-head">
+      <label>Ver estado del mes</label>
+      <input type="month" id="statusMes" onchange="renderEstadoMes()">
+    </div>
+    <div id="estadoMesGrid" class="estado-grid"></div>
+  </div>
+
+  <div class="subnav">
+    <button class="tab-btn active" id="tab-lectura" onclick="cambiarTab('lectura')">🔧 Nueva Revisión</button>
+    <button class="tab-btn" id="tab-mis" onclick="cambiarTab('mis')">📋 Revisiones (boceto)</button>
+    <button class="tab-btn" onclick="abrirGestionTareas()" style="margin-left:auto;border-color:rgba(240,192,64,.35);color:var(--gold-light)">⚙️ Admin: gestionar tareas</button>
+  </div>
+
+  <!-- ── NUEVA REVISIÓN ── -->
+  <div id="sec-lectura">
+    <div class="card">
+      <div class="sec-title">🔧 Registrar revisión</div>
+
+      <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px">Identificación</div>
+      <div class="frio-grid">
+        <div class="frio-field"><label>Equipo *</label>
+          <select id="lEq" onchange="renderChecklist()">
+            <option value="">— Selecciona —</option>
+            <option>A/A MUELLE</option><option>A/A OBRADOR</option><option>A/A OFICINAS</option><option>A/A TRANSFORMADOR</option><option>A/A VESTUARIO</option><option>CAMARA STOCK 1</option><option>CAMARA STOCK 2</option><option>CAMARA STOCK 3</option><option>CAMARA STOCK 4</option><option>CAMARA STOCK 5 (TRUENO)</option><option>COMPRESOR 1 (AIRE)</option><option>COMPRESOR 2 (AIRE)</option><option>COMPRESOR 3 (AIRE)</option><option>COMPRESOR N5 (AIRE)</option><option>COMPRESOR TRUENO 1 (AIRE)</option><option>EVAPORATIVA 1</option><option>EVAPORATIVA 2</option><option>FERMENTADORA RELAMPAGO</option><option>FERMENTADORA TRUENO</option><option>TANQUE 1</option><option>TANQUE 2</option><option>TANQUE 3</option><option>TANQUE 4</option><option>TANQUE 5 (TRUENO)</option><option>TUNEL 1</option><option>TUNEL 2</option><option>TUNEL 3</option><option>TUNEL 4</option><option>TUNEL 5</option><option>TUNEL 6</option><option>TUNEL 7</option><option>TUNEL 8</option><option>TUNEL 9 (1 TRUENO)</option><option>TUNEL 10 (2 TRUENO)</option><option>TUNEL PREFRIO</option><option>TUNEL PREFRIO ARRASTRE</option>
+          </select>
+        </div>
+        <div class="frio-field"><label>Fecha *</label><input type="date" id="lFecha"></div>
+        <div class="frio-field"><label>Hora *</label><input type="time" id="lHora"></div>
+      </div>
+
+      <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px">Checklist del equipo</div>
+      <div id="checklistWrap" style="margin-bottom:16px">
+        <div class="sin-tareas">Selecciona un equipo para ver sus tareas.</div>
+      </div>
+
+      <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);margin-bottom:8px">Estado visual y eléctrico</div>
+      <div class="frio-grid">
+        <div class="frio-field"><label>Indicios de fuga *</label>
+          <select id="lFuga">
+            <option value="no">✅ Sin indicios</option>
+            <option value="posible">⚠️ Posible</option>
+            <option value="confirmada">🔴 Confirmada</option>
+          </select>
+        </div>
+        <div class="frio-field"><label>Ventiladores condensador</label>
+          <select id="lVentCond">
+            <option value="ok">✅ Todos OK</option>
+            <option value="uno_parado">⚠️ Uno parado</option>
+            <option value="ruido">⚠️ Ruido</option>
+            <option value="fallo">❌ Fallo</option>
+          </select>
+        </div>
+        <div class="frio-field"><label>Condensador (suciedad)</label>
+          <select id="lCond">
+            <option value="limpio">✅ Limpio</option>
+            <option value="algo">⚠️ Algo sucio</option>
+            <option value="sucio">🔴 Muy sucio</option>
+          </select>
+        </div>
+        <div class="frio-field"><label>Contactores cuadro</label>
+          <select id="lContactor">
+            <option value="ok">✅ OK</option>
+            <option value="desgaste">⚠️ Desgaste visible</option>
+            <option value="fallo">❌ Fallo / Quemado</option>
+          </select>
+        </div>
+        <div class="frio-field"><label>Relés / termistores</label>
+          <select id="lRele">
+            <option value="ok">✅ OK</option>
+            <option value="disparado">⚠️ Disparado (resetado)</option>
+            <option value="fallo">❌ Fallo</option>
+          </select>
+        </div>
+        <div class="frio-field"><label>Diferencial / magnetotérmico</label>
+          <select id="lDiferencial">
+            <option value="ok">✅ OK — En posición</option>
+            <option value="disparado">⚠️ Disparado (resetado)</option>
+            <option value="fallo">❌ Fallo</option>
+          </select>
+        </div>
+        <div class="frio-field"><label>Seta de emergencia (cuadro)</label>
+          <select id="lSeta">
+            <option value="ok">✅ OK — Libre</option>
+            <option value="pulsada">🔴 Pulsada / Activada</option>
+            <option value="dañada">⚠️ Dañada</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="frio-field" style="margin-bottom:16px"><label>Observaciones</label>
+        <textarea id="lObs" placeholder="Ruidos, anomalías, cambios..."></textarea>
+      </div>
+
+      <button onclick="guardarLectura()" style="background:rgba(100,210,255,.15);border:1px solid rgba(100,210,255,.45);color:#64d2ff;border-radius:9px;padding:11px 22px;font-family:'Barlow',sans-serif;font-size:.9rem;font-weight:800;cursor:pointer">💾 Guardar (boceto, solo local)</button>
+    </div>
+  </div>
+
+  <!-- ── REVISIONES (BOCETO) ── -->
+  <div id="sec-mis" style="display:none">
+    <div class="card">
+      <div class="sec-title">📋 Revisiones guardadas (solo en este navegador)</div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th>Equipo</th><th>Fecha</th><th>Tareas hechas</th><th>Fuga</th><th></th>
+          </tr></thead>
+          <tbody id="misTbody"><tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,.3);padding:20px">Sin revisiones todavía</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div><!-- /appPanel -->
+
+<!-- ── ADMIN: GESTIONAR TAREAS ── -->
+<div class="modal-overlay" id="modalTareas">
+  <div class="modal-box" style="max-width:640px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="sec-title" style="margin:0">⚙️ Gestionar tareas de mantenimiento</div>
+      <span onclick="cerrarGestionTareas()" style="cursor:pointer;color:rgba(255,255,255,.4);font-size:1.3rem;line-height:1">✕</span>
+    </div>
+    <div class="frio-field" style="margin-bottom:14px"><label>Equipo *</label>
+      <select id="gEq" onchange="renderAdminTareas()">
+        <option value="">— Selecciona —</option>
+        <option>A/A MUELLE</option><option>A/A OBRADOR</option><option>A/A OFICINAS</option><option>A/A TRANSFORMADOR</option><option>A/A VESTUARIO</option><option>CAMARA STOCK 1</option><option>CAMARA STOCK 2</option><option>CAMARA STOCK 3</option><option>CAMARA STOCK 4</option><option>CAMARA STOCK 5 (TRUENO)</option><option>COMPRESOR 1 (AIRE)</option><option>COMPRESOR 2 (AIRE)</option><option>COMPRESOR 3 (AIRE)</option><option>COMPRESOR N5 (AIRE)</option><option>COMPRESOR TRUENO 1 (AIRE)</option><option>EVAPORATIVA 1</option><option>EVAPORATIVA 2</option><option>FERMENTADORA RELAMPAGO</option><option>FERMENTADORA TRUENO</option><option>TANQUE 1</option><option>TANQUE 2</option><option>TANQUE 3</option><option>TANQUE 4</option><option>TANQUE 5 (TRUENO)</option><option>TUNEL 1</option><option>TUNEL 2</option><option>TUNEL 3</option><option>TUNEL 4</option><option>TUNEL 5</option><option>TUNEL 6</option><option>TUNEL 7</option><option>TUNEL 8</option><option>TUNEL 9 (1 TRUENO)</option><option>TUNEL 10 (2 TRUENO)</option><option>TUNEL PREFRIO</option><option>TUNEL PREFRIO ARRASTRE</option>
+      </select>
+    </div>
+
+    <div id="gCopiarWrap" style="display:none;margin-bottom:14px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.15);border-radius:8px">
+      <label style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4);display:block;margin-bottom:6px">Copiar checklist desde otro equipo (útil para los 10 túneles, que son iguales)</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <select id="gCopiarOrigen" style="flex:1;min-width:160px"></select>
+        <button onclick="copiarChecklist()" style="background:rgba(100,210,255,.1);border:1px solid rgba(100,210,255,.35);color:#64d2ff;border-radius:8px;padding:8px 16px;font-family:'Barlow',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer">Copiar aquí</button>
+      </div>
+    </div>
+
+    <div id="gListaTareas"><div class="sin-tareas">Selecciona un equipo.</div></div>
+
+    <button id="gBtnAñadir" onclick="añadirTareaAdmin()" style="display:none;width:100%;background:rgba(46,204,113,.12);border:1px solid rgba(46,204,113,.4);color:#2ecc71;border-radius:9px;padding:10px 22px;font-family:'Barlow',sans-serif;font-size:.87rem;font-weight:800;cursor:pointer;margin-top:10px">+ Añadir tarea nueva</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────
+// Catálogo de tareas por equipo — sacado de FRIO_CLIMA_Preventivos_y_Partes.xlsx
+// (36 equipos reales). Se puede editar/añadir/borrar desde "Admin: gestionar
+// tareas"; los cambios se guardan aparte y no tocan este catálogo base, así
+// que "restaurar" siempre sería posible más adelante si hiciera falta.
+// ─────────────────────────────────────
+var TAREAS_BASE = JSON.parse('{"A/A MUELLE":[{"tarea":"FUNCIONAMIENTO","frecuencia":"MENSUAL"},{"tarea":"FILTROS","frecuencia":"MENSUAL"},{"tarea":"ESTADO VISUAL","frecuencia":"MENSUAL"}],"A/A OBRADOR":[{"tarea":"FUNCIONAMIENTO","frecuencia":"MENSUAL"},{"tarea":"CONDENSADOR","frecuencia":"MENSUAL"},{"tarea":"EVAPORADOR","frecuencia":"MENSUAL"},{"tarea":"CUADRO","frecuencia":"MENSUAL"},{"tarea":"RELES-CONTACTORES","frecuencia":"SEMESTRAL"},{"tarea":"TOMA DE TIERRA","frecuencia":"MENSUAL"}],"A/A OFICINAS":[{"tarea":"FUNCIONAMIENTO","frecuencia":"MENSUAL"},{"tarea":"FILTROS","frecuencia":"MENSUAL"},{"tarea":"ESTADO VISUAL","frecuencia":"MENSUAL"}],"A/A VESTUARIO":[{"tarea":"FUNCIONAMIENTO","frecuencia":"MENSUAL"},{"tarea":"FILTROS","frecuencia":"MENSUAL"},{"tarea":"ESTADO VISUAL","frecuencia":"MENSUAL"}],"CAMARA STOCK 1":[{"tarea":"CUADRO, ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"ESTADO CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 1 (ANOTAR) PISTOLA","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 2 (ANOTAR) BAGETTE","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 3 (ANOTAR) MUELLE","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 4 (ANOTAR) R18","frecuencia":"MENSUAL"},{"tarea":"LUZ INTERIOR","frecuencia":"MENSUAL"},{"tarea":"PANTALLA Y SETA ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"PRESIONES","frecuencia":"MENSUAL"},{"tarea":"RESISTENCIAS","frecuencia":"MENSUAL"},{"tarea":"TOMA DE TIERRA (COMPROBAR CON PARTE METALICA)","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"AISLAMIENTO-PANELES-PUERTAS","frecuencia":"QUINCENAL"},{"tarea":"BISAGRAS O CORREDERAS","frecuencia":"QUINCENAL"},{"tarea":"MANETAS","frecuencia":"QUINCENAL"},{"tarea":"DIFERENCIALES","frecuencia":"SEMESTRAL"},{"tarea":"RELES-CONTACTORES (RELES V.E. CADA 6 MESES)","frecuencia":"SEMESTRAL"}],"CAMARA STOCK 2":[{"tarea":"CUADRO, ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"ESTADO CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 1 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 2 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"LUZ INTERIOR","frecuencia":"MENSUAL"},{"tarea":"PANTALLA Y SETA ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"PRESIONES","frecuencia":"MENSUAL"},{"tarea":"RESISTENCIAS","frecuencia":"MENSUAL"},{"tarea":"TOMA DE TIERRA (COMPROBAR CON PARTE METALICA)","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"AISLAMIENTO-PANELES-PUERTAS","frecuencia":"QUINCENAL"},{"tarea":"BISAGRAS O CORREDERAS","frecuencia":"QUINCENAL"},{"tarea":"MANETAS","frecuencia":"QUINCENAL"},{"tarea":"DIFERENCIALES","frecuencia":"SEMESTRAL"},{"tarea":"RELES-CONTACTORES (RELES V.E. CADA 6 MESES)","frecuencia":"SEMESTRAL"}],"CAMARA STOCK 3":[{"tarea":"CUADRO, ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"ESTADO CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 1 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 2 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"LUZ INTERIOR","frecuencia":"MENSUAL"},{"tarea":"PANTALLA Y SETA ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"PRESIONES","frecuencia":"MENSUAL"},{"tarea":"RESISTENCIAS","frecuencia":"MENSUAL"},{"tarea":"TOMA DE TIERRA (COMPROBAR CON PARTE METALICA)","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"AISLAMIENTO-PANELES-PUERTAS","frecuencia":"QUINCENAL"},{"tarea":"BISAGRAS O CORREDERAS","frecuencia":"QUINCENAL"},{"tarea":"MANETAS","frecuencia":"QUINCENAL"},{"tarea":"DIFERENCIALES","frecuencia":"SEMESTRAL"},{"tarea":"RELES-CONTACTORES (RELES V.E. CADA 6 MESES)","frecuencia":"SEMESTRAL"}],"CAMARA STOCK 4":[{"tarea":"CUADRO, ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"ESTADO CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 1 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 2 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"LUZ INTERIOR","frecuencia":"MENSUAL"},{"tarea":"PANTALLA Y SETA ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"PRESIONES","frecuencia":"MENSUAL"},{"tarea":"RESISTENCIAS","frecuencia":"MENSUAL"},{"tarea":"TOMA DE TIERRA (COMPROBAR CON PARTE METALICA)","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"AISLAMIENTO-PANELES-PUERTAS","frecuencia":"QUINCENAL"},{"tarea":"BISAGRAS O CORREDERAS","frecuencia":"QUINCENAL"},{"tarea":"MANETAS","frecuencia":"QUINCENAL"},{"tarea":"DIFERENCIALES","frecuencia":"SEMESTRAL"},{"tarea":"RELES-CONTACTORES (RELES V.E. CADA 6 MESES)","frecuencia":"SEMESTRAL"}],"CAMARA STOCK 5 (TRUENO)":[{"tarea":"CUADRO, ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"ESTADO CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 1 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 2 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"LUZ INTERIOR","frecuencia":"MENSUAL"},{"tarea":"PANTALLA Y SETA ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"PRESIONES","frecuencia":"MENSUAL"},{"tarea":"RESISTENCIAS","frecuencia":"MENSUAL"},{"tarea":"TOMA DE TIERRA (COMPROBAR CON PARTE METALICA)","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"AISLAMIENTO-PANELES-PUERTAS","frecuencia":"QUINCENAL"},{"tarea":"BISAGRAS O CORREDERAS","frecuencia":"QUINCENAL"},{"tarea":"MANETAS","frecuencia":"QUINCENAL"},{"tarea":"DIFERENCIALES","frecuencia":"SEMESTRAL"},{"tarea":"RELES-CONTACTORES (RELES V.E. CADA 6 MESES)","frecuencia":"SEMESTRAL"}],"EVAPORATIVA 1":[{"tarea":"AGUA - EV - BOYA","frecuencia":"QUINCENAL"},{"tarea":"FILTROS-CARTONES","frecuencia":"QUINCENAL"}],"EVAPORATIVA 2":[{"tarea":"AGUA - EV - BOYA","frecuencia":"QUINCENAL"},{"tarea":"FILTROS-CARTONES","frecuencia":"QUINCENAL"}],"FERMENTADORA RELAMPAGO":[{"tarea":"CARRILES GUIAS","frecuencia":"MENSUAL"},{"tarea":"DESAGUES","frecuencia":"MENSUAL"},{"tarea":"SUELO","frecuencia":"MENSUAL"},{"tarea":"TOMA DE TIERRA A PARTE ALEATORIA METALICA","frecuencia":"MENSUAL"},{"tarea":"PRESIONES EQUIPO 1 (VERANO E INVIERNO)","frecuencia":"QUINCENAL"},{"tarea":"PRESIONES EQUIPO 2 (VERANO E INVIERNO)","frecuencia":"QUINCENAL"},{"tarea":"PRESIONES EQUIPO 3 (VERANO E INVIERNO)","frecuencia":"QUINCENAL"},{"tarea":"PRESIONES EQUIPO 4 (VERANO E INVIERNO)","frecuencia":"QUINCENAL"},{"tarea":"VAPAC 1 LLENADO Y VAPOR","frecuencia":"QUINCENAL"},{"tarea":"VAPAC 2 LLENADO Y VAPOR","frecuencia":"QUINCENAL"},{"tarea":"VAPAC 3 LLENADO Y VAPOR","frecuencia":"QUINCENAL"},{"tarea":"VAPAC 4 LLENADO Y VAPOR","frecuencia":"QUINCENAL"},{"tarea":"VENTILADORES CONDENSADORES","frecuencia":"QUINCENAL"},{"tarea":"VENTILADORES EVAPORADORES","frecuencia":"QUINCENAL"},{"tarea":"CORTINAS","frecuencia":"SEMANAL"},{"tarea":"GOTERAS EQUIPOS","frecuencia":"SEMANAL"},{"tarea":"TIRAS ANTIDESLI. ENTRADA","frecuencia":"SEMANAL"},{"tarea":"TIRAS ANTIDESLI. PASILLO","frecuencia":"SEMANAL"},{"tarea":"CONDENSADORES (ABRIL Y OCTUBRE)","frecuencia":"SEMESTRAL"}],"FERMENTADORA TRUENO":[{"tarea":"CARRILES GUIAS","frecuencia":"MENSUAL"},{"tarea":"DESAGUES","frecuencia":"MENSUAL"},{"tarea":"SUELO","frecuencia":"MENSUAL"},{"tarea":"TOMA DE TIERRA A PARTE ALEATORIA METALICA","frecuencia":"MENSUAL"},{"tarea":"PRESIONES EQUIPO 1 (VERANO E INVIERNO)","frecuencia":"QUINCENAL"},{"tarea":"PRESIONES EQUIPO 2 (VERANO E INVIERNO)","frecuencia":"QUINCENAL"},{"tarea":"VAPAC 1 LLENADO Y VAPOR","frecuencia":"QUINCENAL"},{"tarea":"VENTILADORES CONDENSADORES","frecuencia":"QUINCENAL"},{"tarea":"VENTILADORES EVAPORADORES","frecuencia":"QUINCENAL"},{"tarea":"GOTERAS EQUIPOS","frecuencia":"SEMANAL"},{"tarea":"TIRAS ANTIDESLI. ENTRADA","frecuencia":"SEMANAL"},{"tarea":"TIRAS ANTIDESLI. PASILLO","frecuencia":"SEMANAL"},{"tarea":"CONDENSADORES (ABRIL Y OCTUBRE)","frecuencia":"SEMESTRAL"}],"TANQUE 1":[{"tarea":"CONDENSADOR","frecuencia":"SEMESTRAL"},{"tarea":"EVAPORADOR","frecuencia":"SEMESTRAL"},{"tarea":"PAJARITOS","frecuencia":"SEMESTRAL"},{"tarea":"FUNCIONAMIENTO","frecuencia":"MENSUAL"},{"tarea":"CUADRO","frecuencia":"MENSUAL"},{"tarea":"BOMBA RECIRCULACION","frecuencia":"MENSUAL"},{"tarea":"BOMBA TRASVASE","frecuencia":"MENSUAL"}],"TANQUE 2":[{"tarea":"CONDENSADOR","frecuencia":"SEMESTRAL"},{"tarea":"EVAPORADOR","frecuencia":"SEMESTRAL"},{"tarea":"PAJARITOS","frecuencia":"SEMESTRAL"},{"tarea":"FUNCIONAMIENTO","frecuencia":"MENSUAL"},{"tarea":"CUADRO","frecuencia":"MENSUAL"},{"tarea":"BOMBA RECIRCULACION","frecuencia":"MENSUAL"},{"tarea":"BOMBA TRASVASE","frecuencia":"MENSUAL"}],"TANQUE 3":[{"tarea":"CONDENSADOR","frecuencia":"SEMESTRAL"},{"tarea":"EVAPORADOR","frecuencia":"SEMESTRAL"},{"tarea":"PAJARITOS","frecuencia":"SEMESTRAL"},{"tarea":"FUNCIONAMIENTO","frecuencia":"MENSUAL"},{"tarea":"CUADRO","frecuencia":"MENSUAL"},{"tarea":"BOMBA RECIRCULACION","frecuencia":"MENSUAL"},{"tarea":"BOMBA TRASVASE","frecuencia":"MENSUAL"}],"TANQUE 4":[{"tarea":"CONDENSADOR","frecuencia":"SEMESTRAL"},{"tarea":"EVAPORADOR","frecuencia":"SEMESTRAL"},{"tarea":"PAJARITOS","frecuencia":"SEMESTRAL"},{"tarea":"FUNCIONAMIENTO","frecuencia":"MENSUAL"},{"tarea":"CUADRO","frecuencia":"MENSUAL"},{"tarea":"BOMBA RECIRCULACION","frecuencia":"MENSUAL"},{"tarea":"BOMBA TRASVASE","frecuencia":"MENSUAL"}],"TANQUE 5 (TRUENO)":[{"tarea":"CONDENSADOR","frecuencia":"SEMESTRAL"},{"tarea":"EVAPORADOR","frecuencia":"SEMESTRAL"},{"tarea":"PAJARITOS","frecuencia":"SEMESTRAL"},{"tarea":"FUNCIONAMIENTO","frecuencia":"MENSUAL"},{"tarea":"CUADRO - PANTALLA","frecuencia":"MENSUAL"},{"tarea":"BOMBA RECIRCULACION","frecuencia":"MENSUAL"},{"tarea":"BOMBA DOSIFICACION","frecuencia":"MENSUAL"}],"TUNEL 1":[{"tarea":"CUADRO, ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"ESTADO CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 1 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 2 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"LUZ INTERIOR","frecuencia":"MENSUAL"},{"tarea":"PANTALLA Y SETA ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"PRESIONES","frecuencia":"MENSUAL"},{"tarea":"RESISTENCIAS","frecuencia":"MENSUAL"},{"tarea":"TOMA DE TIERRA (COMPROBAR CON PARTE METALICA)","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"AISLAMIENTO","frecuencia":"QUINCENAL"},{"tarea":"BISAGRAS O CORREDERAS","frecuencia":"QUINCENAL"},{"tarea":"ENTRADA TUNEL","frecuencia":"QUINCENAL"},{"tarea":"MANETAS","frecuencia":"QUINCENAL"},{"tarea":"DIFERENCIALES","frecuencia":"SEMESTRAL"},{"tarea":"RELES-CONTACTORES (RELES V.E. CADA 6 MESES)","frecuencia":"SEMESTRAL"}],"TUNEL 10 (2 TRUENO)":[{"tarea":"CUADRO, ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"ESTADO CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 1 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 2 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"LUZ INTERIOR","frecuencia":"MENSUAL"},{"tarea":"PANTALLA Y SETA ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"PRESIONES","frecuencia":"MENSUAL"},{"tarea":"RESISTENCIAS","frecuencia":"MENSUAL"},{"tarea":"TOMA DE TIERRA (COMPROBAR CON PARTE METALICA)","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"AISLAMIENTO","frecuencia":"QUINCENAL"},{"tarea":"BISAGRAS O CORREDERAS","frecuencia":"QUINCENAL"},{"tarea":"ENTRADA TUNEL","frecuencia":"QUINCENAL"},{"tarea":"MANETAS","frecuencia":"QUINCENAL"},{"tarea":"DIFERENCIALES","frecuencia":"SEMESTRAL"},{"tarea":"RELES-CONTACTORES (RELES V.E. CADA 6 MESES)","frecuencia":"SEMESTRAL"}],"TUNEL 2":[{"tarea":"CUADRO, ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"ESTADO CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 1 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 2 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"LUZ INTERIOR","frecuencia":"MENSUAL"},{"tarea":"PANTALLA Y SETA ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"PRESIONES","frecuencia":"MENSUAL"},{"tarea":"RESISTENCIAS","frecuencia":"MENSUAL"},{"tarea":"TOMA DE TIERRA (COMPROBAR CON PARTE METALICA)","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"AISLAMIENTO","frecuencia":"QUINCENAL"},{"tarea":"BISAGRAS O CORREDERAS","frecuencia":"QUINCENAL"},{"tarea":"ENTRADA TUNEL","frecuencia":"QUINCENAL"},{"tarea":"MANETAS","frecuencia":"QUINCENAL"},{"tarea":"DIFERENCIALES","frecuencia":"SEMESTRAL"},{"tarea":"RELES-CONTACTORES (RELES V.E. CADA 6 MESES)","frecuencia":"SEMESTRAL"}],"TUNEL 3":[{"tarea":"CUADRO, ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"ESTADO CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 1 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 2 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"LUZ INTERIOR","frecuencia":"MENSUAL"},{"tarea":"PANTALLA Y SETA ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"PRESIONES","frecuencia":"MENSUAL"},{"tarea":"RESISTENCIAS","frecuencia":"MENSUAL"},{"tarea":"TOMA DE TIERRA (COMPROBAR CON PARTE METALICA)","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"AISLAMIENTO","frecuencia":"QUINCENAL"},{"tarea":"BISAGRAS O CORREDERAS","frecuencia":"QUINCENAL"},{"tarea":"ENTRADA TUNEL","frecuencia":"QUINCENAL"},{"tarea":"MANETAS","frecuencia":"QUINCENAL"},{"tarea":"DIFERENCIALES","frecuencia":"SEMESTRAL"},{"tarea":"RELES-CONTACTORES (RELES V.E. CADA 6 MESES)","frecuencia":"SEMESTRAL"}],"TUNEL 4":[{"tarea":"CUADRO, ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"ESTADO CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 1 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 2 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"LUZ INTERIOR","frecuencia":"MENSUAL"},{"tarea":"PANTALLA Y SETA ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"PRESIONES","frecuencia":"MENSUAL"},{"tarea":"RESISTENCIAS","frecuencia":"MENSUAL"},{"tarea":"TOMA DE TIERRA (COMPROBAR CON PARTE METALICA)","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"AISLAMIENTO","frecuencia":"QUINCENAL"},{"tarea":"BISAGRAS O CORREDERAS","frecuencia":"QUINCENAL"},{"tarea":"ENTRADA TUNEL","frecuencia":"QUINCENAL"},{"tarea":"MANETAS","frecuencia":"QUINCENAL"},{"tarea":"DIFERENCIALES","frecuencia":"SEMESTRAL"},{"tarea":"RELES-CONTACTORES (RELES V.E. CADA 6 MESES)","frecuencia":"SEMESTRAL"}],"TUNEL 5":[{"tarea":"CUADRO, ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"ESTADO CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 1 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 2 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"LUZ INTERIOR","frecuencia":"MENSUAL"},{"tarea":"PANTALLA Y SETA ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"PRESIONES","frecuencia":"MENSUAL"},{"tarea":"RESISTENCIAS","frecuencia":"MENSUAL"},{"tarea":"TOMA DE TIERRA (COMPROBAR CON PARTE METALICA)","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"AISLAMIENTO","frecuencia":"QUINCENAL"},{"tarea":"BISAGRAS O CORREDERAS","frecuencia":"QUINCENAL"},{"tarea":"ENTRADA TUNEL","frecuencia":"QUINCENAL"},{"tarea":"MANETAS","frecuencia":"QUINCENAL"},{"tarea":"DIFERENCIALES","frecuencia":"SEMESTRAL"},{"tarea":"RELES-CONTACTORES (RELES V.E. CADA 6 MESES)","frecuencia":"SEMESTRAL"}],"TUNEL 6":[{"tarea":"CUADRO, ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"ESTADO CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 1 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 2 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"LUZ INTERIOR","frecuencia":"MENSUAL"},{"tarea":"PANTALLA Y SETA ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"PRESIONES","frecuencia":"MENSUAL"},{"tarea":"RESISTENCIAS","frecuencia":"MENSUAL"},{"tarea":"TOMA DE TIERRA (COMPROBAR CON PARTE METALICA)","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"AISLAMIENTO","frecuencia":"QUINCENAL"},{"tarea":"BISAGRAS O CORREDERAS","frecuencia":"QUINCENAL"},{"tarea":"ENTRADA TUNEL","frecuencia":"QUINCENAL"},{"tarea":"MANETAS","frecuencia":"QUINCENAL"},{"tarea":"DIFERENCIALES","frecuencia":"SEMESTRAL"},{"tarea":"RELES-CONTACTORES (RELES V.E. CADA 6 MESES)","frecuencia":"SEMESTRAL"}],"TUNEL 7":[{"tarea":"CUADRO, ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"ESTADO CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 1 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 2 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"LUZ INTERIOR","frecuencia":"MENSUAL"},{"tarea":"PANTALLA Y SETA ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"PRESIONES","frecuencia":"MENSUAL"},{"tarea":"RESISTENCIAS","frecuencia":"MENSUAL"},{"tarea":"TOMA DE TIERRA (COMPROBAR CON PARTE METALICA)","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"AISLAMIENTO","frecuencia":"QUINCENAL"},{"tarea":"BISAGRAS O CORREDERAS","frecuencia":"QUINCENAL"},{"tarea":"ENTRADA TUNEL","frecuencia":"QUINCENAL"},{"tarea":"MANETAS","frecuencia":"QUINCENAL"},{"tarea":"DIFERENCIALES","frecuencia":"SEMESTRAL"},{"tarea":"RELES-CONTACTORES (RELES V.E. CADA 6 MESES)","frecuencia":"SEMESTRAL"}],"TUNEL 8":[{"tarea":"CUADRO, ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"ESTADO CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 1 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 2 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"LUZ INTERIOR","frecuencia":"MENSUAL"},{"tarea":"PANTALLA Y SETA ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"PRESIONES","frecuencia":"MENSUAL"},{"tarea":"RESISTENCIAS","frecuencia":"MENSUAL"},{"tarea":"TOMA DE TIERRA (COMPROBAR CON PARTE METALICA)","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"AISLAMIENTO","frecuencia":"QUINCENAL"},{"tarea":"BISAGRAS O CORREDERAS","frecuencia":"QUINCENAL"},{"tarea":"ENTRADA TUNEL","frecuencia":"QUINCENAL"},{"tarea":"MANETAS","frecuencia":"QUINCENAL"},{"tarea":"DIFERENCIALES","frecuencia":"SEMESTRAL"},{"tarea":"RELES-CONTACTORES (RELES V.E. CADA 6 MESES)","frecuencia":"SEMESTRAL"}],"TUNEL 9 (1 TRUENO)":[{"tarea":"CUADRO, ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"ESTADO CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 1 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"ESTADO Y CONSUMO COMPRESOR 2 (ANOTAR)","frecuencia":"MENSUAL"},{"tarea":"LUZ INTERIOR","frecuencia":"MENSUAL"},{"tarea":"PANTALLA Y SETA ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"PRESIONES","frecuencia":"MENSUAL"},{"tarea":"RESISTENCIAS","frecuencia":"MENSUAL"},{"tarea":"TOMA DE TIERRA (COMPROBAR CON PARTE METALICA)","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"AISLAMIENTO","frecuencia":"QUINCENAL"},{"tarea":"BISAGRAS O CORREDERAS","frecuencia":"QUINCENAL"},{"tarea":"ENTRADA TUNEL","frecuencia":"QUINCENAL"},{"tarea":"MANETAS","frecuencia":"QUINCENAL"},{"tarea":"DIFERENCIALES","frecuencia":"SEMESTRAL"},{"tarea":"RELES-CONTACTORES (RELES V.E. CADA 6 MESES)","frecuencia":"SEMESTRAL"}],"TUNEL PREFRIO":[{"tarea":"PAJARITOS","frecuencia":"ANUAL"},{"tarea":"COMPRESOR 1 ACEITE Y ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"COMPRESOR 2 ACEITE Y ESTADO GENERAL","frecuencia":"MENSUAL"},{"tarea":"CUADRO (LIMPIEZA Y ORGANIZACIÓN)","frecuencia":"MENSUAL"},{"tarea":"EQUIPO 1 PRESIONES","frecuencia":"MENSUAL"},{"tarea":"EQUIPO 2 PRESIONES","frecuencia":"MENSUAL"},{"tarea":"TOMA DE TIERRA A PARTE ALEATORIA METALICA","frecuencia":"MENSUAL"},{"tarea":"TURBINA 1 CORREAS-TENSION Y ESTADO TURBINA","frecuencia":"MENSUAL"},{"tarea":"TURBINA 2 CORREAS-TENSION Y ESTADO TURBINA","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES CONDENSADORES","frecuencia":"MENSUAL"},{"tarea":"VENTILADORES EVAPORADORES","frecuencia":"MENSUAL"},{"tarea":"CADENA DCHA ARRASTRE (VISTA ENTRADA)","frecuencia":"QUINCENAL"},{"tarea":"CADENA IZDA ARRASTRE (VISTA ENTRADA)","frecuencia":"QUINCENAL"},{"tarea":"PISTONES","frecuencia":"QUINCENAL"},{"tarea":"RELES Y CONTACTORES","frecuencia":"SEMESTRAL"}],"COMPRESOR 1 (AIRE)":[{"tarea":"TOMAS DE AIRE - LIMPIEZA RADIADOR -PURGA AGUA - OBSERVAR","frecuencia":"QUINCENAL"}],"COMPRESOR 2 (AIRE)":[{"tarea":"TOMAS DE AIRE - LIMPIEZA RADIADOR -PURGA AGUA - OBSERVAR","frecuencia":"QUINCENAL"}],"COMPRESOR 3 (AIRE)":[{"tarea":"TOMAS DE AIRE - LIMPIEZA RADIADOR -PURGA AGUA - OBSERVAR","frecuencia":"QUINCENAL"}],"COMPRESOR TRUENO 1 (AIRE)":[{"tarea":"TOMAS DE AIRE - LIMPIEZA RADIADOR -PURGA AGUA - OBSERVAR","frecuencia":"QUINCENAL"}],"TUNEL PREFRIO ARRASTRE":[{"tarea":"CADENA DERECHA","frecuencia":"MENSUAL"},{"tarea":"CADENA IZDA","frecuencia":"MENSUAL"},{"tarea":"CUADRO LIMPIEZA-ORGANIZACIÓN","frecuencia":"MENSUAL"},{"tarea":"DETECTORES ENTRADA","frecuencia":"MENSUAL"},{"tarea":"FOTOCELULAS SALIDA","frecuencia":"MENSUAL"},{"tarea":"MOTOR-REDUCTOR DCHA","frecuencia":"MENSUAL"},{"tarea":"MOTOR-REDUCTOR IZD","frecuencia":"MENSUAL"},{"tarea":"SETAS","frecuencia":"MENSUAL"},{"tarea":"ENGRASADOR CADENAS","frecuencia":"SEMANAL"}],"COMPRESOR N5 (AIRE)":[{"tarea":"TOMAS DE AIRE - LIMPIEZA RADIADOR -PURGA AGUA - OBSERVAR","frecuencia":"QUINCENAL"}],"A/A TRANSFORMADOR":[{"tarea":"FUNCIONAMIENTO","frecuencia":"MENSUAL"},{"tarea":"CONDENSADOR","frecuencia":"MENSUAL"},{"tarea":"EVAPORADOR","frecuencia":"MENSUAL"},{"tarea":"CUADRO","frecuencia":"MENSUAL"},{"tarea":"RELES-CONTACTORES","frecuencia":"SEMESTRAL"},{"tarea":"TOMA DE TIERRA","frecuencia":"MENSUAL"}]}');
+
+var FREQ_ORDEN = ['SEMANAL','QUINCENAL','MENSUAL','TRIMESTRAL','SEMESTRAL','ANUAL'];
+var FREQ_LABEL = {SEMANAL:'Semanal', QUINCENAL:'Quincenal', MENSUAL:'Mensual', TRIMESTRAL:'Trimestral', SEMESTRAL:'Semestral', ANUAL:'Anual'};
+var EQUIPOS_TODOS = Object.keys(TAREAS_BASE).sort();
+
+// El admin puede editar/añadir/borrar tareas. Al primer cambio de un equipo,
+// se clona su lista base a localStorage; a partir de ahí esa copia editable
+// manda para ese equipo (el catálogo base original no se toca nunca).
+function getTareasOverride() {
+  try { return JSON.parse(localStorage.getItem('boceto_frio_tareas_override') || '{}'); }
+  catch(e) { return {}; }
+}
+function setTareasOverride(obj) { localStorage.setItem('boceto_frio_tareas_override', JSON.stringify(obj)); }
+
+function getTareasEquipo(equipo) {
+  var override = getTareasOverride();
+  if (override[equipo]) return override[equipo];
+  return TAREAS_BASE[equipo] || [];
+}
+function setTareasEquipo(equipo, tareas) {
+  var override = getTareasOverride();
+  override[equipo] = tareas;
+  setTareasOverride(override);
+}
+
+// ─────────────────────────────────────
+// Periodo actual según frecuencia — para saber si una tarea "ya está
+// hecha en tiempo" (esta semana/quincena/mes/etc.) y bloquear que se
+// vuelva a marcar, aunque su fecha sí se pueda seguir editando.
+// ─────────────────────────────────────
+function claveInstanciaPeriodo(frecuencia, fechaStr) {
+  var d = fechaStr ? new Date(fechaStr + 'T00:00:00') : new Date();
+  var y = d.getFullYear();
+  if (frecuencia === 'SEMANAL') {
+    var tmp = new Date(d.getTime());
+    tmp.setHours(0,0,0,0);
+    tmp.setDate(tmp.getDate() + 3 - ((tmp.getDay() + 6) % 7));
+    var week1 = new Date(tmp.getFullYear(), 0, 4);
+    var weekNo = 1 + Math.round(((tmp - week1) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
+    return tmp.getFullYear() + '-W' + weekNo;
+  }
+  if (frecuencia === 'QUINCENAL') return y + '-' + (d.getMonth()+1) + '-' + (d.getDate() <= 15 ? 'Q1' : 'Q2');
+  if (frecuencia === 'MENSUAL')   return y + '-' + (d.getMonth()+1);
+  if (frecuencia === 'TRIMESTRAL')return y + '-T' + (Math.floor(d.getMonth()/3)+1);
+  if (frecuencia === 'SEMESTRAL') return y + '-S' + (d.getMonth() < 6 ? 1 : 2);
+  if (frecuencia === 'ANUAL')     return '' + y;
+  return y + '-' + (d.getMonth()+1);
+}
+
+// Busca, entre todas las revisiones ya guardadas de este equipo, si esta
+// tarea concreta ya se marcó dentro del periodo actual. Devuelve el id de
+// esa revisión y la fecha, o null si todavía no se ha hecho este periodo.
+function buscarHechaEnPeriodoActual(equipo, tarea, frecuencia) {
+  var periodoActual = claveInstanciaPeriodo(frecuencia, null);
+  var lecturas = getLecturas().filter(function(l){ return l.eq === equipo; });
+  for (var i = 0; i < lecturas.length; i++) {
+    var item = (lecturas[i].checklist || []).find(function(c){ return c.tarea === tarea; });
+    if (item && item.fecha && claveInstanciaPeriodo(frecuencia, item.fecha) === periodoActual) {
+      return { lecturaId: lecturas[i].id, fecha: item.fecha };
+    }
+  }
+  return null;
+}
+
+// ─────────────────────────────────────
+// Checklist dinámico en Nueva Revisión
+// ─────────────────────────────────────
+function renderChecklist() {
+  var equipo = document.getElementById('lEq').value;
+  var wrap = document.getElementById('checklistWrap');
+  if (!equipo) { wrap.innerHTML = '<div class="sin-tareas">Selecciona un equipo para ver sus tareas.</div>'; return; }
+  var tareas = getTareasEquipo(equipo);
+  if (!tareas.length) { wrap.innerHTML = '<div class="sin-tareas">Este equipo no tiene tareas todavía.</div>'; return; }
+
+  var html = '';
+  FREQ_ORDEN.forEach(function(freq) {
+    var deEstaFreq = tareas.filter(function(t){ return t.frecuencia === freq; });
+    if (!deEstaFreq.length) return;
+    html += '<div class="freq-badge fb-' + freq + '">' + FREQ_LABEL[freq] + '</div>';
+    deEstaFreq.forEach(function(t, i) {
+      var key = 'chk_' + freq + '_' + i;
+      var hecha = buscarHechaEnPeriodoActual(equipo, t.tarea, freq);
+      if (hecha) {
+        html += '<div class="tarea-row hecha-periodo" data-lectura-id="' + hecha.lecturaId + '" data-tarea="' + escHtml(t.tarea) + '">'
+          + '<input type="checkbox" checked disabled>'
+          + '<span class="tarea-nombre">' + escHtml(t.tarea) + '</span>'
+          + '<span class="tarea-hecha-label">✅ Hecho ' + escHtml(hecha.fecha) + '</span>'
+          + '<input type="date" id="' + key + '_fecha_edit" value="' + escHtml(hecha.fecha) + '" disabled>'
+          + '<button type="button" class="btn-editar-fecha" onclick="habilitarEdicionFecha(this)">✏️ Editar</button>'
+          + '</div>';
+      } else {
+        html += '<div class="tarea-row">'
+          + '<input type="checkbox" id="' + key + '" onchange="toggleFechaTarea(\'' + key + '\')">'
+          + '<span class="tarea-nombre">' + escHtml(t.tarea) + '</span>'
+          + '<input type="date" id="' + key + '_fecha" disabled>'
+          + '</div>';
+      }
+    });
+  });
+  wrap.innerHTML = html;
+}
+
+function toggleFechaTarea(key) {
+  var chk = document.getElementById(key);
+  var fecha = document.getElementById(key + '_fecha');
+  fecha.disabled = !chk.checked;
+  if (chk.checked && !fecha.value) fecha.value = new Date().toISOString().slice(0,10);
+}
+
+// Ya hecha en este periodo: no se puede volver a marcar, pero sí editar
+// la fecha que quedó guardada — esto actualiza directamente el registro
+// histórico (la revisión donde se marcó), no crea una marca nueva.
+function habilitarEdicionFecha(btn) {
+  var row = btn.closest('.tarea-row');
+  var input = row.querySelector('input[type=date]');
+  input.disabled = false;
+  input.focus();
+  btn.textContent = '💾 Guardar';
+  btn.onclick = function() {
+    var lecturaId = row.getAttribute('data-lectura-id');
+    var tarea = row.getAttribute('data-tarea');
+    var list = getLecturas();
+    var lectura = list.find(function(l){ return l.id === lecturaId; });
+    if (lectura) {
+      var item = (lectura.checklist || []).find(function(c){ return c.tarea === tarea; });
+      if (item) item.fecha = input.value;
+      setLecturas(list);
+      showToast('✅ Fecha actualizada');
+    }
+    renderChecklist();
+  };
+}
+
+function recogerChecklistMarcado() {
+  var equipo = document.getElementById('lEq').value;
+  var tareas = getTareasEquipo(equipo);
+  var resultado = [];
+  FREQ_ORDEN.forEach(function(freq) {
+    var deEstaFreq = tareas.filter(function(t){ return t.frecuencia === freq; });
+    deEstaFreq.forEach(function(t, i) {
+      var key = 'chk_' + freq + '_' + i;
+      var chk = document.getElementById(key);
+      if (chk && chk.checked) {
+        resultado.push({ tarea: t.tarea, frecuencia: freq, fecha: document.getElementById(key + '_fecha').value });
+      }
+    });
+  });
+  return resultado;
+}
+
+// ─────────────────────────────────────
+// Admin: gestionar tareas (añadir, editar, borrar, copiar entre equipos)
+// ─────────────────────────────────────
+function abrirGestionTareas() {
+  document.getElementById('modalTareas').classList.add('show');
+  document.getElementById('gEq').value = '';
+  renderAdminTareas();
+}
+function cerrarGestionTareas() {
+  document.getElementById('modalTareas').classList.remove('show');
+}
+
+function renderAdminTareas() {
+  var equipo = document.getElementById('gEq').value;
+  var wrap = document.getElementById('gListaTareas');
+  var copiarWrap = document.getElementById('gCopiarWrap');
+  var btnAñadir = document.getElementById('gBtnAñadir');
+  if (!equipo) {
+    wrap.innerHTML = '<div class="sin-tareas">Selecciona un equipo.</div>';
+    copiarWrap.style.display = 'none';
+    btnAñadir.style.display = 'none';
+    return;
+  }
+  btnAñadir.style.display = '';
+  copiarWrap.style.display = '';
+  var selOrigen = document.getElementById('gCopiarOrigen');
+  selOrigen.innerHTML = EQUIPOS_TODOS.filter(function(e){ return e !== equipo; })
+    .map(function(e){ return '<option>' + escHtml(e) + '</option>'; }).join('');
+
+  var tareas = getTareasEquipo(equipo);
+  if (!tareas.length) { wrap.innerHTML = '<div class="sin-tareas">Sin tareas — añade una nueva o copia el checklist de otro equipo.</div>'; return; }
+
+  var html = '';
+  tareas.forEach(function(t, i) {
+    html += '<div class="tarea-row">'
+      + '<input type="text" value="' + escHtml(t.tarea) + '" onchange="actualizarTareaAdmin(' + i + ',\'tarea\',this.value)" style="flex:2;min-width:180px">'
+      + '<select onchange="actualizarTareaAdmin(' + i + ',\'frecuencia\',this.value)" style="flex:1;min-width:120px">'
+      + FREQ_ORDEN.map(function(f){ return '<option value="' + f + '"' + (f===t.frecuencia?' selected':'') + '>' + FREQ_LABEL[f] + '</option>'; }).join('')
+      + '</select>'
+      + '<button onclick="borrarTareaAdmin(' + i + ')" style="background:rgba(231,76,60,.08);border:1px solid rgba(231,76,60,.25);color:rgba(231,76,60,.7);border-radius:6px;padding:4px 9px;cursor:pointer;font-family:\'Barlow\',sans-serif;font-size:.73rem;font-weight:700">🗑</button>'
+      + '</div>';
+  });
+  wrap.innerHTML = html;
+}
+
+function actualizarTareaAdmin(idx, campo, valor) {
+  var equipo = document.getElementById('gEq').value;
+  var tareas = getTareasEquipo(equipo).slice();
+  tareas[idx] = Object.assign({}, tareas[idx]);
+  tareas[idx][campo] = valor;
+  setTareasEquipo(equipo, tareas);
+  renderChecklist();
+}
+function borrarTareaAdmin(idx) {
+  var equipo = document.getElementById('gEq').value;
+  var tareas = getTareasEquipo(equipo).slice();
+  tareas.splice(idx, 1);
+  setTareasEquipo(equipo, tareas);
+  renderAdminTareas();
+  renderChecklist();
+}
+function añadirTareaAdmin() {
+  var equipo = document.getElementById('gEq').value;
+  if (!equipo) return;
+  var tareas = getTareasEquipo(equipo).slice();
+  tareas.push({ tarea: '', frecuencia: 'MENSUAL' });
+  setTareasEquipo(equipo, tareas);
+  renderAdminTareas();
+  renderChecklist();
+}
+function copiarChecklist() {
+  var destino = document.getElementById('gEq').value;
+  var origen = document.getElementById('gCopiarOrigen').value;
+  if (!destino || !origen) return;
+  if (!confirm('¿Sustituir el checklist de "' + destino + '" por el de "' + origen + '"? Se perderán las tareas actuales de ' + destino + '.')) return;
+  var tareasOrigen = getTareasEquipo(origen).map(function(t){ return { tarea: t.tarea, frecuencia: t.frecuencia }; });
+  setTareasEquipo(destino, tareasOrigen);
+  renderAdminTareas();
+  renderChecklist();
+  showToast('✅ Checklist copiado de ' + origen + ' a ' + destino);
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._h);
+  t._h = setTimeout(function(){ t.classList.remove('show'); }, 2600);
+}
+
+function cambiarTab(tab) {
+  ['lectura','mis'].forEach(function(t){
+    var s = document.getElementById('sec-'+t); if (s) s.style.display = t===tab ? '' : 'none';
+    var b = document.getElementById('tab-'+t); if (b) b.classList.toggle('active', t===tab);
+  });
+  if (tab === 'mis') renderMis();
+}
+
+function getLecturas() {
+  try { return JSON.parse(localStorage.getItem('boceto_frio_v2') || '[]'); }
+  catch(e) { return []; }
+}
+function setLecturas(list) { localStorage.setItem('boceto_frio_v2', JSON.stringify(list)); }
+
+function guardarLectura() {
+  var eq = document.getElementById('lEq').value;
+  var fecha = document.getElementById('lFecha').value;
+  var hora = document.getElementById('lHora').value;
+  if (!eq || !fecha || !hora) { showToast('⚠️ Rellena equipo, fecha y hora'); return; }
+
+  var obj = {
+    id: 'BOC-' + Date.now(),
+    eq: eq, fecha: fecha, hora: hora,
+    checklist: recogerChecklistMarcado(),
+    fuga: document.getElementById('lFuga').value,
+    ventCond: document.getElementById('lVentCond').value,
+    cond: document.getElementById('lCond').value,
+    contactor: document.getElementById('lContactor').value,
+    rele: document.getElementById('lRele').value,
+    diferencial: document.getElementById('lDiferencial').value,
+    seta: document.getElementById('lSeta').value,
+    obs: document.getElementById('lObs').value,
+    ts: Date.now()
+  };
+  var list = getLecturas();
+  list.unshift(obj);
+  setLecturas(list);
+  showToast('✅ Guardado (boceto)' + (obj.fuga === 'confirmada' ? ' — 🚨 FUGA CONFIRMADA' : ''));
+
+  ['lEq','lObs'].forEach(function(id){ document.getElementById(id).value = ''; });
+  ['lFuga','lVentCond','lCond','lContactor','lRele','lDiferencial','lSeta'].forEach(function(id){
+    document.getElementById(id).selectedIndex = 0;
+  });
+  var hoy = new Date().toISOString().slice(0,10);
+  var ahora = new Date().toTimeString().slice(0,5);
+  document.getElementById('lFecha').value = hoy;
+  document.getElementById('lHora').value = ahora;
+  renderChecklist();
+  renderEstadoMes();
+}
+
+function borrarLectura(id) {
+  if (!confirm('¿Borrar esta revisión de prueba?')) return;
+  setLecturas(getLecturas().filter(function(l){ return l.id !== id; }));
+  renderMis();
+  renderEstadoMes();
+}
+
+// ─────────────────────────────────────
+// Estado del mes: verde=todo hecho, naranja=algo, rojo=nada,
+// blanco=todavía no se ha elegido mes
+// ─────────────────────────────────────
+function calcularEstadoEquipo(equipo, mesStr) {
+  var tareas = getTareasEquipo(equipo);
+  if (!tareas.length) return 'rojo';
+  var hechasEsteMes = {};
+  getLecturas().forEach(function(l){
+    if (l.eq !== equipo) return;
+    (l.checklist || []).forEach(function(c){
+      if (c.fecha && c.fecha.slice(0,7) === mesStr) hechasEsteMes[c.tarea] = true;
+    });
+  });
+  var totalHechas = tareas.filter(function(t){ return hechasEsteMes[t.tarea]; }).length;
+  if (totalHechas === 0) return 'rojo';
+  if (totalHechas === tareas.length) return 'verde';
+  return 'naranja';
+}
+
+function renderEstadoMes() {
+  var mes = document.getElementById('statusMes').value;
+  var grid = document.getElementById('estadoMesGrid');
+  grid.innerHTML = EQUIPOS_TODOS.map(function(equipo){
+    var clase = mes ? calcularEstadoEquipo(equipo, mes) : '';
+    return '<span class="estado-item ' + clase + '">' + escHtml(equipo) + '</span>';
+  }).join('');
+}
+
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function renderMis() {
+  var tb = document.getElementById('misTbody');
+  var list = getLecturas();
+  if (!list.length) {
+    tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,.3);padding:20px">Sin revisiones todavía</td></tr>';
+    return;
+  }
+  var fugaIcon = {no:'✅', posible:'⚠️', confirmada:'🔴'};
+  tb.innerHTML = list.map(function(l){
+    var total = getTareasEquipo(l.eq).length;
+    var hechas = (l.checklist || []).length;
+    return '<tr>'
+      + '<td><b>' + escHtml(l.eq) + '</b></td>'
+      + '<td>' + escHtml(l.fecha) + ' ' + escHtml(l.hora) + '</td>'
+      + '<td>' + hechas + ' / ' + total + '</td>'
+      + '<td>' + (fugaIcon[l.fuga]||'—') + '</td>'
+      + '<td><button onclick="borrarLectura(\'' + l.id + '\')" style="background:rgba(231,76,60,.08);border:1px solid rgba(231,76,60,.25);color:rgba(231,76,60,.7);border-radius:6px;padding:4px 9px;cursor:pointer;font-family:\'Barlow\',sans-serif;font-size:.73rem;font-weight:700">🗑</button></td>'
+      + '</tr>';
+  }).join('');
+}
+
+// ─────────────────────────────────────
+// Acceso — solo Gregorio, José, Javier H y Admin
+// ─────────────────────────────────────
+function entrar() {
+  var nombre = document.getElementById('loginNombre').value;
+  if (!nombre) { showToast('⚠️ Selecciona tu nombre'); return; }
+  localStorage.setItem('frioClimaSesion', nombre);
+  iniciarApp(nombre);
+}
+function cerrarSesion() {
+  localStorage.removeItem('frioClimaSesion');
+  document.getElementById('loginPanel').style.display = 'flex';
+  document.getElementById('appPanel').style.display = 'none';
+  document.getElementById('btnCerrarSesion').style.display = 'none';
+}
+function iniciarApp(nombre) {
+  document.getElementById('loginPanel').style.display = 'none';
+  document.getElementById('appPanel').style.display = 'block';
+  document.getElementById('btnCerrarSesion').style.display = '';
+  document.getElementById('topbarSub').textContent = 'Boceto — ' + nombre;
+
+  var hoy = new Date().toISOString().slice(0,10);
+  var ahora = new Date().toTimeString().slice(0,5);
+  document.getElementById('lFecha').value = hoy;
+  document.getElementById('lHora').value = ahora;
+  renderEstadoMes();
+}
+
+(function init(){
+  var sesion = localStorage.getItem('frioClimaSesion');
+  if (sesion) iniciarApp(sesion);
+})();
+</script>
+</body>
+</html>

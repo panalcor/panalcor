@@ -6,6 +6,12 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.689 — 2026-08-23
+  - Nueva página frio_clima.html (todavía boceto en revisión, no conectada
+    a Firebase): acceso restringido con selector de nombre a solo
+    GREGORIO, JOSE, JAVIER H y ADMIN. Por ahora es de solo consulta —
+    la definición final se hace en la reunión de finales de septiembre.
+
 v1.5.679 — 2026-08-23
   - Seguimiento: mejora sobre el fix anterior — cuando el id de una tarea
     se renumeró pero la tarea (texto+frecuencia) sigue existiendo igual
