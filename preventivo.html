@@ -4138,16 +4138,38 @@ async function cargarSeguimiento(mkOverride) {
     // publicó el plan (p.ej. "LINEAS FORMADORAS" -> "LINEA 1"). Se refresca con
     // el catálogo actual por id para que el seguimiento muestre siempre la
     // máquina concreta, no el nombre genérico que tenía al publicarse.
+    const catalogoActual = getCatalogoEffectivo();
     const catalogMap = {};
-    getCatalogoEffectivo().forEach(c => { catalogMap[c.id] = c; });
+    catalogoActual.forEach(c => { catalogMap[c.id] = c; });
+    // Índice tarea+frecuencia -> máquinas que la tienen ahora mismo, para el
+    // caso en que el id se renumeró pero la tarea sigue existiendo tal cual
+    // bajo un id distinto (p.ej. LEVADURA/ENFRIAMIENTO TANQUES ahora vive en
+    // "LEVADURA CUADRO GENERAL Y BOMBAS").
+    const porContenido = {};
+    catalogoActual.forEach(c => {
+      const k = c.tarea + '||' + c.frecuencia;
+      (porContenido[k] = porContenido[k] || new Set()).add(c.maquina);
+    });
     const tareas = (planData.tareas || []).map(t => {
       const cat = catalogMap[t.id];
-      // Solo refrescamos el nombre de máquina si el catálogo actual sigue
-      // teniendo la MISMA tarea+frecuencia en ese id — si el catálogo se
-      // renumeró (ids reasignados a otras tareas), el id ya no identifica
-      // la misma tarea y hay que quedarse con el nombre guardado en el plan.
-      const esMismaTarea = cat && cat.tarea === t.tarea && cat.frecuencia === t.frecuencia;
-      return esMismaTarea ? Object.assign({}, t, { maquina: cat.maquina }) : t;
+      // 1) Si el id sigue teniendo la MISMA tarea+frecuencia, es la misma
+      //    tarea — refrescamos el nombre (puede haberse afinado, p.ej. de
+      //    "LINEAS FORMADORAS" a "LINEA 1").
+      if(cat && cat.tarea === t.tarea && cat.frecuencia === t.frecuencia) {
+        return Object.assign({}, t, { maquina: cat.maquina });
+      }
+      // 2) El id se renumeró (ahora apunta a otra tarea distinta). Buscamos
+      //    por tarea+frecuencia en TODO el catálogo: si hay exactamente una
+      //    máquina con esa tarea, es seguro refrescar. Si hay varias (p.ej.
+      //    una tarea genérica de "LINEAS FORMADORAS" que ahora existe una
+      //    vez por cada LINEA 1-7), no hay forma de saber cuál era la
+      //    concreta — el plan de ese mes nunca lo registró a ese nivel de
+      //    detalle, así que se deja el nombre genérico guardado entonces.
+      const candidatos = porContenido[t.tarea + '||' + t.frecuencia];
+      if(candidatos && candidatos.size === 1) {
+        return Object.assign({}, t, { maquina: [...candidatos][0] });
+      }
+      return t;
     });
 
     if(!tareas.length) {

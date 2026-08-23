@@ -6,6 +6,16 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.679 — 2026-08-23
+  - Seguimiento: mejora sobre el fix anterior — cuando el id de una tarea
+    se renumeró pero la tarea (texto+frecuencia) sigue existiendo igual
+    en el catálogo bajo OTRO id, ahora se refresca el nombre de máquina
+    igualmente (ej. "LEVADURA" pasa a mostrar "LEVADURA CUADRO GENERAL Y
+    BOMBAS"). Solo se deja el nombre genérico cuando de verdad es
+    ambiguo — p.ej. "LINEAS FORMADORAS" no puede convertirse en "LINEA 1"
+    porque el plan de ese mes nunca registró cuál de las 7 líneas
+    concretas era; esa información no existe y no se puede inventar.
+
 v1.5.669 — 2026-08-23
   - Seguimiento (preventivo.html): corregido bug grave por el que marzo,
     abril, mayo, junio y julio mostraban la MÁQUINA equivocada en casi
