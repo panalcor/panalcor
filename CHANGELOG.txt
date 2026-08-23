@@ -6,6 +6,21 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.669 — 2026-08-23
+  - Seguimiento (preventivo.html): corregido bug grave por el que marzo,
+    abril, mayo, junio y julio mostraban la MÁQUINA equivocada en casi
+    el 80% de las tareas (ej. una tarea de LEVADURA aparecía bajo
+    "PABAT 1"). Causa: cargarSeguimiento() refrescaba el nombre de
+    máquina desde el catálogo actual solo por "id", pero el catálogo se
+    renumeró por completo entre julio y agosto (los mismos ids ahora
+    apuntan a tareas totalmente distintas) — agosto y octubre no se
+    vieron afectados porque se publicaron ya con la numeración nueva.
+    Ahora solo se refresca el nombre si el id sigue teniendo la misma
+    tarea+frecuencia en el catálogo actual; si no, se respeta el nombre
+    que quedó guardado al publicar ese mes. Los datos de realización
+    (preventivo_completado) nunca estuvieron afectados, solo la
+    visualización del nombre de máquina.
+
 v1.5.659 — 2026-08-23
   - MAQ-169 A/A TRANSFORMADOR: unificada su área a FRIO/CLIMA (como sus
     4 hermanos A/A) en las 4 copias del registro de máquinas donde

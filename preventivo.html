@@ -4142,7 +4142,12 @@ async function cargarSeguimiento(mkOverride) {
     getCatalogoEffectivo().forEach(c => { catalogMap[c.id] = c; });
     const tareas = (planData.tareas || []).map(t => {
       const cat = catalogMap[t.id];
-      return cat ? Object.assign({}, t, { maquina: cat.maquina }) : t;
+      // Solo refrescamos el nombre de máquina si el catálogo actual sigue
+      // teniendo la MISMA tarea+frecuencia en ese id — si el catálogo se
+      // renumeró (ids reasignados a otras tareas), el id ya no identifica
+      // la misma tarea y hay que quedarse con el nombre guardado en el plan.
+      const esMismaTarea = cat && cat.tarea === t.tarea && cat.frecuencia === t.frecuencia;
+      return esMismaTarea ? Object.assign({}, t, { maquina: cat.maquina }) : t;
     });
 
     if(!tareas.length) {
