@@ -6,6 +6,13 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.699 — 2026-08-23
+  - panalcor_inicio.html: se me había olvidado enlazar frio_clima.html
+    desde el menú — añadido un botón "🧊 Frío/Clima (boceto)" junto al
+    de "❄️ Frío" existente, visible para las mismas personas (Gregorio,
+    José, Javier H y admin). No sustituye al botón de Frío real
+    (frio_mec.html), que sigue igual.
+
 v1.5.689 — 2026-08-23
   - Nueva página frio_clima.html (todavía boceto en revisión, no conectada
     a Firebase): acceso restringido con selector de nombre a solo
