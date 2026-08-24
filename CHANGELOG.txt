@@ -6,6 +6,13 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.729 — 2026-08-24
+  - panalcor_inicio.html: el botón de acceso a Integrales iba en el
+    Dashboard de admin.html por error de interpretación — el usuario
+    quería el acceso desde el menú principal (panalcor_inicio.html),
+    visible solo para el rol admin. Añadido ahí, junto a "Plan
+    Preventivo" y "Preventivos Externos".
+
 v1.5.719 — 2026-08-24
   - "Integrales" ya no es una pestaña dentro de admin.html — ahora es su
     propia página, integrales.html, con el mismo acceso por contraseña
