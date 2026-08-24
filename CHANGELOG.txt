@@ -6,6 +6,13 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.749 — 2026-08-24
+  - Extraída la sección "Proyectos" de admin.html a una página propia
+    (proyectos.html). Quitados los dos enlaces que había en admin.html
+    (pestaña de la barra y botón del Dashboard); ahora se accede desde
+    un botón "🚀 Proyectos" en panalcor_inicio.html, junto al de
+    Administrador.
+
 v1.5.739 — 2026-08-24
   - Quitado el botón "🔩 Integrales" del Dashboard de admin.html — el
     acceso correcto va en panalcor_inicio.html, no aquí.
