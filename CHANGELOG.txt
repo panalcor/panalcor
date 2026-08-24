@@ -6,6 +6,15 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.719 — 2026-08-24
+  - "Integrales" ya no es una pestaña dentro de admin.html — ahora es su
+    propia página, integrales.html, con el mismo acceso por contraseña
+    y toda la funcionalidad intacta (crear, checklist, componentes,
+    imprimir, repetir, editar). Se accede con un botón "🔩 Integrales"
+    en la fila de accesos rápidos del Dashboard, junto a "Plan
+    Preventivo" y "Fichas de Máquinas" — un clic en vez de buscarla
+    entre las pestañas.
+
 v1.5.709 — 2026-08-24
   - Integrales (admin.html): nuevo botón "🔁 Volver a repetir el:" en el
     modal de detalle — programa una integral nueva para otra fecha,
