@@ -6,6 +6,18 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.709 — 2026-08-24
+  - Integrales (admin.html): nuevo botón "🔁 Volver a repetir el:" en el
+    modal de detalle — programa una integral nueva para otra fecha,
+    copiando el checklist y los repuestos como plantilla (todo
+    reseteado a pendiente, sin notas ni confirmaciones), la integral
+    original no se toca.
+  - Dashboard: nueva alerta "N integrales próximas" cuando queda 1 mes
+    o menos para el mes previsto de una integral programada.
+  - "🖨️ Imprimir hoja" ahora incluye también el checklist de revisión
+    (antes solo salía la lista de repuestos) — plantilla completa para
+    rellenar a mano si conviene más que hacerlo desde el móvil.
+
 v1.5.699 — 2026-08-23
   - panalcor_inicio.html: se me había olvidado enlazar frio_clima.html
     desde el menú — añadido un botón "🧊 Frío/Clima (boceto)" junto al
