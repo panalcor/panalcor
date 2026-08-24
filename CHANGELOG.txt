@@ -6,6 +6,10 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.739 — 2026-08-24
+  - Quitado el botón "🔩 Integrales" del Dashboard de admin.html — el
+    acceso correcto va en panalcor_inicio.html, no aquí.
+
 v1.5.729 — 2026-08-24
   - panalcor_inicio.html: el botón de acceso a Integrales iba en el
     Dashboard de admin.html por error de interpretación — el usuario
