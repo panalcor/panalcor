@@ -6,6 +6,13 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.759 — 2026-08-24
+  - Nuevo registro de tiempo de uso: session_tracker.js contabiliza
+    cuánto tiempo tiene cada persona la página abierta y en primer
+    plano, incluido en las 26 páginas del sitio. Nueva pestaña
+    "⏱ Tiempo" en admin.html para verlo por día o por mes, por persona.
+    Requiere la regla "tiempo_uso" añadida en Firebase Realtime Database.
+
 v1.5.749 — 2026-08-24
   - Extraída la sección "Proyectos" de admin.html a una página propia
     (proyectos.html). Quitados los dos enlaces que había en admin.html

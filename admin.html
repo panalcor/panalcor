@@ -231,6 +231,7 @@ if('serviceWorker' in navigator){
   <div class="tab" onclick="switchTab('cal')"  id="tab-cal">📐 Calibración</div>
   <div class="tab" onclick="switchTab('est')"  id="tab-est">🟢 Estado</div>
   <div class="tab" onclick="switchTab('sug')"  id="tab-sug">💬 Sugerencias <span id="badgeSug" style="display:none;background:#e74c3c;color:#fff;border-radius:50%;padding:1px 6px;font-size:0.7rem;font-weight:900;margin-left:4px">0</span></div>
+  <div class="tab" onclick="switchTab('tiempo')" id="tab-tiempo">⏱ Tiempo</div>
   <a href="calendario.html" target="_blank" class="tab" style="text-decoration:none">📅 Calendario</a>
   <a href="manual_admin.html" target="_blank" class="tab" style="text-decoration:none">📖 Manual</a>
   <a href="ayuda.html" target="_blank" class="tab" style="text-decoration:none;color:#64d2ff">❄️ Normativa</a>
@@ -5100,6 +5101,7 @@ function switchTab(name){
   if(name==='enc') cargarAvisosEncargados();
   if(name==='est') loadMaquinasExtra(initEstado);
   if(name==='sug') initSugerencias();
+  if(name==='tiempo') initTiempoUso();
   if(name==='cur') initCursos();
   if(name==='frio') initFrio();
   if(name==='cal') initCal();
@@ -8322,6 +8324,127 @@ function escAttr(s){ return String(s||'').replace(/'/g,'&#39;').replace(/"/g,'&q
   <div id="sugList"><div style="text-align:center;color:rgba(255,255,255,0.3);padding:40px;font-size:0.85rem">Cargando sugerencias...</div></div>
 </div>
 
+<!-- ═══ PANEL TIEMPO DE USO ═══ -->
+<div class="panel" id="panel-tiempo">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px">
+    <div>
+      <h2 style="font-size:1.1rem;font-weight:800;color:var(--gold)">⏱ Tiempo de uso</h2>
+      <p style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-top:3px">Tiempo que cada persona ha tenido la página abierta y en primer plano.</p>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <select id="tiempoModo" onchange="renderTiempoUso()" style="background:var(--navy-dark);color:var(--white);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:7px 12px;font-family:'Barlow',sans-serif;font-size:0.82rem">
+        <option value="dia">Un día</option>
+        <option value="mes">Mes completo</option>
+      </select>
+      <input type="date" id="tiempoFecha" onchange="cargarTiempoUso()" style="background:var(--navy-dark);color:var(--white);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:6px 10px;font-family:'Barlow',sans-serif;font-size:0.82rem">
+    </div>
+  </div>
+  <div id="tiempoResumen" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px"></div>
+  <div style="overflow-x:auto">
+    <table class="data-table" id="tTiempoUso">
+      <thead><tr><th>Nombre</th><th>Rol</th><th>Tiempo</th><th>Última página</th><th>Última conexión</th></tr></thead>
+      <tbody><tr><td colspan="5" class="no-data">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// TIEMPO DE USO — admin
+// ══════════════════════════════════════
+var _tiempoData = {};
+
+function _tiempoHoy(){ return new Date().toISOString().slice(0,10); }
+
+function initTiempoUso(){
+  var inp = document.getElementById('tiempoFecha');
+  if (!inp.value) inp.value = _tiempoHoy();
+  cargarTiempoUso();
+}
+
+function cargarTiempoUso(){
+  var modo = document.getElementById('tiempoModo').value;
+  var fecha = document.getElementById('tiempoFecha').value || _tiempoHoy();
+  var tbody = document.querySelector('#tTiempoUso tbody');
+  tbody.innerHTML = '<tr><td colspan="5" class="no-data">Cargando...</td></tr>';
+
+  if (modo === 'dia') {
+    DB.ref('tiempo_uso/'+fecha).once('value').then(function(snap){
+      _tiempoData = snap.val() || {};
+      renderTiempoUso();
+    }).catch(function(){ tbody.innerHTML = '<tr><td colspan="5" class="no-data">Error al cargar</td></tr>'; });
+  } else {
+    var mes = fecha.slice(0,7);
+    DB.ref('tiempo_uso').once('value').then(function(snap){
+      var todo = snap.val() || {};
+      var acumulado = {};
+      Object.keys(todo).forEach(function(dia){
+        if (dia.slice(0,7) !== mes) return;
+        var personas = todo[dia] || {};
+        Object.keys(personas).forEach(function(k){
+          var p = personas[k];
+          if (!acumulado[k]) acumulado[k] = {nombre:p.nombre, rol:p.rol, segundos:0, ultimaPagina:p.ultimaPagina, ultimaConexion:p.ultimaConexion};
+          acumulado[k].segundos += (p.segundos||0);
+          if ((p.ultimaConexion||0) > (acumulado[k].ultimaConexion||0)) {
+            acumulado[k].ultimaConexion = p.ultimaConexion;
+            acumulado[k].ultimaPagina = p.ultimaPagina;
+          }
+        });
+      });
+      _tiempoData = acumulado;
+      renderTiempoUso();
+    }).catch(function(){ tbody.innerHTML = '<tr><td colspan="5" class="no-data">Error al cargar</td></tr>'; });
+  }
+}
+
+function _fmtDuracion(seg){
+  seg = Math.round(seg||0);
+  var h = Math.floor(seg/3600);
+  var m = Math.floor((seg%3600)/60);
+  var s = seg%60;
+  if (h>0) return h+'h '+String(m).padStart(2,'0')+'m';
+  if (m>0) return m+'m '+String(s).padStart(2,'0')+'s';
+  return s+'s';
+}
+
+function _fmtHaceTiempo(ts){
+  if (!ts) return '—';
+  var diffMin = Math.round((Date.now()-ts)/60000);
+  if (diffMin < 1) return 'ahora mismo';
+  if (diffMin < 60) return 'hace '+diffMin+' min';
+  var diffH = Math.round(diffMin/60);
+  if (diffH < 24) return 'hace '+diffH+' h';
+  var diffD = Math.round(diffH/24);
+  return 'hace '+diffD+' día'+(diffD!==1?'s':'');
+}
+
+function renderTiempoUso(){
+  var tbody = document.querySelector('#tTiempoUso tbody');
+  var resumen = document.getElementById('tiempoResumen');
+  var lista = Object.values(_tiempoData).sort(function(a,b){ return (b.segundos||0)-(a.segundos||0); });
+
+  if (!lista.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="no-data">Sin actividad registrada en este periodo</td></tr>';
+    resumen.innerHTML = '';
+    return;
+  }
+
+  var totalSeg = lista.reduce(function(s,p){ return s+(p.segundos||0); }, 0);
+  resumen.innerHTML = '<div style="background:rgba(201,162,39,0.1);border:1px solid rgba(201,162,39,0.3);border-radius:8px;padding:8px 16px;font-size:0.85rem;color:var(--gold-light)"><b>'+lista.length+'</b> persona'+(lista.length!==1?'s':'')+' activa'+(lista.length!==1?'s':'')+'</div>'
+    + '<div style="background:rgba(52,152,219,0.1);border:1px solid rgba(52,152,219,0.3);border-radius:8px;padding:8px 16px;font-size:0.85rem;color:#5dade2">Total: <b>'+_fmtDuracion(totalSeg)+'</b></div>';
+
+  tbody.innerHTML = lista.map(function(p){
+    return '<tr>'
+      + '<td>'+escHtml(p.nombre||'—')+'</td>'
+      + '<td>'+escHtml(p.rol||'—')+'</td>'
+      + '<td>'+_fmtDuracion(p.segundos)+'</td>'
+      + '<td>'+escHtml(p.ultimaPagina||'—')+'</td>'
+      + '<td>'+_fmtHaceTiempo(p.ultimaConexion)+'</td>'
+      + '</tr>';
+  }).join('');
+}
+</script>
+
 <script>
 // ══════════════════════════════════════
 // FRÍO — admin
@@ -11086,6 +11209,7 @@ function albImprimir(){
   </div>
 </div>
 
+<script src="session_tracker.js"></script>
 </body>
 </html>
 
