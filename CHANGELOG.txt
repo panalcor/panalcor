@@ -6,6 +6,15 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.769 — 2026-09-06
+  - Nueva página albaran.html: formulario de albaranes conectado al
+    catálogo de repuestos (busca por nombre o referencia, autorrellena
+    el último precio usado por referencia). Numeración correlativa
+    automática (clienteAAnnn, ej. mora26001), historial de albaranes
+    guardados con opción de reimprimir, e impresión en A4 apaisado con
+    2 copias A5 (con los logos de Panalcor e ISO 14001/9001), replicando
+    el formato de ALBARAN BLANCO.xlsx. Enlace en panalcor_inicio.html.
+
 v1.5.759 — 2026-08-24
   - Nuevo registro de tiempo de uso: session_tracker.js contabiliza
     cuánto tiempo tiene cada persona la página abierta y en primer

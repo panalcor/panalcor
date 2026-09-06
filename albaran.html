@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="apple-mobile-web-app-title" content="PANALCOR">
+<title>Albaranes — PANALCOR</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy-deep:#0d1b2a;--navy-mid:#1a2d42;--navy-dark:#0d1b2a;
+  --gold:#c9a227;--gold-light:#f0c040;--white:#f0f4f8;
+  --red:#e74c3c;--green:#2ecc71;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-serif;font-size:1rem;min-height:100vh}
+
+/* ── TOPBAR ── */
+.topbar{background:linear-gradient(135deg,#0a1520,var(--navy-mid));border-bottom:2px solid var(--gold);padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.topbar h1{font-size:1.3rem;font-weight:900;letter-spacing:0.05em;color:var(--gold-light)}
+.back-btn{background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.4);color:var(--gold);padding:8px 14px;border-radius:7px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.85rem;text-decoration:none;display:inline-block}
+.back-btn:hover{background:rgba(201,162,39,0.3)}
+.tab-toggle{margin-left:auto;display:flex;gap:8px}
+.tab-toggle button{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:7px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.85rem;font-weight:700}
+.tab-toggle button.active{background:rgba(201,162,39,0.25);border-color:var(--gold);color:var(--gold-light)}
+
+/* ── LAYOUT ── */
+.container{max-width:1100px;margin:0 auto;padding:20px 16px}
+.card{background:var(--navy-mid);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:18px;margin-bottom:16px}
+.card h3{font-size:0.95rem;font-weight:800;color:var(--gold);margin-bottom:14px}
+.field-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.field label{display:block;font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:5px}
+.field input,.field select{width:100%;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:9px 11px;font-family:'Barlow',sans-serif;font-size:0.92rem}
+.field input:focus,.field select:focus{outline:none;border-color:var(--gold)}
+
+/* ── TABLA LÍNEAS ── */
+.tabla-wrap{overflow-x:auto}
+table.lineas{width:100%;border-collapse:collapse;font-size:0.85rem;min-width:820px}
+table.lineas th{background:rgba(201,162,39,0.15);color:var(--gold-light);font-size:0.72rem;letter-spacing:0.05em;text-transform:uppercase;padding:8px 6px;border:1px solid rgba(255,255,255,0.1);white-space:nowrap}
+table.lineas td{padding:4px;border:1px solid rgba(255,255,255,0.08)}
+table.lineas input{width:100%;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.15);border-radius:5px;padding:7px 8px;font-family:'Barlow',sans-serif;font-size:0.85rem}
+table.lineas input:focus{outline:none;border-color:var(--gold)}
+table.lineas .col-ref{width:110px}
+table.lineas .col-unid{width:80px}
+table.lineas .col-precio{width:100px}
+table.lineas .col-importe{width:100px}
+td.importe-cell{text-align:right;font-weight:700;color:var(--gold-light);padding:0 10px;white-space:nowrap}
+
+/* Autocompletado */
+.autocomplete-wrap{position:relative}
+.autocomplete-drop{display:none;position:absolute;top:100%;left:0;right:0;background:#0f2030;border:1px solid rgba(255,255,255,0.15);border-radius:0 0 8px 8px;z-index:50;max-height:220px;overflow-y:auto}
+.autocomplete-drop div{padding:7px 10px;font-size:0.8rem;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.06)}
+.autocomplete-drop div:hover{background:rgba(201,162,39,0.15)}
+.autocomplete-drop .ac-ref{color:var(--gold);font-weight:700;margin-right:6px}
+
+/* ── TOTALES ── */
+.totales{display:flex;justify-content:flex-end}
+.totales table{border-collapse:collapse;font-size:0.92rem}
+.totales td{padding:6px 16px}
+.totales .lbl{color:rgba(255,255,255,0.5);text-align:right}
+.totales .val{text-align:right;font-weight:700;min-width:110px}
+.totales .total-row .lbl,.totales .total-row .val{color:var(--gold-light);font-size:1.1rem;font-weight:900}
+
+/* ── ACCIONES ── */
+.acciones{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.btn{border:none;border-radius:9px;padding:12px 22px;font-family:'Barlow',sans-serif;font-size:0.92rem;font-weight:800;cursor:pointer}
+.btn-primary{background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a}
+.btn-secondary{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.18)}
+
+.hint{font-size:0.75rem;color:rgba(255,255,255,0.35);margin-top:8px}
+.numero-asignado{background:rgba(46,204,113,0.12);border:1px solid rgba(46,204,113,0.35);color:#7be3a8;border-radius:8px;padding:10px 16px;font-size:0.9rem;margin-bottom:14px;display:none}
+
+/* ── HISTORIAL ── */
+table.data-table{width:100%;border-collapse:collapse;font-size:0.88rem}
+table.data-table th{text-align:left;padding:9px 12px;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid rgba(201,162,39,0.2)}
+table.data-table td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,0.06)}
+table.data-table tr:hover td{background:rgba(255,255,255,0.03)}
+.mini-btn{background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.35);color:var(--gold);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:0.78rem}
+
+/* ══════════════════════════════════════════════
+   VISTA DE IMPRESIÓN — A4 apaisado, 2 copias A5
+   ══════════════════════════════════════════════ */
+#printArea{display:none}
+@media print{
+  body > *:not(#printArea){display:none !important}
+  #printArea{display:flex !important;gap:6mm;background:#fff}
+  @page{size:A4 landscape;margin:6mm}
+}
+.a5-copy{
+  width:138mm;background:#fff;color:#111;font-family:Calibri,Carlito,Arial,sans-serif;
+  font-size:9.2pt;padding:3mm;box-sizing:border-box;
+}
+.a5-head{display:flex;align-items:flex-start;justify-content:space-between;gap:4mm;margin-bottom:2mm}
+.a5-logo img{max-width:62mm;display:block}
+.a5-cliente{flex:1;font-size:8.8pt}
+.a5-cliente div{display:flex;gap:5px;margin-bottom:1.5mm;border-bottom:1px solid #000;padding-bottom:1mm}
+.a5-cliente b{min-width:20mm;display:inline-block}
+.a5-cif{font-weight:700;font-size:10pt;margin:1mm 0 2mm}
+.a5-fechalb{display:flex;justify-content:space-between;font-weight:700;margin-bottom:2mm;font-size:9pt}
+table.a5-tabla{width:100%;border-collapse:collapse;font-size:8.4pt}
+table.a5-tabla th{background:#F4B183;border:1px solid #000;padding:1.2mm;font-weight:700;text-align:center}
+table.a5-tabla td{border:1px solid #000;padding:1mm 1.5mm;height:4.2mm}
+table.a5-tabla td.a5-ref{text-align:center}
+table.a5-tabla td.a5-concepto{text-align:center;font-weight:700}
+table.a5-tabla td.a5-num{text-align:right}
+.a5-totales{width:100%;border-collapse:collapse;margin-top:1mm;font-size:8.6pt}
+.a5-totales td{padding:0.8mm 1.5mm}
+.a5-totales .a5-lbl{text-align:right;font-weight:700}
+.a5-totales .a5-val{text-align:right;border:1px solid #000;width:22mm}
+.a5-totales .a5-total td{background:#F4B183;font-size:10pt;font-weight:900}
+.a5-sellos{display:flex;justify-content:center;gap:6mm;margin-top:3mm}
+.a5-sellos img{width:20mm}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="panalcor_inicio.html" class="back-btn">← Inicio</a>
+  <h1>📄 Albaranes</h1>
+  <div class="tab-toggle">
+    <button id="btnVNuevo" class="active" onclick="mostrarVista('nuevo')">+ Nuevo</button>
+    <button id="btnVHist" onclick="mostrarVista('historial')">📋 Historial</button>
+  </div>
+</div>
+
+<!-- ══ VISTA: NUEVO ALBARÁN ══ -->
+<div class="container" id="vistaNuevo">
+
+  <div class="numero-asignado" id="numeroAsignado"></div>
+
+  <div class="card">
+    <h3>📇 Datos del cliente</h3>
+    <div class="field-grid">
+      <div class="field"><label>Cliente *</label><input type="text" id="fCliente" placeholder="Ej: MORA S.L."></div>
+      <div class="field"><label>Dirección</label><input type="text" id="fDireccion"></div>
+      <div class="field"><label>Ciudad</label><input type="text" id="fCiudad"></div>
+      <div class="field"><label>NIF</label><input type="text" id="fNif"></div>
+      <div class="field"><label>Fecha *</label><input type="date" id="fFecha"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🔧 Líneas de repuestos</h3>
+    <div class="tabla-wrap">
+      <table class="lineas" id="tablaLineas">
+        <thead><tr>
+          <th class="col-ref">Ref.</th><th>Concepto</th><th class="col-unid">Unidades</th>
+          <th class="col-precio">Precio/U</th><th class="col-importe">Importe</th>
+        </tr></thead>
+        <tbody id="bLineas"></tbody>
+      </table>
+    </div>
+    <p class="hint">Escribe en Referencia o Concepto para buscar en el catálogo de repuestos. El precio se autorrellena con el último usado para esa referencia — puedes cambiarlo si ha variado.<br>
+    Si no aparecen resultados, abre <a href="panalcor_inicio.html" style="color:var(--gold)">panalcor_inicio.html</a> una vez y sube el archivo de repuestos para cargar el catálogo en este navegador.</p>
+  </div>
+
+  <div class="card">
+    <div class="totales">
+      <table>
+        <tr><td class="lbl">SUBTOTAL</td><td class="val" id="tSubtotal">0,00 €</td></tr>
+        <tr><td class="lbl">IVA (21%)</td><td class="val" id="tIva">0,00 €</td></tr>
+        <tr class="total-row"><td class="lbl">TOTAL</td><td class="val" id="tTotal">0,00 €</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="acciones">
+    <button class="btn btn-primary" onclick="guardarEImprimir()">🖨 Guardar e imprimir</button>
+    <button class="btn btn-secondary" onclick="nuevoAlbaran()">🆕 Nuevo albarán (limpiar)</button>
+  </div>
+</div>
+
+<!-- ══ VISTA: HISTORIAL ══ -->
+<div class="container" id="vistaHistorial" style="display:none">
+  <div class="card">
+    <h3>📋 Historial de albaranes</h3>
+    <div class="field" style="max-width:320px;margin-bottom:14px">
+      <label>Buscar por cliente o número</label>
+      <input type="text" id="histBuscar" oninput="renderHistorial()" placeholder="Ej: mora, loeches26002...">
+    </div>
+    <div style="overflow-x:auto">
+      <table class="data-table" id="tHistorial">
+        <thead><tr><th>Nº Albarán</th><th>Fecha</th><th>Cliente</th><th>Total</th><th></th></tr></thead>
+        <tbody><tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.3);padding:30px">Cargando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ VISTA DE IMPRESIÓN (oculta en pantalla) ══ -->
+<div id="printArea"></div>
+
+<script>
+// ══════════════════════════════════════════════════
+// FIREBASE
+// ══════════════════════════════════════════════════
+const FB_CFG = {
+  apiKey:            "AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU",
+  authDomain:        "panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:       "https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:         "panalcor-mantenimiento",
+  storageBucket:     "panalcor-mantenimiento.firebasestorage.app",
+  messagingSenderId: "67593058609",
+  appId:             "1:67593058609:web:c33fa1fa4fce2932485810"
+};
+if (!firebase.apps.length) firebase.initializeApp(FB_CFG);
+const DB = firebase.database();
+
+const NUM_LINEAS = 13;
+const IVA_PCT = 0.21;
+
+function escHtml(s){
+  return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtEUR(n){
+  return (Number(n)||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
+}
+
+// ══════════════════════════════════════════════════
+// CATÁLOGO DE REPUESTOS (mismo caché que el resto del sitio)
+// ══════════════════════════════════════════════════
+var _repBase = [];
+try {
+  var cached = JSON.parse(localStorage.getItem('repuestosCache') || 'null');
+  if (Array.isArray(cached)) _repBase = cached;
+} catch(e){}
+
+function _refKey(ref, desc){
+  var r = (ref||'').toString().trim().toUpperCase();
+  if (r) return r.replace(/[.#$\[\]\/]/g, '_').substring(0,150);
+  var d = (desc||'').toString().trim().toUpperCase();
+  return 'D_' + d.replace(/[^A-Z0-9]/g,'_').replace(/_+/g,'_').substring(0,100);
+}
+
+function buscarRepuestos(q){
+  q = (q||'').trim().toLowerCase();
+  if (!q) return [];
+  return _repBase.filter(function(r){
+    return (r.desc||'').toLowerCase().includes(q) || String(r.ref||'').toLowerCase().includes(q);
+  }).slice(0, 15);
+}
+
+// ══════════════════════════════════════════════════
+// LÍNEAS DE LA TABLA
+// ══════════════════════════════════════════════════
+function construirFilasLineas(){
+  var tbody = document.getElementById('bLineas');
+  var html = '';
+  for (var i = 0; i < NUM_LINEAS; i++){
+    html += '<tr data-idx="'+i+'">'
+      + '<td class="autocomplete-wrap"><input type="text" class="in-ref" oninput="onBuscarLinea('+i+',\'ref\')" onblur="setTimeout(function(){ocultarDrop('+i+')},150)">'
+        + '<div class="autocomplete-drop" id="drop'+i+'"></div></td>'
+      + '<td class="autocomplete-wrap"><input type="text" class="in-concepto" oninput="onBuscarLinea('+i+',\'concepto\')" onblur="setTimeout(function(){ocultarDrop('+i+')},150)"></td>'
+      + '<td><input type="number" class="in-unidades" min="0" step="0.01" oninput="recalcularLinea('+i+')"></td>'
+      + '<td><input type="number" class="in-precio" min="0" step="0.01" oninput="recalcularLinea('+i+')"></td>'
+      + '<td class="importe-cell" id="importe'+i+'">0,00 €</td>'
+      + '</tr>';
+  }
+  tbody.innerHTML = html;
+}
+
+function onBuscarLinea(idx, campo){
+  var tr = document.querySelector('tr[data-idx="'+idx+'"]');
+  var input = tr.querySelector('.in-'+campo);
+  var drop = document.getElementById('drop'+idx);
+  var resultados = buscarRepuestos(input.value);
+  if (!resultados.length){ drop.style.display = 'none'; return; }
+  drop.innerHTML = resultados.map(function(r){
+    return '<div onclick=\'seleccionarRepuesto('+idx+', '+JSON.stringify(JSON.stringify(r))+')\'>'
+      + '<span class="ac-ref">'+escHtml(r.ref||'—')+'</span>'+escHtml(r.desc||'')+'</div>';
+  }).join('');
+  drop.style.display = 'block';
+}
+
+function ocultarDrop(idx){
+  var drop = document.getElementById('drop'+idx);
+  if (drop) drop.style.display = 'none';
+}
+
+function seleccionarRepuesto(idx, rJson){
+  var r = JSON.parse(rJson);
+  var tr = document.querySelector('tr[data-idx="'+idx+'"]');
+  tr.querySelector('.in-ref').value = r.ref || '';
+  tr.querySelector('.in-concepto').value = r.desc || '';
+  ocultarDrop(idx);
+  var key = _refKey(r.ref, r.desc);
+  DB.ref('precios_repuestos/'+key).once('value').then(function(snap){
+    var p = snap.val();
+    if (p && p.precio !== undefined && !tr.querySelector('.in-precio').value){
+      tr.querySelector('.in-precio').value = p.precio;
+      recalcularLinea(idx);
+    }
+  }).catch(function(){});
+}
+
+function recalcularLinea(idx){
+  var tr = document.querySelector('tr[data-idx="'+idx+'"]');
+  var unidades = parseFloat(tr.querySelector('.in-unidades').value) || 0;
+  var precio   = parseFloat(tr.querySelector('.in-precio').value) || 0;
+  var importe  = unidades * precio;
+  document.getElementById('importe'+idx).textContent = fmtEUR(importe);
+  recalcularTotales();
+}
+
+function recalcularTotales(){
+  var subtotal = 0;
+  for (var i = 0; i < NUM_LINEAS; i++){
+    var tr = document.querySelector('tr[data-idx="'+i+'"]');
+    var unidades = parseFloat(tr.querySelector('.in-unidades').value) || 0;
+    var precio   = parseFloat(tr.querySelector('.in-precio').value) || 0;
+    subtotal += unidades * precio;
+  }
+  var iva = subtotal * IVA_PCT;
+  var total = subtotal + iva;
+  document.getElementById('tSubtotal').textContent = fmtEUR(subtotal);
+  document.getElementById('tIva').textContent = fmtEUR(iva);
+  document.getElementById('tTotal').textContent = fmtEUR(total);
+  return {subtotal:subtotal, iva:iva, total:total};
+}
+
+function leerLineas(){
+  var lineas = [];
+  for (var i = 0; i < NUM_LINEAS; i++){
+    var tr = document.querySelector('tr[data-idx="'+i+'"]');
+    var ref = tr.querySelector('.in-ref').value.trim();
+    var concepto = tr.querySelector('.in-concepto').value.trim();
+    var unidades = parseFloat(tr.querySelector('.in-unidades').value) || 0;
+    var precio = parseFloat(tr.querySelector('.in-precio').value) || 0;
+    if (!concepto && !ref && !unidades && !precio) continue;
+    lineas.push({ref:ref, concepto:concepto, unidades:unidades, precio:precio, importe:unidades*precio});
+  }
+  return lineas;
+}
+
+// ══════════════════════════════════════════════════
+// NUEVO ALBARÁN / RESET
+// ══════════════════════════════════════════════════
+function nuevoAlbaran(){
+  document.getElementById('fCliente').value = '';
+  document.getElementById('fDireccion').value = '';
+  document.getElementById('fCiudad').value = '';
+  document.getElementById('fNif').value = '';
+  document.getElementById('fFecha').value = new Date().toISOString().slice(0,10);
+  construirFilasLineas();
+  recalcularTotales();
+  document.getElementById('numeroAsignado').style.display = 'none';
+}
+
+// ══════════════════════════════════════════════════
+// NUMERACIÓN CORRELATIVA: clienteYYnnn (ej. mora26001)
+// ══════════════════════════════════════════════════
+var _ACENTOS = {'á':'a','é':'e','í':'i','ó':'o','ú':'u','ü':'u','ñ':'n','Á':'a','É':'e','Í':'i','Ó':'o','Ú':'u','Ü':'u','Ñ':'n'};
+function _slugCliente(nombre){
+  var primero = (nombre||'').trim().split(/\s+/)[0] || 'cli';
+  var sinAcentos = primero.split('').map(function(c){ return _ACENTOS[c] || c; }).join('');
+  return sinAcentos.toLowerCase().replace(/[^a-z0-9]/g,'') || 'cli';
+}
+
+function generarNumeroAlbaran(cliente){
+  var yy = String(new Date().getFullYear() % 100).padStart(2,'0');
+  return DB.ref('albaranes_contador/'+yy).transaction(function(actual){
+    return (actual||0) + 1;
+  }).then(function(res){
+    var seq = res.snapshot.val();
+    var seqStr = String(seq).padStart(3,'0');
+    return _slugCliente(cliente) + yy + seqStr;
+  });
+}
+
+// ══════════════════════════════════════════════════
+// GUARDAR + IMPRIMIR
+// ══════════════════════════════════════════════════
+function guardarEImprimir(){
+  var cliente = document.getElementById('fCliente').value.trim();
+  var fecha = document.getElementById('fFecha').value;
+  if (!cliente){ alert('⚠️ Indica el cliente'); return; }
+  if (!fecha){ alert('⚠️ Indica la fecha'); return; }
+  var lineas = leerLineas();
+  if (!lineas.length){ alert('⚠️ Añade al menos una línea'); return; }
+
+  var totales = recalcularTotales();
+  var datos = {
+    cliente: cliente,
+    direccion: document.getElementById('fDireccion').value.trim(),
+    ciudad: document.getElementById('fCiudad').value.trim(),
+    nif: document.getElementById('fNif').value.trim(),
+    fecha: fecha,
+    lineas: lineas,
+    subtotal: totales.subtotal,
+    iva: totales.iva,
+    ivaPct: IVA_PCT,
+    total: totales.total,
+    creado: Date.now()
+  };
+
+  generarNumeroAlbaran(cliente).then(function(numero){
+    datos.numero = numero;
+    var writes = {};
+    writes['albaranes/'+numero] = datos;
+    lineas.forEach(function(l){
+      if (!l.ref && !l.concepto) return;
+      var key = _refKey(l.ref, l.concepto);
+      writes['precios_repuestos/'+key] = {precio:l.precio, ref:l.ref, desc:l.concepto, actualizado: firebase.database.ServerValue.TIMESTAMP};
+    });
+    return DB.ref().update(writes).then(function(){ return numero; });
+  }).then(function(numero){
+    var el = document.getElementById('numeroAsignado');
+    el.textContent = '✅ Albarán guardado con el número: ' + numero;
+    el.style.display = 'block';
+    imprimirAlbaran(datos);
+  }).catch(function(e){
+    alert('❌ Error al guardar el albarán: ' + e.message);
+  });
+}
+
+// ══════════════════════════════════════════════════
+// VISTA DE IMPRESIÓN
+// ══════════════════════════════════════════════════
+function _a5Html(datos){
+  var filasHtml = '';
+  for (var i = 0; i < NUM_LINEAS; i++){
+    var l = datos.lineas[i] || {};
+    filasHtml += '<tr>'
+      + '<td class="a5-ref">'+escHtml(l.ref||'')+'</td>'
+      + '<td class="a5-concepto">'+escHtml(l.concepto||'')+'</td>'
+      + '<td class="a5-num">'+(l.unidades?Number(l.unidades).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}):'')+'</td>'
+      + '<td class="a5-num">'+(l.precio?fmtEUR(l.precio):'')+'</td>'
+      + '<td class="a5-num">'+(l.importe?fmtEUR(l.importe):'')+'</td>'
+      + '</tr>';
+  }
+  var fechaFmt = datos.fecha ? datos.fecha.split('-').reverse().join('-') : '';
+  return ''
+    + '<div class="a5-copy">'
+    + '<div class="a5-head">'
+      + '<div class="a5-logo"><img src="logo_albaran_panalcor.png"></div>'
+      + '<div class="a5-cliente">'
+        + '<div><b>CLIENTE</b> '+escHtml(datos.cliente)+'</div>'
+        + '<div><b>DIRECCION</b> '+escHtml(datos.direccion)+'</div>'
+        + '<div><b>CIUDAD</b> '+escHtml(datos.ciudad)+'</div>'
+        + '<div><b>NIF</b> '+escHtml(datos.nif)+'</div>'
+      + '</div>'
+    + '</div>'
+    + '<div class="a5-cif">CIF: B80071079</div>'
+    + '<div class="a5-fechalb"><span>FECHA: '+escHtml(fechaFmt)+'</span><span>Nº ALB: '+escHtml(datos.numero||'')+'</span></div>'
+    + '<table class="a5-tabla"><thead><tr><th>REF.</th><th>CONCEPTO</th><th>UNIDADES</th><th>PRECIO/U</th><th>IMPORTE</th></tr></thead>'
+    + '<tbody>'+filasHtml+'</tbody></table>'
+    + '<table class="a5-totales">'
+      + '<tr><td class="a5-lbl">SUBTOTAL</td><td class="a5-val">'+fmtEUR(datos.subtotal)+'</td></tr>'
+      + '<tr><td class="a5-lbl">IVA (21%)</td><td class="a5-val">'+fmtEUR(datos.iva)+'</td></tr>'
+      + '<tr class="a5-total"><td class="a5-lbl">TOTAL</td><td class="a5-val">'+fmtEUR(datos.total)+'</td></tr>'
+    + '</table>'
+    + '<div class="a5-sellos"><img src="logo_iso14001.png"><img src="logo_iso9001.png"></div>'
+    + '</div>';
+}
+
+function imprimirAlbaran(datos){
+  var area = document.getElementById('printArea');
+  area.innerHTML = _a5Html(datos) + _a5Html(datos);
+  setTimeout(function(){ window.print(); }, 150);
+}
+
+// ══════════════════════════════════════════════════
+// HISTORIAL
+// ══════════════════════════════════════════════════
+var _histData = {};
+var _histCargado = false;
+
+function mostrarVista(v){
+  document.getElementById('vistaNuevo').style.display = (v==='nuevo') ? 'block' : 'none';
+  document.getElementById('vistaHistorial').style.display = (v==='historial') ? 'block' : 'none';
+  document.getElementById('btnVNuevo').classList.toggle('active', v==='nuevo');
+  document.getElementById('btnVHist').classList.toggle('active', v==='historial');
+  if (v === 'historial' && !_histCargado){
+    _histCargado = true;
+    DB.ref('albaranes').once('value').then(function(snap){
+      _histData = snap.val() || {};
+      renderHistorial();
+    });
+  }
+}
+
+function renderHistorial(){
+  var q = (document.getElementById('histBuscar').value||'').toLowerCase();
+  var lista = Object.values(_histData).sort(function(a,b){ return (b.creado||0)-(a.creado||0); });
+  if (q) lista = lista.filter(function(a){
+    return (a.cliente||'').toLowerCase().includes(q) || (a.numero||'').toLowerCase().includes(q);
+  });
+  var tbody = document.querySelector('#tHistorial tbody');
+  if (!lista.length){
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.3);padding:30px">Sin albaranes guardados</td></tr>';
+    return;
+  }
+  tbody.innerHTML = lista.map(function(a){
+    var fechaFmt = a.fecha ? a.fecha.split('-').reverse().join('-') : '';
+    return '<tr>'
+      + '<td><code style="color:var(--gold)">'+escHtml(a.numero)+'</code></td>'
+      + '<td>'+escHtml(fechaFmt)+'</td>'
+      + '<td>'+escHtml(a.cliente)+'</td>'
+      + '<td>'+fmtEUR(a.total)+'</td>'
+      + '<td><button class="mini-btn" onclick="reimprimir(\''+a.numero+'\')">🖨 Reimprimir</button></td>'
+      + '</tr>';
+  }).join('');
+}
+
+function reimprimir(numero){
+  var datos = _histData[numero];
+  if (!datos) return;
+  imprimirAlbaran(datos);
+}
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+construirFilasLineas();
+document.getElementById('fFecha').value = new Date().toISOString().slice(0,10);
+recalcularTotales();
+</script>
+</body>
+</html>
