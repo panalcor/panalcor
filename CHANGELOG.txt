@@ -6,6 +6,11 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.819 — 2026-09-06
+  - albaran.html: contraseña propia (distinta de la de administrador)
+    para consultar el Historial y buscar/editar albaranes existentes.
+    Crear un albarán nuevo sigue sin pedir nada.
+
 v1.5.809 — 2026-09-06
   - albaran.html: buscador de albaranes existentes por cliente (con
     flechas ↑↓ y Enter para elegir), que permite cargar uno para

@@ -404,16 +404,19 @@ function generarNumeroAlbaran(cliente){
 }
 
 // ══════════════════════════════════════════════════
-// CONTRASEÑA — solo para editar un albarán ya guardado
+// CONTRASEÑA — propia de albaranes (consultar historial y editar),
+// distinta de la de administrador. No hace falta para crear uno nuevo.
 // ══════════════════════════════════════════════════
-const PW_KEY = 'adminPwd';
-function getPwd(){ return localStorage.getItem(PW_KEY) || 'admin'; }
-const ADMINS_EXTRA = [
-  {n:'IVAN', pwd:'ivan2026'},
-];
-function _checkPwd(val){
-  if (val === getPwd()) return true;
-  return ADMINS_EXTRA.some(function(a){ return a.pwd === val; });
+const ALBARAN_PWD = 'copa1234';
+var _albaranesDesbloqueado = false;
+
+function _pedirAccesoAlbaranes(){
+  if (_albaranesDesbloqueado) return true;
+  var pwd = prompt('🔒 Contraseña para consultar/editar albaranes:');
+  if (pwd === null) return false;
+  if (pwd !== ALBARAN_PWD){ alert('❌ Contraseña incorrecta'); return false; }
+  _albaranesDesbloqueado = true;
+  return true;
 }
 
 // ══════════════════════════════════════════════════
@@ -505,6 +508,11 @@ function onBuscarAlbaranExistente(){
   var q = document.getElementById('fBuscarAlbaran').value.trim().toLowerCase();
   var drop = document.getElementById('dropBuscarAlbaran');
   if (!q){ drop.style.display = 'none'; _buscarAlbaranResultados = []; return; }
+  if (!_pedirAccesoAlbaranes()){
+    document.getElementById('fBuscarAlbaran').value = '';
+    drop.style.display = 'none';
+    return;
+  }
   _buscarAlbaranResultados = Object.values(_albaranesCache)
     .filter(function(a){ return (a.cliente||'').toLowerCase().includes(q); })
     .sort(function(a,b){ return (b.creado||0)-(a.creado||0); })
@@ -550,9 +558,6 @@ function ocultarDropBuscarAlbaran(){
 function seleccionarAlbaranExistente(idx){
   var a = _buscarAlbaranResultados[idx];
   if (!a) return;
-  var pwd = prompt('🔒 Contraseña de administrador para editar este albarán:');
-  if (pwd === null) return;
-  if (!_checkPwd(pwd)){ alert('❌ Contraseña incorrecta'); return; }
   cargarAlbaranParaEdicion(a);
   ocultarDropBuscarAlbaran();
   document.getElementById('fBuscarAlbaran').value = '';
@@ -561,9 +566,6 @@ function seleccionarAlbaranExistente(idx){
 function editarDesdeHistorial(numero){
   var a = _albaranesCache[numero];
   if (!a) return;
-  var pwd = prompt('🔒 Contraseña de administrador para editar este albarán:');
-  if (pwd === null) return;
-  if (!_checkPwd(pwd)){ alert('❌ Contraseña incorrecta'); return; }
   cargarAlbaranParaEdicion(a);
   mostrarVista('nuevo');
 }
@@ -666,6 +668,7 @@ DB.ref('albaranes').on('value', function(snap){
 });
 
 function mostrarVista(v){
+  if (v === 'historial' && !_pedirAccesoAlbaranes()) return;
   document.getElementById('vistaNuevo').style.display = (v==='nuevo') ? 'block' : 'none';
   document.getElementById('vistaHistorial').style.display = (v==='historial') ? 'block' : 'none';
   document.getElementById('btnVNuevo').classList.toggle('active', v==='nuevo');
