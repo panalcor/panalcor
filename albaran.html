@@ -258,7 +258,7 @@ function construirFilasLineas(){
       + '<td class="autocomplete-wrap"><input type="text" class="in-ref" oninput="_up(this);onBuscarLinea('+i+',\'ref\')" onblur="setTimeout(function(){ocultarDrop('+i+')},150)">'
         + '<div class="autocomplete-drop" id="drop'+i+'"></div></td>'
       + '<td class="autocomplete-wrap"><input type="text" class="in-concepto" oninput="_up(this);onBuscarLinea('+i+',\'concepto\')" onblur="setTimeout(function(){ocultarDrop('+i+')},150)"></td>'
-      + '<td><input type="number" class="in-unidades" min="0" step="0.01" oninput="recalcularLinea('+i+')"></td>'
+      + '<td><input type="number" class="in-unidades" min="0" step="1" oninput="recalcularLinea('+i+')"></td>'
       + '<td><input type="number" class="in-precio" min="0" step="0.01" oninput="recalcularLinea('+i+')"></td>'
       + '<td class="importe-cell" id="importe'+i+'">0,00 €</td>'
       + '</tr>';

@@ -6,6 +6,11 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.799 — 2026-09-06
+  - albaran.html: las flechas del campo Unidades suben/bajan de 1 en 1
+    (antes de 0,01 en 0,01). Se puede seguir escribiendo un decimal a
+    mano si hace falta.
+
 v1.5.789 — 2026-09-06
   - Corregido el fallo por el que a veces no salían los logos al
     imprimir un albarán (la impresión se disparaba antes de que las
