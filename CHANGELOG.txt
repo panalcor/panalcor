@@ -6,6 +6,12 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.789 — 2026-09-06
+  - Corregido el fallo por el que a veces no salían los logos al
+    imprimir un albarán (la impresión se disparaba antes de que las
+    imágenes terminasen de cargar). Ahora se precargan al abrir la
+    página y se espera a que carguen antes de imprimir.
+
 v1.5.779 — 2026-09-06
   - albaran.html: los campos de texto (cliente, dirección, ciudad, nif,
     referencia y concepto de cada línea) se convierten a mayúsculas

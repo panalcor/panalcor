@@ -463,8 +463,25 @@ function _a5Html(datos){
 function imprimirAlbaran(datos){
   var area = document.getElementById('printArea');
   area.innerHTML = _a5Html(datos) + _a5Html(datos);
-  setTimeout(function(){ window.print(); }, 150);
+  var imgs = Array.prototype.slice.call(area.querySelectorAll('img'));
+  var esperas = imgs.map(function(img){
+    return new Promise(function(resolve){
+      if (img.complete && img.naturalWidth > 0) { resolve(); return; }
+      img.addEventListener('load', resolve, {once:true});
+      img.addEventListener('error', resolve, {once:true});
+    });
+  });
+  var timeoutSeguridad = new Promise(function(resolve){ setTimeout(resolve, 3000); });
+  Promise.race([Promise.all(esperas), timeoutSeguridad]).then(function(){
+    setTimeout(function(){ window.print(); }, 100);
+  });
 }
+
+// Precarga los logos desde el primer momento para que ya estén en
+// caché del navegador cuando llegue el primer "Guardar e imprimir".
+['logo_albaran_panalcor.png','logo_iso14001.png','logo_iso9001.png'].forEach(function(src){
+  var im = new Image(); im.src = src;
+});
 
 // ══════════════════════════════════════════════════
 // HISTORIAL
