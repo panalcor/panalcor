@@ -6,6 +6,14 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.809 — 2026-09-06
+  - albaran.html: buscador de albaranes existentes por cliente (con
+    flechas ↑↓ y Enter para elegir), que permite cargar uno para
+    editarlo pidiendo la contraseña de administrador. También desde el
+    Historial ("✏️ Editar"). Separados los botones en Guardar / Imprimir
+    / Nuevo (antes uno solo). Al pulsar Nuevo con cambios sin guardar,
+    pregunta si guardarlos o descartarlos antes de limpiar el formulario.
+
 v1.5.799 — 2026-09-06
   - albaran.html: las flechas del campo Unidades suben/bajan de 1 en 1
     (antes de 0,01 en 0,01). Se puede seguir escribiendo un decimal a

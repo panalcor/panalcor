@@ -131,6 +131,18 @@ table.a5-tabla td.a5-num{text-align:right}
   <div class="numero-asignado" id="numeroAsignado"></div>
 
   <div class="card">
+    <h3>🔍 Buscar / editar albarán existente</h3>
+    <div class="field autocomplete-wrap" style="max-width:380px">
+      <label>Cliente / distribuidor</label>
+      <input type="text" id="fBuscarAlbaran" placeholder="Escribe el nombre del cliente..."
+        oninput="onBuscarAlbaranExistente()" onkeydown="onKeyBuscarAlbaran(event)"
+        onblur="setTimeout(ocultarDropBuscarAlbaran,150)">
+      <div class="autocomplete-drop" id="dropBuscarAlbaran"></div>
+    </div>
+    <div id="editandoBanner" style="display:none;margin-top:10px;font-size:0.85rem;color:var(--gold-light)"></div>
+  </div>
+
+  <div class="card">
     <h3>📇 Datos del cliente</h3>
     <div class="field-grid">
       <div class="field"><label>Cliente *</label><input type="text" id="fCliente" placeholder="Ej: MORA S.L." oninput="_up(this)"></div>
@@ -167,8 +179,9 @@ table.a5-tabla td.a5-num{text-align:right}
   </div>
 
   <div class="acciones">
-    <button class="btn btn-primary" onclick="guardarEImprimir()">🖨 Guardar e imprimir</button>
-    <button class="btn btn-secondary" onclick="nuevoAlbaran()">🆕 Nuevo albarán (limpiar)</button>
+    <button class="btn btn-primary" onclick="guardarAlbaran()">💾 Guardar</button>
+    <button class="btn btn-secondary" onclick="imprimirAlbaranActual()">🖨 Imprimir</button>
+    <button class="btn btn-secondary" onclick="nuevoAlbaran()">🆕 Nuevo</button>
   </div>
 </div>
 
@@ -343,14 +356,30 @@ function leerLineas(){
 // NUEVO ALBARÁN / RESET
 // ══════════════════════════════════════════════════
 function nuevoAlbaran(){
+  if (_formularioTieneContenido() && _snapshotFormulario() !== _ultimoGuardadoSnapshot){
+    if (confirm('⚠️ Hay cambios sin guardar en este albarán.\n\nAceptar = GUARDARLOS antes de continuar.\nCancelar = decidir si descartarlos.')){
+      guardarAlbaran().then(function(){ _limpiarFormularioAlbaran(); }).catch(function(){ /* si falla, se queda como está para reintentar */ });
+      return;
+    }
+    if (!confirm('¿Seguro que quieres descartar los cambios sin guardar?')) return;
+  }
+  _limpiarFormularioAlbaran();
+}
+
+function _limpiarFormularioAlbaran(){
+  _albaranEnEdicion = null;
   document.getElementById('fCliente').value = '';
   document.getElementById('fDireccion').value = '';
   document.getElementById('fCiudad').value = '';
   document.getElementById('fNif').value = '';
   document.getElementById('fFecha').value = new Date().toISOString().slice(0,10);
+  document.getElementById('fBuscarAlbaran').value = '';
+  ocultarDropBuscarAlbaran();
   construirFilasLineas();
   recalcularTotales();
   document.getElementById('numeroAsignado').style.display = 'none';
+  document.getElementById('editandoBanner').style.display = 'none';
+  _ultimoGuardadoSnapshot = _snapshotFormulario();
 }
 
 // ══════════════════════════════════════════════════
@@ -375,49 +404,193 @@ function generarNumeroAlbaran(cliente){
 }
 
 // ══════════════════════════════════════════════════
-// GUARDAR + IMPRIMIR
+// CONTRASEÑA — solo para editar un albarán ya guardado
 // ══════════════════════════════════════════════════
-function guardarEImprimir(){
-  var cliente = document.getElementById('fCliente').value.trim();
-  var fecha = document.getElementById('fFecha').value;
-  if (!cliente){ alert('⚠️ Indica el cliente'); return; }
-  if (!fecha){ alert('⚠️ Indica la fecha'); return; }
-  var lineas = leerLineas();
-  if (!lineas.length){ alert('⚠️ Añade al menos una línea'); return; }
+const PW_KEY = 'adminPwd';
+function getPwd(){ return localStorage.getItem(PW_KEY) || 'admin'; }
+const ADMINS_EXTRA = [
+  {n:'IVAN', pwd:'ivan2026'},
+];
+function _checkPwd(val){
+  if (val === getPwd()) return true;
+  return ADMINS_EXTRA.some(function(a){ return a.pwd === val; });
+}
 
+// ══════════════════════════════════════════════════
+// GUARDAR / IMPRIMIR (separados)
+// ══════════════════════════════════════════════════
+var _albaranEnEdicion = null; // número del albarán cargado para editar/continuar, o null si es nuevo
+var _ultimoGuardadoSnapshot = ''; // estado del formulario en el último guardado/carga — para detectar cambios sin guardar
+
+function _leerFormularioComoDatos(){
   var totales = recalcularTotales();
-  var datos = {
-    cliente: cliente,
+  return {
+    cliente: document.getElementById('fCliente').value.trim(),
     direccion: document.getElementById('fDireccion').value.trim(),
     ciudad: document.getElementById('fCiudad').value.trim(),
     nif: document.getElementById('fNif').value.trim(),
-    fecha: fecha,
-    lineas: lineas,
+    fecha: document.getElementById('fFecha').value,
+    lineas: leerLineas(),
     subtotal: totales.subtotal,
     iva: totales.iva,
     ivaPct: IVA_PCT,
-    total: totales.total,
-    creado: Date.now()
+    total: totales.total
   };
+}
 
-  generarNumeroAlbaran(cliente).then(function(numero){
+function _snapshotFormulario(){
+  return JSON.stringify(_leerFormularioComoDatos());
+}
+
+function _formularioTieneContenido(){
+  var d = _leerFormularioComoDatos();
+  return !!(d.cliente || d.direccion || d.ciudad || d.nif || d.lineas.length);
+}
+
+function guardarAlbaran(){
+  var datos = _leerFormularioComoDatos();
+  if (!datos.cliente){ alert('⚠️ Indica el cliente'); return Promise.reject(new Error('sin cliente')); }
+  if (!datos.fecha){ alert('⚠️ Indica la fecha'); return Promise.reject(new Error('sin fecha')); }
+  if (!datos.lineas.length){ alert('⚠️ Añade al menos una línea'); return Promise.reject(new Error('sin lineas')); }
+
+  function _persistir(numero, creadoOriginal){
     datos.numero = numero;
+    datos.creado = creadoOriginal || Date.now();
+    if (creadoOriginal) datos.modificado = Date.now();
     var writes = {};
     writes['albaranes/'+numero] = datos;
-    lineas.forEach(function(l){
+    datos.lineas.forEach(function(l){
       if (!l.ref && !l.concepto) return;
       var key = _refKey(l.ref, l.concepto);
       writes['precios_repuestos/'+key] = {precio:l.precio, ref:l.ref, desc:l.concepto, actualizado: firebase.database.ServerValue.TIMESTAMP};
     });
     return DB.ref().update(writes).then(function(){ return numero; });
-  }).then(function(numero){
+  }
+
+  var promesa = _albaranEnEdicion
+    ? _persistir(_albaranEnEdicion, (_albaranesCache[_albaranEnEdicion]||{}).creado)
+    : generarNumeroAlbaran(datos.cliente).then(function(numero){ return _persistir(numero, null); });
+
+  return promesa.then(function(numero){
+    var editando = !!_albaranEnEdicion;
+    _albaranEnEdicion = numero;
+    _ultimoGuardadoSnapshot = _snapshotFormulario();
     var el = document.getElementById('numeroAsignado');
-    el.textContent = '✅ Albarán guardado con el número: ' + numero;
+    el.textContent = (editando ? '✅ Albarán actualizado: ' : '✅ Albarán guardado con el número: ') + numero;
     el.style.display = 'block';
-    imprimirAlbaran(datos);
+    return numero;
   }).catch(function(e){
     alert('❌ Error al guardar el albarán: ' + e.message);
+    throw e;
   });
+}
+
+function imprimirAlbaranActual(){
+  var datos = _leerFormularioComoDatos();
+  if (!datos.cliente){ alert('⚠️ Indica al menos el cliente antes de imprimir'); return; }
+  if (!_albaranEnEdicion){
+    if (!confirm('⚠️ Este albarán todavía no se ha guardado, así que no tiene número asignado.\n¿Imprimir igualmente sin número?')) return;
+  }
+  datos.numero = _albaranEnEdicion || '';
+  imprimirAlbaran(datos);
+}
+
+// ══════════════════════════════════════════════════
+// BUSCAR / EDITAR ALBARÁN EXISTENTE (con contraseña)
+// ══════════════════════════════════════════════════
+var _buscarAlbaranResultados = [];
+var _buscarAlbaranIdx = -1;
+
+function onBuscarAlbaranExistente(){
+  var q = document.getElementById('fBuscarAlbaran').value.trim().toLowerCase();
+  var drop = document.getElementById('dropBuscarAlbaran');
+  if (!q){ drop.style.display = 'none'; _buscarAlbaranResultados = []; return; }
+  _buscarAlbaranResultados = Object.values(_albaranesCache)
+    .filter(function(a){ return (a.cliente||'').toLowerCase().includes(q); })
+    .sort(function(a,b){ return (b.creado||0)-(a.creado||0); })
+    .slice(0, 15);
+  _buscarAlbaranIdx = -1;
+  if (!_buscarAlbaranResultados.length){ drop.innerHTML = ''; drop.style.display = 'none'; return; }
+  _renderDropBuscarAlbaran();
+}
+
+function _renderDropBuscarAlbaran(){
+  var drop = document.getElementById('dropBuscarAlbaran');
+  drop.innerHTML = _buscarAlbaranResultados.map(function(a, idx){
+    var fechaFmt = a.fecha ? a.fecha.split('-').reverse().join('-') : '';
+    return '<div onclick="seleccionarAlbaranExistente('+idx+')" style="'+(idx===_buscarAlbaranIdx?'background:rgba(201,162,39,0.2)':'')+'">'
+      + '<span class="ac-ref">'+escHtml(a.numero)+'</span>'+escHtml(a.cliente)+' · '+escHtml(fechaFmt)+' · '+fmtEUR(a.total)
+      + '</div>';
+  }).join('');
+  drop.style.display = 'block';
+}
+
+function onKeyBuscarAlbaran(e){
+  if (!_buscarAlbaranResultados.length) return;
+  if (e.key === 'ArrowDown'){
+    e.preventDefault();
+    _buscarAlbaranIdx = Math.min(_buscarAlbaranIdx+1, _buscarAlbaranResultados.length-1);
+    _renderDropBuscarAlbaran();
+  } else if (e.key === 'ArrowUp'){
+    e.preventDefault();
+    _buscarAlbaranIdx = Math.max(_buscarAlbaranIdx-1, 0);
+    _renderDropBuscarAlbaran();
+  } else if (e.key === 'Enter'){
+    e.preventDefault();
+    seleccionarAlbaranExistente(_buscarAlbaranIdx >= 0 ? _buscarAlbaranIdx : 0);
+  } else if (e.key === 'Escape'){
+    ocultarDropBuscarAlbaran();
+  }
+}
+
+function ocultarDropBuscarAlbaran(){
+  document.getElementById('dropBuscarAlbaran').style.display = 'none';
+}
+
+function seleccionarAlbaranExistente(idx){
+  var a = _buscarAlbaranResultados[idx];
+  if (!a) return;
+  var pwd = prompt('🔒 Contraseña de administrador para editar este albarán:');
+  if (pwd === null) return;
+  if (!_checkPwd(pwd)){ alert('❌ Contraseña incorrecta'); return; }
+  cargarAlbaranParaEdicion(a);
+  ocultarDropBuscarAlbaran();
+  document.getElementById('fBuscarAlbaran').value = '';
+}
+
+function editarDesdeHistorial(numero){
+  var a = _albaranesCache[numero];
+  if (!a) return;
+  var pwd = prompt('🔒 Contraseña de administrador para editar este albarán:');
+  if (pwd === null) return;
+  if (!_checkPwd(pwd)){ alert('❌ Contraseña incorrecta'); return; }
+  cargarAlbaranParaEdicion(a);
+  mostrarVista('nuevo');
+}
+
+function cargarAlbaranParaEdicion(a){
+  _albaranEnEdicion = a.numero;
+  document.getElementById('fCliente').value = a.cliente || '';
+  document.getElementById('fDireccion').value = a.direccion || '';
+  document.getElementById('fCiudad').value = a.ciudad || '';
+  document.getElementById('fNif').value = a.nif || '';
+  document.getElementById('fFecha').value = a.fecha || '';
+  construirFilasLineas();
+  (a.lineas||[]).forEach(function(l, i){
+    if (i >= NUM_LINEAS) return;
+    var tr = document.querySelector('tr[data-idx="'+i+'"]');
+    tr.querySelector('.in-ref').value = l.ref || '';
+    tr.querySelector('.in-concepto').value = l.concepto || '';
+    tr.querySelector('.in-unidades').value = l.unidades || '';
+    tr.querySelector('.in-precio').value = l.precio || '';
+    recalcularLinea(i);
+  });
+  var banner = document.getElementById('editandoBanner');
+  banner.style.display = 'block';
+  banner.innerHTML = '✏️ Editando el albarán <b>'+escHtml(a.numero)+'</b> — al pulsar Guardar se sobrescribirá este mismo albarán. '
+    + '<a href="#" onclick="nuevoAlbaran();return false;" style="color:var(--gold)">Cancelar y empezar uno nuevo</a>';
+  document.getElementById('numeroAsignado').style.display = 'none';
+  _ultimoGuardadoSnapshot = _snapshotFormulario();
 }
 
 // ══════════════════════════════════════════════════
@@ -484,28 +657,25 @@ function imprimirAlbaran(datos){
 });
 
 // ══════════════════════════════════════════════════
-// HISTORIAL
+// ALBARANES GUARDADOS — caché compartido (búsqueda de edición + historial)
 // ══════════════════════════════════════════════════
-var _histData = {};
-var _histCargado = false;
+var _albaranesCache = {};
+DB.ref('albaranes').on('value', function(snap){
+  _albaranesCache = snap.val() || {};
+  if (document.getElementById('vistaHistorial').style.display !== 'none') renderHistorial();
+});
 
 function mostrarVista(v){
   document.getElementById('vistaNuevo').style.display = (v==='nuevo') ? 'block' : 'none';
   document.getElementById('vistaHistorial').style.display = (v==='historial') ? 'block' : 'none';
   document.getElementById('btnVNuevo').classList.toggle('active', v==='nuevo');
   document.getElementById('btnVHist').classList.toggle('active', v==='historial');
-  if (v === 'historial' && !_histCargado){
-    _histCargado = true;
-    DB.ref('albaranes').once('value').then(function(snap){
-      _histData = snap.val() || {};
-      renderHistorial();
-    });
-  }
+  if (v === 'historial') renderHistorial();
 }
 
 function renderHistorial(){
   var q = (document.getElementById('histBuscar').value||'').toLowerCase();
-  var lista = Object.values(_histData).sort(function(a,b){ return (b.creado||0)-(a.creado||0); });
+  var lista = Object.values(_albaranesCache).sort(function(a,b){ return (b.creado||0)-(a.creado||0); });
   if (q) lista = lista.filter(function(a){
     return (a.cliente||'').toLowerCase().includes(q) || (a.numero||'').toLowerCase().includes(q);
   });
@@ -521,13 +691,16 @@ function renderHistorial(){
       + '<td>'+escHtml(fechaFmt)+'</td>'
       + '<td>'+escHtml(a.cliente)+'</td>'
       + '<td>'+fmtEUR(a.total)+'</td>'
-      + '<td><button class="mini-btn" onclick="reimprimir(\''+a.numero+'\')">🖨 Reimprimir</button></td>'
+      + '<td style="white-space:nowrap">'
+        + '<button class="mini-btn" onclick="reimprimir(\''+a.numero+'\')">🖨 Reimprimir</button> '
+        + '<button class="mini-btn" onclick="editarDesdeHistorial(\''+a.numero+'\')">✏️ Editar</button>'
+      + '</td>'
       + '</tr>';
   }).join('');
 }
 
 function reimprimir(numero){
-  var datos = _histData[numero];
+  var datos = _albaranesCache[numero];
   if (!datos) return;
   imprimirAlbaran(datos);
 }
@@ -538,6 +711,7 @@ function reimprimir(numero){
 construirFilasLineas();
 document.getElementById('fFecha').value = new Date().toISOString().slice(0,10);
 recalcularTotales();
+_ultimoGuardadoSnapshot = _snapshotFormulario();
 </script>
 </body>
 </html>
