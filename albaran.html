@@ -133,10 +133,10 @@ table.a5-tabla td.a5-num{text-align:right}
   <div class="card">
     <h3>📇 Datos del cliente</h3>
     <div class="field-grid">
-      <div class="field"><label>Cliente *</label><input type="text" id="fCliente" placeholder="Ej: MORA S.L."></div>
-      <div class="field"><label>Dirección</label><input type="text" id="fDireccion"></div>
-      <div class="field"><label>Ciudad</label><input type="text" id="fCiudad"></div>
-      <div class="field"><label>NIF</label><input type="text" id="fNif"></div>
+      <div class="field"><label>Cliente *</label><input type="text" id="fCliente" placeholder="Ej: MORA S.L." oninput="_up(this)"></div>
+      <div class="field"><label>Dirección</label><input type="text" id="fDireccion" oninput="_up(this)"></div>
+      <div class="field"><label>Ciudad</label><input type="text" id="fCiudad" oninput="_up(this)"></div>
+      <div class="field"><label>NIF</label><input type="text" id="fNif" oninput="_up(this)"></div>
       <div class="field"><label>Fecha *</label><input type="date" id="fFecha"></div>
     </div>
   </div>
@@ -217,6 +217,11 @@ function escHtml(s){
 function fmtEUR(n){
   return (Number(n)||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
 }
+function _up(el){
+  var pos = el.selectionStart;
+  el.value = el.value.toUpperCase();
+  try { el.setSelectionRange(pos, pos); } catch(e){}
+}
 
 // ══════════════════════════════════════════════════
 // CATÁLOGO DE REPUESTOS (mismo caché que el resto del sitio)
@@ -250,9 +255,9 @@ function construirFilasLineas(){
   var html = '';
   for (var i = 0; i < NUM_LINEAS; i++){
     html += '<tr data-idx="'+i+'">'
-      + '<td class="autocomplete-wrap"><input type="text" class="in-ref" oninput="onBuscarLinea('+i+',\'ref\')" onblur="setTimeout(function(){ocultarDrop('+i+')},150)">'
+      + '<td class="autocomplete-wrap"><input type="text" class="in-ref" oninput="_up(this);onBuscarLinea('+i+',\'ref\')" onblur="setTimeout(function(){ocultarDrop('+i+')},150)">'
         + '<div class="autocomplete-drop" id="drop'+i+'"></div></td>'
-      + '<td class="autocomplete-wrap"><input type="text" class="in-concepto" oninput="onBuscarLinea('+i+',\'concepto\')" onblur="setTimeout(function(){ocultarDrop('+i+')},150)"></td>'
+      + '<td class="autocomplete-wrap"><input type="text" class="in-concepto" oninput="_up(this);onBuscarLinea('+i+',\'concepto\')" onblur="setTimeout(function(){ocultarDrop('+i+')},150)"></td>'
       + '<td><input type="number" class="in-unidades" min="0" step="0.01" oninput="recalcularLinea('+i+')"></td>'
       + '<td><input type="number" class="in-precio" min="0" step="0.01" oninput="recalcularLinea('+i+')"></td>'
       + '<td class="importe-cell" id="importe'+i+'">0,00 €</td>'
@@ -282,8 +287,8 @@ function ocultarDrop(idx){
 function seleccionarRepuesto(idx, rJson){
   var r = JSON.parse(rJson);
   var tr = document.querySelector('tr[data-idx="'+idx+'"]');
-  tr.querySelector('.in-ref').value = r.ref || '';
-  tr.querySelector('.in-concepto').value = r.desc || '';
+  tr.querySelector('.in-ref').value = (r.ref || '').toUpperCase();
+  tr.querySelector('.in-concepto').value = (r.desc || '').toUpperCase();
   ocultarDrop(idx);
   var key = _refKey(r.ref, r.desc);
   DB.ref('precios_repuestos/'+key).once('value').then(function(snap){

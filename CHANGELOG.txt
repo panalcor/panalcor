@@ -6,6 +6,11 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.779 — 2026-09-06
+  - albaran.html: los campos de texto (cliente, dirección, ciudad, nif,
+    referencia y concepto de cada línea) se convierten a mayúsculas
+    automáticamente mientras se escriben.
+
 v1.5.769 — 2026-09-06
   - Nueva página albaran.html: formulario de albaranes conectado al
     catálogo de repuestos (busca por nombre o referencia, autorrellena
