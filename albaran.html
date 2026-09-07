@@ -696,7 +696,8 @@ function renderHistorial(){
       + '<td>'+fmtEUR(a.total)+'</td>'
       + '<td style="white-space:nowrap">'
         + '<button class="mini-btn" onclick="reimprimir(\''+a.numero+'\')">🖨 Reimprimir</button> '
-        + '<button class="mini-btn" onclick="editarDesdeHistorial(\''+a.numero+'\')">✏️ Editar</button>'
+        + '<button class="mini-btn" onclick="editarDesdeHistorial(\''+a.numero+'\')">✏️ Editar</button> '
+        + '<button class="mini-btn" style="background:rgba(192,57,43,0.15);border-color:rgba(192,57,43,0.35);color:#e74c3c" onclick="eliminarAlbaran(\''+a.numero+'\')">🗑 Eliminar</button>'
       + '</td>'
       + '</tr>';
   }).join('');
@@ -706,6 +707,41 @@ function reimprimir(numero){
   var datos = _albaranesCache[numero];
   if (!datos) return;
   imprimirAlbaran(datos);
+}
+
+// ══════════════════════════════════════════════════
+// ELIMINAR ALBARÁN
+// Si es el último de su año (el de secuencial más alto), libera el
+// número para que el siguiente que se cree lo reutilice. Si es uno
+// anterior, se borra y queda el hueco (no se renumeran los demás).
+// ══════════════════════════════════════════════════
+function _parseNumeroAlbaran(numero){
+  if (!numero || numero.length < 5) return null;
+  var cola = numero.slice(-5);
+  var yy = cola.slice(0, 2);
+  var seq = parseInt(cola.slice(2), 10);
+  if (!/^[0-9]{2}$/.test(yy) || isNaN(seq)) return null;
+  return {yy: yy, seq: seq};
+}
+
+function eliminarAlbaran(numero){
+  if (!confirm('🗑 ¿Eliminar el albarán '+numero+'?\n\nEsta acción no se puede deshacer.')) return;
+  var info = _parseNumeroAlbaran(numero);
+  var tareaContador = info
+    ? DB.ref('albaranes_contador/'+info.yy).transaction(function(actual){
+        if ((actual||0) === info.seq) return info.seq - 1; // era el último -> libera el número
+        return actual; // no es el último -> no tocar el contador, queda el hueco
+      })
+    : Promise.resolve();
+
+  tareaContador.then(function(){
+    return DB.ref('albaranes/'+numero).remove();
+  }).then(function(){
+    showToast('🗑 Albarán '+numero+' eliminado');
+    if (_albaranEnEdicion === numero) _limpiarFormularioAlbaran();
+  }).catch(function(e){
+    alert('❌ Error al eliminar: ' + e.message);
+  });
 }
 
 // ══════════════════════════════════════════════════
