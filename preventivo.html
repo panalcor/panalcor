@@ -3364,9 +3364,19 @@ async function publicarPlan() {
   const weeks   = getWeeksOfMonth(year, month);
   const mesesN  = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
+  const tareasCatalogo = getCatalogoEffectivo().filter(t => FREQS_AUTO.includes(t.frecuencia));
+  const maquinasSinAsignar = [...new Set(tareasCatalogo.filter(t => !asig[t.maquina]).map(t => t.maquina))];
+  if(maquinasSinAsignar.length) {
+    const continuar = confirm(
+      `⚠️ Estas máquinas no tienen mecánico asignado:\n\n${maquinasSinAsignar.join('\n')}\n\n` +
+      `Si publicas así, sus tareas no aparecerán en "Mis Tareas" ni se contarán bien en Seguimiento.\n\n¿Publicar de todas formas?`
+    );
+    if(!continuar) return;
+  }
+
   // Construir lista de tareas con fechas para Firebase
   const tareasPlan = [];
-  getCatalogoEffectivo().filter(t => FREQS_AUTO.includes(t.frecuencia)).forEach(t => {
+  tareasCatalogo.forEach(t => {
     const mecanico = asig[t.maquina] || '';
     const fechas = {};
     if(t.frecuencia === 'DIARIO') {
@@ -4128,12 +4138,25 @@ async function cargarSeguimiento(mkOverride) {
   document.getElementById('segEmpty').style.display = 'none';
 
   try {
-    const [snapPlan, snapComp] = await Promise.all([
+    const [snapPlan, snapComp, snapTodosPlanes] = await Promise.all([
       _DB.ref('preventivo_plan/'+mk).once('value'),
-      _DB.ref('preventivo_completado/'+mk).once('value')
+      _DB.ref('preventivo_completado/'+mk).once('value'),
+      _DB.ref('preventivo_plan').once('value')
     ]);
     const planData  = snapPlan.val()  || {};
     const compData  = snapComp.val()  || {};
+    // Mejor asignación máquina->mecánico conocida: recorre TODOS los meses
+    // publicados en Firebase (no solo el dispositivo actual) en orden
+    // cronológico y se queda con el último valor no vacío de cada máquina.
+    // La asignación del dispositivo actual (ST.asig(), puede reflejar una
+    // reasignación aún no publicada) tiene prioridad sobre lo ya publicado.
+    const todosPlanes = snapTodosPlanes.val() || {};
+    const mejorAsigConocida = {};
+    Object.keys(todosPlanes).sort().forEach(m => {
+      const asigMes = todosPlanes[m].asig || {};
+      Object.keys(asigMes).forEach(maq => { if(asigMes[maq]) mejorAsigConocida[maq] = asigMes[maq]; });
+    });
+    const asigRecuperacion = Object.assign({}, mejorAsigConocida, ST.asig());
     // El nombre de la máquina puede haberse afinado en el catálogo desde que se
     // publicó el plan (p.ej. "LINEAS FORMADORAS" -> "LINEA 1"). Se refresca con
     // el catálogo actual por id para que el seguimiento muestre siempre la
@@ -4173,14 +4196,12 @@ async function cargarSeguimiento(mkOverride) {
     });
     // Si el plan se publicó sin la asignación máquina->mecánico rellena,
     // t.mecanico queda vacío y la tarea cae en el cajón "—" de Seguimiento.
-    // Se rellena con la asignación actual (por nombre de máquina) como
-    // mejor información disponible; si tampoco hay asignación hoy, se deja
-    // vacío en vez de inventar un mecánico.
-    const asigActual = ST.asig();
+    // Se rellena con la mejor asignación conocida (ver arriba); si tampoco
+    // hay ninguna, se deja vacío en vez de inventar un mecánico.
     const tareasConMec = tareas.map(t => {
       if(t.mecanico) return t;
-      const mecActual = asigActual[t.maquina];
-      return mecActual ? Object.assign({}, t, { mecanico: mecActual }) : t;
+      const mecRecuperado = asigRecuperacion[t.maquina];
+      return mecRecuperado ? Object.assign({}, t, { mecanico: mecRecuperado }) : t;
     });
 
     if(!tareas.length) {

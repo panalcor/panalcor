@@ -6,6 +6,14 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.859 — 2026-09-06
+  - preventivo.html: la recuperación de mecánico en Seguimiento ahora
+    busca en TODOS los meses publicados en Firebase (no solo en el
+    dispositivo actual), así que funciona aunque la asignación se
+    hiciera en otro ordenador. Además, al publicar un plan se avisa si
+    alguna máquina no tiene mecánico asignado, con opción de cancelar
+    para ir a asignarla antes.
+
 v1.5.849 — 2026-09-06
   - preventivo.html: en Seguimiento, las tareas cuyo plan se publicó sin
     la asignación máquina→mecánico rellena (caían todas bajo el cajón
