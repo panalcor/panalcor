@@ -6,6 +6,11 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.839 — 2026-09-06
+  - averias.html: en el listado de historial, las averías "EN CURSO"
+    muestran quién las abrió (👷 Abre: nombre) directamente en la fila,
+    visible solo para el rol admin.
+
 v1.5.829 — 2026-09-06
   - albaran.html: botón "🗑 Eliminar" en el Historial. Si se borra el
     último albarán del año (el de número más alto), el correlativo se

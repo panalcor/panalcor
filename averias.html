@@ -1761,17 +1761,25 @@ function renderHistorial(){
   const el = document.getElementById('histList');
   if(!data.length){el.innerHTML='<div class="no-data">No hay averías registradas con esos filtros</div>';return;}
 
+  let esAdminHist = false;
+  try{
+    var psHist = JSON.parse(localStorage.getItem('panalcor_session')||'null');
+    esAdminHist = psHist && psHist.rol==='admin' && Date.now()<psHist.expires;
+  }catch(e){}
+
   el.innerHTML = data.map((a,i)=>{
     const badgeCls = a.estado==='RESUELTA'?'badge-resuel':a.estado==='EN CURSO'?'badge-curso':a.estado==='FUNCIONA SIN REPARAR'?'badge-funciona':a.estado==='SIN FALLO DETECTADO'?'badge-sinfallo':'badge-pend';
     const dotCls = a.estado==='RESUELTA'?'dot-green':a.estado==='EN CURSO'?'dot-red':a.estado==='FUNCIONA SIN REPARAR'?'dot-orange':a.estado==='SIN FALLO DETECTADO'?'dot-blue':'dot-yellow';
     const tStr = a.tiempoMin? Math.floor(a.tiempoMin/60)+'h '+((a.tiempoMin%60)+'').padStart(2,'0')+'min':'—';
     const crit = a.criticidad?`<span class="crit-badge crit-${a.criticidad}">★${a.criticidad}</span>`:'';
     const prioBadge = a.prioridad==='URGENTE'?'<span class="crit-badge" style="background:rgba(231,76,60,0.25);color:#ff6b6b">🔴 URGENTE</span>':a.prioridad==='PROGRAMABLE'?'<span class="crit-badge" style="background:rgba(46,204,113,0.2);color:#2ecc71">🟢 PROG.</span>':'';
+    const abrioBadge = (esAdminHist && a.estado==='EN CURSO' && a.mecApertura)
+      ? `<span class="crit-badge" style="background:rgba(52,152,219,0.2);color:#5dade2;white-space:nowrap">👷 Abre: ${a.mecApertura}</span>` : '';
     return `
     <div class="averia-card">
       <div class="averia-head" onclick="toggleAv('av${i}')">
         <span class="averia-id">${a.id}</span>
-        <span class="averia-maq">${a.maqNombre} ${crit} ${prioBadge}</span>
+        <span class="averia-maq">${a.maqNombre} ${crit} ${prioBadge} ${abrioBadge}</span>
         <span class="averia-desc">${a.parte?a.parte+' · ':''}${a.descripcion}</span>
         <span style="font-size:0.8rem;color:rgba(255,255,255,0.4);white-space:nowrap;margin-right:8px">${a.fecha} ${a.horaInicio}</span>
         ${a.foto?`<img src="${a.foto}" style="width:32px;height:32px;object-fit:cover;border-radius:5px;flex-shrink:0;margin-right:4px">`:''}
