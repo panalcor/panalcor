@@ -6,6 +6,12 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.869 — 2026-09-06
+  - preventivo.html: "Auto-rellenar fechas" ya no le asigna una fecha
+    al azar a una tarea cuando el mecánico está ausente (vacaciones,
+    baja, etc) todo el periodo — antes forzaba un día cualquiera. Ahora
+    ese hueco se deja vacío y se avisa cuántos se han dejado así.
+
 v1.5.859 — 2026-09-06
   - preventivo.html: la recuperación de mecánico en Seguimiento ahora
     busca en TODOS los meses publicados en Firebase (no solo en el

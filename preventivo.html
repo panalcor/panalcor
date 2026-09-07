@@ -3610,7 +3610,7 @@ async function autoRellenarFechas(mesVencido) {
 
   function pickRandom(days, mecId) {
     const available = days.filter(ds => !mecIsOffOn(mecId, ds));
-    if(!available.length) return days[Math.floor(Math.random()*days.length)]; // fallback: any day
+    if(!available.length) return null; // mecánico ausente todo el periodo: no forzar fecha
     return available[Math.floor(Math.random()*available.length)];
   }
 
@@ -3620,6 +3620,7 @@ async function autoRellenarFechas(mesVencido) {
   }
 
   let filled = 0;
+  let sinAsignar = 0;
 
   getCatalogoEffectivo().filter(t => FREQS_AUTO.includes(t.frecuencia)).forEach(t => {
     const mecNombre = asig[t.maquina] || '';
@@ -3629,27 +3630,35 @@ async function autoRellenarFechas(mesVencido) {
       weeks.forEach((wk, wi) => {
         const key = `${t.id}_${wi}`;
         if(!mkData[key]) { // only fill empty slots
-          mkData[key] = pickRandom(wk.days, mecId);
-          filled++;
+          const fecha = pickRandom(wk.days, mecId);
+          if(fecha) { mkData[key] = fecha; filled++; } else { sinAsignar++; }
         }
       });
     } else if(t.frecuencia === 'QUINCENAL') {
       const half1 = weeks.slice(0, Math.ceil(weeks.length/2)).flatMap(w=>w.days);
       const half2 = weeks.slice(Math.ceil(weeks.length/2)).flatMap(w=>w.days);
-      if(!mkData[`${t.id}_0`]) { mkData[`${t.id}_0`] = pickRandom(half1, mecId); filled++; }
-      if(!mkData[`${t.id}_1`]) { mkData[`${t.id}_1`] = pickRandom(half2, mecId); filled++; }
+      if(!mkData[`${t.id}_0`]) {
+        const f = pickRandom(half1, mecId);
+        if(f) { mkData[`${t.id}_0`] = f; filled++; } else { sinAsignar++; }
+      }
+      if(!mkData[`${t.id}_1`]) {
+        const f = pickRandom(half2, mecId);
+        if(f) { mkData[`${t.id}_1`] = f; filled++; } else { sinAsignar++; }
+      }
     } else if(t.frecuencia === 'MENSUAL') {
       if(!mkData[`${t.id}_0`]) {
         const allDays = weeks.flatMap(w=>w.days);
-        mkData[`${t.id}_0`] = pickRandom(allDays, mecId);
-        filled++;
+        const f = pickRandom(allDays, mecId);
+        if(f) { mkData[`${t.id}_0`] = f; filled++; } else { sinAsignar++; }
       }
     }
   });
 
   ST.setFechasMes(all);
   renderPlan();
-  alert(`✅ Auto-relleno completado: ${filled} fecha${filled!==1?'s':''} asignada${filled!==1?'s':''} en ${mesesNom[month]} ${year}.`);
+  let msg = `✅ Auto-relleno completado: ${filled} fecha${filled!==1?'s':''} asignada${filled!==1?'s':''} en ${mesesNom[month]} ${year}.`;
+  if(sinAsignar) msg += `\n\n⚠️ ${sinAsignar} hueco${sinAsignar!==1?'s':''} sin fecha porque el mecánico está ausente todo el periodo (vacaciones/baja/etc). Se han dejado vacíos.`;
+  alert(msg);
 }
 
 /* ════ AJUSTES ════ */
