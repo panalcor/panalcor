@@ -4171,6 +4171,17 @@ async function cargarSeguimiento(mkOverride) {
       }
       return t;
     });
+    // Si el plan se publicó sin la asignación máquina->mecánico rellena,
+    // t.mecanico queda vacío y la tarea cae en el cajón "—" de Seguimiento.
+    // Se rellena con la asignación actual (por nombre de máquina) como
+    // mejor información disponible; si tampoco hay asignación hoy, se deja
+    // vacío en vez de inventar un mecánico.
+    const asigActual = ST.asig();
+    const tareasConMec = tareas.map(t => {
+      if(t.mecanico) return t;
+      const mecActual = asigActual[t.maquina];
+      return mecActual ? Object.assign({}, t, { mecanico: mecActual }) : t;
+    });
 
     if(!tareas.length) {
       document.getElementById('segTabla').innerHTML = '';
@@ -4185,8 +4196,8 @@ async function cargarSeguimiento(mkOverride) {
       return;
     }
 
-    _segData = { tareas, compData };
-    renderSeguimiento(tareas, compData,
+    _segData = { tareas: tareasConMec, compData };
+    renderSeguimiento(tareasConMec, compData,
       document.getElementById('segMecFilt').value,
       document.getElementById('segEstFilt').value);
   } catch(e) {

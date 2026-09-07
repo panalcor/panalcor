@@ -6,6 +6,13 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.849 — 2026-09-06
+  - preventivo.html: en Seguimiento, las tareas cuyo plan se publicó sin
+    la asignación máquina→mecánico rellena (caían todas bajo el cajón
+    "—") ahora recuperan el mecánico desde la asignación actual, si la
+    hay. Si no hay asignación disponible, se deja vacío en vez de
+    inventar un nombre.
+
 v1.5.839 — 2026-09-06
   - averias.html: en el listado de historial, las averías "EN CURSO"
     muestran quién las abrió (👷 Abre: nombre) directamente en la fila,
