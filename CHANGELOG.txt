@@ -6,6 +6,9 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.879 — 2026-09-11
+  - albaran.html: quitado el botón "← Inicio" de la cabecera.
+
 v1.5.869 — 2026-09-06
   - preventivo.html: "Auto-rellenar fechas" ya no le asigna una fecha
     al azar a una tarea cuando el mecánico está ausente (vacaciones,

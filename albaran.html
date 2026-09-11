@@ -20,8 +20,6 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 /* ── TOPBAR ── */
 .topbar{background:linear-gradient(135deg,#0a1520,var(--navy-mid));border-bottom:2px solid var(--gold);padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .topbar h1{font-size:1.3rem;font-weight:900;letter-spacing:0.05em;color:var(--gold-light)}
-.back-btn{background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.4);color:var(--gold);padding:8px 14px;border-radius:7px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.85rem;text-decoration:none;display:inline-block}
-.back-btn:hover{background:rgba(201,162,39,0.3)}
 .tab-toggle{margin-left:auto;display:flex;gap:8px}
 .tab-toggle button{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:7px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:0.85rem;font-weight:700}
 .tab-toggle button.active{background:rgba(201,162,39,0.25);border-color:var(--gold);color:var(--gold-light)}
@@ -117,7 +115,6 @@ table.a5-tabla td.a5-num{text-align:right}
 <body>
 
 <div class="topbar">
-  <a href="panalcor_inicio.html" class="back-btn">← Inicio</a>
   <h1>📄 Albaranes</h1>
   <div class="tab-toggle">
     <button id="btnVNuevo" class="active" onclick="mostrarVista('nuevo')">+ Nuevo</button>
