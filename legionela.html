@@ -527,6 +527,20 @@ function cargar(tipo, mes, cb){
   } catch(e){}
 }
 
+// Para exportar: a diferencia de cargar() (pensada para refrescar la tabla en
+// pantalla con un callback que puede llamarse dos veces), esto devuelve una
+// promesa que espera siempre el dato real de Firebase — necesario porque una
+// promesa solo se puede resolver una vez.
+function cargarParaExport(tipo, mes){
+  const key = tipo+'/'+mes;
+  if(cache[key]) return Promise.resolve(cache[key]);
+  return DB.ref(fbPath(tipo,mes)).once('value').then(s=>{
+    const val = s.val()||{};
+    if(Object.keys(val).length) cache[key] = val;
+    return val;
+  }).catch(()=>({}));
+}
+
 function guardar(tipo, mes, data, cb){
   cache[tipo+'/'+mes] = data;
   DB.ref(fbPath(tipo,mes)).set(data).then(()=>{
@@ -1083,7 +1097,7 @@ async function exportarMesCompleto(mesOverride){
   showToast('⏳ Generando Excel...');
 
   const tipos=['depositos','afchacs','termos','grifos','incidencias'];
-  const results = await Promise.all(tipos.map(t=>new Promise(res=>cargar(t,mes,d=>res({t,d})))));
+  const results = await Promise.all(tipos.map(t=>cargarParaExport(t,mes).then(d=>({t,d}))));
   const datos={};
   results.forEach(({t,d})=>datos[t]=d);
 
@@ -1447,7 +1461,7 @@ async function exportarPDFCompleto(mesOverride){
   showToast('⏳ Generando PDF...');
 
   const tipos=['depositos','afchacs','termos','grifos','incidencias'];
-  const results = await Promise.all(tipos.map(t=>new Promise(res=>cargar(t,mes,d=>res({t,d})))));
+  const results = await Promise.all(tipos.map(t=>cargarParaExport(t,mes).then(d=>({t,d}))));
   const datos={};
   results.forEach(({t,d})=>datos[t]=d);
 

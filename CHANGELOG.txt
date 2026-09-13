@@ -6,6 +6,14 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.909 — 2026-09-13
+  - legionela.html: corregido el fallo de fondo por el que exportar un
+    mes distinto al que ya estaba en pantalla salía vacío. cargar()
+    llama al callback dos veces (vacío primero, datos reales después) y
+    el export lo envolvía en una promesa que solo puede resolverse una
+    vez, quedándose con el primer valor (vacío). Ahora usa una carga
+    dedicada que sí espera el dato real de Firebase.
+
 v1.5.899 — 2026-09-13
   - legionela.html: nuevo selector de mes en la cabecera junto a
     "EXPORTAR MES"/"EXPORTAR PDF". Ya no hace falta ir a ninguna
