@@ -6,6 +6,12 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.889 — 2026-09-13
+  - legionela.html: exportar Excel/PDF (tanto el botón general como el
+    de cada pestaña) usaba siempre el mes de la pestaña "Depósitos AFCH",
+    ignorando el mes seleccionado en otras pestañas (Termos, Grifos,
+    etc). Ahora usa el mes de la pestaña que se esté viendo.
+
 v1.5.879 — 2026-09-11
   - albaran.html: quitado el botón "← Inicio" de la cabecera.
 

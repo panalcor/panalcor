@@ -485,6 +485,25 @@ function escH(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'
 // ── Mes actual por defecto ────────────────────────────────────────────────────
 function mesActual(){ return new Date().toISOString().slice(0,7); }
 
+// ── Mes de la pestaña activa (cada sección tiene su propio selector de mes;
+//    exportar debe usar el de la pestaña que se está viendo, no siempre el de
+//    Depósitos) ───────────────────────────────────────────────────────────────
+function _mesSeccionActiva(){
+  const MAPA = {
+    'panel-depositos':   'mesDepositos',
+    'panel-afch-acs':    'mesAfchAcs',
+    'panel-termos':      'mesTermos',
+    'panel-grifos':      'mesGrifos',
+    'panel-incidencias': 'mesIncidencias'
+  };
+  const activo = document.querySelector('.panel.active');
+  const inputId = activo && MAPA[activo.id];
+  const el = inputId && document.getElementById(inputId);
+  if(el && el.value) return el.value;
+  const fallback = document.getElementById('mesDepositos');
+  return (fallback && fallback.value) || mesActual();
+}
+
 // ── Cache datos ───────────────────────────────────────────────────────────────
 var cache = {};
 
@@ -1053,7 +1072,7 @@ function guardarIncidencias(){
 function exportarMes(tipo){ exportarMesCompleto(); }
 
 async function exportarMesCompleto(){
-  const mes = document.getElementById('mesDepositos').value || mesActual();
+  const mes = _mesSeccionActiva();
   const [y,m] = mes.split('-').map(Number);
   const MESES_ES=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
   const mesNombre = MESES_ES[m-1];
@@ -1417,7 +1436,7 @@ async function exportarMesCompleto(){
 function exportarPDF(tipo){ exportarPDFCompleto(); }
 
 async function exportarPDFCompleto(){
-  const mes = document.getElementById('mesDepositos').value || mesActual();
+  const mes = _mesSeccionActiva();
   const [y,m] = mes.split('-').map(Number);
   const MESES_ES=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
   const mesNombre = MESES_ES[m-1];
