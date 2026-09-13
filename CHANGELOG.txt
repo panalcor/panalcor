@@ -6,6 +6,12 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.899 — 2026-09-13
+  - legionela.html: nuevo selector de mes en la cabecera junto a
+    "EXPORTAR MES"/"EXPORTAR PDF". Ya no hace falta ir a ninguna
+    pestaña (Depósitos, Termos, etc) para elegir el mes — se elige una
+    vez arriba y exporta todos los apartados juntos para ese mes.
+
 v1.5.889 — 2026-09-13
   - legionela.html: exportar Excel/PDF (tanto el botón general como el
     de cada pestaña) usaba siempre el mes de la pestaña "Depósitos AFCH",

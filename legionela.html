@@ -50,6 +50,7 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
 .mes-bar{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
 .mes-bar label{color:var(--gray);font-size:0.82rem}
 .mes-bar input[type=month]{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:var(--white);padding:7px 12px;font-size:0.9rem}
+.topbar-right input[type=month]{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:var(--white);padding:7px 12px;font-size:0.9rem}
 .blocked-msg{background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);border-radius:8px;padding:12px 16px;color:var(--red);font-weight:600;font-size:0.88rem;margin-bottom:16px;display:none}
 
 /* ── TABLE FORMS ── */
@@ -124,8 +125,9 @@ body{background:var(--navy);color:var(--white);font-family:'Segoe UI',Arial,sans
     </div>
     <div class="topbar-right">
       <a href="panalcor_inicio.html"><button class="btn btn-back">← Inicio</button></a>
-      <button class="btn btn-gold" onclick="exportarMesCompleto()" style="font-size:0.8rem">📥 EXPORTAR MES</button>
-      <button class="btn btn-outline" onclick="exportarPDFCompleto()" style="font-size:0.8rem">📄 EXPORTAR PDF</button>
+      <input type="month" id="mesExportar" title="Mes a exportar">
+      <button class="btn btn-gold" onclick="exportarMesCompleto(document.getElementById('mesExportar').value)" style="font-size:0.8rem">📥 EXPORTAR MES</button>
+      <button class="btn btn-outline" onclick="exportarPDFCompleto(document.getElementById('mesExportar').value)" style="font-size:0.8rem">📄 EXPORTAR PDF</button>
       <button class="btn btn-outline" onclick="logout()">Salir</button>
     </div>
   </div>
@@ -1071,8 +1073,8 @@ function guardarIncidencias(){
 // ══════════════════════════════════════════════════════════════════════════════
 function exportarMes(tipo){ exportarMesCompleto(); }
 
-async function exportarMesCompleto(){
-  const mes = _mesSeccionActiva();
+async function exportarMesCompleto(mesOverride){
+  const mes = mesOverride || _mesSeccionActiva();
   const [y,m] = mes.split('-').map(Number);
   const MESES_ES=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
   const mesNombre = MESES_ES[m-1];
@@ -1435,8 +1437,8 @@ async function exportarMesCompleto(){
 // ══════════════════════════════════════════════════════════════════════════════
 function exportarPDF(tipo){ exportarPDFCompleto(); }
 
-async function exportarPDFCompleto(){
-  const mes = _mesSeccionActiva();
+async function exportarPDFCompleto(mesOverride){
+  const mes = mesOverride || _mesSeccionActiva();
   const [y,m] = mes.split('-').map(Number);
   const MESES_ES=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
   const mesNombre = MESES_ES[m-1];
@@ -1587,7 +1589,7 @@ function initApp(){
   const hoy = new Date().toISOString().slice(0,10);
   const mes = mesActual();
   document.getElementById('topFecha').textContent = new Date().toLocaleDateString('es-ES',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  ['mesDepositos','mesAfchAcs','mesTermos','mesGrifos','mesIncidencias','mesAutoRellenar'].forEach(id=>{
+  ['mesDepositos','mesAfchAcs','mesTermos','mesGrifos','mesIncidencias','mesAutoRellenar','mesExportar'].forEach(id=>{
     document.getElementById(id).value = mes;
   });
   renderDepositos();
