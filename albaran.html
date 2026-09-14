@@ -77,6 +77,10 @@ table.data-table td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,0.
 table.data-table tr:hover td{background:rgba(255,255,255,0.03)}
 .mini-btn{background:rgba(201,162,39,0.15);border:1px solid rgba(201,162,39,0.35);color:var(--gold);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:0.78rem}
 
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy-mid);border:1px solid rgba(46,204,113,0.5);border-radius:10px;padding:14px 22px;font-size:0.95rem;font-weight:600;z-index:9999;opacity:0;transform:translateY(20px);transition:all .3s;pointer-events:none;max-width:340px}
+.toast.show{opacity:1;transform:translateY(0)}
+
 /* ══════════════════════════════════════════════
    VISTA DE IMPRESIÓN — A4 apaisado, 2 copias A5
    ══════════════════════════════════════════════ */
@@ -119,6 +123,8 @@ table.a5-tabla td.a5-num{text-align:right}
   <div class="tab-toggle">
     <button id="btnVNuevo" class="active" onclick="mostrarVista('nuevo')">+ Nuevo</button>
     <button id="btnVHist" onclick="mostrarVista('historial')">📋 Historial</button>
+    <button id="btnVPresu" onclick="mostrarVista('presupuesto')">+ Presupuesto</button>
+    <button id="btnVHistPresu" onclick="mostrarVista('historialPresu')">📋 Hist. Presup.</button>
   </div>
 </div>
 
@@ -199,8 +205,86 @@ table.a5-tabla td.a5-num{text-align:right}
   </div>
 </div>
 
+<!-- ══ VISTA: NUEVO PRESUPUESTO ══ -->
+<div class="container" id="vistaPresupuesto" style="display:none">
+
+  <div class="numero-asignado" id="numeroAsignadoPresu"></div>
+
+  <div class="card">
+    <h3>🔍 Buscar / editar presupuesto existente</h3>
+    <div class="field autocomplete-wrap" style="max-width:380px">
+      <label>Cliente / distribuidor</label>
+      <input type="text" id="fBuscarPresu" placeholder="Escribe el nombre del cliente..."
+        oninput="onBuscarPresupuestoExistente()" onkeydown="onKeyBuscarPresupuesto(event)"
+        onblur="setTimeout(ocultarDropBuscarPresupuesto,150)">
+      <div class="autocomplete-drop" id="dropBuscarPresu"></div>
+    </div>
+    <div id="editandoBannerPresu" style="display:none;margin-top:10px;font-size:0.85rem;color:var(--gold-light)"></div>
+  </div>
+
+  <div class="card">
+    <h3>📇 Datos del cliente</h3>
+    <div class="field-grid">
+      <div class="field"><label>Cliente *</label><input type="text" id="pCliente" placeholder="Ej: MORA S.L." oninput="_up(this)"></div>
+      <div class="field"><label>Dirección</label><input type="text" id="pDireccion" oninput="_up(this)"></div>
+      <div class="field"><label>Ciudad</label><input type="text" id="pCiudad" oninput="_up(this)"></div>
+      <div class="field"><label>NIF</label><input type="text" id="pNif" oninput="_up(this)"></div>
+      <div class="field"><label>Fecha *</label><input type="date" id="pFecha"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🔧 Líneas de repuestos</h3>
+    <div class="tabla-wrap">
+      <table class="lineas" id="tablaLineasPresu">
+        <thead><tr>
+          <th class="col-ref">Ref.</th><th>Concepto</th><th class="col-unid">Unidades</th>
+          <th class="col-precio">Precio/U</th><th class="col-importe">Importe</th>
+        </tr></thead>
+        <tbody id="bLineasPresu"></tbody>
+      </table>
+    </div>
+    <p class="hint">Escribe en Referencia o Concepto para buscar en el catálogo de repuestos. El precio se autorrellena con el último usado — puedes cambiarlo si es un precio orientativo distinto. Los precios de un presupuesto no modifican el último precio recordado de la referencia.</p>
+  </div>
+
+  <div class="card">
+    <div class="totales">
+      <table>
+        <tr><td class="lbl">SUBTOTAL</td><td class="val" id="pSubtotal">0,00 €</td></tr>
+        <tr><td class="lbl">IVA (21%)</td><td class="val" id="pIva">0,00 €</td></tr>
+        <tr class="total-row"><td class="lbl">TOTAL</td><td class="val" id="pTotal">0,00 €</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="acciones">
+    <button class="btn btn-primary" onclick="guardarPresupuesto()">💾 Guardar</button>
+    <button class="btn btn-secondary" onclick="imprimirPresupuestoActual()">🖨 Imprimir</button>
+    <button class="btn btn-secondary" onclick="nuevoPresupuesto()">🆕 Nuevo</button>
+  </div>
+</div>
+
+<!-- ══ VISTA: HISTORIAL DE PRESUPUESTOS ══ -->
+<div class="container" id="vistaHistorialPresu" style="display:none">
+  <div class="card">
+    <h3>📋 Historial de presupuestos</h3>
+    <div class="field" style="max-width:320px;margin-bottom:14px">
+      <label>Buscar por cliente o número</label>
+      <input type="text" id="histBuscarPresu" oninput="renderHistorialPresu()" placeholder="Ej: mora, PR26-58392...">
+    </div>
+    <div style="overflow-x:auto">
+      <table class="data-table" id="tHistorialPresu">
+        <thead><tr><th>Nº Presupuesto</th><th>Fecha</th><th>Cliente</th><th>Total</th><th></th></tr></thead>
+        <tbody><tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.3);padding:30px">Cargando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <!-- ══ VISTA DE IMPRESIÓN (oculta en pantalla) ══ -->
 <div id="printArea"></div>
+
+<div class="toast" id="toast"></div>
 
 <script>
 // ══════════════════════════════════════════════════
@@ -231,6 +315,15 @@ function _up(el){
   var pos = el.selectionStart;
   el.value = el.value.toUpperCase();
   try { el.setSelectionRange(pos, pos); } catch(e){}
+}
+var _toastTimer;
+function showToast(msg){
+  var t = document.getElementById('toast');
+  if (!t) { alert(msg); return; }
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 3200);
 }
 
 // ══════════════════════════════════════════════════
@@ -492,7 +585,7 @@ function imprimirAlbaranActual(){
     if (!confirm('⚠️ Este albarán todavía no se ha guardado, así que no tiene número asignado.\n¿Imprimir igualmente sin número?')) return;
   }
   datos.numero = _albaranEnEdicion || '';
-  imprimirAlbaran(datos);
+  imprimirDocumento(datos, 'albaran');
 }
 
 // ══════════════════════════════════════════════════
@@ -595,7 +688,9 @@ function cargarAlbaranParaEdicion(a){
 // ══════════════════════════════════════════════════
 // VISTA DE IMPRESIÓN
 // ══════════════════════════════════════════════════
-function _a5Html(datos){
+function _a5Html(datos, tipoDoc){
+  var esPresu = tipoDoc === 'presupuesto';
+  var labelNum = esPresu ? 'Nº PRESUP' : 'Nº ALB';
   var filasHtml = '';
   for (var i = 0; i < NUM_LINEAS; i++){
     var l = datos.lineas[i] || {};
@@ -619,8 +714,9 @@ function _a5Html(datos){
         + '<div><b>NIF</b> '+escHtml(datos.nif)+'</div>'
       + '</div>'
     + '</div>'
+    + (esPresu ? '<div style="text-align:center;font-weight:900;font-size:11pt;letter-spacing:1px;margin:1mm 0;color:#2471a3">PRESUPUESTO</div>' : '')
     + '<div class="a5-cif">CIF: B80071079</div>'
-    + '<div class="a5-fechalb"><span>FECHA: '+escHtml(fechaFmt)+'</span><span>Nº ALB: '+escHtml(datos.numero||'')+'</span></div>'
+    + '<div class="a5-fechalb"><span>FECHA: '+escHtml(fechaFmt)+'</span><span>'+labelNum+': '+escHtml(datos.numero||'')+'</span></div>'
     + '<table class="a5-tabla"><thead><tr><th>REF.</th><th>CONCEPTO</th><th>UNIDADES</th><th>PRECIO/U</th><th>IMPORTE</th></tr></thead>'
     + '<tbody>'+filasHtml+'</tbody></table>'
     + '<table class="a5-totales">'
@@ -632,9 +728,9 @@ function _a5Html(datos){
     + '</div>';
 }
 
-function imprimirAlbaran(datos){
+function imprimirDocumento(datos, tipoDoc){
   var area = document.getElementById('printArea');
-  area.innerHTML = _a5Html(datos) + _a5Html(datos);
+  area.innerHTML = _a5Html(datos, tipoDoc) + _a5Html(datos, tipoDoc);
   var imgs = Array.prototype.slice.call(area.querySelectorAll('img'));
   var esperas = imgs.map(function(img){
     return new Promise(function(resolve){
@@ -665,12 +761,17 @@ DB.ref('albaranes').on('value', function(snap){
 });
 
 function mostrarVista(v){
-  if (v === 'historial' && !_pedirAccesoAlbaranes()) return;
+  if ((v === 'historial' || v === 'historialPresu') && !_pedirAccesoAlbaranes()) return;
   document.getElementById('vistaNuevo').style.display = (v==='nuevo') ? 'block' : 'none';
   document.getElementById('vistaHistorial').style.display = (v==='historial') ? 'block' : 'none';
+  document.getElementById('vistaPresupuesto').style.display = (v==='presupuesto') ? 'block' : 'none';
+  document.getElementById('vistaHistorialPresu').style.display = (v==='historialPresu') ? 'block' : 'none';
   document.getElementById('btnVNuevo').classList.toggle('active', v==='nuevo');
   document.getElementById('btnVHist').classList.toggle('active', v==='historial');
+  document.getElementById('btnVPresu').classList.toggle('active', v==='presupuesto');
+  document.getElementById('btnVHistPresu').classList.toggle('active', v==='historialPresu');
   if (v === 'historial') renderHistorial();
+  if (v === 'historialPresu') renderHistorialPresu();
 }
 
 function renderHistorial(){
@@ -703,7 +804,7 @@ function renderHistorial(){
 function reimprimir(numero){
   var datos = _albaranesCache[numero];
   if (!datos) return;
-  imprimirAlbaran(datos);
+  imprimirDocumento(datos, 'albaran');
 }
 
 // ══════════════════════════════════════════════════
@@ -741,6 +842,381 @@ function eliminarAlbaran(numero){
   });
 }
 
+// ══════════════════════════════════════════════════════════════════
+// PRESUPUESTOS
+// Numeración PR+YY-NNNNN+letra de revisión (aleatoria, no correlativa,
+// para no dar pistas de cuántos albaranes/presupuestos se hacen).
+// Al editar un presupuesto ya guardado se crea una revisión nueva
+// (letra siguiente) y se conserva la anterior — no se sobrescribe.
+// Los precios de un presupuesto NO actualizan el último precio
+// recordado de la referencia (a diferencia de los albaranes).
+// ══════════════════════════════════════════════════════════════════
+function construirFilasLineasPresu(){
+  var tbody = document.getElementById('bLineasPresu');
+  var html = '';
+  for (var i = 0; i < NUM_LINEAS; i++){
+    html += '<tr data-idxp="'+i+'">'
+      + '<td class="autocomplete-wrap"><input type="text" class="pin-ref" oninput="_up(this);onBuscarLineaPresu('+i+',\'ref\')" onblur="setTimeout(function(){ocultarDropPresu('+i+')},150)">'
+        + '<div class="autocomplete-drop" id="dropp'+i+'"></div></td>'
+      + '<td class="autocomplete-wrap"><input type="text" class="pin-concepto" oninput="_up(this);onBuscarLineaPresu('+i+',\'concepto\')" onblur="setTimeout(function(){ocultarDropPresu('+i+')},150)"></td>'
+      + '<td><input type="number" class="pin-unidades" min="0" step="1" oninput="recalcularLineaPresu('+i+')"></td>'
+      + '<td><input type="number" class="pin-precio" min="0" step="0.01" oninput="recalcularLineaPresu('+i+')"></td>'
+      + '<td class="importe-cell" id="importep'+i+'">0,00 €</td>'
+      + '</tr>';
+  }
+  tbody.innerHTML = html;
+}
+
+function onBuscarLineaPresu(idx, campo){
+  var tr = document.querySelector('tr[data-idxp="'+idx+'"]');
+  var input = tr.querySelector('.pin-'+campo);
+  var drop = document.getElementById('dropp'+idx);
+  var resultados = buscarRepuestos(input.value);
+  if (!resultados.length){ drop.style.display = 'none'; return; }
+  drop.innerHTML = resultados.map(function(r){
+    return '<div onclick=\'seleccionarRepuestoPresu('+idx+', '+JSON.stringify(JSON.stringify(r))+')\'>'
+      + '<span class="ac-ref">'+escHtml(r.ref||'—')+'</span>'+escHtml(r.desc||'')+'</div>';
+  }).join('');
+  drop.style.display = 'block';
+}
+
+function ocultarDropPresu(idx){
+  var drop = document.getElementById('dropp'+idx);
+  if (drop) drop.style.display = 'none';
+}
+
+function seleccionarRepuestoPresu(idx, rJson){
+  var r = JSON.parse(rJson);
+  var tr = document.querySelector('tr[data-idxp="'+idx+'"]');
+  tr.querySelector('.pin-ref').value = (r.ref || '').toUpperCase();
+  tr.querySelector('.pin-concepto').value = (r.desc || '').toUpperCase();
+  ocultarDropPresu(idx);
+  var key = _refKey(r.ref, r.desc);
+  DB.ref('precios_repuestos/'+key).once('value').then(function(snap){
+    var p = snap.val();
+    if (p && p.precio !== undefined && !tr.querySelector('.pin-precio').value){
+      tr.querySelector('.pin-precio').value = p.precio;
+      recalcularLineaPresu(idx);
+    }
+  }).catch(function(){});
+}
+
+function recalcularLineaPresu(idx){
+  var tr = document.querySelector('tr[data-idxp="'+idx+'"]');
+  var unidades = parseFloat(tr.querySelector('.pin-unidades').value) || 0;
+  var precio   = parseFloat(tr.querySelector('.pin-precio').value) || 0;
+  var importe  = unidades * precio;
+  document.getElementById('importep'+idx).textContent = fmtEUR(importe);
+  recalcularTotalesPresu();
+}
+
+function recalcularTotalesPresu(){
+  var subtotal = 0;
+  for (var i = 0; i < NUM_LINEAS; i++){
+    var tr = document.querySelector('tr[data-idxp="'+i+'"]');
+    var unidades = parseFloat(tr.querySelector('.pin-unidades').value) || 0;
+    var precio   = parseFloat(tr.querySelector('.pin-precio').value) || 0;
+    subtotal += unidades * precio;
+  }
+  var iva = subtotal * IVA_PCT;
+  var total = subtotal + iva;
+  document.getElementById('pSubtotal').textContent = fmtEUR(subtotal);
+  document.getElementById('pIva').textContent = fmtEUR(iva);
+  document.getElementById('pTotal').textContent = fmtEUR(total);
+  return {subtotal:subtotal, iva:iva, total:total};
+}
+
+function leerLineasPresu(){
+  var lineas = [];
+  for (var i = 0; i < NUM_LINEAS; i++){
+    var tr = document.querySelector('tr[data-idxp="'+i+'"]');
+    var ref = tr.querySelector('.pin-ref').value.trim();
+    var concepto = tr.querySelector('.pin-concepto').value.trim();
+    var unidades = parseFloat(tr.querySelector('.pin-unidades').value) || 0;
+    var precio = parseFloat(tr.querySelector('.pin-precio').value) || 0;
+    if (!concepto && !ref && !unidades && !precio) continue;
+    lineas.push({ref:ref, concepto:concepto, unidades:unidades, precio:precio, importe:unidades*precio});
+  }
+  return lineas;
+}
+
+// ── Numeración: PR+YY-NNNNN+letra, aleatoria con comprobación de choque ──
+function _randomDigits(n){
+  var s = '';
+  for (var i = 0; i < n; i++) s += Math.floor(Math.random()*10);
+  return s;
+}
+
+function generarNumeroPresupuesto(){
+  var yy = String(new Date().getFullYear() % 100).padStart(2,'0');
+  function intentar(){
+    var candidato = 'PR' + yy + '-' + _randomDigits(5) + 'A';
+    return DB.ref('presupuestos/'+candidato).once('value').then(function(snap){
+      if (snap.exists()) return intentar();
+      return candidato;
+    });
+  }
+  return intentar();
+}
+
+// Siguiente letra de revisión libre a partir de un número ya existente
+// (por si se edita una revisión antigua y la siguiente letra ya está usada).
+function _siguienteRevisionDisponible(numero){
+  function intentar(actual){
+    var letra = actual.slice(-1);
+    var base = actual.slice(0, -1);
+    var siguiente = base + String.fromCharCode(Math.min(letra.charCodeAt(0)+1, 90));
+    return DB.ref('presupuestos/'+siguiente).once('value').then(function(snap){
+      if (snap.exists()) return intentar(siguiente);
+      return siguiente;
+    });
+  }
+  return intentar(numero);
+}
+
+// ── Guardar / imprimir / nuevo ──
+var _presupuestoEnEdicion = null;
+var _ultimoGuardadoSnapshotPresu = '';
+
+function _leerFormularioPresupuestoComoDatos(){
+  var totales = recalcularTotalesPresu();
+  return {
+    cliente: document.getElementById('pCliente').value.trim(),
+    direccion: document.getElementById('pDireccion').value.trim(),
+    ciudad: document.getElementById('pCiudad').value.trim(),
+    nif: document.getElementById('pNif').value.trim(),
+    fecha: document.getElementById('pFecha').value,
+    lineas: leerLineasPresu(),
+    subtotal: totales.subtotal,
+    iva: totales.iva,
+    ivaPct: IVA_PCT,
+    total: totales.total
+  };
+}
+
+function _snapshotFormularioPresupuesto(){
+  return JSON.stringify(_leerFormularioPresupuestoComoDatos());
+}
+
+function _formularioPresupuestoTieneContenido(){
+  var d = _leerFormularioPresupuestoComoDatos();
+  return !!(d.cliente || d.direccion || d.ciudad || d.nif || d.lineas.length);
+}
+
+function guardarPresupuesto(){
+  var datos = _leerFormularioPresupuestoComoDatos();
+  if (!datos.cliente){ alert('⚠️ Indica el cliente'); return Promise.reject(new Error('sin cliente')); }
+  if (!datos.fecha){ alert('⚠️ Indica la fecha'); return Promise.reject(new Error('sin fecha')); }
+  if (!datos.lineas.length){ alert('⚠️ Añade al menos una línea'); return Promise.reject(new Error('sin lineas')); }
+
+  function _persistir(numero){
+    datos.numero = numero;
+    datos.base = numero.slice(0, -1);
+    datos.revision = numero.slice(-1);
+    datos.creado = Date.now();
+    return DB.ref('presupuestos/'+numero).set(datos).then(function(){ return numero; });
+  }
+
+  var promesa = _presupuestoEnEdicion
+    ? _siguienteRevisionDisponible(_presupuestoEnEdicion).then(_persistir)
+    : generarNumeroPresupuesto().then(_persistir);
+
+  return promesa.then(function(numero){
+    var editando = !!_presupuestoEnEdicion;
+    _presupuestoEnEdicion = numero;
+    _ultimoGuardadoSnapshotPresu = _snapshotFormularioPresupuesto();
+    var el = document.getElementById('numeroAsignadoPresu');
+    el.textContent = (editando ? '✅ Nueva revisión guardada: ' : '✅ Presupuesto guardado con el número: ') + numero;
+    el.style.display = 'block';
+    return numero;
+  }).catch(function(e){
+    alert('❌ Error al guardar el presupuesto: ' + e.message);
+    throw e;
+  });
+}
+
+function imprimirPresupuestoActual(){
+  var datos = _leerFormularioPresupuestoComoDatos();
+  if (!datos.cliente){ alert('⚠️ Indica al menos el cliente antes de imprimir'); return; }
+  if (!_presupuestoEnEdicion){
+    if (!confirm('⚠️ Este presupuesto todavía no se ha guardado, así que no tiene número asignado.\n¿Imprimir igualmente sin número?')) return;
+  }
+  datos.numero = _presupuestoEnEdicion || '';
+  imprimirDocumento(datos, 'presupuesto');
+}
+
+function nuevoPresupuesto(){
+  if (_formularioPresupuestoTieneContenido() && _snapshotFormularioPresupuesto() !== _ultimoGuardadoSnapshotPresu){
+    if (confirm('⚠️ Hay cambios sin guardar en este presupuesto.\n\nAceptar = GUARDARLOS antes de continuar.\nCancelar = decidir si descartarlos.')){
+      guardarPresupuesto().then(function(){ _limpiarFormularioPresupuesto(); }).catch(function(){});
+      return;
+    }
+    if (!confirm('¿Seguro que quieres descartar los cambios sin guardar?')) return;
+  }
+  _limpiarFormularioPresupuesto();
+}
+
+function _limpiarFormularioPresupuesto(){
+  _presupuestoEnEdicion = null;
+  document.getElementById('pCliente').value = '';
+  document.getElementById('pDireccion').value = '';
+  document.getElementById('pCiudad').value = '';
+  document.getElementById('pNif').value = '';
+  document.getElementById('pFecha').value = new Date().toISOString().slice(0,10);
+  document.getElementById('fBuscarPresu').value = '';
+  ocultarDropBuscarPresupuesto();
+  construirFilasLineasPresu();
+  recalcularTotalesPresu();
+  document.getElementById('numeroAsignadoPresu').style.display = 'none';
+  document.getElementById('editandoBannerPresu').style.display = 'none';
+  _ultimoGuardadoSnapshotPresu = _snapshotFormularioPresupuesto();
+}
+
+// ── Buscar / editar presupuesto existente (misma contraseña que albaranes) ──
+var _buscarPresuResultados = [];
+var _buscarPresuIdx = -1;
+
+function onBuscarPresupuestoExistente(){
+  var q = document.getElementById('fBuscarPresu').value.trim().toLowerCase();
+  var drop = document.getElementById('dropBuscarPresu');
+  if (!q){ drop.style.display = 'none'; _buscarPresuResultados = []; return; }
+  if (!_pedirAccesoAlbaranes()){
+    document.getElementById('fBuscarPresu').value = '';
+    drop.style.display = 'none';
+    return;
+  }
+  _buscarPresuResultados = Object.values(_presupuestosCache)
+    .filter(function(p){ return (p.cliente||'').toLowerCase().includes(q); })
+    .sort(function(a,b){ return (b.creado||0)-(a.creado||0); })
+    .slice(0, 15);
+  _buscarPresuIdx = -1;
+  if (!_buscarPresuResultados.length){ drop.innerHTML = ''; drop.style.display = 'none'; return; }
+  _renderDropBuscarPresupuesto();
+}
+
+function _renderDropBuscarPresupuesto(){
+  var drop = document.getElementById('dropBuscarPresu');
+  drop.innerHTML = _buscarPresuResultados.map(function(p, idx){
+    var fechaFmt = p.fecha ? p.fecha.split('-').reverse().join('-') : '';
+    return '<div onclick="seleccionarPresupuestoExistente('+idx+')" style="'+(idx===_buscarPresuIdx?'background:rgba(201,162,39,0.2)':'')+'">'
+      + '<span class="ac-ref">'+escHtml(p.numero)+'</span>'+escHtml(p.cliente)+' · '+escHtml(fechaFmt)+' · '+fmtEUR(p.total)
+      + '</div>';
+  }).join('');
+  drop.style.display = 'block';
+}
+
+function onKeyBuscarPresupuesto(e){
+  if (!_buscarPresuResultados.length) return;
+  if (e.key === 'ArrowDown'){
+    e.preventDefault();
+    _buscarPresuIdx = Math.min(_buscarPresuIdx+1, _buscarPresuResultados.length-1);
+    _renderDropBuscarPresupuesto();
+  } else if (e.key === 'ArrowUp'){
+    e.preventDefault();
+    _buscarPresuIdx = Math.max(_buscarPresuIdx-1, 0);
+    _renderDropBuscarPresupuesto();
+  } else if (e.key === 'Enter'){
+    e.preventDefault();
+    seleccionarPresupuestoExistente(_buscarPresuIdx >= 0 ? _buscarPresuIdx : 0);
+  } else if (e.key === 'Escape'){
+    ocultarDropBuscarPresupuesto();
+  }
+}
+
+function ocultarDropBuscarPresupuesto(){
+  document.getElementById('dropBuscarPresu').style.display = 'none';
+}
+
+function seleccionarPresupuestoExistente(idx){
+  var p = _buscarPresuResultados[idx];
+  if (!p) return;
+  cargarPresupuestoParaEdicion(p);
+  ocultarDropBuscarPresupuesto();
+  document.getElementById('fBuscarPresu').value = '';
+}
+
+function editarPresupuestoDesdeHistorial(numero){
+  var p = _presupuestosCache[numero];
+  if (!p) return;
+  cargarPresupuestoParaEdicion(p);
+  mostrarVista('presupuesto');
+}
+
+function cargarPresupuestoParaEdicion(p){
+  _presupuestoEnEdicion = p.numero;
+  document.getElementById('pCliente').value = p.cliente || '';
+  document.getElementById('pDireccion').value = p.direccion || '';
+  document.getElementById('pCiudad').value = p.ciudad || '';
+  document.getElementById('pNif').value = p.nif || '';
+  document.getElementById('pFecha').value = p.fecha || '';
+  construirFilasLineasPresu();
+  (p.lineas||[]).forEach(function(l, i){
+    if (i >= NUM_LINEAS) return;
+    var tr = document.querySelector('tr[data-idxp="'+i+'"]');
+    tr.querySelector('.pin-ref').value = l.ref || '';
+    tr.querySelector('.pin-concepto').value = l.concepto || '';
+    tr.querySelector('.pin-unidades').value = l.unidades || '';
+    tr.querySelector('.pin-precio').value = l.precio || '';
+    recalcularLineaPresu(i);
+  });
+  var banner = document.getElementById('editandoBannerPresu');
+  banner.style.display = 'block';
+  banner.innerHTML = '✏️ Editando el presupuesto <b>'+escHtml(p.numero)+'</b> — al pulsar Guardar se creará una nueva revisión (se conserva esta versión). '
+    + '<a href="#" onclick="nuevoPresupuesto();return false;" style="color:var(--gold)">Cancelar y empezar uno nuevo</a>';
+  document.getElementById('numeroAsignadoPresu').style.display = 'none';
+  _ultimoGuardadoSnapshotPresu = _snapshotFormularioPresupuesto();
+}
+
+// ── Historial de presupuestos ──
+var _presupuestosCache = {};
+DB.ref('presupuestos').on('value', function(snap){
+  _presupuestosCache = snap.val() || {};
+  if (document.getElementById('vistaHistorialPresu').style.display !== 'none') renderHistorialPresu();
+});
+
+function renderHistorialPresu(){
+  var q = (document.getElementById('histBuscarPresu').value||'').toLowerCase();
+  var lista = Object.values(_presupuestosCache).sort(function(a,b){ return (b.creado||0)-(a.creado||0); });
+  if (q) lista = lista.filter(function(p){
+    return (p.cliente||'').toLowerCase().includes(q) || (p.numero||'').toLowerCase().includes(q);
+  });
+  var tbody = document.querySelector('#tHistorialPresu tbody');
+  if (!lista.length){
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.3);padding:30px">Sin presupuestos guardados</td></tr>';
+    return;
+  }
+  tbody.innerHTML = lista.map(function(p){
+    var fechaFmt = p.fecha ? p.fecha.split('-').reverse().join('-') : '';
+    return '<tr>'
+      + '<td><code style="color:var(--gold)">'+escHtml(p.numero)+'</code></td>'
+      + '<td>'+escHtml(fechaFmt)+'</td>'
+      + '<td>'+escHtml(p.cliente)+'</td>'
+      + '<td>'+fmtEUR(p.total)+'</td>'
+      + '<td style="white-space:nowrap">'
+        + '<button class="mini-btn" onclick="reimprimirPresupuesto(\''+p.numero+'\')">🖨 Reimprimir</button> '
+        + '<button class="mini-btn" onclick="editarPresupuestoDesdeHistorial(\''+p.numero+'\')">✏️ Editar</button> '
+        + '<button class="mini-btn" style="background:rgba(192,57,43,0.15);border-color:rgba(192,57,43,0.35);color:#e74c3c" onclick="eliminarPresupuesto(\''+p.numero+'\')">🗑 Eliminar</button>'
+      + '</td>'
+      + '</tr>';
+  }).join('');
+}
+
+function reimprimirPresupuesto(numero){
+  var datos = _presupuestosCache[numero];
+  if (!datos) return;
+  imprimirDocumento(datos, 'presupuesto');
+}
+
+function eliminarPresupuesto(numero){
+  if (!confirm('🗑 ¿Eliminar el presupuesto '+numero+'?\n\nEsta acción no se puede deshacer.')) return;
+  DB.ref('presupuestos/'+numero).remove().then(function(){
+    showToast('🗑 Presupuesto '+numero+' eliminado');
+    if (_presupuestoEnEdicion === numero) _limpiarFormularioPresupuesto();
+  }).catch(function(e){
+    alert('❌ Error al eliminar: ' + e.message);
+  });
+}
+
 // ══════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════
@@ -748,6 +1224,10 @@ construirFilasLineas();
 document.getElementById('fFecha').value = new Date().toISOString().slice(0,10);
 recalcularTotales();
 _ultimoGuardadoSnapshot = _snapshotFormulario();
+construirFilasLineasPresu();
+document.getElementById('pFecha').value = new Date().toISOString().slice(0,10);
+recalcularTotalesPresu();
+_ultimoGuardadoSnapshotPresu = _snapshotFormularioPresupuesto();
 </script>
 </body>
 </html>

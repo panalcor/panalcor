@@ -6,6 +6,18 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.919 — 2026-09-14
+  - albaran.html: nueva pestaña "+ Presupuesto" con su propio formulario
+    e historial, separados de los albaranes. Numeración PR+año-5 cifras
+    aleatorias+letra de revisión (ej. PR26-58392A) — no correlativa, para
+    no dar pistas de cuántos se hacen. Al editar un presupuesto ya
+    guardado se crea una revisión nueva (letra siguiente) conservando la
+    anterior. El precio de un presupuesto no actualiza el último precio
+    recordado de la referencia (a diferencia de los albaranes). Requiere
+    la regla "presupuestos" añadida en Firebase.
+  - fix: añadida la función showToast() que faltaba en albaran.html —
+    el aviso al eliminar un albarán nunca llegaba a mostrarse.
+
 v1.5.909 — 2026-09-13
   - legionela.html: corregido el fallo de fondo por el que exportar un
     mes distinto al que ya estaba en pantalla salía vacío. cargar()
