@@ -6,6 +6,14 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.929 — 2026-09-14
+  - Importados 131 albaranes/presupuestos reales antiguos (Excel) al
+    Historial de albaran.html, marcados como "importado" y ordenados
+    por fecha. 24 archivos con el cliente incorrecto en el contenido
+    (decían "BORIS" pero el nombre de archivo era de otro cliente) se
+    dejaron fuera para revisión manual. eliminarAlbaran() ya no toca el
+    contador correlativo real al borrar un registro importado.
+
 v1.5.919 — 2026-09-14
   - albaran.html: nueva pestaña "+ Presupuesto" con su propio formulario
     e historial, separados de los albaranes. Numeración PR+año-5 cifras

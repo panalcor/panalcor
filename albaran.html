@@ -824,7 +824,11 @@ function _parseNumeroAlbaran(numero){
 
 function eliminarAlbaran(numero){
   if (!confirm('🗑 ¿Eliminar el albarán '+numero+'?\n\nEsta acción no se puede deshacer.')) return;
-  var info = _parseNumeroAlbaran(numero);
+  // Los albaranes importados de Excel antiguos (origen:'importado') tienen
+  // numeración libre/manual — nunca deben tocar el contador correlativo real,
+  // aunque sus últimos 5 caracteres coincidan por casualidad con un YYnnn.
+  var esImportado = (_albaranesCache[numero]||{}).origen === 'importado';
+  var info = (!esImportado) ? _parseNumeroAlbaran(numero) : null;
   var tareaContador = info
     ? DB.ref('albaranes_contador/'+info.yy).transaction(function(actual){
         if ((actual||0) === info.seq) return info.seq - 1; // era el último -> libera el número
