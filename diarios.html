@@ -72,6 +72,14 @@ tr.finde td.dia{color:rgba(255,255,255,0.35)}
 .tarea small{display:block;color:rgba(255,255,255,0.4);font-size:0.72rem}
 .modal-f{padding:14px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;gap:10px;flex-wrap:wrap}
 
+.tabs{display:flex;gap:8px;max-width:1100px;margin:14px auto 0;padding:0 14px}
+.tab{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.15);border-radius:9px 9px 0 0;padding:10px 18px;font-family:'Barlow',sans-serif;font-weight:800;font-size:0.88rem;cursor:pointer}
+.tab.on{background:var(--navy-mid);color:var(--gold-light);border-color:var(--gold)}
+.acit{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;padding:9px 10px;border:1px solid rgba(255,255,255,0.08);border-radius:8px;margin-bottom:6px}
+.acit.on{background:rgba(46,204,113,0.1);border-color:rgba(46,204,113,0.4)}
+.acit .sub2{grid-column:2;display:flex;gap:6px;flex-wrap:wrap}
+.acit .sub2 select,.acit .sub2 input{font-size:0.78rem;padding:5px 7px}
+.acit .sub2 input[type=text]{flex:1;min-width:110px}
 .toast{position:fixed;bottom:24px;right:24px;background:var(--navy-mid);border:1px solid rgba(46,204,113,0.5);border-radius:10px;padding:14px 22px;font-weight:600;z-index:9999;opacity:0;transform:translateY(20px);transition:all .3s;pointer-events:none;max-width:360px}
 .toast.show{opacity:1;transform:translateY(0)}
 </style>
@@ -98,7 +106,12 @@ tr.finde td.dia{color:rgba(255,255,255,0.35)}
     </div>
   </div>
 
-  <div class="container">
+  <div class="tabs">
+    <button class="tab on" id="tabDia" onclick="cambiarVista('dia')">📋 Mantenimiento diario</button>
+    <button class="tab" id="tabAC" onclick="cambiarVista('ac')">🚦 Arrancada / Cierre</button>
+  </div>
+
+  <div class="container" id="vistaDia">
     <div class="toolbar">
       <button class="btn btn-sec" onclick="cambiarMes(-1)">◀</button>
       <input type="month" id="mesSel" onchange="renderGrid()">
@@ -114,6 +127,26 @@ tr.finde td.dia{color:rgba(255,255,255,0.35)}
       <table class="grid">
         <thead><tr><th style="text-align:left">Día</th><th>🌙 Noche</th><th>☀️ Mañana</th><th>🌆 Tarde</th></tr></thead>
         <tbody id="gridBody"><tr><td colspan="4" style="padding:30px;color:rgba(255,255,255,0.3)">Cargando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="container" id="vistaAC" style="display:none">
+    <div class="toolbar">
+      <button class="btn btn-sec" onclick="acCambiarMes(-1)">◀</button>
+      <input type="month" id="mesAC" onchange="acRenderGrid()">
+      <button class="btn btn-sec" onclick="acCambiarMes(1)">▶</button>
+      <span style="flex:1"></span>
+      <label>Rellenar desde</label>
+      <input type="date" id="rellDesdeAC">
+      <button class="btn btn-primary" onclick="acRellenarHastaHoy()">⏩ Rellenar hasta hoy</button>
+    </div>
+    <p class="hint">Una arrancada y un cierre por día. Pulsa una celda para ver, editar, crear o eliminar. Los días laborables sin registro salen en rojo discontinuo.</p>
+    <div class="resumen" id="resumenAC"></div>
+    <div class="tabla-wrap">
+      <table class="grid">
+        <thead><tr><th style="text-align:left">Día</th><th>🚦 Arrancada</th><th>🔒 Cierre</th></tr></thead>
+        <tbody id="gridBodyAC"></tbody>
       </table>
     </div>
   </div>
@@ -133,6 +166,24 @@ tr.finde td.dia{color:rgba(255,255,255,0.35)}
       <button class="btn btn-primary" onclick="guardarParte()">💾 Guardar</button>
       <button class="btn btn-red" id="mBtnDel" onclick="eliminarParte()">🗑 Eliminar parte</button>
       <button class="btn btn-sec" onclick="cerrarModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalAC">
+  <div class="modal">
+    <div class="modal-h"><b id="acTitulo"></b><button class="btn btn-sec" onclick="acCerrar()">✕</button></div>
+    <div class="modal-b">
+      <div class="row">
+        <div><label>Hora del registro</label><input type="time" id="acHora"></div>
+        <div><label>Mecánico para los ítems hechos</label><select id="acMecTodos" onchange="acAplicarMec(this.value)"></select></div>
+      </div>
+      <div id="acItems"></div>
+    </div>
+    <div class="modal-f">
+      <button class="btn btn-primary" onclick="acGuardar()">💾 Guardar</button>
+      <button class="btn btn-red" id="acBtnDel" onclick="acEliminar()">🗑 Eliminar</button>
+      <button class="btn btn-sec" onclick="acCerrar()">Cancelar</button>
     </div>
   </div>
 </div>
@@ -212,6 +263,17 @@ function initApp(){
     var v = snap.val() || [];
     MEC_NOMBRES = (Array.isArray(v) ? v : Object.values(v)).filter(Boolean);
   });
+  DB.ref('arrancada_cierre').on('value', function(snap){
+    AC = snap.val() || {};
+    if(!document.getElementById('rellDesdeAC').value) document.getElementById('rellDesdeAC').value = acDesdeSugerido();
+    acRenderGrid();
+  });
+  DB.ref('config/ac_items').once('value').then(function(snap){
+    var v = snap.val() || {};
+    if(Array.isArray(v.arrancada) && v.arrancada.length) AC_ITEMS.arrancada = v.arrancada;
+    if(Array.isArray(v.cierre) && v.cierre.length) AC_ITEMS.cierre = v.cierre;
+  });
+  document.getElementById('mesAC').value = toDS(hoy).slice(0,7);
   DB.ref('turnos').once('value').then(function(snap){
     var t = snap.val() || {};
     S.dias = t.dias || {}; S.config = t.config || {}; S.mecanicos = t.mecanicos || {};
@@ -575,6 +637,201 @@ function rellenarHastaHoy(){
   DB.ref('registros_turno').update(updates).then(function(){
     showToast('✅ '+n+' partes creados');
   }).catch(function(e){ alert('⚠️ Error al guardar: '+e.message); });
+}
+
+// ══════════════════════════════════════════════════════════════
+// ARRANCADA / CIERRE (arrancada_cierre/{fecha}/{arrancada|cierre})
+// ══════════════════════════════════════════════════════════════
+var AC = {};
+var AC_ITEMS = {
+  arrancada: ['LIMPIEZA MÁQUINA DE CAJAS','HOLGURAS Y CORRECTO FUNCIONAMIENTO M. CAJAS','LIMPIEZA MÁQUINA DE BOLSAS','HOLGURAS Y CORRECTO FUNCIONAMIENTO M. BOLSAS','APRETAR ÁNGULOS CARGADOR 1','APRETAR ÁNGULOS DESCARGADOR 1','APRETAR ÁNGULOS CARGADOR 2','APRETAR ÁNGULOS DESCARGADOR 2','ENGRASE CADENAS DESMOLDEOS','ENGRASE GUÍAS NORIAS','LIMPIEZA CADENAS CONTADORAS (SOPLAR)','REVISAR SEGURIDADES','REVISIÓN VISUAL ENFARDADORA','REVISIÓN VISUAL ROBOT'],
+  cierre: ['ENGRASE CADENAS TALLADORA','APRETAR ÁNGULOS CARGADOR/DESCARGADOR TALLADORAS','SOPLAR DRIVERS INFRANOR (SEGUIR PROCEDIMIENTO)','REVISAR SEGURIDADES']
+};
+// Ítems periódicos: solo se hacen una vez cada N días (igual que arrancada_cierre.html)
+var AC_PERIODICO = {
+  'APRETAR ÁNGULOS CARGADOR 1':30,'APRETAR ÁNGULOS DESCARGADOR 1':30,'APRETAR ÁNGULOS CARGADOR 2':30,
+  'APRETAR ÁNGULOS DESCARGADOR 2':30,'APRETAR ÁNGULOS CARGADOR/DESCARGADOR TALLADORAS':30,
+  'SOPLAR DRIVERS INFRANOR (SEGUIR PROCEDIMIENTO)':90
+};
+var AC_TURNO = {arrancada:'NOCHE', cierre:'TARDE'};            // de qué turno sale el mecánico que firma
+var AC_VENTANA = {arrancada:[10,90], cierre:[1230,1310]};       // minutos del día para la hora del registro
+var AC_P_HECHO = 0.95;
+
+function cambiarVista(v){
+  document.getElementById('vistaDia').style.display = v === 'dia' ? '' : 'none';
+  document.getElementById('vistaAC').style.display = v === 'ac' ? '' : 'none';
+  document.getElementById('tabDia').classList.toggle('on', v === 'dia');
+  document.getElementById('tabAC').classList.toggle('on', v === 'ac');
+}
+function _hm(min){ min = Math.max(0, Math.min(1439, min)); return String(Math.floor(min/60)).padStart(2,'0')+':'+String(min%60).padStart(2,'0'); }
+
+function acDesdeSugerido(){
+  var max = '';
+  Object.keys(AC).forEach(function(f){ if(f > max) max = f; });
+  if(!max) return toDS(new Date());
+  var d = parseDS(max); d.setDate(d.getDate()+1); return toDS(d);
+}
+function acCambiarMes(delta){
+  var v = document.getElementById('mesAC').value.split('-');
+  document.getElementById('mesAC').value = toDS(new Date(+v[0], +v[1]-1+delta, 1)).slice(0,7);
+  acRenderGrid();
+}
+function _acReg(fecha, tipo){ var d = AC[fecha]; return d && d[tipo] && d[tipo].items ? d[tipo] : null; }
+
+function acRenderGrid(){
+  var mes = document.getElementById('mesAC').value; if(!mes) return;
+  var p = mes.split('-'), y = +p[0], m = +p[1], ultimo = new Date(y, m, 0).getDate(), hoy = toDS(new Date());
+  var html = '', n = 0, nParc = 0, nFalta = 0;
+  for(var dia = 1; dia <= ultimo; dia++){
+    var d = new Date(y, m-1, dia), ds = toDS(d), dow = d.getDay(), finde = dow === 0 || dow === 6;
+    html += '<tr class="'+(finde?'finde':'')+'"><td class="dia">'+dia+' <small>'+DIAS_SH[dow]+'</small></td>';
+    ['arrancada','cierre'].forEach(function(t){
+      var r = _acReg(ds, t), cls, txt;
+      if(r){
+        var items = r.items || [], done = items.filter(function(i){ return i.done; }).length;
+        var mecs = []; items.forEach(function(i){ if(i.mecanico && mecs.indexOf(i.mecanico) === -1) mecs.push(i.mecanico); });
+        cls = done === 0 ? 'c-cero' : (done >= items.length ? 'c-ok' : 'c-parcial');
+        txt = escHtml(mecs.join(' / ') || '?')+'<br><b>'+done+'/'+items.length+'</b> · '+escHtml(r.hora||'');
+        n++; if(done < items.length) nParc++;
+      } else if(!finde && ds <= hoy){ cls = 'c-falta'; txt = 'sin registro'; nFalta++; }
+      else { cls = 'c-na'; txt = '—'; }
+      html += '<td><span class="celda '+cls+'" onclick="acAbrir(\''+ds+'\',\''+t+'\')">'+txt+'</span></td>';
+    });
+    html += '</tr>';
+  }
+  document.getElementById('gridBodyAC').innerHTML = html;
+  document.getElementById('resumenAC').innerHTML =
+    '<span class="chip">🚦 '+n+' registros</span><span class="chip" style="color:#f5b95a">⚠️ '+nParc+' con ítems sin hacer</span><span class="chip" style="color:#ff8c80">❌ '+nFalta+' sin registro</span>';
+}
+
+// ── Editor ──
+var ACE = null;
+function acAbrir(fecha, tipo){
+  var r = _acReg(fecha, tipo);
+  var labels = AC_ITEMS[tipo].slice();
+  var porLabel = {}; if(r) r.items.forEach(function(i){ porLabel[i.label] = i; });
+  if(r) r.items.forEach(function(i){ if(labels.indexOf(i.label) === -1) labels.push(i.label); });
+  ACE = {fecha:fecha, tipo:tipo, existe:!!r, items: labels.map(function(l){
+    var i = porLabel[l] || {}; return {label:l, done:!!i.done, mecanico:i.mecanico||'', obs:i.obs||'', hora:i.hora||''};
+  })};
+  document.getElementById('acTitulo').textContent = (tipo === 'arrancada' ? '🚦 Arrancada' : '🔒 Cierre')+' · '+fecha.split('-').reverse().join('-');
+  document.getElementById('acBtnDel').style.display = r ? '' : 'none';
+  document.getElementById('acHora').value = r && r.hora ? r.hora : (tipo === 'arrancada' ? '00:30' : '21:00');
+  var nombres = MEC_NOMBRES.slice();
+  ACE.items.forEach(function(i){ if(i.mecanico && nombres.indexOf(i.mecanico) === -1) nombres.push(i.mecanico); });
+  ACE.nombres = nombres;
+  document.getElementById('acMecTodos').innerHTML = '<option value="">— Elegir —</option>' + nombres.map(function(n){ return '<option>'+escHtml(n)+'</option>'; }).join('');
+  acRenderItems();
+  document.getElementById('modalAC').style.display = 'block';
+}
+function acRenderItems(){
+  document.getElementById('acItems').innerHTML = ACE.items.map(function(it, i){
+    var opts = '<option value="">— mecánico —</option>' + ACE.nombres.map(function(n){ return '<option '+(it.mecanico===n?'selected':'')+'>'+escHtml(n)+'</option>'; }).join('');
+    return '<div class="acit '+(it.done?'on':'')+'">'
+      + '<input type="checkbox" '+(it.done?'checked':'')+' onchange="acToggle('+i+',this)" style="accent-color:#2ecc71">'
+      + '<span>'+escHtml(it.label)+'</span>'
+      + '<div class="sub2"><select onchange="ACE.items['+i+'].mecanico=this.value">'+opts+'</select>'
+      + '<input type="time" value="'+escHtml(it.hora)+'" onchange="ACE.items['+i+'].hora=this.value">'
+      + '<input type="text" placeholder="Observaciones" value="'+escHtml(it.obs)+'" onchange="ACE.items['+i+'].obs=this.value"></div></div>';
+  }).join('');
+}
+function acToggle(i, el){
+  var it = ACE.items[i]; it.done = el.checked;
+  if(it.done){
+    if(!it.mecanico) it.mecanico = document.getElementById('acMecTodos').value || '';
+    if(!it.hora) it.hora = document.getElementById('acHora').value || '';
+  } else { it.hora = ''; }
+  acRenderItems();
+}
+function acAplicarMec(v){
+  if(!v) return;
+  ACE.items.forEach(function(it){ if(it.done) it.mecanico = v; });
+  acRenderItems();
+}
+function acCerrar(){ document.getElementById('modalAC').style.display = 'none'; ACE = null; }
+
+function _acRegistro(fecha, tipo, hora, items){
+  return {tipo:tipo, fecha:fecha, hora:hora, ts:Date.now(), guardadoPor:'ADMIN',
+    items: items.map(function(i){ return {label:i.label, done:!!i.done, mecanico:i.done ? (i.mecanico||'') : '', obs:i.obs||'', hora:i.done ? (i.hora||'') : ''}; })};
+}
+function acGuardar(){
+  var hora = document.getElementById('acHora').value;
+  if(!hora){ showToast('⚠️ Indica la hora'); return; }
+  if(ACE.items.some(function(i){ return i.done && !i.mecanico; })){ showToast('⚠️ Hay ítems hechos sin mecánico'); return; }
+  var reg = _acRegistro(ACE.fecha, ACE.tipo, hora, ACE.items);
+  DB.ref('arrancada_cierre/'+ACE.fecha+'/'+ACE.tipo).set(reg)
+    .then(function(){ showToast('✅ Guardado'); acCerrar(); })
+    .catch(function(e){ showToast('❌ Error: '+e.message); });
+}
+function acEliminar(){
+  if(!confirm('¿Eliminar este registro?')) return;
+  DB.ref('arrancada_cierre/'+ACE.fecha+'/'+ACE.tipo).remove()
+    .then(function(){ showToast('🗑 Eliminado'); acCerrar(); })
+    .catch(function(e){ showToast('❌ Error: '+e.message); });
+}
+
+// ── Rellenar hasta hoy ──
+// Mecánico: el del parte diario de ese día y turno (arrancada→noche, cierre→tarde); si no existe,
+// cuadrante de turnos > mecánico sin turno ese día > JAVIER H.
+function _mecDelParte(ds, turno){
+  var e = indexRegistros()[ds+'|'+turno]; if(e && e.r.mecanico) return normMec(e.r.mecanico);
+  var t = T_LOWER[turno];
+  var cand = [1,2,3,4,5].map(String).filter(function(k){ return !ausenteEn(k, ds) && turnoDe(k, ds) === t; });
+  if(!cand.length) cand = [1,2,3,4,5].map(String).filter(function(k){ return !ausenteEn(k, ds) && turnoDe(k, ds) === 'st'; });
+  if(cand.length) return nombreDe(cand[Math.floor(Math.random()*cand.length)]);
+  var jh = idDe('JAVIER H');
+  return jh && !ausenteEn(jh, ds) ? 'JAVIER H' : null;
+}
+function _acUltimaHecha(){
+  var ult = {};  // label -> última fecha hecha
+  Object.keys(AC).sort().forEach(function(f){
+    ['arrancada','cierre'].forEach(function(t){
+      var r = AC[f] && AC[f][t]; if(!r || !r.items) return;
+      r.items.forEach(function(i){ if(i.done) ult[i.label] = f; });
+    });
+  });
+  return ult;
+}
+function _diasEntre(a, b){ return Math.round((parseDS(b) - parseDS(a)) / 86400000); }
+
+function acRellenarHastaHoy(){
+  if(!Object.keys(S.mecanicos).length){ showToast('⏳ Cargando datos, inténtalo en un momento'); return; }
+  var desde = document.getElementById('rellDesdeAC').value, hasta = toDS(new Date()), ahora = new Date();
+  if(!desde){ showToast('⚠️ Indica desde qué día'); return; }
+  if(desde > hasta){ showToast('⚠️ Ese día es posterior a hoy'); return; }
+  var ult = _acUltimaHecha(), updates = {}, n = 0, sinMec = [], porTipo = {arrancada:0, cierre:0};
+  var d = parseDS(desde), fin = parseDS(hasta);
+  for(; d <= fin; d.setDate(d.getDate()+1)){
+    var ds = toDS(d), dow = d.getDay();
+    if(dow === 0 || dow === 6) continue;
+    var fest = (S.festivos || {})[ds]; if(fest && fest.oficial) continue;
+    ['arrancada','cierre'].forEach(function(tipo){
+      if(_acReg(ds, tipo)) return;
+      if(ds === hasta && ahora.getHours() < (tipo === 'arrancada' ? 2 : 22)) return;   // aún no ha pasado hoy
+      var mec = _mecDelParte(ds, AC_TURNO[tipo]);
+      if(!mec){ sinMec.push(ds+' '+tipo); return; }
+      var v = AC_VENTANA[tipo], min = v[0] + Math.floor(Math.random()*(v[1]-v[0]));
+      var horaReg = _hm(min), t = min + 1;
+      var items = AC_ITEMS[tipo].map(function(label){
+        var dias = AC_PERIODICO[label], hecho;
+        if(dias){ hecho = !ult[label] || _diasEntre(ult[label], ds) >= dias; }
+        else hecho = Math.random() < AC_P_HECHO;
+        if(!hecho) return {label:label, done:false};
+        if(dias) ult[label] = ds;
+        t += Math.floor(Math.random()*3);
+        return {label:label, done:true, mecanico:mec, hora:_hm(t)};
+      });
+      updates[ds+'/'+tipo] = _acRegistro(ds, tipo, horaReg, items);
+      n++; porTipo[tipo]++;
+    });
+  }
+  if(!n){ alert('No hay nada que rellenar entre '+desde+' y hoy'+(sinMec.length ? '.\n\n'+sinMec.length+' registros sin mecánico disponible.' : '.')); return; }
+  var msg = '¿Crear '+n+' registros ('+porTipo.arrancada+' arrancadas y '+porTipo.cierre+' cierres) entre '+desde.split('-').reverse().join('-')+' y hoy?\n\n'
+    + 'Firma el mecánico que hizo el turno de noche (arrancada) o de tarde (cierre) ese día. Los ítems periódicos (30/90 días) solo se marcan cuando toca. No se tocan los registros que ya existen.';
+  if(sinMec.length) msg += '\n\n• '+sinMec.length+' quedan SIN registro (nadie disponible).';
+  if(!confirm(msg)) return;
+  DB.ref('arrancada_cierre').update(updates).then(function(){ showToast('✅ '+n+' registros creados'); })
+    .catch(function(e){ alert('⚠️ Error al guardar: '+e.message); });
 }
 </script>
 <script src="session_tracker.js"></script>

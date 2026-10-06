@@ -6,6 +6,13 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.6.1009 — 2026-10-06
+  - diarios.html: nueva pestaña "Arrancada / Cierre" con cuadrícula mensual,
+    editor de cualquier registro (hecho, mecánico, hora y observaciones por
+    ítem; crear/eliminar) y botón "Rellenar hasta hoy": una arrancada
+    (firma el mecánico del turno de noche) y un cierre (turno de tarde) por
+    día laborable; los ítems periódicos solo se marcan cuando toca (30/90 d).
+
 v1.6.999 — 2026-10-06
   - diarios.html: botón "← Inicio" en la cabecera.
 
