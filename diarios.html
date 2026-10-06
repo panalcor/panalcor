@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="apple-mobile-web-app-title" content="PANALCOR">
+<title>Partes diarios — PANALCOR</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy-deep:#0d1b2a;--navy-mid:#1a2d42;--gold:#c9a227;--gold-light:#f0c040;--white:#f0f4f8;
+  --red:#e74c3c;--green:#2ecc71;--orange:#f39c12;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-serif;font-size:1rem;min-height:100vh}
+
+.login-screen{position:fixed;inset:0;background:var(--navy-deep);display:flex;align-items:center;justify-content:center;z-index:999}
+.login-box{background:var(--navy-mid);border:1px solid rgba(201,162,39,0.3);border-radius:16px;padding:40px;width:340px;text-align:center}
+.login-box h2{font-size:1.4rem;font-weight:900;color:var(--gold-light);letter-spacing:0.08em;margin-bottom:6px}
+.login-box .sub{font-size:0.78rem;color:rgba(255,255,255,0.4);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:24px}
+.login-box input{width:100%;background:var(--navy-deep);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:13px 16px;font-size:1.1rem;text-align:center;letter-spacing:0.2em;margin-bottom:14px}
+.login-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a;border:none;border-radius:8px;font-weight:900;letter-spacing:0.1em;cursor:pointer}
+.login-err{color:var(--red);font-size:0.85rem;margin-top:8px;display:none}
+
+.topbar{background:linear-gradient(135deg,#0a1520,var(--navy-mid));border-bottom:2px solid var(--gold);padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.topbar h1{font-size:1.3rem;font-weight:900;letter-spacing:0.05em;color:var(--gold-light)}
+.topbar .sub{font-size:0.75rem;color:rgba(255,255,255,0.5)}
+.container{max-width:1100px;margin:0 auto;padding:18px 14px}
+
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.toolbar label{font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.45)}
+input[type=month],input[type=date],input[type=time],select{background:var(--navy-mid);color:var(--white);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:8px 10px;font-family:'Barlow',sans-serif;font-size:0.9rem}
+.btn{border:none;border-radius:9px;padding:10px 18px;font-family:'Barlow',sans-serif;font-size:0.88rem;font-weight:800;cursor:pointer}
+.btn-primary{background:linear-gradient(135deg,var(--gold),#a07d1a);color:#0d1b2a}
+.btn-sec{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.75);border:1px solid rgba(255,255,255,0.18)}
+.btn-red{background:rgba(192,57,43,0.15);color:#e74c3c;border:1px solid rgba(192,57,43,0.4)}
+.hint{font-size:0.78rem;color:rgba(255,255,255,0.4);margin-bottom:12px}
+
+.resumen{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.chip{font-size:0.78rem;padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05)}
+
+.tabla-wrap{overflow-x:auto}
+table.grid{width:100%;border-collapse:collapse;min-width:640px}
+table.grid th{font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);padding:8px;border-bottom:1px solid rgba(201,162,39,0.25);text-align:center}
+table.grid td{padding:4px;border-bottom:1px solid rgba(255,255,255,0.05);text-align:center}
+td.dia{text-align:left !important;font-weight:700;white-space:nowrap;padding:6px 10px !important}
+td.dia small{color:rgba(255,255,255,0.4);font-weight:500}
+tr.finde td.dia{color:rgba(255,255,255,0.35)}
+.celda{display:block;border-radius:7px;padding:7px 6px;font-size:0.78rem;cursor:pointer;border:1px solid transparent;line-height:1.25}
+.celda:hover{border-color:var(--gold)}
+.c-ok{background:rgba(46,204,113,0.16);color:#7be3a8}
+.c-parcial{background:rgba(243,156,18,0.16);color:#f5b95a}
+.c-cero{background:rgba(231,76,60,0.16);color:#ff8c80}
+.c-falta{background:rgba(231,76,60,0.07);color:rgba(255,140,128,0.75);border:1px dashed rgba(231,76,60,0.35)}
+.c-na{color:rgba(255,255,255,0.18)}
+
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;overflow-y:auto;padding:16px}
+.modal{max-width:620px;margin:auto;background:var(--navy-mid);border:1px solid rgba(201,162,39,0.3);border-radius:14px;overflow:hidden}
+.modal-h{padding:16px 20px;border-bottom:1px solid rgba(201,162,39,0.2);display:flex;justify-content:space-between;align-items:center}
+.modal-h b{color:var(--gold-light);font-size:1.05rem}
+.modal-b{padding:18px 20px}
+.row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.row > div{flex:1;min-width:150px}
+.row label{display:block;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:5px}
+.row select,.row input{width:100%}
+.tarea{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1px solid rgba(255,255,255,0.08);border-radius:8px;margin-bottom:6px;cursor:pointer}
+.tarea.on{background:rgba(46,204,113,0.1);border-color:rgba(46,204,113,0.4)}
+.tarea.off{opacity:0.4;cursor:not-allowed}
+.tarea input{margin-top:3px;accent-color:var(--green)}
+.tarea small{display:block;color:rgba(255,255,255,0.4);font-size:0.72rem}
+.modal-f{padding:14px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;gap:10px;flex-wrap:wrap}
+
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy-mid);border:1px solid rgba(46,204,113,0.5);border-radius:10px;padding:14px 22px;font-weight:600;z-index:9999;opacity:0;transform:translateY(20px);transition:all .3s;pointer-events:none;max-width:360px}
+.toast.show{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div style="font-size:2.4rem;margin-bottom:10px">📋</div>
+    <h2>PARTES DIARIOS</h2>
+    <div class="sub">PANALCOR S.L. · Acceso restringido</div>
+    <input type="password" id="pwInput" placeholder="Contraseña" onkeydown="if(event.key==='Enter')login()">
+    <button class="login-btn" onclick="login()">ENTRAR</button>
+    <div class="login-err" id="loginErr">❌ Contraseña incorrecta</div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <div class="topbar">
+    <div>
+      <h1>📋 Partes diarios</h1>
+      <div class="sub">Revisión y edición del mantenimiento diario por turno</div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="toolbar">
+      <button class="btn btn-sec" onclick="cambiarMes(-1)">◀</button>
+      <input type="month" id="mesSel" onchange="renderGrid()">
+      <button class="btn btn-sec" onclick="cambiarMes(1)">▶</button>
+      <span style="flex:1"></span>
+      <label>Rellenar desde</label>
+      <input type="date" id="rellDesde">
+      <button class="btn btn-primary" onclick="rellenarHastaHoy()">⏩ Rellenar hasta hoy</button>
+    </div>
+    <p class="hint">Pulsa cualquier celda para ver, editar o crear el parte de ese día y turno. Los días sin parte (lunes a viernes) salen en rojo discontinuo.</p>
+    <div class="resumen" id="resumen"></div>
+    <div class="tabla-wrap">
+      <table class="grid">
+        <thead><tr><th style="text-align:left">Día</th><th>🌙 Noche</th><th>☀️ Mañana</th><th>🌆 Tarde</th></tr></thead>
+        <tbody id="gridBody"><tr><td colspan="4" style="padding:30px;color:rgba(255,255,255,0.3)">Cargando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <div class="modal-h"><b id="mTitulo"></b><button class="btn btn-sec" onclick="cerrarModal()">✕</button></div>
+    <div class="modal-b">
+      <div class="row">
+        <div><label>Mecánico</label><select id="mMec"></select></div>
+        <div><label>Hora</label><input type="time" id="mHora"></div>
+      </div>
+      <div id="mTareas"></div>
+    </div>
+    <div class="modal-f">
+      <button class="btn btn-primary" onclick="guardarParte()">💾 Guardar</button>
+      <button class="btn btn-red" id="mBtnDel" onclick="eliminarParte()">🗑 Eliminar parte</button>
+      <button class="btn btn-sec" onclick="cerrarModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════ ACCESO (misma contraseña que admin.html) ══════════
+const PW_KEY = 'adminPwd';
+function getPwd(){ return localStorage.getItem(PW_KEY) || 'admin'; }
+const ADMINS_EXTRA = [{n:'IVAN', pwd:'ivan2026'}];
+function _checkLogin(v){ return v === getPwd() || ADMINS_EXTRA.some(function(a){ return a.pwd === v; }); }
+function login(){
+  if(_checkLogin(document.getElementById('pwInput').value)){
+    localStorage.setItem('adminSession', Date.now());
+    entrar();
+  } else {
+    document.getElementById('loginErr').style.display = 'block';
+    document.getElementById('pwInput').value = '';
+  }
+}
+function entrar(){
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  initApp();
+}
+
+// ══════════ FIREBASE ══════════
+const FB_CFG = {
+  apiKey:"AIzaSyC_AJEkrbWqfE65Mt_f5V0LfemPJc10UuU", authDomain:"panalcor-mantenimiento.firebaseapp.com",
+  databaseURL:"https://panalcor-mantenimiento-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"panalcor-mantenimiento", storageBucket:"panalcor-mantenimiento.firebasestorage.app",
+  messagingSenderId:"67593058609", appId:"1:67593058609:web:c33fa1fa4fce2932485810"
+};
+if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
+const DB = firebase.database();
+
+(function(){
+  var ps = null;
+  try { ps = JSON.parse(localStorage.getItem('panalcor_session') || 'null'); } catch(e){}
+  if(ps && ps.rol === 'admin' && Date.now() < ps.expires){
+    localStorage.setItem('adminSession', String(Date.now()));
+    setTimeout(entrar, 0);
+  }
+})();
+
+// ══════════ UTILIDADES ══════════
+function escHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+var _toastT;
+function showToast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(_toastT); _toastT=setTimeout(function(){t.classList.remove('show');},3500); }
+function toDS(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function parseDS(ds){ return new Date(ds+'T00:00:00'); }
+const DIAS_SH = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const TURNOS = ['NOCHE','MAÑANA','TARDE'];
+const T_LOWER = {'NOCHE':'noche','MAÑANA':'mañana','TARDE':'tarde'};
+function normMec(n){ return (n||'').toUpperCase().replace(/\.+\s*$/,'').trim(); }
+
+// ══════════ DATOS ══════════
+var REG = {};          // registros_turno {key: registro}
+var TAREAS = [];       // tareas_diarias ordenadas
+var MEC_NOMBRES = [];  // config/mecanicos (los del selector de mecanicos.html)
+var S = {dias:{}, config:{}, mecanicos:{}, ausencias:{}, festivos:{}};
+
+function initApp(){
+  var hoy = new Date();
+  document.getElementById('mesSel').value = toDS(hoy).slice(0,7);
+  DB.ref('registros_turno').on('value', function(snap){
+    REG = snap.val() || {};
+    if(!document.getElementById('rellDesde').value) document.getElementById('rellDesde').value = desdeSugerido();
+    renderGrid();
+  });
+  DB.ref('tareas_diarias').once('value').then(function(snap){
+    var v = snap.val() || {};
+    TAREAS = Object.values(v).sort(function(a,b){ return (a.orden||0)-(b.orden||0); });
+  });
+  DB.ref('config/mecanicos').once('value').then(function(snap){
+    var v = snap.val() || [];
+    MEC_NOMBRES = (Array.isArray(v) ? v : Object.values(v)).filter(Boolean);
+  });
+  DB.ref('turnos').once('value').then(function(snap){
+    var t = snap.val() || {};
+    S.dias = t.dias || {}; S.config = t.config || {}; S.mecanicos = t.mecanicos || {};
+    S.ausencias = t.ausencias || {}; S.festivos = t.festivos || {};
+  });
+}
+
+function desdeSugerido(){
+  var max = '';
+  Object.values(REG).forEach(function(r){ if(r && r.fecha && r.fecha > max) max = r.fecha; });
+  if(!max) return toDS(new Date());
+  var d = parseDS(max); d.setDate(d.getDate()+1);
+  return toDS(d);
+}
+
+// Un registro por (fecha, turno): si hubiera varios, manda el más reciente
+function indexRegistros(){
+  var idx = {};
+  Object.keys(REG).forEach(function(k){
+    var r = REG[k]; if(!r || !r.fecha) return;
+    var tk = r.fecha+'|'+r.turno;
+    if(!idx[tk] || (r.ts||0) > (idx[tk].r.ts||0) || k > idx[tk].k) idx[tk] = {k:k, r:r};
+  });
+  return idx;
+}
+
+// ══════════ CUADRÍCULA DEL MES ══════════
+function cambiarMes(delta){
+  var v = document.getElementById('mesSel').value.split('-');
+  var d = new Date(+v[0], +v[1]-1+delta, 1);
+  document.getElementById('mesSel').value = toDS(d).slice(0,7);
+  renderGrid();
+}
+
+function renderGrid(){
+  var mes = document.getElementById('mesSel').value;
+  if(!mes) return;
+  var p = mes.split('-'), y = +p[0], m = +p[1];
+  var ultimo = new Date(y, m, 0).getDate();
+  var idx = indexRegistros();
+  var hoy = toDS(new Date());
+  var html = '', nPartes = 0, nFalta = 0, nParcial = 0;
+  for(var dia = 1; dia <= ultimo; dia++){
+    var d = new Date(y, m-1, dia), ds = toDS(d), dow = d.getDay();
+    var finde = dow === 0 || dow === 6;
+    html += '<tr class="'+(finde?'finde':'')+'"><td class="dia">'+dia+' <small>'+DIAS_SH[dow]+'</small></td>';
+    TURNOS.forEach(function(t){
+      var e = idx[ds+'|'+t];
+      var cls, txt;
+      if(e){
+        var r = e.r, done = r.done||0, total = r.total||0;
+        cls = done === 0 ? 'c-cero' : (done >= total ? 'c-ok' : 'c-parcial');
+        txt = escHtml(r.mecanico||'?')+'<br><b>'+done+'/'+total+'</b>';
+        nPartes++; if(done < total) nParcial++;
+      } else if(!finde && ds <= hoy){
+        cls = 'c-falta'; txt = 'sin parte'; nFalta++;
+      } else { cls = 'c-na'; txt = '—'; }
+      html += '<td><span class="celda '+cls+'" onclick="abrirParte(\''+ds+'\',\''+t+'\')">'+txt+'</span></td>';
+    });
+    html += '</tr>';
+  }
+  document.getElementById('gridBody').innerHTML = html;
+  document.getElementById('resumen').innerHTML =
+    '<span class="chip">📋 '+nPartes+' partes</span>'+
+    '<span class="chip" style="color:#f5b95a">⚠️ '+nParcial+' con tareas sin hacer</span>'+
+    '<span class="chip" style="color:#ff8c80">❌ '+nFalta+' turnos sin parte</span>';
+}
+
+// ══════════ EDITOR DE UN PARTE ══════════
+var EDIT = null; // {fecha, turno, existente:{k,r}|null}
+
+function abrirParte(fecha, turno){
+  var e = indexRegistros()[fecha+'|'+turno] || null;
+  EDIT = {fecha:fecha, turno:turno, existente:e};
+  var r = e ? e.r : null;
+  document.getElementById('mTitulo').textContent = '📋 '+fecha.split('-').reverse().join('-')+' · '+turno;
+  document.getElementById('mBtnDel').style.display = e ? '' : 'none';
+
+  var nombres = MEC_NOMBRES.slice();
+  if(r && r.mecanico && nombres.indexOf(r.mecanico) === -1) nombres.push(r.mecanico);
+  document.getElementById('mMec').innerHTML = '<option value="">— Mecánico —</option>' +
+    nombres.map(function(n){ return '<option value="'+escHtml(n)+'" '+((r&&r.mecanico===n)?'selected':'')+'>'+escHtml(n)+'</option>'; }).join('');
+  document.getElementById('mHora').value = r && r.hora ? r.hora : '';
+
+  // Lista de tareas: las del parte (aunque ya no existan) + las actuales que falten
+  var porId = {}, orden = [];
+  if(r && r.tareas) r.tareas.forEach(function(t){ porId[t.id] = {id:t.id, tarea:t.tarea, ok:!!t.ok}; orden.push(t.id); });
+  TAREAS.forEach(function(t){
+    if(!porId[t.id]){ porId[t.id] = {id:t.id, tarea:t.tarea, ok:false}; orden.push(t.id); }
+  });
+  EDIT.lista = orden.map(function(id){ return porId[id]; });
+  var meta = {}; TAREAS.forEach(function(t){ meta[t.id] = t; });
+  document.getElementById('mTareas').innerHTML = EDIT.lista.map(function(t, i){
+    var m = meta[t.id] || {};
+    var otroTurno = m.turno && m.turno !== 'TODOS' && m.turno !== turno;
+    return '<label class="tarea '+(t.ok?'on':'')+(otroTurno?' off':'')+'">'
+      + '<input type="checkbox" '+(t.ok?'checked':'')+(otroTurno?' disabled':'')+' onchange="toggleTarea('+i+',this)">'
+      + '<span>'+escHtml(t.tarea)+'<small>'+escHtml(m.maquina||'')+(otroTurno?' · solo turno '+escHtml(m.turno):'')+'</small></span></label>';
+  }).join('');
+  document.getElementById('modalBg').style.display = 'block';
+}
+
+function toggleTarea(i, el){
+  EDIT.lista[i].ok = el.checked;
+  el.parentNode.classList.toggle('on', el.checked);
+}
+function cerrarModal(){ document.getElementById('modalBg').style.display = 'none'; EDIT = null; }
+
+function _claveRegistro(fecha, turno, mec, ts){
+  return fecha+'_'+turno.replace(/[^A-Z0-9]/g,'_')+'_'+mec.replace(/[^A-Za-z0-9]/g,'_')+'_'+ts;
+}
+
+function _construirRegistro(fecha, turno, mec, hora, lista, extra){
+  var done = lista.filter(function(t){ return t.ok; }).length;
+  return Object.assign({
+    fecha:fecha, turno:turno, mecanico:mec, hora:hora, done:done, total:lista.length,
+    editadoPorAdmin:false,
+    tareas: lista.map(function(t){
+      var o = {id:t.id, tarea:t.tarea, ok:!!t.ok};
+      if(t.ok) o.info = {fecha:fecha, mec:mec, turno:turno};
+      return o;
+    }),
+    fecha_turno: fecha+'|'+turno
+  }, extra || {});
+}
+
+function guardarParte(){
+  var mec = document.getElementById('mMec').value;
+  var hora = document.getElementById('mHora').value;
+  if(!mec){ showToast('⚠️ Elige el mecánico'); return; }
+  if(!hora){ showToast('⚠️ Indica la hora'); return; }
+  var reg = _construirRegistro(EDIT.fecha, EDIT.turno, mec, hora, EDIT.lista, {editadoPorAdmin:true});
+  var updates = {};
+  // Quitar cualquier parte previo de ese día y turno y escribir el nuevo
+  Object.keys(REG).forEach(function(k){
+    var r = REG[k]; if(r && r.fecha === EDIT.fecha && r.turno === EDIT.turno) updates[k] = null;
+  });
+  updates[_claveRegistro(EDIT.fecha, EDIT.turno, mec, Date.now())] = reg;
+  DB.ref('registros_turno').update(updates).then(function(){
+    showToast('✅ Parte guardado: '+reg.done+'/'+reg.total);
+    cerrarModal();
+  }).catch(function(e){ showToast('❌ Error: '+e.message); });
+}
+
+function eliminarParte(){
+  if(!confirm('¿Eliminar el parte de '+EDIT.fecha+' · '+EDIT.turno+'?')) return;
+  var updates = {};
+  Object.keys(REG).forEach(function(k){
+    var r = REG[k]; if(r && r.fecha === EDIT.fecha && r.turno === EDIT.turno) updates[k] = null;
+  });
+  DB.ref('registros_turno').update(updates).then(function(){
+    showToast('🗑 Parte eliminado');
+    cerrarModal();
+  }).catch(function(e){ showToast('❌ Error: '+e.message); });
+}
+
+// ══════════════════════════════════════════════════════════════
+// TURNOS: quién trabaja cada turno (misma lógica que turnos.html)
+// ══════════════════════════════════════════════════════════════
+function diaMec(ds, k){
+  var d = S.dias[ds]; if(!d) return {};
+  return (Array.isArray(d) ? d[+k] : d[k]) || {};
+}
+function getWeekMonday(ds){
+  var d = parseDS(ds), dow = d.getDay(), diff = dow === 0 ? -6 : 1 - dow;
+  d.setDate(d.getDate() + diff); return d;
+}
+function getMec3Turno(ds){
+  var cfg = S.config.rotacionMec3;
+  if(!cfg || !cfg.inicio) return 'mañana';
+  var diffDays = Math.floor((parseDS(ds) - parseDS(cfg.inicio)) / 86400000);
+  var diffWeeks = Math.floor(diffDays / 7);
+  var period = Math.floor(Math.abs(diffWeeks) / 2);
+  var base = cfg.turnoInicio || 'mañana', alt = base === 'mañana' ? 'tarde' : 'mañana';
+  if(diffDays < 0){
+    var negWeeks = Math.floor((-diffDays - 1) / 7) + 1, negPer = Math.floor(negWeeks / 2);
+    return negPer % 2 === 0 ? alt : base;
+  }
+  return period % 2 === 0 ? base : alt;
+}
+function getMec1Absences(wMon){
+  var count = 0;
+  for(var i = 0; i < 7; i++){
+    var d = new Date(wMon); d.setDate(wMon.getDate() + i);
+    var e = diaMec(toDS(d), '1').estado;
+    if(e && e !== 'normal') count++;
+  }
+  return count;
+}
+function getTarWeekIndex(wMon){
+  var cfg = S.config.rotacionMec3;
+  if(!cfg || !cfg.inicio) return -1;
+  if(getMec3Turno(toDS(wMon)) === 'mañana') return -1;
+  var diffWeeks = Math.max(0, Math.floor((wMon - parseDS(cfg.inicio)) / (7*86400000)));
+  var cyclePos = diffWeeks % 4, startsMan = cfg.turnoInicio === 'mañana';
+  var tarPos = startsMan ? cyclePos - 2 : cyclePos;
+  return Math.floor(diffWeeks / 4) * 2 + tarPos;
+}
+function getAlexCovMec(wMon){
+  var starter = S.config.alexCovStarter || '4';
+  var seen = {};
+  Object.keys(S.dias).forEach(function(ds){
+    var e = diaMec(ds, '1').estado;
+    if(e && e !== 'normal') seen[toDS(getWeekMonday(ds))] = 1;
+  });
+  var idx = 0;
+  Object.keys(seen).sort().forEach(function(monStr){
+    var mon = parseDS(monStr);
+    if(mon >= wMon) return;
+    if(getMec1Absences(mon) >= 4 && getMec3Turno(monStr) === 'mañana') idx++;
+  });
+  var starterFirst = starter === '4';
+  return (idx % 2 === 0) ? (starterFirst ? '4' : '5') : (starterFirst ? '5' : '4');
+}
+var _wsCache = {};
+function getWeekShifts(wMon){
+  var key = toDS(wMon);
+  if(_wsCache[key]) return _wsCache[key];
+  var greg = getMec3Turno(key), alexNight = getMec1Absences(wMon) >= 4, mec4, mec5;
+  if(greg === 'mañana'){
+    mec4 = 'tarde'; mec5 = 'tarde';
+    if(alexNight){ if(getAlexCovMec(wMon) === '4') mec4 = 'mañana'; else mec5 = 'mañana'; }
+  } else {
+    var tarIdx = getTarWeekIndex(wMon), javierFirst = (S.config.tarStarter || '4') === '4';
+    var javierMan = (tarIdx % 2 === 0) ? javierFirst : !javierFirst;
+    mec4 = javierMan ? 'mañana' : 'tarde'; mec5 = javierMan ? 'tarde' : 'mañana';
+    if(alexNight){ mec4 = 'mañana'; mec5 = 'mañana'; }
+  }
+  return (_wsCache[key] = {'1':'noche','2':alexNight?'noche':'mañana','3':greg,'4':mec4,'5':mec5});
+}
+// Turno de un mecánico ese día: el guardado ese día > el de la semana > el calculado
+function turnoDe(k, ds){
+  var st = diaMec(ds, k).turno;
+  if(st) return st;
+  var wMon = getWeekMonday(ds);
+  for(var i = 0; i < 7; i++){
+    var d = new Date(wMon); d.setDate(wMon.getDate() + i);
+    if(d.getDay() === 0 || d.getDay() === 6) continue;
+    var s = diaMec(toDS(d), k).turno;
+    if(s) return s;
+  }
+  return getWeekShifts(wMon)[k];
+}
+function ausenteEn(k, ds){
+  var e = diaMec(ds, k).estado;
+  if(e && e !== 'normal') return true;
+  var r = Object.values(S.ausencias || {});
+  for(var i = 0; i < r.length; i++){
+    if(String(r[i].mecId) === String(k) && ds >= r[i].desde && ds <= r[i].hasta) return true;
+  }
+  return false;
+}
+function nombreDe(k){ var m = Array.isArray(S.mecanicos) ? S.mecanicos[+k] : S.mecanicos[k]; return m ? normMec(m.nombre) : ''; }
+function idDe(nombre){
+  var ks = Object.keys(S.mecanicos);
+  for(var i = 0; i < ks.length; i++) if(nombreDe(ks[i]) === normMec(nombre)) return ks[i];
+  return null;
+}
+
+// ══════════════════════════════════════════════════════════════
+// RELLENAR HASTA HOY
+// ══════════════════════════════════════════════════════════════
+const VENTANA = {'NOCHE':[60,330], 'MAÑANA':[540,810], 'TARDE':[1020,1290]}; // minutos del día plausibles para guardar el parte
+const FIN_TURNO = {'NOCHE':6, 'MAÑANA':14, 'TARDE':22};                       // hora a partir de la cual el turno de hoy ya terminó
+function horaPlausible(turno){
+  var v = VENTANA[turno], min = v[0] + Math.floor(Math.random() * (v[1] - v[0]));
+  return String(Math.floor(min/60)).padStart(2,'0')+':'+String(min%60).padStart(2,'0');
+}
+
+// Probabilidad de que cada tarea salga hecha, calculada con los partes reales
+function probTareas(){
+  var st = {};
+  Object.values(REG).forEach(function(r){
+    if(!r || r.autoRelleno) return;
+    (r.tareas || []).forEach(function(t){
+      var s = st[t.id] || (st[t.id] = {n:0, ok:0}); s.n++; if(t.ok) s.ok++;
+    });
+  });
+  var p = {};
+  Object.keys(st).forEach(function(id){ p[id] = st[id].n >= 5 ? st[id].ok / st[id].n : 0.9; });
+  return p;
+}
+
+function planificarRelleno(desde, hasta){
+  var existentes = {};
+  Object.values(REG).forEach(function(r){ if(r && r.fecha) existentes[r.fecha+'|'+r.turno] = 1; });
+  var ahora = new Date(), hoy = toDS(ahora);
+  var javierH = idDe('JAVIER H');
+  var crear = [], sinCubrir = [], porJavierH = 0, porLibres = 0;
+  var d = parseDS(desde), fin = parseDS(hasta);
+  for(; d <= fin; d.setDate(d.getDate() + 1)){
+    var ds = toDS(d), dow = d.getDay();
+    if(dow === 0 || dow === 6) continue;
+    var fest = (S.festivos || {})[ds];
+    if(fest && fest.oficial) continue;
+    var usados = {}, faltan = [];
+    TURNOS.forEach(function(t){
+      if(existentes[ds+'|'+t]) return;
+      if(ds === hoy && ahora.getHours() < FIN_TURNO[t]) return;          // turno de hoy que aún no ha terminado
+      // 1) mecánicos de ese turno ese día
+      var cand = [1,2,3,4,5].map(String).filter(function(k){
+        return !ausenteEn(k, ds) && turnoDe(k, ds) === T_LOWER[t] && !usados[k];
+      });
+      if(cand.length){
+        var k = cand[Math.floor(Math.random()*cand.length)];
+        usados[k] = 1; crear.push({fecha:ds, turno:t, mec:nombreDe(k)});
+      } else faltan.push(t);
+    });
+    // 2) turnos sin nadie: un mecánico sin turno asignado y no ausente ese día
+    var aun = [];
+    faltan.forEach(function(t){
+      var libres = [1,2,3,4,5].map(String).filter(function(k){
+        return !ausenteEn(k, ds) && turnoDe(k, ds) === 'st' && !usados[k];
+      });
+      if(libres.length){
+        var k = libres[Math.floor(Math.random()*libres.length)];
+        usados[k] = 1; porLibres++; crear.push({fecha:ds, turno:t, mec:nombreDe(k)});
+      } else aun.push(t);
+    });
+    // 3) lo que siga sin cubrir: JAVIER H, pero solo en un turno por día
+    if(aun.length){
+      var pref = ['MAÑANA','TARDE','NOCHE'].filter(function(t){ return aun.indexOf(t) !== -1; });
+      if(javierH && !ausenteEn(javierH, ds) && !usados[javierH]){
+        usados[javierH] = 1; porJavierH++;
+        crear.push({fecha:ds, turno:pref[0], mec:'JAVIER H'});
+        pref.shift();
+      }
+      pref.forEach(function(t){ sinCubrir.push(ds+' '+t); });
+    }
+  }
+  return {crear:crear, sinCubrir:sinCubrir, porJavierH:porJavierH, porLibres:porLibres};
+}
+
+function rellenarHastaHoy(){
+  if(!Object.keys(S.mecanicos).length || !TAREAS.length){ showToast('⏳ Cargando datos, inténtalo en un momento'); return; }
+  var desde = document.getElementById('rellDesde').value, hasta = toDS(new Date());
+  if(!desde){ showToast('⚠️ Indica desde qué día'); return; }
+  if(desde > hasta){ showToast('⚠️ Ese día es posterior a hoy'); return; }
+  var plan = planificarRelleno(desde, hasta);
+  if(!plan.crear.length){
+    alert('No hay nada que rellenar entre '+desde+' y hoy'+(plan.sinCubrir.length ? '.\n\n'+plan.sinCubrir.length+' turnos no tienen a nadie disponible.' : ' (todos los turnos ya tienen parte).'));
+    return;
+  }
+  var msg = '¿Crear '+plan.crear.length+' partes entre '+desde.split('-').reverse().join('-')+' y hoy?\n\n'
+    + 'Mecánico según el cuadrante de turnos (respetando ausencias). Hora y tareas hechas plausibles. No se tocan los partes que ya existen.\n';
+  if(plan.porLibres) msg += '\n• '+plan.porLibres+' turnos cubiertos por un mecánico sin turno ese día.';
+  if(plan.porJavierH) msg += '\n• '+plan.porJavierH+' turnos asignados a JAVIER H (uno por día como máximo).';
+  if(plan.sinCubrir.length) msg += '\n• '+plan.sinCubrir.length+' turnos se quedan SIN parte (nadie disponible).';
+  if(!confirm(msg)) return;
+
+  var prob = probTareas(), updates = {}, ts = Date.now(), n = 0;
+  plan.crear.forEach(function(c){
+    var lista = TAREAS.map(function(t){
+      var aplica = !t.turno || t.turno === 'TODOS' || t.turno === c.turno;
+      var p = prob[t.id] === undefined ? 0.9 : prob[t.id];
+      return {id:t.id, tarea:t.tarea, ok: aplica && Math.random() < p};
+    });
+    var reg = _construirRegistro(c.fecha, c.turno, c.mec, horaPlausible(c.turno), lista, {autoRelleno:true});
+    updates[_claveRegistro(c.fecha, c.turno, c.mec, ts + (n++))] = reg;
+  });
+  DB.ref('registros_turno').update(updates).then(function(){
+    showToast('✅ '+n+' partes creados');
+  }).catch(function(e){ alert('⚠️ Error al guardar: '+e.message); });
+}
+</script>
+<script src="session_tracker.js"></script>
+</body>
+</html>

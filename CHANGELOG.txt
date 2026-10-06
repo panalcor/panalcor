@@ -6,6 +6,18 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.6.989 — 2026-10-06
+  - NUEVA diarios.html (solo admin): revisión y edición de los partes
+    diarios de mantenimiento. Cuadrícula mensual día x turno con el estado
+    de cada parte (hechas/total, sin parte), y editor para cambiar
+    mecánico, hora y tareas hechas de cualquier día, crear o eliminar.
+  - Botón "Rellenar hasta hoy": crea los partes que faltan (L-V, sin
+    festivos) con el mecánico del cuadrante de turnos; si un turno no
+    tiene a nadie, usa un mecánico sin turno ese día y no ausente, y en
+    último caso a JAVIER H (un solo turno al día). El parte queda como
+    uno normal.
+  - admin.html: acceso directo "Partes diarios" en el dashboard.
+
 v1.5.979 — 2026-10-06
   - preventivo.html: en Plan Mensual el selector de día de cada tarea
     enseña el día en que se hizo (si ya está hecha) o, si no, la fecha
