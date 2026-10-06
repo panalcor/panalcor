@@ -6,6 +6,11 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.6.1029 — 2026-10-06
+  - turnos.html (Sábados): se puede registrar un sábado SIN mecánicos
+    (libramos todos). Sale como "Libramos todos" y cuenta como sábado no
+    trabajado para arrancada/cierre.
+
 v1.6.1019 — 2026-10-06
   - turnos.html (pestaña Sábados): cada sábado y festivo trabajado admite
     los turnos que se trabajaron (noche / mañana / tarde), en el formulario

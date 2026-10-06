@@ -440,7 +440,7 @@ if('serviceWorker' in navigator){
       <input type="date" id="sabFecha">
     </div>
     <div class="form-field" style="flex:1;min-width:260px">
-      <label>Mecánicos que trabajaron</label>
+      <label>Mecánicos que trabajaron <span style="text-transform:none;opacity:0.6">(ninguno = sábado libre para todos)</span></label>
       <div class="mec-checkboxes" id="sabCbs"></div>
     </div>
     <div class="form-field" style="flex:0 0 auto">
@@ -1600,7 +1600,17 @@ function addSabado(){
   if(!fecha){ showToast('Selecciona una fecha'); return; }
   const mecs = [];
   getAllMecIds().forEach(k=>{ const cb=document.getElementById('sabCb'+k); if(cb?.checked) mecs.push(+k); });
-  if(!mecs.length){ showToast('Selecciona al menos un mecánico'); return; }
+  if(!mecs.length){
+    // Sin mecánicos = sábado libre para todos (no se trabaja)
+    if(!confirm('¿Registrar el sábado '+fecha+' SIN mecánicos? Significa que ese sábado libráis todos (no se trabaja).'+((S.sabados[fecha]?.mecanicos||[]).length?'\n\nSe quitarán los mecánicos ya registrados ese día.':''))) return;
+    S.sabados[fecha] = { libre:true };
+    recalcSabadosExtra();
+    fbSet('sabados',S.sabados); fbSet('bolsas',S.bolsas);
+    renderSabados(); renderCalendar();
+    showToast('Sábado libre registrado');
+    _limpiarTurnosForm('sab');
+    return;
+  }
   const prev = S.sabados[fecha]?.mecanicos||[];
   const entrada = { ...(S.sabados[fecha]||{}), mecanicos:[...new Set([...prev,...mecs])] };
   const tur = _leerTurnosForm('sab');
@@ -1797,12 +1807,13 @@ function renderSabados(){
     list.innerHTML = entries.map(([fecha,data])=>{
       const d = new Date(fecha+'T12:00:00');
       const esFestivo = !!S.festivos[fecha];
-      const tags = (data.mecanicos||[]).map(m=>`<span class="sab-mec-tag">${S.mecanicos[String(m)]?.nombre||'Mec '+m}</span>`).join('');
+      const libre = !(data.mecanicos||[]).length;
+      const tags = libre ? '<span class="sab-mec-tag" style="background:rgba(46,204,113,0.12);border-color:rgba(46,204,113,0.4);color:#2ecc71">🏖️ Libramos todos</span>' : (data.mecanicos||[]).map(m=>`<span class="sab-mec-tag">${S.mecanicos[String(m)]?.nombre||'Mec '+m}</span>`).join('');
       const festBadge = esFestivo ? '<span class="fest-badge">FESTIVO — no computa</span>' : '';
       return `<div class="sab-item${esFestivo?' sab-item-fest':''}">
         <div class="sab-date">📅 ${d.getDate()} ${MONTHS_SH[d.getMonth()]} ${d.getFullYear()}${festBadge}</div>
         <div class="sab-mecs">${tags}</div>
-        ${turnosChipsHtml('sabados', fecha, data)}
+        ${libre ? '' : turnosChipsHtml('sabados', fecha, data)}
         <button class="sab-del" onclick="deleteSabado('${fecha}')">✕</button>
       </div>`;
     }).join('');
@@ -1845,7 +1856,7 @@ function renderSabados(){
         const dow = d.getDay();
         const esDom = dow === 0;
         const esSab = dow === 6;
-        const enSabs = esSab && !!S.sabados[fecha];
+        const enSabs = esSab && (S.sabados[fecha]?.mecanicos||[]).length > 0;
         const tags = (data.mecanicos||[]).map(m=>`<span class="sab-mec-tag">${S.mecanicos[String(m)]?.nombre||'Mec '+m}</span>`).join('') || '<span style="color:rgba(255,255,255,0.28);font-size:0.78rem">Sin mecánicos</span>';
         const DAYS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
         const icono = esDom ? '☀️' : '🎌';
