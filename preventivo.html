@@ -876,7 +876,10 @@ if('serviceWorker' in navigator){
         <button type="button" class="export-btn" onclick="publicarPlan()" style="padding:9px 16px;background:rgba(253,203,110,0.12);border-color:rgba(253,203,110,0.4);color:#fdcb6e" id="btnPublicar">
           📤 Publicar a mecánicos
         </button>
-        <button type="button" class="export-btn" onclick="rellenarMesVencido()" style="padding:9px 16px;background:rgba(162,155,254,0.12);border-color:rgba(162,155,254,0.4);color:#a29bfe">
+        <button type="button" class="export-btn" onclick="rellenarMesVencido(true)" style="padding:9px 16px;background:rgba(116,185,255,0.12);border-color:rgba(116,185,255,0.4);color:#74b9ff">
+          ⏩ Rellenar hasta hoy
+        </button>
+        <button type="button" class="export-btn" onclick="rellenarMesVencido(false)" style="padding:9px 16px;background:rgba(162,155,254,0.12);border-color:rgba(162,155,254,0.4);color:#a29bfe">
           📅 Rellenar mes vencido
         </button>
         <button type="button" class="export-btn" onclick="exportPlan()" style="padding:9px 16px">
@@ -3446,14 +3449,20 @@ async function publicarPlan() {
   }
 }
 
-/* ════ RELLENAR MES VENCIDO (lee el plan publicado de Firebase) ════ */
-async function rellenarMesVencido() {
+/* ════ RELLENAR MES VENCIDO / HASTA HOY (lee el plan publicado de Firebase) ════ */
+// hastaHoy=false → mes anterior completo. hastaHoy=true → mes en pantalla,
+// solo las tareas cuya fecha planificada ya ha llegado (hasta hoy incluido).
+async function rellenarMesVencido(hastaHoy) {
   let { year, month } = curMes;
-  month--; if(month < 0) { year--; month = 11; }
+  if(!hastaHoy) { month--; if(month < 0) { year--; month = 11; } }
   const mk = mesKey(year, month);
   const mesesN = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const hoy = toDS(new Date());
+  const etiqueta = hastaHoy ? 'hasta hoy' : 'mes vencido';
 
-  if(!confirm(`¿Rellenar mes vencido ${mesesN[month]} ${year}?\n\nLas tareas sin marcar por el mecánico se completarán automáticamente con su fecha planificada.`)) return;
+  if(!confirm(hastaHoy
+    ? `¿Rellenar ${mesesN[month]} ${year} hasta hoy?\n\nLas tareas sin marcar por el mecánico cuya fecha planificada sea hoy o anterior se completarán automáticamente. Las posteriores no se tocan.`
+    : `¿Rellenar mes vencido ${mesesN[month]} ${year}?\n\nLas tareas sin marcar por el mecánico se completarán automáticamente con su fecha planificada.`)) return;
 
   // Leer plan publicado, completados y turnos (para saber quién estaba ausente) de Firebase
   let planTareas = [], completados = {}, diasFB = {}, ausenciasFB = {}, mecNombreAId = {};
@@ -3492,8 +3501,11 @@ async function rellenarMesVencido() {
   // Si no hay plan publicado, avisar
   const tareasFiltradas = planTareas.filter(t => FREQS_AUTO.includes(t.frecuencia));
   if(!tareasFiltradas.length) {
-    alert(`⚠️ No hay plan publicado para ${mesesN[month]} ${year}.\nPublica el plan antes de rellenar el mes vencido.`); return;
+    alert(`⚠️ No hay plan publicado para ${mesesN[month]} ${year}.\nPublica el plan antes de rellenar (${etiqueta}).`); return;
   }
+
+  // Slots con fecha; en modo "hasta hoy" solo los que ya han llegado
+  const slotsDe = t => Object.entries(t.fechas || {}).filter(([,v]) => typeof v === 'string' && (!hastaHoy || v <= hoy));
 
   // Añade n días laborables (L-V) a una fecha 'YYYY-MM-DD'
   function _addWorkDays(ds, n) {
@@ -3506,12 +3518,13 @@ async function rellenarMesVencido() {
   // Contar slots totales para calcular porcentajes
   let slotCount = 0;
   tareasFiltradas.forEach(t => {
-    const slots = Object.entries(t.fechas || {}).filter(([,v]) => typeof v === 'string');
-    slotCount += slots.length;
+    slotCount += slotsDe(t).length;
   });
 
   if(!slotCount) {
-    alert(`⚠️ El plan de ${mesesN[month]} ${year} no tiene fechas asignadas.`); return;
+    alert(hastaHoy
+      ? `⚠️ El plan de ${mesesN[month]} ${year} no tiene tareas con fecha igual o anterior a hoy.`
+      : `⚠️ El plan de ${mesesN[month]} ${year} no tiene fechas asignadas.`); return;
   }
 
   // 1-5% de slots se dejan SIN rellenar (quedan pendientes)
@@ -3538,7 +3551,7 @@ async function rellenarMesVencido() {
   tareasFiltradas.forEach(t => {
     // mecanico ya viene correcto en el plan publicado (reglas de asignación)
     const mecanico = t.mecanico || '—';
-    const slots = Object.entries(t.fechas || {}).filter(([,v]) => typeof v === 'string');
+    const slots = slotsDe(t);
     slots.forEach(([wi, fechaPlan]) => {
       const clave = `${t.id}_${wi}`;
       if(completados[clave]) return; // ya marcada por el mecánico, no tocar
@@ -3550,23 +3563,25 @@ async function rellenarMesVencido() {
         return;
       }
       if(sinRellenarSet.has(idx)) return; // dejar pendiente intencionalmente
-      const esRetraso = retrasosSet.has(idx);
+      let esRetraso = retrasosSet.has(idx);
       const diasExtra = esRetraso ? (1 + Math.floor(Math.random() * 4)) : 0;
-      const fechaReal = esRetraso ? _addWorkDays(fechaPlan, diasExtra) : fechaPlan;
+      let fechaReal = esRetraso ? _addWorkDays(fechaPlan, diasExtra) : fechaPlan;
+      // Hasta hoy: un retraso nunca puede dejar la fecha real en el futuro
+      if(hastaHoy && fechaReal > hoy) { fechaReal = fechaPlan; esRetraso = false; }
       updates[clave] = { hecho:true, fechaReal, fechaPlan, mecanico, autoRelleno:true, retraso:esRetraso, ts:Date.now() };
       rellenas++;
     });
   });
 
   if(!rellenas && !noDisponibles) {
-    alert(`✅ Todas las tareas de ${mesesN[month]} ${year} ya estaban completadas. Nada que rellenar.`); return;
+    alert(`✅ Todas las tareas de ${mesesN[month]} ${year}${hastaHoy ? ' hasta hoy' : ''} ya estaban completadas. Nada que rellenar.`); return;
   }
 
   try {
     await _DB.ref(`preventivo_completado/${mk}`).update(updates);
     const nRetr = Object.values(updates).filter(u=>u.retraso).length;
     const nPend = sinRellenarSet.size;
-    alert(`✅ Mes vencido ${mesesN[month]} ${year} procesado.\n\n• EN FECHA: ${rellenas-nRetr}\n• RETRASO (1-4 días): ${nRetr}\n• Sin rellenar (pendientes): ${nPend}\n• No disponible (ausencia): ${noDisponibles}`);
+    alert(`✅ ${hastaHoy ? mesesN[month] + ' ' + year + ' hasta hoy' : 'Mes vencido ' + mesesN[month] + ' ' + year} procesado.\n\n• EN FECHA: ${rellenas-nRetr}\n• RETRASO (1-4 días): ${nRetr}\n• Sin rellenar (pendientes): ${nPend}\n• No disponible (ausencia): ${noDisponibles}`);
   } catch(e) {
     alert('⚠️ Error al guardar en Firebase: ' + e.message);
   }

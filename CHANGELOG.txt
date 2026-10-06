@@ -6,6 +6,13 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.959 — 2026-10-06
+  - preventivo.html: nuevo botón "⏩ Rellenar hasta hoy" en Plan Mensual.
+    Marca como hechas las tareas del mes en pantalla cuya fecha
+    planificada es hoy o anterior (mismas reglas que "Rellenar mes
+    vencido": respeta ausencias, deja algunas pendientes y con algún
+    retraso, y un retraso nunca deja la fecha real en el futuro).
+
 v1.5.949 — 2026-10-06
   - preventivo.html: al publicar el plan se completan solos las fechas
     que falten, desde cualquier navegador. Primero se reutilizan las
