@@ -165,6 +165,10 @@ body{background:var(--navy-deep);color:var(--white);font-family:'Barlow',sans-se
 .sab-mec-tag{font-size:0.68rem;background:rgba(201,162,39,0.13);border:1px solid rgba(201,162,39,0.28);color:var(--gold);padding:2px 7px;border-radius:4px}
 .sab-del{background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.28);color:var(--red);padding:5px 10px;border-radius:5px;cursor:pointer;font-size:0.78rem;font-family:'Barlow',sans-serif}
 .sab-del:hover{background:rgba(231,76,60,0.28)}
+.turno-chips{display:flex;gap:4px;align-items:center}
+.turno-chip{font-size:0.66rem;font-weight:800;letter-spacing:0.04em;padding:3px 8px;border-radius:12px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.4);cursor:pointer;font-family:inherit}
+.turno-chip.on{background:rgba(52,152,219,0.22);border-color:rgba(52,152,219,0.7);color:#7fc4f0}
+.turno-hint{font-size:0.62rem;color:rgba(255,255,255,0.3)}
 .sab-item-fest{border-color:rgba(255,165,0,0.35);background:rgba(255,140,0,0.06)}
 .fest-item{border-color:rgba(255,165,0,0.25);background:rgba(255,140,0,0.05)}
 .fest-badge{font-size:0.6rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;background:rgba(255,165,0,0.18);color:#ffb347;border:1px solid rgba(255,165,0,0.35);padding:2px 6px;border-radius:4px;margin-left:8px}
@@ -439,6 +443,14 @@ if('serviceWorker' in navigator){
       <label>Mecánicos que trabajaron</label>
       <div class="mec-checkboxes" id="sabCbs"></div>
     </div>
+    <div class="form-field" style="flex:0 0 auto">
+      <label>Turnos trabajados</label>
+      <div class="mec-checkboxes">
+        <label class="mec-cb"><input type="checkbox" id="sabTnoche"> 🌙 Noche</label>
+        <label class="mec-cb"><input type="checkbox" id="sabTmañana"> ☀️ Mañana</label>
+        <label class="mec-cb"><input type="checkbox" id="sabTtarde"> 🌆 Tarde</label>
+      </div>
+    </div>
     <button class="btn btn-add" onclick="addSabado()" style="align-self:flex-end;white-space:nowrap">+ Añadir</button>
   </div>
   <div id="sabList"><div class="empty">Sin sábados registrados</div></div>
@@ -455,9 +467,18 @@ if('serviceWorker' in navigator){
       <label>Mecánicos que trabajaron</label>
       <div class="mec-checkboxes" id="festCbs"></div>
     </div>
+    <div class="form-field" style="flex:0 0 auto">
+      <label>Turnos trabajados</label>
+      <div class="mec-checkboxes">
+        <label class="mec-cb"><input type="checkbox" id="festTnoche"> 🌙 Noche</label>
+        <label class="mec-cb"><input type="checkbox" id="festTmañana"> ☀️ Mañana</label>
+        <label class="mec-cb"><input type="checkbox" id="festTtarde"> 🌆 Tarde</label>
+      </div>
+    </div>
     <button class="btn btn-add" onclick="addFestivo()" style="align-self:flex-end;white-space:nowrap">+ Añadir</button>
   </div>
   <div style="font-size:0.74rem;color:rgba(255,255,255,0.32);margin-bottom:10px;line-height:1.5">
+    Los turnos trabajados (sábados y festivos) sirven para decidir cuándo se hacen la arrancada y el cierre semanales: el cierre es el último turno trabajado de la semana (sábado si se trabaja; si no, el viernes). Un festivo sin nadie trabajando se considera cerrado.<br>
     Domingos y festivos tienen el mismo tratamiento: si el día cae en sábado queda excluido del conteo de sábados extra.
     Alberto genera días libres por cada uno (configurable en ✏️ Ajustar). El resto cobra el día trabajado.
   </div>
@@ -1581,13 +1602,40 @@ function addSabado(){
   getAllMecIds().forEach(k=>{ const cb=document.getElementById('sabCb'+k); if(cb?.checked) mecs.push(+k); });
   if(!mecs.length){ showToast('Selecciona al menos un mecánico'); return; }
   const prev = S.sabados[fecha]?.mecanicos||[];
-  S.sabados[fecha] = { mecanicos:[...new Set([...prev,...mecs])] };
+  const entrada = { ...(S.sabados[fecha]||{}), mecanicos:[...new Set([...prev,...mecs])] };
+  const tur = _leerTurnosForm('sab');
+  if(tur.length) entrada.turnos = tur;
+  S.sabados[fecha] = entrada;
   recalcSabadosExtra();
   fbSet('sabados',S.sabados); fbSet('bolsas',S.bolsas);
   renderSabados();
   renderCalendar();
   showToast('Sábado registrado');
   getAllMecIds().forEach(k=>{ const cb=document.getElementById('sabCb'+k); if(cb) cb.checked=false; });
+  _limpiarTurnosForm('sab');
+}
+// ── Turnos trabajados en sábados / festivos (los usa diarios.html para decidir arrancada y cierre) ──
+const TURNOS_DIA = [['noche','🌙 NOC'],['mañana','☀️ MAÑ'],['tarde','🌆 TAR']];
+function _leerTurnosForm(pref){
+  return TURNOS_DIA.map(t=>t[0]).filter(t=>document.getElementById(pref+'T'+t)?.checked);
+}
+function _limpiarTurnosForm(pref){
+  TURNOS_DIA.forEach(t=>{ const cb=document.getElementById(pref+'T'+t[0]); if(cb) cb.checked=false; });
+}
+function turnosChipsHtml(nodo, fecha, data){
+  const act = Array.isArray(data.turnos) ? data.turnos : [];
+  const chips = TURNOS_DIA.map(([t,lbl])=>`<button type="button" class="turno-chip${act.includes(t)?' on':''}" onclick="toggleTurnoDia('${nodo}','${fecha}','${t}')">${lbl}</button>`).join('');
+  const hint = act.length ? `<span class="turno-hint">${act.length} turno${act.length>1?'s':''}</span>` : '<span class="turno-hint">sin indicar</span>';
+  return `<div class="turno-chips">${chips}${hint}</div>`;
+}
+function toggleTurnoDia(nodo, fecha, turno){
+  const src = nodo==='sabados' ? S.sabados : S.festivos;
+  const e = src[fecha]; if(!e) return;
+  let act = Array.isArray(e.turnos) ? e.turnos.slice() : [];
+  act = act.includes(turno) ? act.filter(x=>x!==turno) : [...act, turno];
+  if(act.length) e.turnos = TURNOS_DIA.map(t=>t[0]).filter(t=>act.includes(t)); else delete e.turnos;
+  fbSet(nodo, src);
+  renderSabados();
 }
 function recalcSabadosExtra(){
   const c={};
@@ -1627,7 +1675,10 @@ function addFestivo(){
   getAllMecIds().forEach(k=>{ const cb=document.getElementById('festCb'+k); if(cb?.checked) mecs.push(+k); });
   if(!mecs.length){ showToast('Selecciona al menos un mecánico'); return; }
   const prev = S.festivos[fecha]?.mecanicos||[];
-  S.festivos[fecha] = { mecanicos:[...new Set([...prev,...mecs])] };
+  const fEntrada = { ...(S.festivos[fecha]||{}), mecanicos:[...new Set([...prev,...mecs])] };
+  const turF = _leerTurnosForm('fest');
+  if(turF.length) fEntrada.turnos = turF;
+  S.festivos[fecha] = fEntrada;
   recalcSabadosExtra(); // re-excluir si el festivo es sábado
   recalcAllBolsas();
   fbSet('festivos',S.festivos); fbSet('sabados',S.sabados); fbSet('bolsas',S.bolsas);
@@ -1635,6 +1686,7 @@ function addFestivo(){
   renderCalendar();
   showToast('Festivo registrado');
   getAllMecIds().forEach(k=>{ const cb=document.getElementById('festCb'+k); if(cb) cb.checked=false; });
+  _limpiarTurnosForm('fest');
 }
 // ── Festivos oficiales del año ──────────────────────────────────────────────
 const FESTIVOS_2026 = [
@@ -1750,6 +1802,7 @@ function renderSabados(){
       return `<div class="sab-item${esFestivo?' sab-item-fest':''}">
         <div class="sab-date">📅 ${d.getDate()} ${MONTHS_SH[d.getMonth()]} ${d.getFullYear()}${festBadge}</div>
         <div class="sab-mecs">${tags}</div>
+        ${turnosChipsHtml('sabados', fecha, data)}
         <button class="sab-del" onclick="deleteSabado('${fecha}')">✕</button>
       </div>`;
     }).join('');
@@ -1803,6 +1856,7 @@ function renderSabados(){
         return `<div class="sab-item fest-item${esDom?' fest-item-dom':''}">
           <div class="sab-date">${icono} ${DAYS[dow]} ${d.getDate()} ${MONTHS_SH[d.getMonth()]} ${d.getFullYear()}${tipoBadge}${sabNote}</div>
           <div class="sab-mecs">${tags}</div>
+          ${(data.mecanicos||[]).length ? turnosChipsHtml('festivos', fecha, data) : '<span class="turno-hint">cerrado (nadie trabajó)</span>'}
           <button class="sab-del" onclick="deleteFestivo('${fecha}')">✕</button>
         </div>`;
       }).join('');

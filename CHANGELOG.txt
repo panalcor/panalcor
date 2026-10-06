@@ -6,6 +6,18 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.6.1019 — 2026-10-06
+  - turnos.html (pestaña Sábados): cada sábado y festivo trabajado admite
+    los turnos que se trabajaron (noche / mañana / tarde), en el formulario
+    y con botones editables en la lista. Se conserva el flag "oficial" al
+    registrar un festivo.
+  - diarios.html: arrancada y cierre pasan a ser SEMANALES. Arrancada = primer
+    turno trabajado de la semana; cierre = último turno trabajado (sábado si
+    se trabaja, si no el día anterior; un festivo sin nadie trabajando se
+    salta, uno con gente cuenta con sus turnos). La cuadrícula marca en rojo
+    solo lo que debería existir; "Rellenar hasta hoy" respeta las semanas que
+    ya tienen registro.
+
 v1.6.1009 — 2026-10-06
   - diarios.html: nueva pestaña "Arrancada / Cierre" con cuadrícula mensual,
     editor de cualquier registro (hecho, mecánico, hora y observaciones por

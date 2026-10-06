@@ -141,7 +141,7 @@ tr.finde td.dia{color:rgba(255,255,255,0.35)}
       <input type="date" id="rellDesdeAC">
       <button class="btn btn-primary" onclick="acRellenarHastaHoy()">⏩ Rellenar hasta hoy</button>
     </div>
-    <p class="hint">Una arrancada y un cierre por día. Pulsa una celda para ver, editar, crear o eliminar. Los días laborables sin registro salen en rojo discontinuo.</p>
+    <p class="hint">Una arrancada y un cierre por semana: la arrancada el primer día trabajado y el cierre el último (sábado si se trabaja, si no el viernes; los festivos según los turnos que se trabajaron, ver Turnos → Sábados). Pulsa cualquier celda para ver, editar, crear o eliminar. Lo que debería existir y falta sale en rojo discontinuo.</p>
     <div class="resumen" id="resumenAC"></div>
     <div class="tabla-wrap">
       <table class="grid">
@@ -245,7 +245,7 @@ function normMec(n){ return (n||'').toUpperCase().replace(/\.+\s*$/,'').trim(); 
 var REG = {};          // registros_turno {key: registro}
 var TAREAS = [];       // tareas_diarias ordenadas
 var MEC_NOMBRES = [];  // config/mecanicos (los del selector de mecanicos.html)
-var S = {dias:{}, config:{}, mecanicos:{}, ausencias:{}, festivos:{}};
+var S = {dias:{}, config:{}, mecanicos:{}, ausencias:{}, festivos:{}, sabados:{}};
 
 function initApp(){
   var hoy = new Date();
@@ -277,7 +277,8 @@ function initApp(){
   DB.ref('turnos').once('value').then(function(snap){
     var t = snap.val() || {};
     S.dias = t.dias || {}; S.config = t.config || {}; S.mecanicos = t.mecanicos || {};
-    S.ausencias = t.ausencias || {}; S.festivos = t.festivos || {};
+    S.ausencias = t.ausencias || {}; S.festivos = t.festivos || {}; S.sabados = t.sabados || {};
+    acRenderGrid();
   });
 }
 
@@ -653,8 +654,12 @@ var AC_PERIODICO = {
   'APRETAR ÁNGULOS DESCARGADOR 2':30,'APRETAR ÁNGULOS CARGADOR/DESCARGADOR TALLADORAS':30,
   'SOPLAR DRIVERS INFRANOR (SEGUIR PROCEDIMIENTO)':90
 };
-var AC_TURNO = {arrancada:'NOCHE', cierre:'TARDE'};            // de qué turno sale el mecánico que firma
-var AC_VENTANA = {arrancada:[10,90], cierre:[1230,1310]};       // minutos del día para la hora del registro
+// Arrancada = primer turno trabajado de la semana; cierre = último turno trabajado de la semana
+// (sábado si se trabaja, si no el día anterior trabajado; los festivos cuentan según turnos/sabados y turnos/festivos).
+var ORDEN_TURNOS = ['noche','mañana','tarde'];
+var UP = {'noche':'NOCHE','mañana':'MAÑANA','tarde':'TARDE'};
+var AC_VENTANA_INI = {'noche':[5,90], 'mañana':[365,450], 'tarde':[845,930]};   // minutos del día al empezar el turno
+var AC_VENTANA_FIN = {'noche':[300,355], 'mañana':[790,835], 'tarde':[1260,1315]}; // minutos del día al acabar el turno
 var AC_P_HECHO = 0.95;
 
 function cambiarVista(v){
@@ -681,7 +686,7 @@ function _acReg(fecha, tipo){ var d = AC[fecha]; return d && d[tipo] && d[tipo].
 function acRenderGrid(){
   var mes = document.getElementById('mesAC').value; if(!mes) return;
   var p = mes.split('-'), y = +p[0], m = +p[1], ultimo = new Date(y, m, 0).getDate(), hoy = toDS(new Date());
-  var html = '', n = 0, nParc = 0, nFalta = 0;
+  var html = '', n = 0, nParc = 0, nFalta = 0, esperado = acEsperadosMes(y, m);
   for(var dia = 1; dia <= ultimo; dia++){
     var d = new Date(y, m-1, dia), ds = toDS(d), dow = d.getDay(), finde = dow === 0 || dow === 6;
     html += '<tr class="'+(finde?'finde':'')+'"><td class="dia">'+dia+' <small>'+DIAS_SH[dow]+'</small></td>';
@@ -693,7 +698,7 @@ function acRenderGrid(){
         cls = done === 0 ? 'c-cero' : (done >= items.length ? 'c-ok' : 'c-parcial');
         txt = escHtml(mecs.join(' / ') || '?')+'<br><b>'+done+'/'+items.length+'</b> · '+escHtml(r.hora||'');
         n++; if(done < items.length) nParc++;
-      } else if(!finde && ds <= hoy){ cls = 'c-falta'; txt = 'sin registro'; nFalta++; }
+      } else if(esperado[ds+'|'+t] && ds <= hoy){ cls = 'c-falta'; txt = 'sin registro'; nFalta++; }
       else { cls = 'c-na'; txt = '—'; }
       html += '<td><span class="celda '+cls+'" onclick="acAbrir(\''+ds+'\',\''+t+'\')">'+txt+'</span></td>';
     });
@@ -770,9 +775,38 @@ function acEliminar(){
     .catch(function(e){ showToast('❌ Error: '+e.message); });
 }
 
-// ── Rellenar hasta hoy ──
-// Mecánico: el del parte diario de ese día y turno (arrancada→noche, cierre→tarde); si no existe,
-// cuadrante de turnos > mecánico sin turno ese día > JAVIER H.
+// ── Calendario de planta: qué turnos se trabajaron cada día ──
+function _fuenteDia(ds){
+  var dow = parseDS(ds).getDay();
+  if(dow === 0) return null;
+  var fest = (S.festivos || {})[ds], sab = (S.sabados || {})[ds];
+  if(dow === 6){ return sab && (sab.mecanicos||[]).length ? sab : null; }
+  if(fest && fest.oficial){ return (fest.mecanicos||[]).length ? fest : null; }
+  return {normal:true};
+}
+// Devuelve null si no se trabajó, o la lista de turnos trabajados (en minúsculas, orden noche→tarde)
+function turnosTrabajados(ds){
+  var src = _fuenteDia(ds); if(!src) return null;
+  if(src.normal) return ORDEN_TURNOS.slice();
+  var t = Array.isArray(src.turnos) ? src.turnos : (src.turnos ? Object.values(src.turnos) : []);
+  t = ORDEN_TURNOS.filter(function(x){ return t.indexOf(x) !== -1; });
+  if(!t.length){   // sin turnos indicados: deducirlos del turno que tenían esos mecánicos ese día
+    (src.mecanicos||[]).forEach(function(k){ var x = turnoDe(String(k), ds); if(ORDEN_TURNOS.indexOf(x) !== -1 && t.indexOf(x) === -1) t.push(x); });
+    t = ORDEN_TURNOS.filter(function(x){ return t.indexOf(x) !== -1; });
+  }
+  return t.length ? t : ['mañana'];
+}
+// Mecánico que firma: el del parte diario de ese turno; en sábados/festivos, uno de los que trabajaron ese día
+function _mecFirma(ds, turno){
+  var src = _fuenteDia(ds);
+  if(src && !src.normal){
+    var ids = (src.mecanicos||[]).map(String);
+    var propios = ids.filter(function(k){ return turnoDe(k, ds) === turno; });
+    var pool = propios.length ? propios : ids;
+    return nombreDe(pool[Math.floor(Math.random()*pool.length)]);
+  }
+  return _mecDelParte(ds, UP[turno]);
+}
 function _mecDelParte(ds, turno){
   var e = indexRegistros()[ds+'|'+turno]; if(e && e.r.mecanico) return normMec(e.r.mecanico);
   var t = T_LOWER[turno];
@@ -782,6 +816,33 @@ function _mecDelParte(ds, turno){
   var jh = idDe('JAVIER H');
   return jh && !ausenteEn(jh, ds) ? 'JAVIER H' : null;
 }
+
+function _lunesDe(ds){ return toDS(getWeekMonday(ds)); }
+function _sumaDias(ds, n){ var d = parseDS(ds); d.setDate(d.getDate()+n); return toDS(d); }
+// Plan de una semana (lunes a domingo): {arrancada:{ds,turno}|null, cierre:{ds,turno}|null}
+function planSemana(lunes){
+  var dias = [];
+  for(var i = 0; i < 6; i++){ var ds = _sumaDias(lunes, i); var t = turnosTrabajados(ds); if(t) dias.push({ds:ds, t:t}); }
+  if(!dias.length) return {arrancada:null, cierre:null};
+  var a = dias[0], c = dias[dias.length-1];
+  return {arrancada:{ds:a.ds, turno:a.t[0]}, cierre:{ds:c.ds, turno:c.t[c.t.length-1]}};
+}
+function _semanaTieneRegistro(lunes, tipo){
+  for(var i = 0; i < 7; i++) if(_acReg(_sumaDias(lunes, i), tipo)) return true;
+  return false;
+}
+// Fechas donde debería haber arrancada/cierre en un mes (para marcar lo que falta en la cuadrícula)
+function acEsperadosMes(y, m){
+  var res = {}, ult = new Date(y, m, 0).getDate();
+  var lunes = _lunesDe(toDS(new Date(y, m-1, 1))), fin = toDS(new Date(y, m-1, ult));
+  for(; lunes <= fin; lunes = _sumaDias(lunes, 7)){
+    var pl = planSemana(lunes);
+    ['arrancada','cierre'].forEach(function(t){ if(pl[t]) res[pl[t].ds+'|'+t] = true; });
+  }
+  return res;
+}
+
+// ── Rellenar hasta hoy ──
 function _acUltimaHecha(){
   var ult = {};  // label -> última fecha hecha
   Object.keys(AC).sort().forEach(function(f){
@@ -799,19 +860,21 @@ function acRellenarHastaHoy(){
   var desde = document.getElementById('rellDesdeAC').value, hasta = toDS(new Date()), ahora = new Date();
   if(!desde){ showToast('⚠️ Indica desde qué día'); return; }
   if(desde > hasta){ showToast('⚠️ Ese día es posterior a hoy'); return; }
-  var ult = _acUltimaHecha(), updates = {}, n = 0, sinMec = [], porTipo = {arrancada:0, cierre:0};
-  var d = parseDS(desde), fin = parseDS(hasta);
-  for(; d <= fin; d.setDate(d.getDate()+1)){
-    var ds = toDS(d), dow = d.getDay();
-    if(dow === 0 || dow === 6) continue;
-    var fest = (S.festivos || {})[ds]; if(fest && fest.oficial) continue;
+  var ult = _acUltimaHecha(), updates = {}, n = 0, sinMec = [], porTipo = {arrancada:0, cierre:0}, detalle = [];
+  var lunes = _lunesDe(desde);
+  for(; lunes <= hasta; lunes = _sumaDias(lunes, 7)){
+    var pl = planSemana(lunes);
     ['arrancada','cierre'].forEach(function(tipo){
-      if(_acReg(ds, tipo)) return;
-      if(ds === hasta && ahora.getHours() < (tipo === 'arrancada' ? 2 : 22)) return;   // aún no ha pasado hoy
-      var mec = _mecDelParte(ds, AC_TURNO[tipo]);
+      var pt = pl[tipo]; if(!pt) return;
+      var ds = pt.ds;
+      if(ds < desde || ds > hasta) return;
+      if(_semanaTieneRegistro(lunes, tipo)) return;
+      var v = (tipo === 'arrancada' ? AC_VENTANA_INI : AC_VENTANA_FIN)[pt.turno];
+      var min = v[0] + Math.floor(Math.random()*(v[1]-v[0]));
+      if(ds === hasta && min > ahora.getHours()*60 + ahora.getMinutes()) return;   // todavía no ha llegado esa hora
+      var mec = _mecFirma(ds, pt.turno);
       if(!mec){ sinMec.push(ds+' '+tipo); return; }
-      var v = AC_VENTANA[tipo], min = v[0] + Math.floor(Math.random()*(v[1]-v[0]));
-      var horaReg = _hm(min), t = min + 1;
+      var t = min + 1;
       var items = AC_ITEMS[tipo].map(function(label){
         var dias = AC_PERIODICO[label], hecho;
         if(dias){ hecho = !ult[label] || _diasEntre(ult[label], ds) >= dias; }
@@ -821,13 +884,15 @@ function acRellenarHastaHoy(){
         t += Math.floor(Math.random()*3);
         return {label:label, done:true, mecanico:mec, hora:_hm(t)};
       });
-      updates[ds+'/'+tipo] = _acRegistro(ds, tipo, horaReg, items);
+      updates[ds+'/'+tipo] = _acRegistro(ds, tipo, _hm(min), items);
       n++; porTipo[tipo]++;
+      detalle.push(ds.split('-').reverse().join('-')+' '+(tipo === 'arrancada' ? 'arrancada' : 'cierre')+' ('+pt.turno+', '+mec+')');
     });
   }
-  if(!n){ alert('No hay nada que rellenar entre '+desde+' y hoy'+(sinMec.length ? '.\n\n'+sinMec.length+' registros sin mecánico disponible.' : '.')); return; }
+  if(!n){ alert('No hay nada que rellenar entre '+desde+' y hoy'+(sinMec.length ? '.\n\n'+sinMec.length+' registros sin mecánico disponible.' : ' (las semanas ya tienen su arrancada y su cierre).')); return; }
   var msg = '¿Crear '+n+' registros ('+porTipo.arrancada+' arrancadas y '+porTipo.cierre+' cierres) entre '+desde.split('-').reverse().join('-')+' y hoy?\n\n'
-    + 'Firma el mecánico que hizo el turno de noche (arrancada) o de tarde (cierre) ese día. Los ítems periódicos (30/90 días) solo se marcan cuando toca. No se tocan los registros que ya existen.';
+    + 'Arrancada: primer turno trabajado de cada semana. Cierre: último turno trabajado (sábado si se trabajó, si no el día anterior; festivos según Turnos). Firma uno de los mecánicos de ese turno. Los ítems periódicos (30/90 días) solo se marcan cuando toca. No se tocan las semanas que ya tienen registro.\n\n'
+    + 'Primeros: \n' + detalle.slice(0, 6).join('\n') + (detalle.length > 6 ? '\n…' : '');
   if(sinMec.length) msg += '\n\n• '+sinMec.length+' quedan SIN registro (nadie disponible).';
   if(!confirm(msg)) return;
   DB.ref('arrancada_cierre').update(updates).then(function(){ showToast('✅ '+n+' registros creados'); })
