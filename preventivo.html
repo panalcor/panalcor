@@ -4544,9 +4544,10 @@ function imprimirInformeSeguimiento(soloTrueno) {
 
   const tareasRows = slots.map(({t, slotKey, fechaPlan}) => {
     const comp = compData[slotKey];
-    const estado = comp && comp.noDisponible ? 'NO DISPONIBLE' : comp ? (comp.retraso ? 'FUERA DE PLAZO' : 'HECHA') : 'PENDIENTE';
-    const estadoColor = comp && comp.noDisponible ? '#9b59b6' : comp ? (comp.retraso ? '#e67e22' : '#27ae60') : '#c0392b';
     const fechaReal = comp ? (comp.fechaReal || comp.fecha || '') : '';
+    const tarde = !!(comp && (comp.retraso || (fechaReal && fechaPlan && fechaReal > fechaPlan)));
+    const estado = comp && comp.noDisponible ? 'NO DISPONIBLE' : comp ? (tarde ? 'CORRECTO RETRASADO' : 'CORRECTO EN FECHA') : 'PENDIENTE';
+    const estadoColor = comp && comp.noDisponible ? '#9b59b6' : comp ? (tarde ? '#e67e22' : '#27ae60') : '#c0392b';
     return `<tr>
       <td>${t.maquina||''}</td>
       <td>${t.tarea||''}</td>

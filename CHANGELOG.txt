@@ -6,6 +6,11 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.6.1059 — 2026-10-07
+  - preventivo.html: el informe imprimible usa las mismas etiquetas de
+    estado que el de admin (CORRECTO EN FECHA / CORRECTO RETRASADO /
+    PENDIENTE / NO DISPONIBLE).
+
 v1.6.1049 — 2026-10-07
   - admin.html: en el informe de preventivo general la columna Estado ya no
     distingue "AUTO"; ahora pone CORRECTO EN FECHA, CORRECTO RETRASADO,
