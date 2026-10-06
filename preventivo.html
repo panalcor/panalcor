@@ -3392,6 +3392,20 @@ async function publicarPlan() {
     tareasPlan.push({ id: t.id, maquina: t.maquina, tarea: t.tarea, frecuencia: t.frecuencia, mecanico, fechas });
   });
 
+  // Sin fechas, en "Mis Tareas" cada tarea sale como "Sin fecha asignada" y el
+  // mecánico no puede marcarla como hecha (las fechas del plan solo existen en
+  // este navegador hasta que se publica).
+  const conFecha = tareasPlan.filter(t => Object.values(t.fechas).some(v => typeof v === 'string')).length;
+  if(!conFecha) {
+    const seguir = confirm(
+      `⚠️ El plan de ${mesesN[month]} ${year} no tiene NINGUNA fecha asignada en este navegador.\n\n` +
+      `Si lo publicas así, los mecánicos verán todas las tareas como "Sin fecha asignada" y no podrán marcarlas como hechas. ` +
+      `Además sustituiría un plan ya publicado que sí tuviera fechas.\n\n` +
+      `Cancela y usa "Auto-rellenar fechas" (o asigna las fechas) antes de publicar.\n\n¿Publicar de todas formas?`
+    );
+    if(!seguir) return;
+  }
+
   const btn = document.getElementById('btnPublicar');
   btn.disabled = true; btn.textContent = '⏳ Publicando...';
   // Sanitizar claves de asig: Firebase no permite . # $ / [ ] en keys

@@ -6,6 +6,15 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.939 — 2026-10-06
+  - preventivo.html: al publicar un plan avisa si no tiene NINGUNA fecha
+    asignada (en ese caso, en "Mis Tareas" todas las tareas salen "Sin
+    fecha asignada" y el mecánico no puede marcarlas como hechas), con
+    opción de cancelar. Así se quedó septiembre sin poder guardar tareas.
+  - Datos: rellenadas las fechas de los planes ya publicados de
+    septiembre y octubre (estaban sin ninguna) con el mismo criterio del
+    auto-rellenar.
+
 v1.5.929 — 2026-09-14
   - Importados 131 albaranes/presupuestos reales antiguos (Excel) al
     Historial de albaran.html, marcados como "importado" y ordenados
