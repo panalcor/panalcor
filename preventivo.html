@@ -3058,6 +3058,30 @@ function _buildDaySelect(days, savedFecha, taskId, wi, mk, isAC) {
     style="background:#0d1b2a;color:${hasVal?'#e8c14e':'rgba(255,255,255,0.4)'};border:1px solid ${hasVal?'rgba(232,193,78,0.5)':'rgba(255,255,255,0.15)'};border-radius:5px;padding:3px 6px;font-size:0.73rem;font-family:Barlow,sans-serif;cursor:pointer">${opts}</select>`;
 }
 
+/* ── Estado "hecho" de cada tarea en Plan Mensual ──
+   Lee preventivo_completado/{mes} (lo mismo que Seguimiento) y se mantiene
+   al día mientras haya cambios (mecánicos marcando, "Rellenar hasta hoy"...). */
+let _compPlan = {}, _compPlanMk = null, _compPlanRef = null;
+function _escucharCompletadosPlan(mk) {
+  if(_compPlanMk === mk) return;
+  if(_compPlanRef) { _compPlanRef.off(); _compPlanRef = null; }
+  _compPlanMk = mk;
+  _compPlan = {};
+  _compPlanRef = _DB.ref(`preventivo_completado/${mk}`);
+  _compPlanRef.on('value', snap => {
+    if(_compPlanMk !== mk) return;
+    _compPlan = snap.val() || {};
+    renderPlan();
+  });
+}
+function _marcaHecho(taskId, wi) {
+  const c = _compPlan[`${taskId}_${wi}`];
+  if(!c) return '';
+  if(c.noDisponible) return `<span title="No disponible (ausencia)" style="font-size:0.7rem">🏖️</span>`;
+  const tip = c.fechaReal ? `Hecha el ${c.fechaReal}${c.mecanico ? ' · '+c.mecanico : ''}` : 'Hecha';
+  return `<span title="${escHtml(tip)}" style="font-size:0.72rem;font-weight:700;color:#00b894">✓</span>`;
+}
+
 function renderPlan() {
   const { year, month } = curMes;
   const mk = mesKey(year, month);
@@ -3066,6 +3090,7 @@ function renderPlan() {
   const fechasMes = ST.fechasMes();
   const mkData = fechasMes[mk] || {};
   _actualizarEstadoBotonesPlan(mk);
+  _escucharCompletadosPlan(mk);
 
   // Header
   document.getElementById('monthTitle').textContent =
@@ -3174,6 +3199,7 @@ function renderPlan() {
           html += `<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
             <span style="font-size:0.62rem;color:rgba(255,255,255,0.3)">S${wi+1}</span>
             ${_buildDaySelect(wk.days, savedFecha, t.id, wi, mk)}
+            ${_marcaHecho(t.id, wi)}
           </div>`;
         });
       } else if(t.frecuencia === 'QUINCENAL') {
@@ -3182,12 +3208,12 @@ function renderPlan() {
         const half2 = weeks.slice(Math.ceil(weeks.length/2)).flatMap(w=>w.days);
         const s1 = mkData[`${t.id}_0`] || '';
         const s2 = mkData[`${t.id}_1`] || '';
-        html += `<div style="display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-size:0.62rem;color:rgba(255,255,255,0.3)">1ª mitad</span>${_buildDaySelect(half1, s1, t.id, 0, mk)}</div>`;
-        html += `<div style="display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-size:0.62rem;color:rgba(255,255,255,0.3)">2ª mitad</span>${_buildDaySelect(half2, s2, t.id, 1, mk)}</div>`;
+        html += `<div style="display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-size:0.62rem;color:rgba(255,255,255,0.3)">1ª mitad</span>${_buildDaySelect(half1, s1, t.id, 0, mk)}${_marcaHecho(t.id, 0)}</div>`;
+        html += `<div style="display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-size:0.62rem;color:rgba(255,255,255,0.3)">2ª mitad</span>${_buildDaySelect(half2, s2, t.id, 1, mk)}${_marcaHecho(t.id, 1)}</div>`;
       } else if(t.frecuencia === 'MENSUAL') {
         const allDays = weeks.flatMap(w=>w.days);
         const saved = mkData[`${t.id}_0`] || '';
-        html += `<div style="display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-size:0.62rem;color:rgba(255,255,255,0.3)">Mes</span>${_buildDaySelect(allDays, saved, t.id, 0, mk)}</div>`;
+        html += `<div style="display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-size:0.62rem;color:rgba(255,255,255,0.3)">Mes</span>${_buildDaySelect(allDays, saved, t.id, 0, mk)}${_marcaHecho(t.id, 0)}</div>`;
       }
 
       html += `<span class="freq-badge freq-${t.frecuencia}" style="color:${cfg.color};background:${cfg.bg};border-color:${cfg.border}">${t.frecuencia}</span>

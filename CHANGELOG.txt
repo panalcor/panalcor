@@ -6,6 +6,13 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.969 — 2026-10-06
+  - preventivo.html: Plan Mensual ahora muestra el estado de cada tarea
+    (✓ hecha, con tooltip de fecha y mecánico; 🏖️ no disponible por
+    ausencia) junto al selector de cada semana/quincena/mes. Lee lo mismo
+    que Seguimiento y se actualiza en directo (mecánicos marcando,
+    "Rellenar hasta hoy"...). Antes solo Seguimiento lo reflejaba.
+
 v1.5.959 — 2026-10-06
   - preventivo.html: nuevo botón "⏩ Rellenar hasta hoy" en Plan Mensual.
     Marca como hechas las tareas del mes en pantalla cuya fecha
