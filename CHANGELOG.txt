@@ -6,6 +6,9 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.6.999 — 2026-10-06
+  - diarios.html: botón "← Inicio" en la cabecera.
+
 v1.6.989 — 2026-10-06
   - NUEVA diarios.html (solo admin): revisión y edición de los partes
     diarios de mantenimiento. Cuadrícula mensual día x turno con el estado
