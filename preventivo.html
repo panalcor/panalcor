@@ -3049,8 +3049,11 @@ function poblarPlanMecanicos() {
 function _buildDaySelect(days, savedFecha, taskId, wi, mk, isAC) {
   const fn = isAC ? 'guardarFechaAC' : 'guardarFechaMes';
   const hasVal = !!savedFecha;
+  // Si la fecha mostrada cae fuera de las opciones (p. ej. tarea hecha con
+  // retraso en otra semana), se añade para que el selector la enseñe igualmente.
+  const lista = (savedFecha && !days.includes(savedFecha)) ? [...days, savedFecha].sort() : days;
   const opts = `<option value="">— Día —</option>` +
-    days.map(ds => {
+    lista.map(ds => {
       const d = new Date(ds+'T12:00:00');
       return `<option value="${ds}" ${savedFecha===ds?'selected':''}>${DIAS_ES[d.getDay()]} ${d.getDate()}</option>`;
     }).join('');
@@ -3074,6 +3077,40 @@ function _escucharCompletadosPlan(mk) {
     renderPlan();
   });
 }
+/* Fechas del plan ya publicado en Firebase: Plan Mensual las usa si este
+   navegador no tiene fechas propias para esa tarea (p. ej. el plan se publicó
+   desde otro ordenador o se completaron fechas al publicar). */
+let _planPubFechas = {}, _planPubMk = null;
+function _cargarFechasPublicadas(mk) {
+  if(_planPubMk === mk) return;
+  _planPubMk = mk;
+  _planPubFechas = {};
+  _DB.ref(`preventivo_plan/${mk}/tareas`).once('value').then(snap => {
+    if(_planPubMk !== mk) return;
+    const pub = snap.val() || [];
+    const catMap = {};
+    getCatalogoEffectivo().forEach(c => { catMap[c.id] = c; });
+    const f = {};
+    (Array.isArray(pub) ? pub : Object.values(pub)).forEach(t => {
+      if(!t) return;
+      const c = catMap[t.id];
+      if(!c || c.tarea !== t.tarea || c.frecuencia !== t.frecuencia) return;
+      Object.entries(t.fechas || {}).forEach(([wi, v]) => { if(typeof v === 'string') f[`${t.id}_${wi}`] = v; });
+    });
+    _planPubFechas = f;
+    renderPlan();
+  }).catch(() => {});
+}
+
+// Día que enseña el selector: el día en que se hizo la tarea; si aún no está
+// hecha, la fecha planificada (de este navegador o, si falta, la publicada).
+function _fechaSlot(mkData, taskId, wi) {
+  const key = `${taskId}_${wi}`;
+  const c = _compPlan[key];
+  if(c && c.hecho && c.fechaReal) return c.fechaReal;
+  return mkData[key] || _planPubFechas[key] || '';
+}
+
 function _marcaHecho(taskId, wi) {
   const c = _compPlan[`${taskId}_${wi}`];
   if(!c) return '';
@@ -3091,6 +3128,7 @@ function renderPlan() {
   const mkData = fechasMes[mk] || {};
   _actualizarEstadoBotonesPlan(mk);
   _escucharCompletadosPlan(mk);
+  _cargarFechasPublicadas(mk);
 
   // Header
   document.getElementById('monthTitle').textContent =
@@ -3195,7 +3233,7 @@ function renderPlan() {
         html += `<span style="font-size:0.72rem;color:rgba(255,255,255,0.4);font-style:italic">Cada día L-V</span>`;
       } else if(t.frecuencia === 'SEMANAL') {
         weeks.forEach((wk, wi) => {
-          const savedFecha = mkData[`${t.id}_${wi}`] || '';
+          const savedFecha = _fechaSlot(mkData, t.id, wi);
           html += `<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
             <span style="font-size:0.62rem;color:rgba(255,255,255,0.3)">S${wi+1}</span>
             ${_buildDaySelect(wk.days, savedFecha, t.id, wi, mk)}
@@ -3206,13 +3244,13 @@ function renderPlan() {
         // Primera quincena: weeks 0 y 1 combinados; segunda: weeks 2 y 3+
         const half1 = weeks.slice(0, Math.ceil(weeks.length/2)).flatMap(w=>w.days);
         const half2 = weeks.slice(Math.ceil(weeks.length/2)).flatMap(w=>w.days);
-        const s1 = mkData[`${t.id}_0`] || '';
-        const s2 = mkData[`${t.id}_1`] || '';
+        const s1 = _fechaSlot(mkData, t.id, 0);
+        const s2 = _fechaSlot(mkData, t.id, 1);
         html += `<div style="display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-size:0.62rem;color:rgba(255,255,255,0.3)">1ª mitad</span>${_buildDaySelect(half1, s1, t.id, 0, mk)}${_marcaHecho(t.id, 0)}</div>`;
         html += `<div style="display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-size:0.62rem;color:rgba(255,255,255,0.3)">2ª mitad</span>${_buildDaySelect(half2, s2, t.id, 1, mk)}${_marcaHecho(t.id, 1)}</div>`;
       } else if(t.frecuencia === 'MENSUAL') {
         const allDays = weeks.flatMap(w=>w.days);
-        const saved = mkData[`${t.id}_0`] || '';
+        const saved = _fechaSlot(mkData, t.id, 0);
         html += `<div style="display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-size:0.62rem;color:rgba(255,255,255,0.3)">Mes</span>${_buildDaySelect(allDays, saved, t.id, 0, mk)}${_marcaHecho(t.id, 0)}</div>`;
       }
 
@@ -3453,6 +3491,8 @@ async function publicarPlan() {
     });
     btn.textContent = '✅ Publicado';
     _actualizarEstadoBotonesPlan(mk);
+    _planPubMk = null; // forzar releer las fechas recién publicadas
+    renderPlan();
     let msgOk = `✅ Plan de ${mesesN[month]} ${year} publicado. Los mecánicos ya pueden ver sus tareas en "Mis Tareas".`;
     if(relleno.filled || relleno.reutilizadas) {
       msgOk += `\n\nFechas completadas automáticamente: ${relleno.filled} nueva${relleno.filled!==1?'s':''}`

@@ -6,6 +6,13 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.979 — 2026-10-06
+  - preventivo.html: en Plan Mensual el selector de día de cada tarea
+    enseña el día en que se hizo (si ya está hecha) o, si no, la fecha
+    planificada; y si este navegador no tiene fechas propias para esa
+    tarea usa las del plan ya publicado en Firebase. Antes septiembre y
+    octubre salían con "— Día —" vacío aunque el plan tuviera fechas.
+
 v1.5.969 — 2026-10-06
   - preventivo.html: Plan Mensual ahora muestra el estado de cada tarea
     (✓ hecha, con tooltip de fecha y mecánico; 🏖️ no disponible por
