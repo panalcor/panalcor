@@ -6,6 +6,10 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.6.1039 — 2026-10-06
+  - admin.html: el informe mensual (arrancada/cierre) ya no muestra la
+    columna "Guardado por".
+
 v1.6.1029 — 2026-10-06
   - turnos.html (Sábados): se puede registrar un sábado SIN mecánicos
     (libramos todos). Sale como "Libramos todos" y cuenta como sábado no

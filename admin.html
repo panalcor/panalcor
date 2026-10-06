@@ -2857,12 +2857,11 @@ function _buildAChtml(acData, mesLabel){
       +'<td style="padding:5px 8px;border:1px solid #ddd;text-align:center;background:'+pctBg+';color:'+pctColor+';font-weight:700">'+pct+'%</td>'
       +'<td style="padding:5px 8px;border:1px solid #ddd;text-align:center">'+done+' / '+total+'</td>'
       +'<td style="padding:5px 8px;border:1px solid #ddd;font-size:10px;color:#1a1a2e">'+(mecsUniq.join(', ')||'—')+'</td>'
-      +'<td style="padding:5px 8px;border:1px solid #ddd;font-size:9px;color:#555">'+(r.guardadoPor||'—')+'</td>'
       +'</tr>';
   }).join('');
 
   var tbody = registros.length ? rows
-    : '<tr><td colspan="7" style="padding:10px;text-align:center;color:#aaa;font-style:italic">Sin registros de arrancada/cierre para este mes</td></tr>';
+    : '<tr><td colspan="6" style="padding:10px;text-align:center;color:#aaa;font-style:italic">Sin registros de arrancada/cierre para este mes</td></tr>';
 
   return '<div style="margin-top:18px;page-break-before:auto">'
     +'<div style="background:#0d1b2a;color:#e67e22;font-weight:900;font-size:12px;letter-spacing:.08em;padding:8px 12px;border-radius:5px 5px 0 0">🔧 ARRANCADA / CIERRE — '+mesLabel.toUpperCase()+'</div>'
@@ -2874,7 +2873,6 @@ function _buildAChtml(acData, mesLabel){
     +'<th style="padding:5px 8px;border:1px solid #2a3d52;text-align:center">CUMPL.</th>'
     +'<th style="padding:5px 8px;border:1px solid #2a3d52;text-align:center">ÍTEMS</th>'
     +'<th style="padding:5px 8px;border:1px solid #2a3d52;text-align:left">MECÁNICOS</th>'
-    +'<th style="padding:5px 8px;border:1px solid #2a3d52;text-align:left">GUARDADO POR</th>'
     +'</tr></thead><tbody>'+tbody+'</tbody></table></div>';
 }
 
