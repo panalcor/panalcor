@@ -6,6 +6,14 @@ Formato: v1.MINOR.PATCH
 
 =====================================
 
+v1.5.949 — 2026-10-06
+  - preventivo.html: al publicar el plan se completan solos las fechas
+    que falten, desde cualquier navegador. Primero se reutilizan las
+    fechas ya publicadas en Firebase para esa misma tarea (publicar desde
+    otro ordenador ya no las cambia) y el resto se reparte evitando las
+    ausencias. Eliminado el botón "Auto-rellenar fechas", que ya no hace
+    falta. Si aun así no hubiera ninguna fecha, sigue avisando.
+
 v1.5.939 — 2026-10-06
   - preventivo.html: al publicar un plan avisa si no tiene NINGUNA fecha
     asignada (en ese caso, en "Mis Tareas" todas las tareas salen "Sin

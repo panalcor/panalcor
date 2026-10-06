@@ -876,9 +876,6 @@ if('serviceWorker' in navigator){
         <button type="button" class="export-btn" onclick="publicarPlan()" style="padding:9px 16px;background:rgba(253,203,110,0.12);border-color:rgba(253,203,110,0.4);color:#fdcb6e" id="btnPublicar">
           📤 Publicar a mecánicos
         </button>
-        <button type="button" class="export-btn" onclick="autoRellenarFechas(false)" style="padding:9px 16px;background:rgba(116,185,255,0.12);border-color:rgba(116,185,255,0.4);color:#74b9ff">
-          🎲 Auto-rellenar fechas
-        </button>
         <button type="button" class="export-btn" onclick="rellenarMesVencido()" style="padding:9px 16px;background:rgba(162,155,254,0.12);border-color:rgba(162,155,254,0.4);color:#a29bfe">
           📅 Rellenar mes vencido
         </button>
@@ -3360,7 +3357,6 @@ async function publicarPlan() {
   const { year, month } = curMes;
   const mk      = mesKey(year, month);
   const asig    = ST.asig();
-  const mkData  = (ST.fechasMes()[mk]) || {};
   const weeks   = getWeeksOfMonth(year, month);
   const mesesN  = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
@@ -3373,6 +3369,12 @@ async function publicarPlan() {
     );
     if(!continuar) return;
   }
+
+  // Completa solo las fechas que falten (desde cualquier navegador): reutiliza
+  // las ya publicadas y reparte el resto. Las que ya estén puestas no se tocan.
+  const relleno = await _completarFechasMes(year, month);
+  if(relleno.filled || relleno.reutilizadas) renderPlan();
+  const mkData  = (ST.fechasMes()[mk]) || {};
 
   // Construir lista de tareas con fechas para Firebase
   const tareasPlan = [];
@@ -3392,16 +3394,14 @@ async function publicarPlan() {
     tareasPlan.push({ id: t.id, maquina: t.maquina, tarea: t.tarea, frecuencia: t.frecuencia, mecanico, fechas });
   });
 
-  // Sin fechas, en "Mis Tareas" cada tarea sale como "Sin fecha asignada" y el
-  // mecánico no puede marcarla como hecha (las fechas del plan solo existen en
-  // este navegador hasta que se publica).
+  // Red de seguridad: si tras completar las fechas sigue sin haber ninguna
+  // (p. ej. todos los mecánicos ausentes), en "Mis Tareas" nadie podría marcar
+  // nada y se sustituiría un plan ya publicado.
   const conFecha = tareasPlan.filter(t => Object.values(t.fechas).some(v => typeof v === 'string')).length;
   if(!conFecha) {
     const seguir = confirm(
-      `⚠️ El plan de ${mesesN[month]} ${year} no tiene NINGUNA fecha asignada en este navegador.\n\n` +
-      `Si lo publicas así, los mecánicos verán todas las tareas como "Sin fecha asignada" y no podrán marcarlas como hechas. ` +
-      `Además sustituiría un plan ya publicado que sí tuviera fechas.\n\n` +
-      `Cancela y usa "Auto-rellenar fechas" (o asigna las fechas) antes de publicar.\n\n¿Publicar de todas formas?`
+      `⚠️ El plan de ${mesesN[month]} ${year} sigue sin ninguna fecha asignada.\n\n` +
+      `Si lo publicas así, los mecánicos verán todas las tareas como "Sin fecha asignada" y no podrán marcarlas como hechas.\n\n¿Publicar de todas formas?`
     );
     if(!seguir) return;
   }
@@ -3424,7 +3424,13 @@ async function publicarPlan() {
     });
     btn.textContent = '✅ Publicado';
     _actualizarEstadoBotonesPlan(mk);
-    alert(`✅ Plan de ${mesesN[month]} ${year} publicado. Los mecánicos ya pueden ver sus tareas en "Mis Tareas".`);
+    let msgOk = `✅ Plan de ${mesesN[month]} ${year} publicado. Los mecánicos ya pueden ver sus tareas en "Mis Tareas".`;
+    if(relleno.filled || relleno.reutilizadas) {
+      msgOk += `\n\nFechas completadas automáticamente: ${relleno.filled} nueva${relleno.filled!==1?'s':''}`
+        + (relleno.reutilizadas ? `, ${relleno.reutilizadas} recuperada${relleno.reutilizadas!==1?'s':''} del plan ya publicado` : '') + '.';
+    }
+    if(relleno.sinAsignar) msgOk += `\n⚠️ ${relleno.sinAsignar} hueco${relleno.sinAsignar!==1?'s':''} sin fecha porque el mecánico está ausente todo el periodo.`;
+    alert(msgOk);
     // Notificar a mecánicos asignados via FCM
     if(typeof fcmEnviar === 'function') {
       const mecAsignados = [...new Set(Object.values(ST.asig()))].filter(m => m && m !== '—');
@@ -3566,19 +3572,14 @@ async function rellenarMesVencido() {
   }
 }
 
-/* ════ AUTO-RELLENAR FECHAS ════ */
-// mesVencido=true → rellena el mes ANTERIOR solo donde no haya fecha
-// mesVencido=false → rellena el mes ACTUAL solo donde no haya fecha
-async function autoRellenarFechas(mesVencido) {
-  let { year, month } = curMes;
-  if(mesVencido) {
-    month--;
-    if(month < 0) { year--; month = 11; }
-  }
+/* ════ COMPLETAR FECHAS DEL MES (se ejecuta al publicar) ════ */
+// Rellena solo los huecos sin fecha de un mes; las ya puestas no se tocan.
+// 1) Reutiliza las fechas ya publicadas en Firebase para esa misma tarea, así
+//    publicar desde otro navegador no cambia fechas que ya existían.
+// 2) Para lo que siga vacío reparte días al azar evitando las ausencias del
+//    mecánico. Si está ausente todo el periodo, el hueco se deja vacío.
+async function _completarFechasMes(year, month) {
   const mk = mesKey(year, month);
-  const mesesNom = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  const confirm = window.confirm(`¿Auto-rellenar fechas de ${mesesNom[month]} ${year}?\n\nSolo se rellenarán los huecos vacíos. Las fechas ya guardadas no se tocan.`);
-  if(!confirm) return;
 
   // Cargar ausencias/dias de Firebase para saber libranzas
   let diasFB = {}, ausenciasFB = {};
@@ -3604,6 +3605,25 @@ async function autoRellenarFechas(mesVencido) {
   const all = ST.fechasMes();
   if(!all[mk]) all[mk] = {};
   const mkData = all[mk];
+
+  // 1) Reutilizar fechas ya publicadas (solo si el id sigue siendo la misma tarea)
+  let reutilizadas = 0;
+  try {
+    const snapPub = await _DB.ref(`preventivo_plan/${mk}/tareas`).once('value');
+    const pub = snapPub.val() || [];
+    const catMap = {};
+    getCatalogoEffectivo().forEach(c => { catMap[c.id] = c; });
+    (Array.isArray(pub) ? pub : Object.values(pub)).forEach(t => {
+      if(!t) return;
+      const c = catMap[t.id];
+      if(!c || c.tarea !== t.tarea || c.frecuencia !== t.frecuencia) return;
+      Object.entries(t.fechas || {}).forEach(([wi, v]) => {
+        if(typeof v !== 'string' || !v.startsWith(mk)) return;
+        const key = `${t.id}_${wi}`;
+        if(!mkData[key]) { mkData[key] = v; reutilizadas++; }
+      });
+    });
+  } catch(e) {}
 
   const AUSENTES_ESTADO = ['vacaciones','baja','sancion','asunto','guardia'];
 
@@ -3669,10 +3689,7 @@ async function autoRellenarFechas(mesVencido) {
   });
 
   ST.setFechasMes(all);
-  renderPlan();
-  let msg = `✅ Auto-relleno completado: ${filled} fecha${filled!==1?'s':''} asignada${filled!==1?'s':''} en ${mesesNom[month]} ${year}.`;
-  if(sinAsignar) msg += `\n\n⚠️ ${sinAsignar} hueco${sinAsignar!==1?'s':''} sin fecha porque el mecánico está ausente todo el periodo (vacaciones/baja/etc). Se han dejado vacíos.`;
-  alert(msg);
+  return { filled, sinAsignar, reutilizadas };
 }
 
 /* ════ AJUSTES ════ */
