@@ -3204,15 +3204,14 @@ function _abrirInformePrev(mes, mesLabel, year, month, tareas, compData, secs){
     var p=total?Math.round(done/total*100):0;
     return '<b style="color:'+pctColor(p)+'">'+done+'/'+total+' ('+p+'%)</b>';
   }
-  function estadoBadge(comp){
+  function estadoBadge(comp, fechaPlan){
     if(!comp) return '<span style="color:#aaa">— PENDIENTE</span>';
     if(comp.noDisponible) return '<span style="color:#9b59b6">🏖 NO DISPONIBLE</span>';
-    if(comp.autoRelleno){
-      return comp.retraso
-        ? '<span style="color:#e67e22">⚠ AUTO·RETRASO '+fmtD(comp.fechaReal)+'</span>'
-        : '<span style="color:#27ae60">✓ AUTO·EN FECHA '+fmtD(comp.fechaReal)+'</span>';
-    }
-    return '<span style="color:#2980b9">✓ REALIZADA '+fmtD(comp.fechaReal)+'</span>';
+    var fp = fechaPlan || comp.fechaPlan || '';
+    var tarde = !!comp.retraso || !!(comp.fechaReal && fp && comp.fechaReal > fp);
+    return tarde
+      ? '<span style="color:#e67e22">⚠ CORRECTO RETRASADO '+fmtD(comp.fechaReal)+'</span>'
+      : '<span style="color:#27ae60">✓ CORRECTO EN FECHA '+fmtD(comp.fechaReal)+'</span>';
   }
 
   // ── construir slots planos ─────────────────────────────────
@@ -3312,7 +3311,7 @@ function _abrirInformePrev(mes, mesLabel, year, month, tareas, compData, secs){
         +'<table><thead><tr><th>Máquina</th><th>Tarea</th><th class="fc">Frec.</th><th>Plan</th><th>Estado</th></tr></thead><tbody>';
       d.slots.slice().sort(function(a,b){ return a.fechaPlan.localeCompare(b.fechaPlan)||(a.maquina.localeCompare(b.maquina)); }).forEach(function(s){
         body+='<tr><td class="fc">'+s.maquina+'</td><td>'+s.tarea+'</td><td class="fc">'+s.frecuencia+'</td>'
-          +'<td class="fc">'+fmtD(s.fechaPlan)+'</td><td>'+estadoBadge(s.comp)+'</td></tr>';
+          +'<td class="fc">'+fmtD(s.fechaPlan)+'</td><td>'+estadoBadge(s.comp, s.fechaPlan)+'</td></tr>';
       });
       body += '</tbody></table>';
     });
@@ -3334,7 +3333,7 @@ function _abrirInformePrev(mes, mesLabel, year, month, tareas, compData, secs){
         +'<table><thead><tr><th>Tarea</th><th class="fc">Frec.</th><th>Mecánico</th><th>Plan</th><th>Estado</th></tr></thead><tbody>';
       d.slots.slice().sort(function(a,b){ return a.fechaPlan.localeCompare(b.fechaPlan); }).forEach(function(s){
         body+='<tr><td>'+s.tarea+'</td><td class="fc">'+s.frecuencia+'</td><td>'+s.mecanico+'</td>'
-          +'<td class="fc">'+fmtD(s.fechaPlan)+'</td><td>'+estadoBadge(s.comp)+'</td></tr>';
+          +'<td class="fc">'+fmtD(s.fechaPlan)+'</td><td>'+estadoBadge(s.comp, s.fechaPlan)+'</td></tr>';
       });
       body += '</tbody></table>';
     });
@@ -3370,7 +3369,7 @@ function _abrirInformePrev(mes, mesLabel, year, month, tareas, compData, secs){
         +'<table><thead><tr><th>Máquina</th><th>Tarea</th><th>Mecánico</th><th>Plan</th><th>Estado</th></tr></thead><tbody>';
       d.slots.slice().sort(function(a,b){return a.fechaPlan.localeCompare(b.fechaPlan);}).forEach(function(s){
         body+='<tr><td class="fc">'+s.maquina+'</td><td>'+s.tarea+'</td><td>'+s.mecanico+'</td>'
-          +'<td class="fc">'+fmtD(s.fechaPlan)+'</td><td>'+estadoBadge(s.comp)+'</td></tr>';
+          +'<td class="fc">'+fmtD(s.fechaPlan)+'</td><td>'+estadoBadge(s.comp, s.fechaPlan)+'</td></tr>';
       });
       body += '</tbody></table>';
     });
@@ -3392,7 +3391,7 @@ function _abrirInformePrev(mes, mesLabel, year, month, tareas, compData, secs){
         +'<table><thead><tr><th>Máquina</th><th>Tarea</th><th>Mecánico</th><th>Estado</th></tr></thead><tbody>';
       d.slots.forEach(function(s){
         body+='<tr><td class="fc">'+s.maquina+'</td><td>'+s.tarea+'</td><td>'+s.mecanico+'</td>'
-          +'<td>'+estadoBadge(s.comp)+'</td></tr>';
+          +'<td>'+estadoBadge(s.comp, s.fechaPlan)+'</td></tr>';
       });
       body += '</tbody></table>';
     });
